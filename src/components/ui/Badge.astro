@@ -1,0 +1,21 @@
+---
+interface Props {
+  type: 'new' | 'bestseller';
+}
+
+const { type } = Astro.props;
+
+const labels = {
+  new: 'Nuevo',
+  bestseller: 'Top Ventas',
+};
+
+const styles = {
+  new: 'bg-king-text text-king-surface',
+  bestseller: 'bg-king-accent text-king-surface',
+};
+---
+
+<span class={`inline-block px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] ${styles[type]}`}>
+  {labels[type]}
+</span>

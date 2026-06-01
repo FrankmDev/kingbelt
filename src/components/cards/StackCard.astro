@@ -1,0 +1,36 @@
+---
+import ArrowTextLink from '../ui/ArrowTextLink.astro';
+
+interface Props {
+  title: string;
+  body: string;
+  image: string;
+  index: number;
+}
+
+const { title, body, image, index } = Astro.props;
+---
+
+<div class="stack-card sticky top-24 md:top-28 mb-8 md:mb-[20vh] bg-king-surface border border-king-border overflow-hidden rounded-sm shadow-xl">
+  <div class="grid grid-cols-1 md:grid-cols-2">
+    <div class="relative h-64 md:h-[28rem] overflow-hidden">
+      <img
+        src={image}
+        alt={title}
+        class="w-full h-full object-cover grayscale-[0.2] contrast-110 brightness-90 sepia-[0.05]"
+        loading="lazy"
+      />
+      <div class="absolute inset-0 bg-gradient-to-r from-transparent to-king-surface/20 md:to-king-surface/60"></div>
+    </div>
+    <div class="p-8 md:p-12 lg:p-16 flex flex-col justify-center">
+      <span class="text-king-accent text-xs font-bold tracking-[0.2em] uppercase mb-4">
+        0{index}
+      </span>
+      <h3 class="text-2xl md:text-3xl font-display text-king-text tracking-tight mb-4">
+        {title}
+      </h3>
+      <p class="text-king-muted leading-relaxed mb-8">{body}</p>
+      <ArrowTextLink href="#coleccion">Explorar Colección</ArrowTextLink>
+    </div>
+  </div>
+</div>

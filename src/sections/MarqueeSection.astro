@@ -1,0 +1,28 @@
+---
+import Icon from '../components/ui/Icon.astro';
+import { marqueeItems } from '../data/home';
+
+const row1 = [...marqueeItems, ...marqueeItems, ...marqueeItems, ...marqueeItems];
+const row2 = [...marqueeItems, ...marqueeItems, ...marqueeItems, ...marqueeItems];
+---
+
+<section class="pt-12 md:pt-16 pb-0 overflow-hidden bg-king-bg">
+  <div class="relative">
+    <div class="flex animate-marquee-left whitespace-nowrap mb-5">
+      {row1.map((item) => (
+        <div class="flex items-center gap-2.5 mx-7 text-king-text/[0.07]">
+          <Icon name={item.icon} class="w-4 h-4" />
+          <span class="text-[10px] font-medium tracking-[0.22em] uppercase">{item.text}</span>
+        </div>
+      ))}
+    </div>
+    <div class="flex animate-marquee-right whitespace-nowrap">
+      {row2.map((item) => (
+        <div class="flex items-center gap-2.5 mx-7 text-king-text/[0.05]">
+          <Icon name={item.icon} class="w-4 h-4" />
+          <span class="text-[10px] font-medium tracking-[0.22em] uppercase">{item.text}</span>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>

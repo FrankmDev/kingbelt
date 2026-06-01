@@ -1,0 +1,174 @@
+---
+import type { Product } from '../../data/products';
+import Button from '../ui/Button.astro';
+
+interface Props {
+  product: Product;
+}
+
+const { product } = Astro.props;
+const whatsappUrl = `https://wa.me/1234567890?text=${encodeURIComponent(product.whatsappMessage)}`;
+---
+
+<div class="lg:col-span-5 flex flex-col" data-product-info>
+  {/* Badge */}
+  {product.badge && (
+    <div class="mb-5 self-start">
+      <span class:list={[
+        'inline-block px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em]',
+        product.badge === 'new' ? 'bg-king-text text-king-surface' : 'bg-king-accent text-king-surface'
+      ]}>
+        {product.badge === 'new' ? 'Nuevo' : 'Top Ventas'}
+      </span>
+    </div>
+  )}
+
+  {/* Product ID */}
+  <span class="text-[10px] font-mono uppercase tracking-[0.2em] text-king-muted/50 mb-3">{product.id}</span>
+
+  {/* Name — serif treatment */}
+  <h1 class="font-serif text-4xl md:text-5xl lg:text-6xl text-king-text mb-4 tracking-[-0.02em] leading-[0.92]">
+    {product.name}
+  </h1>
+
+  {/* Short description */}
+  <p class="text-king-muted text-[14px] md:text-[15px] leading-[1.8] mb-8 max-w-md">
+    {product.shortDescription}
+  </p>
+
+  {/* Divider */}
+  <div class="flex items-center gap-0 mb-8">
+    <span class="w-10 h-[1px] bg-king-border"></span>
+    <span class="w-1 h-1 rounded-full bg-king-accent/40 mx-3"></span>
+    <span class="w-10 h-[1px] bg-king-border"></span>
+  </div>
+
+  {/* Color selector */}
+  <div class="mb-8" data-color-selector>
+    <div class="flex items-center gap-3 mb-3">
+      <span class="text-[10px] uppercase tracking-[0.2em] text-king-text font-medium">Color</span>
+      <span class="text-[10px] uppercase tracking-[0.15em] text-king-muted/60 color-name">{product.colors[0]?.name}</span>
+    </div>
+    <div class="flex items-center gap-3">
+      {product.colors.map((color, i) => (
+        <button
+          class:list={[
+            'color-swatch relative w-8 h-8 rounded-full border-2 transition-all duration-300',
+            i === 0 ? 'border-king-accent scale-110' : 'border-king-border/30 hover:border-king-accent/50'
+          ]}
+          data-color={color.name}
+          type="button"
+          aria-label={`Color: ${color.name}`}
+        >
+          <span class="absolute inset-[3px] rounded-full" style={`background-color: ${color.hex};`}></span>
+          {i === 0 && <span class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-king-accent"></span>}
+        </button>
+      ))}
+    </div>
+  </div>
+
+  {/* Sizes */}
+  <div class="mb-8">
+    <div class="flex items-center gap-3 mb-3">
+      <span class="text-[10px] uppercase tracking-[0.2em] text-king-text font-medium">Talla</span>
+      <span class="text-[10px] uppercase tracking-[0.15em] text-king-muted/60 size-name">{product.sizes[0]} cm</span>
+    </div>
+    <div class="flex flex-wrap gap-2" data-size-selector>
+      {product.sizes.map((size, i) => (
+        <button
+          class:list={[
+            'size-btn px-3.5 py-1.5 border text-[11px] font-medium uppercase tracking-[0.1em] transition-all duration-300',
+            i === 0 ? 'border-king-accent text-king-accent bg-king-accent/5' : 'border-king-border/50 text-king-muted hover:border-king-accent/40 hover:text-king-text'
+          ]}
+          data-size={size}
+          type="button"
+        >
+          {size}
+        </button>
+      ))}
+    </div>
+  </div>
+
+  {/* Materials — compact list */}
+  <div class="mb-10">
+    <span class="text-[10px] uppercase tracking-[0.2em] text-king-text font-medium mb-3 block">Materiales</span>
+    <ul class="space-y-2">
+      {product.materials.map((mat) => (
+        <li class="text-king-muted text-[14px] leading-relaxed flex items-start gap-2.5">
+          <span class="w-1 h-1 rounded-full bg-king-accent/40 mt-[7px] shrink-0"></span>
+          {mat}
+        </li>
+      ))}
+    </ul>
+  </div>
+
+  {/* CTAs */}
+  <div class="mt-auto flex flex-col gap-3">
+    <Button
+      href={product.amazonUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      variant="secondary"
+      size="md"
+      class="w-full"
+    >
+      Comprar en Amazon
+      <svg class="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M5 12h14M12 5l7 7-7 7" />
+      </svg>
+    </Button>
+    <Button
+      href={whatsappUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      variant="surfaceOutline"
+      size="md"
+      class="w-full"
+    >
+      Contactar Fabricante
+    </Button>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-product-info]').forEach((info) => {
+    const colorBtns = info.querySelectorAll<HTMLElement>('[data-color]');
+    const sizeBtns = info.querySelectorAll<HTMLElement>('[data-size]');
+    const colorNameEl = info.querySelector<HTMLElement>('.color-name');
+    const sizeNameEl = info.querySelector<HTMLElement>('.size-name');
+    const gallery = document.querySelector<HTMLElement>('[data-product-gallery]');
+    const updateGallery = (gallery as any)?.__updateGallery;
+
+    colorBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const color = btn.getAttribute('data-color') || '';
+        colorBtns.forEach((b) => {
+          b.classList.remove('border-king-accent', 'scale-110');
+          b.classList.add('border-king-border/30');
+          b.querySelector('.bg-king-accent')?.remove();
+        });
+        btn.classList.remove('border-king-border/30');
+        btn.classList.add('border-king-accent', 'scale-110');
+        const dot = document.createElement('span');
+        dot.className = 'absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-king-accent';
+        btn.appendChild(dot);
+
+        if (colorNameEl) colorNameEl.textContent = color;
+        if (updateGallery) updateGallery(color, 0);
+      });
+    });
+
+    sizeBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const size = btn.getAttribute('data-size') || '';
+        sizeBtns.forEach((b) => {
+          b.classList.remove('border-king-accent', 'text-king-accent', 'bg-king-accent/5');
+          b.classList.add('border-king-border/50', 'text-king-muted');
+        });
+        btn.classList.remove('border-king-border/50', 'text-king-muted');
+        btn.classList.add('border-king-accent', 'text-king-accent', 'bg-king-accent/5');
+        if (sizeNameEl) sizeNameEl.textContent = `${size} cm`;
+      });
+    });
+  });
+</script>

@@ -1,0 +1,370 @@
+---
+import type { ImageMetadata } from 'astro';
+import { Image } from 'astro:assets';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Header from '../../components/layout/Header.astro';
+import FooterSection from '../../components/layout/FooterSection.astro';
+import ProductCard from '../../components/product/ProductCard.astro';
+import Button from '../../components/ui/Button.astro';
+import { products, getProductBySlug, getRelatedProducts } from '../../data/products';
+
+export function getStaticPaths() {
+  return products.map((product) => ({
+    params: { slug: product.slug },
+  }));
+}
+
+const { slug } = Astro.params;
+const product = getProductBySlug(slug || '');
+
+if (!product) {
+  return Astro.redirect('/404');
+}
+
+const related = getRelatedProducts(product.slug, 3);
+const pageTitle = `${product.name} — KingBelt`;
+const pageDescription = product.shortDescription;
+
+const allImages = Object.values(
+  import.meta.glob<{ default: ImageMetadata }>('../../assets/products/*.avif', {
+    eager: true,
+  })
+)
+  .map((entry) => entry.default)
+  .sort((a, b) => a.src.localeCompare(b.src));
+
+const productIndex = Math.max(products.indexOf(product), 0);
+const primaryImage = allImages[productIndex % allImages.length];
+const fallbackHoverImage = allImages[(productIndex + 3) % allImages.length];
+const defaultColorName = product.colors[0]?.name || '';
+const defaultColorHex = product.colors[0]?.hex || '#8A6A3D';
+const whatsappUrl = `https://wa.me/1234567890?text=${encodeURIComponent(product.whatsappMessage)}`;
+
+const galleryItems = product.colors.map((color) => ({
+  name: color.name,
+  hex: color.hex,
+  image: primaryImage.src,
+  alt: `${product.name} acabado ${color.name}`,
+}));
+---
+
+<BaseLayout title={pageTitle} description={pageDescription}>
+  <Header slot="header" initialTheme="light" scrolledTheme="light" compactThreshold={36} />
+
+  <main class="relative pb-16 pt-24 md:pt-32">
+    <div
+      class="pointer-events-none absolute inset-0 opacity-[0.02]"
+      style="background-image: linear-gradient(90deg, rgba(138,106,61,0.14) 0, rgba(138,106,61,0.14) 1px, transparent 1px, transparent 24%), linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px); background-size: 160px 100%, 100% 100%;"
+    ></div>
+
+    <div class="relative mx-auto px-6 md:px-10 lg:px-16">
+      <nav class="mb-8 md:mb-12" aria-label="Breadcrumb">
+        <ol class="flex items-center gap-2 text-[10px] uppercase tracking-[0.25em] text-king-muted/50">
+          <li><a href="/" class="transition-colors duration-300 hover:text-king-text">Inicio</a></li>
+          <li class="text-king-border">/</li>
+          <li><a href="/#coleccion" class="transition-colors duration-300 hover:text-king-text">Colección</a></li>
+          <li class="text-king-border">/</li>
+          <li class="font-medium text-king-text">{product.name}</li>
+        </ol>
+      </nav>
+
+      <div class="mb-24 grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-16">
+
+        {/* ===== LEFT: Full-height gallery ===== */}
+        <div
+          class="lg:col-span-6 lg:sticky lg:top-28 lg:self-start lg:h-[calc(100svh-8rem)]"
+          data-product-gallery
+          data-gallery-items={JSON.stringify(galleryItems)}
+          data-default-index="0"
+        >
+          <div
+            class="product-gallery-frame relative h-full overflow-hidden min-h-[clamp(28rem,68vh,48rem)] lg:min-h-0"
+            style={`--product-gallery-accent: ${defaultColorHex};`}
+          >
+            {/* Background gradient tint */}
+            <div class="absolute inset-0 bg-[linear-gradient(160deg,rgba(255,255,255,0.92)_0%,rgba(235,232,228,0.96)_48%,rgba(215,206,196,0.88)_100%)]"></div>
+            <div class="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.72),transparent_42%)]"></div>
+            <div class="absolute inset-0 opacity-70" style="background: linear-gradient(180deg, color-mix(in srgb, var(--product-gallery-accent) 12%, transparent) 0%, transparent 26%, transparent 100%);"></div>
+
+            {/* Blueprint corner marks */}
+            <div class="absolute inset-3 z-10 pointer-events-none md:inset-5">
+              <span class="absolute left-0 top-0 h-[1px] w-5 bg-king-accent/20"></span>
+              <span class="absolute left-0 top-0 h-5 w-[1px] bg-king-accent/20"></span>
+              <span class="absolute right-0 top-0 h-[1px] w-5 bg-king-accent/20"></span>
+              <span class="absolute right-0 top-0 h-5 w-[1px] bg-king-accent/20"></span>
+              <span class="absolute bottom-0 left-0 h-[1px] w-5 bg-king-accent/20"></span>
+              <span class="absolute bottom-0 left-0 h-5 w-[1px] bg-king-accent/20"></span>
+              <span class="absolute bottom-0 right-0 h-[1px] w-5 bg-king-accent/20"></span>
+              <span class="absolute bottom-0 right-0 h-5 w-[1px] bg-king-accent/20"></span>
+            </div>
+
+            {/* Product ID */}
+            <div class="absolute right-4 top-4 z-10 md:right-6 md:top-6">
+              <span class="text-[10px] font-mono uppercase tracking-[0.18em] text-king-text/15">{product.id}</span>
+            </div>
+
+            {/* Badge */}
+            {product.badge && (
+              <div class="absolute left-4 top-4 z-10 md:left-6 md:top-6">
+                <span
+                  class:list={[
+                    'inline-block px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em]',
+                    product.badge === 'new' ? 'bg-king-text text-king-surface' : 'bg-king-accent text-king-surface',
+                  ]}
+                >
+                  {product.badge === 'new' ? 'Nuevo' : 'Top Ventas'}
+                </span>
+              </div>
+            )}
+
+            {/* Main image — fills full height */}
+            <img
+              src={primaryImage.src}
+              width={primaryImage.width}
+              height={primaryImage.height}
+              alt={`${product.name} acabado ${defaultColorName}`}
+              class="product-main-image relative z-[1] h-full w-full object-cover object-center transition-opacity duration-300"
+              loading="eager"
+            />
+
+            {/* Bottom fade */}
+            <div class="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/15 to-transparent"></div>
+          </div>
+        </div>
+
+        {/* ===== RIGHT: Product info ===== */}
+        <div class="flex flex-col lg:col-span-6" data-product-info>
+          <span class="mb-3 text-[10px] font-mono uppercase tracking-[0.2em] text-king-muted/40">{product.id}</span>
+
+          <h1 class="mb-5 font-serif text-4xl leading-[0.92] tracking-[-0.02em] text-king-text md:text-5xl lg:text-6xl">
+            {product.name}
+          </h1>
+
+          <p class="mb-6 max-w-md text-[14px] leading-[1.8] text-king-muted md:text-[15px]">
+            {product.shortDescription}
+          </p>
+
+          <div class="mb-6 flex items-center gap-0">
+            <span class="h-[1px] w-10 bg-king-border"></span>
+            <span class="mx-3 h-1 w-1 rounded-full bg-king-accent/40"></span>
+            <span class="h-[1px] w-10 bg-king-border"></span>
+          </div>
+
+          {/* Color selector — swatches only */}
+          <div class="mb-8" data-color-selector>
+            <div class="mb-3 flex items-center gap-3">
+              <span class="text-[10px] font-medium uppercase tracking-[0.2em] text-king-text">Color</span>
+              <span class="color-name text-[10px] uppercase tracking-[0.15em] text-king-muted/60">{defaultColorName}</span>
+            </div>
+            <div class="flex items-center gap-3">
+              {product.colors.map((color, i) => (
+                <button
+                  class:list={[
+                    'color-swatch group relative h-9 w-9 rounded-full border-2 transition-all duration-300',
+                    i === 0 ? 'border-king-accent scale-110' : 'border-king-border/30 hover:border-king-accent/50',
+                  ]}
+                  data-color-index={i}
+                  type="button"
+                  aria-label={`Color: ${color.name}`}
+                  title={color.name}
+                >
+                  <span class="absolute inset-[3px] rounded-full" style={`background-color: ${color.hex};`}></span>
+                  {i === 0 && <span class="absolute -bottom-1.5 left-1/2 h-[2px] w-2 -translate-x-1/2 rounded-full bg-king-accent"></span>}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div class="mb-8">
+            <p class="max-w-lg text-[14px] leading-[1.9] text-king-text/80 md:text-[15px]">
+              {product.description}
+            </p>
+          </div>
+
+          <div class="mb-8">
+            <span class="mb-3 block text-[10px] font-medium uppercase tracking-[0.2em] text-king-text">Materiales</span>
+            <ul class="space-y-2">
+              {product.materials.map((mat) => (
+                <li class="flex items-start gap-2.5 text-[14px] leading-relaxed text-king-muted">
+                  <span class="mt-[7px] h-1 w-1 shrink-0 rounded-full bg-king-accent/40"></span>
+                  {mat}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div class="mb-10">
+            <div class="mb-3 flex items-center gap-3">
+              <span class="text-[10px] font-medium uppercase tracking-[0.2em] text-king-text">Talla</span>
+              <span class="size-name text-[10px] uppercase tracking-[0.15em] text-king-muted/60">{product.sizes[0]} cm</span>
+            </div>
+            <div class="flex flex-wrap gap-2" data-size-selector>
+              {product.sizes.map((size, index) => (
+                <button
+                  class:list={[
+                     'size-btn border px-3.5 py-1.5 text-[11px] font-medium uppercase tracking-[0.1em] transition-all duration-300',
+                    index === 0
+                      ? 'border-king-accent bg-king-accent/5 text-king-accent'
+                      : 'border-king-border/50 text-king-muted hover:border-king-accent/40 hover:text-king-text',
+                  ]}
+                  data-size={size}
+                  type="button"
+                >
+                  {size}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <Button
+              href={product.amazonUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              variant="secondary"
+              size="md"
+              class="w-full"
+            >
+              Comprar en Amazon
+              <svg class="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
+            </Button>
+            <Button
+              href={whatsappUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              variant="surfaceOutline"
+              size="md"
+              class="w-full"
+            >
+              Pedir al fabricante
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* ===== Features ===== */}
+      <div class="mb-24">
+        <div class="border-t border-king-border/60 pt-16">
+          <div class="mb-10 flex items-center gap-4">
+            <span class="text-[10px] font-mono uppercase tracking-[0.22em] text-king-accent/50">01</span>
+            <span class="h-px flex-1 bg-king-border/60"></span>
+            <h2 class="text-[11px] font-medium uppercase tracking-[0.22em] text-king-text">Detalles Artesanales</h2>
+            <span class="h-px flex-1 bg-king-border/60"></span>
+          </div>
+          <div class="grid grid-cols-1 gap-0 md:grid-cols-2 lg:grid-cols-4">
+            {product.features.map((feature, index) => (
+              <article class="group relative border-b border-king-border/40 px-5 py-6 last:!border-b-0 md:px-6 md:py-7 lg:border-b-0 lg:border-r last:!border-r-0">
+                <div class="mb-4 flex items-center gap-3">
+                  <span class="tabular-nums text-[10px] font-mono text-king-accent/50">0{index + 1}</span>
+                  <span class="h-px flex-1 bg-king-border/40 transition-colors duration-500 group-hover:bg-king-accent/30"></span>
+                </div>
+                <p class="text-[14px] leading-[1.75] text-king-text md:text-[15px]">{feature}</p>
+                <span class="absolute bottom-0 left-0 h-[1px] w-full origin-left scale-x-0 bg-king-accent transition-transform duration-500 group-hover:scale-x-100"></span>
+              </article>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ===== Related products ===== */}
+      {related.length > 0 && (
+        <div class="border-t border-king-border/60 pt-16">
+          <div class="mb-10 flex items-center gap-4">
+            <span class="text-[10px] font-mono uppercase tracking-[0.22em] text-king-accent/50">02</span>
+            <span class="h-px flex-1 bg-king-border/60"></span>
+            <h2 class="text-[11px] font-medium uppercase tracking-[0.22em] text-king-text">Más Modelos</h2>
+            <span class="h-px flex-1 bg-king-border/60"></span>
+            <a href="/#coleccion" class="text-[11px] uppercase tracking-[0.18em] text-king-muted/50 transition-colors duration-300 hover:text-king-accent">
+              Ver Todo
+            </a>
+          </div>
+          <div class="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-6">
+            {related.map((p) => {
+              const idx = products.indexOf(p);
+              const pPrimary = allImages[idx % allImages.length];
+              const pHover = allImages[(idx + 3) % allImages.length] ?? fallbackHoverImage;
+              return <ProductCard product={p} imageSrc={pPrimary} hoverImageSrc={pHover} />;
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  </main>
+
+  <FooterSection slot="footer" />
+</BaseLayout>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-product-gallery]').forEach((gallery) => {
+    const mainImage = gallery.querySelector<HTMLImageElement>('.product-main-image');
+    const frame = gallery.querySelector<HTMLElement>('.product-gallery-frame');
+    const galleryItemsData = gallery.getAttribute('data-gallery-items');
+    const galleryItems: Array<{ name: string; hex: string; image: string; alt: string }> = galleryItemsData ? JSON.parse(galleryItemsData) : [];
+    let currentIndex = parseInt(gallery.getAttribute('data-default-index') || '0', 10);
+
+    function updateGallery(nextIndex: number) {
+      const item = galleryItems[nextIndex];
+      if (!item || !mainImage) return;
+
+      currentIndex = nextIndex;
+      mainImage.style.opacity = '0';
+      setTimeout(() => {
+        mainImage.src = item.image;
+        mainImage.alt = item.alt;
+        mainImage.style.opacity = '1';
+      }, 180);
+
+      frame?.style.setProperty('--product-gallery-accent', item.hex);
+    }
+
+    (gallery as HTMLElement & { __updateGallery?: (index: number) => void }).__updateGallery = updateGallery;
+    updateGallery(currentIndex);
+  });
+
+  document.querySelectorAll<HTMLElement>('[data-product-info]').forEach((info) => {
+    const colorBtns = info.querySelectorAll<HTMLElement>('[data-color-index]');
+    const colorNameEl = info.querySelector<HTMLElement>('.color-name');
+    const sizeBtns = info.querySelectorAll<HTMLElement>('[data-size]');
+    const sizeNameEl = info.querySelector<HTMLElement>('.size-name');
+    const gallery = document.querySelector<HTMLElement>('[data-product-gallery]');
+    const updateGallery = (gallery as any)?.__updateGallery;
+    const galleryItemsData = gallery?.getAttribute('data-gallery-items');
+    const galleryItems: Array<{ name: string; hex: string; image: string; alt: string }> = galleryItemsData ? JSON.parse(galleryItemsData) : [];
+
+    colorBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const idx = parseInt(btn.getAttribute('data-color-index') || '0', 10);
+        const color = galleryItems[idx];
+
+        colorBtns.forEach((b) => {
+          b.classList.remove('border-king-accent', 'scale-110');
+          b.classList.add('border-king-border/30');
+          b.querySelector('.bg-king-accent')?.remove();
+        });
+        btn.classList.remove('border-king-border/30');
+        btn.classList.add('border-king-accent', 'scale-110');
+        const dot = document.createElement('span');
+        dot.className = 'absolute -bottom-1.5 left-1/2 h-[2px] w-2 -translate-x-1/2 rounded-full bg-king-accent';
+        btn.appendChild(dot);
+
+        if (colorNameEl && color) colorNameEl.textContent = color.name;
+        if (updateGallery && color) updateGallery(idx);
+      });
+    });
+
+    sizeBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const size = btn.getAttribute('data-size') || '';
+        sizeBtns.forEach((b) => {
+          b.classList.remove('border-king-accent', 'text-king-accent', 'bg-king-accent/5');
+          b.classList.add('border-king-border/50', 'text-king-muted');
+        });
+        btn.classList.remove('border-king-border/50', 'text-king-muted');
+        btn.classList.add('border-king-accent', 'text-king-accent', 'bg-king-accent/5');
+        if (sizeNameEl) sizeNameEl.textContent = `${size} cm`;
+      });
+    });
+  });
+</script>

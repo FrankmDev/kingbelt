@@ -1,0 +1,431 @@
+---
+interface Props {
+  initialTheme?: 'dark' | 'light';
+  scrolledTheme?: 'dark' | 'light';
+  compactThreshold?: number;
+}
+
+const {
+  initialTheme = 'dark',
+  scrolledTheme = 'light',
+  compactThreshold = 72,
+} = Astro.props;
+
+const links = [
+  { label: 'Colección', href: '/#coleccion', num: '01' },
+  { label: 'Filosofía', href: '/#filosofia', num: '02' },
+  { label: 'Contacto', href: '/#contacto', num: '03' },
+];
+---
+
+<header
+  id="site-header"
+  data-theme={initialTheme}
+  data-initial-theme={initialTheme}
+  data-scrolled-theme={scrolledTheme}
+  data-scrolled="false"
+  data-compact-threshold={compactThreshold}
+  class="fixed left-0 right-0 top-0 z-50 px-3 pt-3 md:px-5 md:pt-4"
+>
+  <div class="header-shell mx-auto overflow-hidden">
+    <div class="header-tier-1 border-b">
+      <div class="mx-auto flex items-center justify-between px-5 py-2.5 md:px-8 lg:px-10">
+        <span class="header-utility-text hidden text-[8px] font-medium uppercase tracking-[0.38em] sm:block">
+          Hecho a mano en España
+        </span>
+        <div class="ml-auto flex items-center gap-5">
+          <a
+            href="https://instagram.com/kingbelt"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="header-utility-text header-utility-link"
+            aria-label="Instagram"
+          >
+            <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="4" y="4" width="16" height="16" rx="4"></rect>
+              <circle cx="12" cy="12" r="4"></circle>
+              <circle cx="17.5" cy="6.5" r="0.5" fill="currentColor"></circle>
+            </svg>
+          </a>
+          <a href="mailto:hola@kingbelt.com" class="header-utility-text header-utility-link" aria-label="Email">
+            <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="5" width="18" height="14" rx="2"></rect>
+              <path d="m3 7 9 6 9-6"></path>
+            </svg>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <nav
+      id="header-nav"
+      class="header-tier-2 mx-auto flex items-center justify-between px-5 md:px-8 lg:px-10"
+    >
+      <a href="/" id="header-logo" class="group relative flex items-center gap-3 md:gap-4">
+        <span class="header-wordmark font-display whitespace-nowrap uppercase">KingBelt</span>
+        <span class="header-logo-rule hidden h-[1px] bg-current md:block"></span>
+      </a>
+
+      <div class="hidden items-center gap-1 md:flex">
+        {links.map((l, i) => (
+          <>
+            {i > 0 && <span class="header-divider mx-2.5 h-3.5 w-px lg:mx-3.5"></span>}
+            <a href={l.href} class="header-link group relative flex items-center gap-2 py-1">
+              <span class="header-link-num hidden font-mono tabular-nums lg:inline">{l.num}</span>
+              <span>{l.label}</span>
+              <span class="header-link-line absolute bottom-0 left-0 h-px w-full origin-left scale-x-0 bg-king-accent transition-transform duration-500 group-hover:scale-x-100"></span>
+            </a>
+          </>
+        ))}
+        <span class="header-divider mx-2.5 h-3.5 w-px lg:mx-3.5"></span>
+      <a href="/#coleccion" id="header-cta" class="group hidden items-center gap-2.5 uppercase md:inline-flex">
+          <span class="h-1.5 w-1.5 rounded-full bg-king-accent/65 transition-all duration-300 group-hover:scale-110 group-hover:bg-king-accent"></span>
+          Comprar
+        </a>
+      </div>
+
+      <button
+        id="menu-toggle"
+        class="relative flex h-8 w-8 flex-col items-end justify-center gap-[6px] md:hidden"
+        aria-label="Toggle menu"
+        type="button"
+      >
+        <span class="menu-line menu-line-1 block h-[1.5px]" style="width: 1.5rem;"></span>
+        <span class="menu-line menu-line-2 block h-[1.5px]" style="width: 0.9rem;"></span>
+      </button>
+    </nav>
+
+    <div class="header-stitch h-px"></div>
+  </div>
+</header>
+
+<div
+  id="mobile-menu"
+  class="fixed inset-0 z-40 opacity-0 pointer-events-none transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] md:hidden"
+  style="background: #0e0d0c;"
+>
+  <div class="absolute left-6 top-6 h-6 w-6 border-l border-t border-white/[0.05]"></div>
+  <div class="absolute right-6 top-6 h-6 w-6 border-r border-t border-white/[0.05]"></div>
+  <div class="absolute bottom-6 left-6 h-6 w-6 border-b border-l border-white/[0.05]"></div>
+  <div class="absolute bottom-6 right-6 h-6 w-6 border-b border-r border-white/[0.05]"></div>
+
+  <div class="relative flex h-full flex-col items-center justify-center">
+    <div class="absolute top-24 left-1/2 flex -translate-x-1/2 items-center gap-3">
+      <span class="h-px w-8 bg-white/[0.06]"></span>
+      <span class="text-[8px] font-medium uppercase tracking-[0.4em] text-white/10">Navegación</span>
+      <span class="h-px w-8 bg-white/[0.06]"></span>
+    </div>
+
+    <div class="flex flex-col items-center gap-1">
+      {links.map((l, i) => (
+        <a
+          href={l.href}
+          class="mobile-nav-link group relative flex items-center gap-5 text-white/70 transition-all duration-500 hover:text-king-accent"
+          style={`transition-delay: ${i * 0.08}s;`}
+        >
+          <span class="font-mono text-[9px] tabular-nums text-white/15 transition-colors duration-300 group-hover:text-king-accent/40">{l.num}</span>
+          <span class="font-serif text-4xl tracking-wide sm:text-5xl md:text-6xl">{l.label}</span>
+        </a>
+      ))}
+    </div>
+
+    <div class="mobile-nav-link my-8 h-px w-16 bg-white/[0.06]" style="transition-delay: 0.2s;"></div>
+
+    <a
+      href="/#coleccion"
+      class="mobile-nav-link group inline-flex items-center gap-3 border border-white/15 px-6 py-3 text-[10px] font-medium uppercase tracking-[0.15em] text-white/60 transition-all duration-500 hover:border-king-accent hover:bg-king-accent/10 hover:text-white"
+      style="transition-delay: 0.25s;"
+    >
+      <span class="h-1.5 w-1.5 rounded-full bg-king-accent/40 transition-colors duration-300 group-hover:bg-king-accent"></span>
+      Comprar Ahora
+    </a>
+
+    <div class="absolute bottom-8 left-0 right-0 flex items-center justify-center gap-6">
+      <span class="text-[8px] font-medium uppercase tracking-[0.35em] text-white/10">Cuero • Acero • Mano</span>
+    </div>
+  </div>
+</div>
+
+<style>
+  #site-header {
+    --scroll-progress: 0;
+    transition:
+      transform 700ms cubic-bezier(0.22, 1, 0.36, 1),
+      color 500ms ease,
+      opacity 500ms ease;
+  }
+
+  .header-shell {
+    max-width: var(--kb-shell-max);
+    border: 1px solid transparent;
+    border-radius: var(--kb-radius-lg);
+    backdrop-filter: blur(calc(10px + (var(--scroll-progress) * 18px))) saturate(calc(1.05 + (var(--scroll-progress) * 0.55)));
+    -webkit-backdrop-filter: blur(calc(10px + (var(--scroll-progress) * 18px))) saturate(calc(1.05 + (var(--scroll-progress) * 0.55)));
+    box-shadow:
+      0 20px 45px rgba(15, 12, 10, calc(var(--scroll-progress) * 0.08)),
+      0 6px 18px rgba(15, 12, 10, calc(var(--scroll-progress) * 0.05));
+    transition:
+      background-color 500ms ease,
+      border-color 500ms ease,
+      box-shadow 500ms ease,
+      border-radius 700ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .header-tier-1 {
+    max-height: 2.5rem;
+    opacity: 1;
+    overflow: hidden;
+    transition:
+      max-height 700ms cubic-bezier(0.22, 1, 0.36, 1),
+      opacity 450ms ease,
+      border-color 450ms ease;
+  }
+
+  .header-tier-2 {
+    padding-top: calc(1.25rem - (var(--scroll-progress) * 0.6rem));
+    padding-bottom: calc(1.25rem - (var(--scroll-progress) * 0.6rem));
+    transition:
+      padding 700ms cubic-bezier(0.22, 1, 0.36, 1),
+      transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .header-wordmark {
+    font-size: calc(0.96rem - (var(--scroll-progress) * 0.12rem));
+    letter-spacing: calc(0.34em - (var(--scroll-progress) * 0.05em));
+    transition:
+      font-size 600ms ease,
+      letter-spacing 600ms ease,
+      opacity 300ms ease;
+  }
+
+  @media (min-width: 768px) {
+    .header-wordmark {
+      font-size: calc(1.04rem - (var(--scroll-progress) * 0.14rem));
+    }
+  }
+
+  .header-logo-rule {
+    width: calc(3.3rem - (var(--scroll-progress) * 1.1rem));
+    opacity: calc(0.18 + (var(--scroll-progress) * 0.06));
+    transition: width 600ms ease, opacity 400ms ease;
+  }
+
+  @media (min-width: 1024px) {
+    .header-logo-rule {
+      width: calc(5.5rem - (var(--scroll-progress) * 1.7rem));
+    }
+  }
+
+  #header-logo:hover .header-logo-rule {
+    opacity: 0.34;
+  }
+
+  .header-divider {
+    background: currentColor;
+    opacity: 0.08;
+    transition: opacity 400ms ease;
+  }
+
+  .header-link {
+    font-size: calc(0.675rem - (var(--scroll-progress) * 0.03rem));
+    font-weight: 500;
+    letter-spacing: calc(0.16em - (var(--scroll-progress) * 0.02em));
+    text-transform: uppercase;
+    transition:
+      color 400ms ease,
+      opacity 400ms ease,
+      letter-spacing 400ms ease,
+      font-size 400ms ease;
+  }
+
+  .header-link-num {
+    font-size: 0.45rem;
+    opacity: 0.28;
+  }
+
+  #header-cta {
+    padding: calc(0.55rem - (var(--scroll-progress) * 0.14rem)) calc(1rem - (var(--scroll-progress) * 0.12rem));
+    border: 1px solid;
+    border-radius: var(--kb-radius-pill);
+    font-size: calc(0.54rem - (var(--scroll-progress) * 0.02rem));
+    font-weight: 600;
+    letter-spacing: calc(0.22em - (var(--scroll-progress) * 0.04em));
+    transition:
+      padding 500ms ease,
+      border-color 400ms ease,
+      background-color 400ms ease,
+      color 400ms ease,
+      letter-spacing 400ms ease;
+  }
+
+  .menu-line {
+    background: currentColor;
+    transition:
+      transform 500ms ease,
+      width 500ms ease,
+      background-color 400ms ease;
+  }
+
+  .header-stitch {
+    background-image: repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 6px,
+      rgba(138, 106, 61, calc(0.14 + (var(--scroll-progress) * 0.12))) 6px,
+      rgba(138, 106, 61, calc(0.14 + (var(--scroll-progress) * 0.12))) 10px
+    );
+    background-repeat: repeat-x;
+    background-size: 10px 1px;
+    opacity: calc(1 - (var(--scroll-progress) * 0.75));
+    transition: opacity 400ms ease;
+  }
+
+  .header-utility-text {
+    transition: color 400ms ease, opacity 300ms ease;
+  }
+
+  .header-utility-link {
+    opacity: 0.34;
+  }
+
+  .header-utility-link:hover {
+    opacity: 0.78;
+  }
+
+  #site-header[data-theme='dark'] {
+    color: #ffffff;
+  }
+
+  #site-header[data-theme='dark'] .header-shell {
+    background-color: rgba(14, 12, 11, calc(var(--scroll-progress) * 0.4));
+    border-color: rgba(255, 255, 255, calc(0.06 + (var(--scroll-progress) * 0.08)));
+  }
+
+  #site-header[data-theme='dark'] .header-tier-1 {
+    border-color: rgba(255, 255, 255, 0.06);
+  }
+
+  #site-header[data-theme='dark'] .header-link {
+    color: rgba(255, 255, 255, 0.62);
+  }
+
+  #site-header[data-theme='dark'] .header-link:hover,
+  #site-header[data-theme='dark'] #header-logo:hover {
+    color: #ffffff;
+  }
+
+  #site-header[data-theme='dark'] #header-cta {
+    border-color: rgba(255, 255, 255, 0.16);
+    color: rgba(255, 255, 255, 0.75);
+  }
+
+  #site-header[data-theme='dark'] #header-cta:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.3);
+    color: #ffffff;
+  }
+
+  #site-header[data-theme='light'] {
+    color: #181512;
+  }
+
+  #site-header[data-theme='light'] .header-shell {
+    background-color: rgba(247, 243, 238, calc(0.82 + (var(--scroll-progress) * 0.1)));
+    border-color: rgba(24, 21, 18, calc(0.08 + (var(--scroll-progress) * 0.04)));
+    box-shadow:
+      0 24px 50px rgba(19, 16, 14, calc(0.07 + (var(--scroll-progress) * 0.06))),
+      0 10px 24px rgba(19, 16, 14, calc(0.03 + (var(--scroll-progress) * 0.03)));
+  }
+
+  #site-header[data-theme='light'] .header-tier-1 {
+    border-color: rgba(24, 21, 18, 0.08);
+  }
+
+  #site-header[data-theme='light'] .header-link {
+    color: rgba(24, 21, 18, 0.58);
+  }
+
+  #site-header[data-theme='light'] .header-link:hover,
+  #site-header[data-theme='light'] #header-logo:hover {
+    color: #181512;
+  }
+
+  #site-header[data-theme='light'] #header-cta {
+    border-color: rgba(24, 21, 18, 0.14);
+    color: rgba(24, 21, 18, 0.76);
+  }
+
+  #site-header[data-theme='light'] #header-cta:hover {
+    background-color: rgba(24, 21, 18, 0.05);
+    border-color: rgba(24, 21, 18, 0.28);
+    color: #181512;
+  }
+
+  #site-header[data-scrolled='true'] .header-shell {
+    border-radius: var(--kb-radius-md);
+  }
+
+  #site-header[data-scrolled='true'] .header-tier-1 {
+    max-height: 0;
+    opacity: 0;
+    border-color: transparent;
+  }
+
+  #site-header[data-scrolled='true'] .header-tier-2 {
+    transform: translateY(-0.02rem);
+  }
+
+  #mobile-menu.is-open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+</style>
+
+<script>
+  const header = document.getElementById('site-header');
+  const menuToggle = document.getElementById('menu-toggle');
+  const mobileMenu = document.getElementById('mobile-menu');
+  const mobileLinks = document.querySelectorAll('.mobile-nav-link');
+  let isMenuOpen = false;
+
+  function updateHeader() {
+    if (!header) return;
+
+    const initial = header.getAttribute('data-initial-theme') || 'dark';
+    const scrolledTheme = header.getAttribute('data-scrolled-theme') || 'light';
+    const threshold = Number(header.getAttribute('data-compact-threshold') || '72');
+    const scrollY = window.scrollY;
+    const progress = Math.min(scrollY / 180, 1);
+    const scrolled = scrollY > threshold;
+
+    header.style.setProperty('--scroll-progress', progress.toFixed(3));
+    header.setAttribute('data-theme', scrolled ? scrolledTheme : initial);
+    header.setAttribute('data-scrolled', String(scrolled));
+  }
+
+  window.addEventListener('scroll', updateHeader, { passive: true });
+  window.addEventListener('resize', updateHeader, { passive: true });
+  updateHeader();
+
+  menuToggle?.addEventListener('click', () => {
+    isMenuOpen = !isMenuOpen;
+
+    if (isMenuOpen) {
+      mobileMenu?.classList.add('is-open');
+      menuToggle.querySelector('.menu-line-1')?.classList.add('rotate-45', 'translate-y-[3.75px]');
+      menuToggle.querySelector('.menu-line-2')?.classList.add('-rotate-45', '-translate-y-[2.25px]', 'w-6');
+      document.body.style.overflow = 'hidden';
+    } else {
+      mobileMenu?.classList.remove('is-open');
+      menuToggle.querySelector('.menu-line-1')?.classList.remove('rotate-45', 'translate-y-[3.75px]');
+      menuToggle.querySelector('.menu-line-2')?.classList.remove('-rotate-45', '-translate-y-[2.25px]', 'w-6');
+      document.body.style.overflow = '';
+    }
+  });
+
+  mobileLinks.forEach((link) => {
+    link.addEventListener('click', () => {
+      if (isMenuOpen) menuToggle?.click();
+    });
+  });
+</script>

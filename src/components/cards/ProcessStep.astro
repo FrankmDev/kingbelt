@@ -1,0 +1,21 @@
+---
+interface Props {
+  num: string;
+  title: string;
+  text: string;
+}
+
+const { num, title, text } = Astro.props;
+---
+
+<div class="flex gap-6 group">
+  <span class="text-king-accent/40 font-display text-2xl group-hover:text-king-accent transition-colors duration-300">
+    {num}
+  </span>
+  <div>
+    <h3 class="text-sm font-medium text-king-text uppercase tracking-wider mb-1">
+      {title}
+    </h3>
+    <p class="text-sm text-king-muted leading-relaxed">{text}</p>
+  </div>
+</div>

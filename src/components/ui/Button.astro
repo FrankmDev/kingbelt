@@ -1,0 +1,205 @@
+---
+interface Props {
+  href?: string;
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'surface' | 'surfaceOutline';
+  size?: 'sm' | 'md' | 'lg';
+  class?: string;
+  target?: string;
+  rel?: string;
+  type?: 'button' | 'submit' | 'reset';
+}
+
+const {
+  href,
+  variant = 'primary',
+  size = 'md',
+  class: className = '',
+  target,
+  rel,
+  type = 'button',
+} = Astro.props;
+
+const baseStyles =
+  'group relative inline-flex items-center justify-center font-medium uppercase overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] focus:outline-none focus-visible:ring-2 focus-visible:ring-king-accent/60 focus-visible:ring-offset-2 focus-visible:ring-offset-king-bg active:scale-[0.98] active:translate-y-px';
+
+const sizes = {
+  sm: 'px-5 py-2 text-[10px] tracking-[0.18em]',
+  md: 'px-6 py-2.5 text-[11px] tracking-[0.2em]',
+  lg: 'px-7 py-3 text-[11px] tracking-[0.22em]',
+};
+
+const variants = {
+  primary:
+    'bg-king-text text-king-surface transition-colors duration-500',
+  secondary:
+    'bg-king-accent text-king-surface transition-colors duration-500',
+  outline:
+    'bg-transparent text-king-text transition-colors duration-500',
+  ghost:
+    'bg-transparent text-king-text transition-colors duration-500',
+  surface:
+    'bg-king-surface text-king-text transition-colors duration-500',
+  surfaceOutline:
+    'bg-transparent text-king-surface transition-colors duration-500',
+};
+
+const fillColors = {
+  primary: 'bg-king-accent',
+  secondary: 'bg-king-accent-light',
+  outline: 'bg-king-text',
+  ghost: 'bg-king-text/5',
+  surface: 'bg-king-accent',
+  surfaceOutline: 'bg-king-surface',
+};
+
+const textHoverClasses = {
+  primary: '',
+  secondary: '',
+  outline: 'group-hover:text-king-surface',
+  ghost: 'group-hover:text-king-accent',
+  surface: 'group-hover:text-king-surface',
+  surfaceOutline: 'group-hover:text-king-text',
+};
+
+const frameType: Record<string, 'double' | 'brackets' | 'none'> = {
+  primary: 'double',
+  secondary: 'double',
+  outline: 'brackets',
+  ghost: 'none',
+  surface: 'double',
+  surfaceOutline: 'brackets',
+};
+
+const frameOuterClasses = {
+  primary: 'border-king-text/20 group-hover:border-king-accent/50',
+  secondary: 'border-king-surface/15 group-hover:border-king-surface/30',
+  outline: '',
+  ghost: '',
+  surface: 'border-king-text/10 group-hover:border-king-accent/40',
+  surfaceOutline: '',
+};
+
+const frameInnerClasses = {
+  primary: 'border-king-accent/40',
+  secondary: 'border-king-surface/30',
+  outline: '',
+  ghost: '',
+  surface: 'border-king-accent/30',
+  surfaceOutline: '',
+};
+
+const bracketClasses = {
+  primary: '',
+  secondary: '',
+  outline: 'text-king-text/30 group-hover:text-king-text/60',
+  ghost: '',
+  surface: '',
+  surfaceOutline: 'text-king-surface/40 group-hover:text-king-surface/80',
+};
+
+const classes = `${baseStyles} ${sizes[size]} ${variants[variant]} ${className}`;
+---
+
+{href ? (
+  <a href={href} class={classes} target={target} rel={rel}>
+    <span class={`kb-fill absolute inset-0 origin-bottom ${fillColors[variant]}`} aria-hidden="true" />
+
+    {frameType[variant] === 'double' && (
+      <>
+        <span class={`kb-frame-outer absolute inset-0 border pointer-events-none transition-colors duration-500 ${frameOuterClasses[variant]}`} aria-hidden="true" />
+        <span class={`kb-frame-inner absolute inset-[3px] border pointer-events-none opacity-0 transition-all duration-500 group-hover:opacity-100 ${frameInnerClasses[variant]}`} aria-hidden="true" />
+      </>
+    )}
+
+    {frameType[variant] === 'brackets' && (
+      <span class={`kb-brackets absolute inset-0 pointer-events-none transition-colors duration-500 ${bracketClasses[variant]}`} aria-hidden="true" />
+    )}
+
+    {variant === 'ghost' && (
+      <span class="kb-ghost-line" aria-hidden="true" />
+    )}
+
+    <span class={`relative z-10 flex items-center gap-2 transition-all duration-500 group-hover:gap-3 ${textHoverClasses[variant]}`}>
+      <slot />
+    </span>
+  </a>
+) : (
+  <button class={classes} type={type}>
+    <span class={`kb-fill absolute inset-0 origin-bottom ${fillColors[variant]}`} aria-hidden="true" />
+
+    {frameType[variant] === 'double' && (
+      <>
+        <span class={`kb-frame-outer absolute inset-0 border pointer-events-none transition-colors duration-500 ${frameOuterClasses[variant]}`} aria-hidden="true" />
+        <span class={`kb-frame-inner absolute inset-[3px] border pointer-events-none opacity-0 transition-all duration-500 group-hover:opacity-100 ${frameInnerClasses[variant]}`} aria-hidden="true" />
+      </>
+    )}
+
+    {frameType[variant] === 'brackets' && (
+      <span class={`kb-brackets absolute inset-0 pointer-events-none transition-colors duration-500 ${bracketClasses[variant]}`} aria-hidden="true" />
+    )}
+
+    {variant === 'ghost' && (
+      <span class="kb-ghost-line" aria-hidden="true" />
+    )}
+
+    <span class={`relative z-10 flex items-center gap-2 transition-all duration-500 group-hover:gap-3 ${textHoverClasses[variant]}`}>
+      <slot />
+    </span>
+  </button>
+)}
+
+<style>
+  .kb-fill {
+    transform: scaleY(0);
+    transform-origin: bottom center;
+    transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .group:hover .kb-fill,
+  .group:focus-visible .kb-fill {
+    transform: scaleY(1);
+  }
+
+  .kb-brackets {
+    background-image:
+      linear-gradient(currentColor, currentColor),
+      linear-gradient(currentColor, currentColor),
+      linear-gradient(currentColor, currentColor),
+      linear-gradient(currentColor, currentColor),
+      linear-gradient(currentColor, currentColor),
+      linear-gradient(currentColor, currentColor),
+      linear-gradient(currentColor, currentColor),
+      linear-gradient(currentColor, currentColor);
+    background-size: 10px 1px, 1px 10px, 10px 1px, 1px 10px, 10px 1px, 1px 10px, 10px 1px, 1px 10px;
+    background-position:
+      0 0, 0 0,
+      100% 0, 100% 0,
+      0 100%, 0 100%,
+      100% 100%, 100% 100%;
+    background-repeat: no-repeat;
+    transition: background-size 0.5s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.5s;
+    opacity: 0.5;
+  }
+
+  .group:hover .kb-brackets,
+  .group:focus-visible .kb-brackets {
+    background-size: 14px 1px, 1px 14px, 14px 1px, 1px 14px, 14px 1px, 1px 14px, 14px 1px, 1px 14px;
+    opacity: 0.8;
+  }
+
+  .kb-ghost-line {
+    position: absolute;
+    bottom: 10px;
+    left: 24px;
+    right: 24px;
+    height: 1px;
+    background: currentColor;
+    transform: scaleX(0);
+    transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .group:hover .kb-ghost-line,
+  .group:focus-visible .kb-ghost-line {
+    transform: scaleX(1);
+  }
+</style>

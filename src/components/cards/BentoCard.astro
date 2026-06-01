@@ -1,0 +1,28 @@
+---
+interface Props {
+  title: string;
+  text: string;
+  image: string;
+  spans: string;
+}
+
+const { title, text, image, spans } = Astro.props;
+---
+
+<div class={`relative overflow-hidden group ${spans}`}>
+  <div class="bento-img absolute inset-0">
+    <img
+      src={image}
+      alt={title}
+      class="w-full h-full object-cover grayscale-[0.3] contrast-110 brightness-90 transition-all duration-700 group-hover:scale-105 group-hover:grayscale-0"
+      loading="lazy"
+    />
+  </div>
+  <div class="absolute inset-0 bg-gradient-to-t from-king-text/80 via-king-text/20 to-transparent"></div>
+  <div class="absolute bottom-0 left-0 p-6 md:p-8">
+    <h3 class="text-xl md:text-2xl font-display text-king-surface tracking-tight mb-2">
+      {title}
+    </h3>
+    <p class="text-sm text-king-surface/80 max-w-xs leading-relaxed">{text}</p>
+  </div>
+</div>

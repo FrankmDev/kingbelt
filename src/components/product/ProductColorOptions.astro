@@ -1,0 +1,25 @@
+---
+import type { Product } from '../../data/products';
+
+interface Props {
+  colors: Product['colors'];
+}
+
+const { colors } = Astro.props;
+---
+
+<div class="mb-10">
+  <h3 class="text-xs uppercase tracking-[0.2em] text-king-text mb-3 font-medium">Colores</h3>
+  <div class="flex items-center gap-3">
+    {colors.map((color) => (
+      <div class="flex flex-col items-center gap-1.5">
+        <span
+          class="w-8 h-8 rounded-full border-2 border-king-text/10 shadow-sm"
+          style={`background-color: ${color.hex};`}
+          title={color.name}
+        ></span>
+        <span class="text-[10px] text-king-muted uppercase tracking-wider">{color.name}</span>
+      </div>
+    ))}
+  </div>
+</div>

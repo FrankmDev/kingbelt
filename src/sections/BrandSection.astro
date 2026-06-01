@@ -1,0 +1,211 @@
+---
+import type { ImageMetadata } from 'astro';
+import { Image } from 'astro:assets';
+import SectionHeader from '../components/common/SectionHeader.astro';
+
+const allImages = Object.values(
+  import.meta.glob<{ default: ImageMetadata }>('../assets/products/*.avif', {
+    eager: true,
+  })
+)
+  .map((entry) => entry.default)
+  .sort((a, b) => a.src.localeCompare(b.src));
+
+const values = [
+  {
+    num: '01',
+    title: 'Fabricación artesanal',
+    text: 'Corte, remate y revisión final pieza a pieza. El acabado no se delega al azar.',
+  },
+  {
+    num: '02',
+    title: 'Producto nacional',
+    text: 'Un proceso próximo, controlado y pensado para mantener criterio en cada tirada.',
+  },
+  {
+    num: '03',
+    title: 'Cuero de alta calidad',
+    text: 'Piel con grosor, tacto y pátina. Una pieza que debe mejorar con el uso.',
+  },
+] as const;
+
+const markers = ['Hecho a mano', 'Acero 316L', 'Cuero real', 'Uso diario'];
+---
+
+<section id="marca" class="brand-about relative overflow-hidden bg-king-bg py-24 md:py-32 lg:py-36" data-gsap-brand>
+  <div class="brand-field pointer-events-none absolute inset-0"></div>
+  <div class="brand-soft-glow pointer-events-none absolute right-[-12rem] top-24 h-[34rem] w-[34rem] rounded-full bg-king-accent/[0.065] blur-[150px]"></div>
+
+  <div class="kb-shell-wide relative">
+    <div class="brand-hero mb-12 md:mb-16">
+      <SectionHeader
+        eyebrow="La marca"
+        body="KingBelt nace para hacer una pieza honesta: sólida en la mano, limpia en la forma y preparada para envejecer bien. No busca parecer nueva siempre; busca acompañarte mejor cada año."
+        ref="Est. España / Road gear"
+        size="xl"
+      >
+        <Fragment slot="title">
+          Carácter
+          <span class="block italic text-king-text/72">sin disfraz.</span>
+        </Fragment>
+      </SectionHeader>
+    </div>
+
+    <div class="brand-dossier grid gap-5 lg:grid-cols-[minmax(0,0.88fr)_20rem] lg:gap-6">
+      <div class="brand-image-panel group relative min-h-[32rem] overflow-hidden rounded-[var(--kb-radius-lg)] border border-king-text/[0.08] bg-[#14110d] md:min-h-[39rem] lg:min-h-[42rem]">
+        <Image
+          src={allImages[0]}
+          alt="Cinturon KingBelt en cuero natural"
+          class="brand-main-image absolute inset-0 h-full w-full object-cover"
+          loading="lazy"
+          sizes="(min-width: 1024px) 68vw, 100vw"
+        />
+        <div class="absolute inset-0 bg-[linear-gradient(180deg,rgba(9,8,7,0.02)_0%,rgba(9,8,7,0.16)_44%,rgba(9,8,7,0.72)_100%)]"></div>
+        <div class="absolute inset-5 rounded-[calc(var(--kb-radius-lg)-0.5rem)] border border-white/[0.075]"></div>
+
+        <div class="brand-image-caption absolute bottom-0 left-0 right-0 grid gap-6 p-5 md:grid-cols-[minmax(0,1fr)_auto] md:items-end md:p-8 lg:p-10">
+          <p class="max-w-[36rem] font-serif text-[2rem] italic leading-[1.03] text-white/88 md:text-[3rem] lg:text-[3.45rem]">
+            La diferencia se nota antes de leer la etiqueta.
+          </p>
+          <div class="inline-flex w-fit rounded-full border border-white/[0.12] bg-white/[0.055] px-4 py-2 text-[10px] font-medium uppercase tracking-[0.22em] text-white/58 backdrop-blur-[var(--kb-blur-sm)]">
+            Road gear, not fashion
+          </div>
+        </div>
+      </div>
+
+      <aside class="brand-rail relative grid gap-3 lg:grid-rows-[1fr_auto]">
+        <div class="brand-note relative overflow-hidden rounded-[var(--kb-radius-lg)] border border-king-border/80 bg-white/34 p-6 backdrop-blur-[var(--kb-blur-sm)] lg:p-7">
+          <div class="absolute right-5 top-5 font-mono text-[10px] uppercase tracking-[0.18em] text-king-accent/64">ES-01</div>
+          <span class="mb-8 block text-[10px] font-medium uppercase tracking-[0.24em] text-king-muted/58">Taller</span>
+          <p class="font-serif text-[1.85rem] italic leading-[1.12] text-king-text/82">
+            Lo importante no se ve en una ficha técnica. Se nota al abrocharlo.
+          </p>
+        </div>
+
+        <div class="brand-marker-list rounded-[var(--kb-radius-lg)] border border-king-border/80 bg-king-bg/64 p-4">
+          {markers.map((marker) => (
+            <div class="flex items-center justify-between gap-4 border-b border-king-border/70 py-3 last:border-b-0">
+              <span class="text-[10px] font-medium uppercase tracking-[0.2em] text-king-text/66">{marker}</span>
+              <span class="h-1.5 w-1.5 rounded-full bg-king-accent/42"></span>
+            </div>
+          ))}
+        </div>
+      </aside>
+    </div>
+
+    <div class="brand-values mt-8 grid border-y border-king-border/80 md:mt-10 md:grid-cols-3">
+      {values.map((value, index) => (
+        <article
+          class:list={[
+            'brand-value group relative py-8 md:px-7 lg:px-9',
+            index < values.length - 1 ? 'md:border-r md:border-king-border/80' : '',
+          ]}
+        >
+          <div class="mb-8 flex items-center justify-between gap-5">
+            <span class="font-mono text-[10px] uppercase tracking-[0.18em] text-king-accent/70">{value.num}</span>
+            <span class="h-px w-10 bg-king-accent/24 transition-all duration-500 group-hover:w-16"></span>
+          </div>
+          <h3 class="mb-4 text-[1.85rem] font-light leading-[0.95] tracking-[var(--kb-title-tracking)] text-king-text md:text-[2.15rem]">
+            {value.title}
+          </h3>
+          <p class="max-w-[25rem] text-[14px] leading-[1.75] text-king-muted">
+            {value.text}
+          </p>
+        </article>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .brand-about {
+    isolation: isolate;
+  }
+
+  .brand-field {
+    opacity: 0.42;
+    background-image:
+      linear-gradient(90deg, rgba(138, 106, 61, 0.07) 0, rgba(138, 106, 61, 0.07) 1px, transparent 1px),
+      linear-gradient(rgba(26, 26, 26, 0.026) 1px, transparent 1px);
+    background-size: 10rem 100%, 100% 5.5rem;
+    mask-image: linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.82) 14%, transparent 92%);
+  }
+
+  .brand-image-panel {
+    box-shadow: 0 28px 80px rgba(18, 15, 12, 0.12);
+  }
+
+  .brand-main-image {
+    filter: saturate(0.78) contrast(1.06);
+    transform: scale(1.01);
+    transition:
+      transform 1300ms var(--kb-ease-out),
+      filter 900ms var(--kb-ease-out);
+  }
+
+  .brand-image-panel:hover .brand-main-image {
+    filter: saturate(0.94) contrast(1.08);
+    transform: scale(1.04);
+  }
+
+  .brand-note,
+  .brand-marker-list {
+    box-shadow:
+      0 18px 46px rgba(18, 15, 12, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.66);
+  }
+
+  .brand-note::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(circle at top right, rgba(138, 106, 61, 0.12), transparent 42%);
+  }
+
+  .brand-value {
+    transition: background-color 500ms var(--kb-ease-out);
+  }
+
+  .brand-value:hover {
+    background-color: rgba(255, 255, 255, 0.24);
+  }
+
+  @media (max-width: 767px) {
+    .brand-value + .brand-value {
+      border-top: 1px solid rgba(229, 224, 219, 0.82);
+    }
+  }
+</style>
+
+<script>
+  import gsap from 'gsap';
+
+  const section = document.querySelector('[data-gsap-brand]');
+  if (section) {
+    const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
+
+    tl.from(section.querySelector('.brand-hero'), {
+      y: 18,
+      opacity: 0,
+      duration: 0.75,
+    })
+      .from(section.querySelector('.brand-image-panel'), {
+        y: 30,
+        opacity: 0,
+        duration: 0.85,
+      }, 0.18)
+      .from(section.querySelectorAll('.brand-rail > *'), {
+        x: 18,
+        opacity: 0,
+        duration: 0.68,
+        stagger: 0.07,
+      }, 0.32)
+      .from(section.querySelectorAll('.brand-value'), {
+        y: 16,
+        opacity: 0,
+        duration: 0.52,
+        stagger: 0.07,
+      }, 0.44);
+  }
+</script>

@@ -1,0 +1,26 @@
+---
+import type { Product } from '../../data/products';
+import ProductCard from './ProductCard.astro';
+
+interface Props {
+  products: Product[];
+}
+
+const { products } = Astro.props;
+---
+
+{products.length > 0 && (
+  <div>
+    <div class="flex items-end justify-between mb-10">
+      <h2 class="font-display text-3xl md:text-4xl text-king-text tracking-tight">También Te Puede Gustar</h2>
+      <a href="/#coleccion" class="text-xs uppercase tracking-widest text-king-muted hover:text-king-accent transition-colors hidden md:block">
+        Ver Todo
+      </a>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+      {products.map((product) => (
+        <ProductCard product={product} />
+      ))}
+    </div>
+  </div>
+)}

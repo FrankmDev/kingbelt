@@ -1,0 +1,312 @@
+---
+import { hero } from '../data/home';
+import Button from '../components/ui/Button.astro';
+---
+
+<section
+  id="inicio"
+  class="hero-shell grain-overlay relative min-h-[100dvh] overflow-hidden bg-[#0c0b0a]"
+  data-gsap-hero
+>
+  <div class="hero-bg absolute inset-0">
+    <video
+      src="/heroVideo.mp4"
+      autoplay
+      muted
+      loop
+      playsinline
+      poster="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=1920&q=80"
+      class="h-full w-full object-cover"
+      style="filter: saturate(0.42) contrast(1.18) brightness(0.58);"
+    />
+  </div>
+
+  <div class="hero-overlay absolute inset-0"></div>
+  <div class="hero-grid absolute inset-0 pointer-events-none"></div>
+  <div class="hero-vignette absolute inset-0 pointer-events-none"></div>
+  <div class="hero-spotlight absolute inset-0 pointer-events-none"></div>
+
+  <div class="absolute inset-8 z-[2] pointer-events-none md:inset-12 lg:inset-16">
+    <div class="hero-frame hero-frame-tl kb-corner-frame"></div>
+    <div class="hero-frame hero-frame-tr kb-corner-frame"></div>
+    <div class="hero-frame hero-frame-bl kb-corner-frame"></div>
+    <div class="hero-frame hero-frame-br kb-corner-frame"></div>
+  </div>
+
+  <div class="hidden lg:block absolute right-16 top-1/2 z-[3] -translate-y-1/2">
+    <span
+      class="hero-side-text block text-[8px] font-medium uppercase tracking-[0.5em] text-white/[0.12]"
+      style="writing-mode: vertical-rl; text-orientation: mixed;"
+    >
+      Artesanía • Cuero • Acero 316L
+    </span>
+  </div>
+  <div class="hidden lg:block absolute left-16 top-1/2 z-[3] -translate-y-1/2">
+    <span
+      class="hero-side-text-left block text-[8px] font-medium uppercase tracking-[0.5em] text-white/[0.12]"
+      style="writing-mode: vertical-rl; text-orientation: mixed; transform: rotate(180deg);"
+    >
+      Est. 2026 • España
+    </span>
+  </div>
+
+  <div class="hero-inner relative z-10 mx-auto flex min-h-[100dvh] flex-col justify-center px-6 pb-30 pt-32 text-center md:px-10 md:pb-32 md:pt-38 lg:px-16">
+    <div class="hero-copy mx-auto">
+      <div class="hero-badge mx-auto mb-8 inline-flex items-center md:mb-12">
+        <div class="hero-badge-inner relative flex items-center gap-3 overflow-hidden px-6 py-3 md:px-7">
+          <span class="absolute inset-0 rounded-full border border-white/[0.08]"></span>
+          <span class="absolute inset-[5px] rounded-full border border-white/[0.04]"></span>
+          <span class="h-1.5 w-1.5 rounded-full bg-king-accent/55"></span>
+          <span class="text-[9px] font-medium uppercase tracking-[0.34em] text-white/58">
+            {hero.eyebrow}
+          </span>
+          <span class="h-1.5 w-1.5 rounded-full bg-king-accent/35"></span>
+        </div>
+      </div>
+
+      <div class="hero-kicker mb-5 text-[10px] font-medium uppercase tracking-[0.42em] text-king-accent/68 md:mb-7">
+        KingBelt
+      </div>
+
+      <h1 class="font-serif leading-[0.86] tracking-[-0.03em] mb-8 md:mb-10">
+        <span class="hero-title-1 block text-white text-[3.2rem] sm:text-5xl md:text-6xl lg:text-7xl xl:text-[5.8rem] 2xl:text-[6.8rem] font-light">
+          Para los que no
+        </span>
+        <span class="hero-title-2 block text-white/94 text-[3.2rem] sm:text-5xl md:text-6xl lg:text-7xl xl:text-[5.8rem] 2xl:text-[6.8rem] font-light italic mt-2 md:mt-3">
+          siguen el <span class="not-italic font-medium text-king-accent">camino</span>.
+        </span>
+      </h1>
+
+      <div class="hero-divider flex items-center justify-center gap-0 mb-8 md:mb-10">
+        <span class="hero-divider-line hero-divider-line-left h-px w-20 md:w-28"></span>
+        <span class="mx-4 h-1.5 w-1.5 rounded-full bg-king-accent/38"></span>
+        <span class="text-[9px] font-medium uppercase tracking-[0.3em] text-white/28">Road gear, not fashion</span>
+        <span class="mx-4 h-1.5 w-1.5 rounded-full bg-king-accent/38"></span>
+        <span class="hero-divider-line hero-divider-line-right h-px w-20 md:w-28"></span>
+      </div>
+
+      <p class="hero-sub mx-auto mb-10 max-w-[42rem] text-[14px] leading-[1.95] text-white/78 md:mb-14 md:text-[16px]">
+        {hero.body}
+      </p>
+
+      <div class="hero-cta-wrap flex flex-col items-center justify-center gap-4 sm:flex-row">
+        <Button
+          href={hero.primaryCta.href}
+          variant="secondary"
+          size="md"
+          class="rounded-full shadow-[0_16px_40px_rgba(138,106,61,0.24)]"
+        >
+          {hero.primaryCta.label}
+          <svg class="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12h14M12 5l7 7-7 7" />
+          </svg>
+        </Button>
+        <Button
+          href={hero.secondaryCta.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          variant="surfaceOutline"
+          size="md"
+          class="rounded-full border-white/18 text-white/68 hover:border-white/40 hover:bg-white/[0.04] hover:text-white"
+        >
+          {hero.secondaryCta.label}
+        </Button>
+      </div>
+    </div>
+
+    <div class="hero-bottom absolute bottom-0 left-0 right-0 z-10 border-t border-white/[0.06]">
+      <div class="hero-bottom-inner mx-auto px-6 md:px-10">
+        <div class="flex flex-col items-center justify-between gap-5 py-4 md:flex-row md:gap-8 md:py-5">
+          <div class="hero-info-strip flex flex-wrap items-center justify-center gap-x-5 gap-y-3 md:gap-x-8">
+            <div class="hero-info-item">
+              <span class="hero-info-num">01</span>
+              <span class="hero-info-label">Cuero natural</span>
+            </div>
+            <span class="hero-info-sep hidden h-3 w-px bg-white/[0.08] md:block"></span>
+            <div class="hero-info-item">
+              <span class="hero-info-num">02</span>
+              <span class="hero-info-label">Acero quirúrgico</span>
+            </div>
+            <span class="hero-info-sep hidden h-3 w-px bg-white/[0.08] md:block"></span>
+            <div class="hero-info-item">
+              <span class="hero-info-num">03</span>
+              <span class="hero-info-label">Hecho a mano</span>
+            </div>
+            <span class="hero-info-sep hidden h-3 w-px bg-white/[0.08] md:block"></span>
+            <div class="hero-info-item hidden md:flex">
+              <span class="hero-info-num">04</span>
+              <span class="hero-info-label">Garantía de por vida</span>
+            </div>
+          </div>
+
+          <div class="hero-scroll flex items-center gap-4">
+            <span class="text-[8px] font-medium uppercase tracking-[0.42em] text-white/22">Descubrir</span>
+            <div class="relative h-px w-16 overflow-hidden bg-white/[0.08]">
+              <div class="animate-scroll-line absolute inset-y-0 left-0 w-6 bg-king-accent/55"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .hero-shell {
+    background:
+      radial-gradient(circle at top, rgba(138, 106, 61, 0.1), transparent 34%),
+      #0c0b0a;
+  }
+
+  .hero-overlay {
+    background:
+      linear-gradient(to bottom, rgba(0, 0, 0, 0.34), rgba(0, 0, 0, 0.12) 32%, rgba(0, 0, 0, 0.8) 100%),
+      linear-gradient(100deg, rgba(7, 7, 7, 0.75) 10%, rgba(7, 7, 7, 0.18) 50%, rgba(7, 7, 7, 0.6) 100%);
+  }
+
+  .hero-grid {
+    opacity: 0.28;
+    background-image:
+      linear-gradient(90deg, rgba(138, 106, 61, 0.08) 0, rgba(138, 106, 61, 0.08) 1px, transparent 1px, transparent 24%),
+      linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+    background-size: 150px 100%, 100% 100%;
+  }
+
+  .hero-vignette {
+    background: radial-gradient(ellipse 60% 56% at 50% 40%, transparent 0%, rgba(0, 0, 0, 0.16) 58%, rgba(0, 0, 0, 0.68) 100%);
+  }
+
+  .hero-spotlight {
+    background:
+      radial-gradient(circle at 50% 34%, rgba(255, 255, 255, 0.07), transparent 24%),
+      radial-gradient(circle at 50% 62%, rgba(138, 106, 61, 0.08), transparent 28%);
+    mix-blend-mode: screen;
+  }
+
+  .hero-inner {
+    max-width: var(--kb-shell-max);
+  }
+
+  .hero-copy {
+    max-width: var(--kb-shell-copy);
+  }
+
+  .hero-bottom-inner {
+    max-width: var(--kb-shell-narrow);
+  }
+
+  .hero-frame {
+    position: absolute;
+  }
+
+  .hero-frame-tl { top: 0; left: 0; }
+  .hero-frame-tr { top: 0; right: 0; transform: scaleX(-1); }
+  .hero-frame-bl { bottom: 0; left: 0; transform: scaleY(-1); }
+  .hero-frame-br { right: 0; bottom: 0; transform: scale(-1); }
+
+  .hero-divider-line-left {
+    background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.14));
+  }
+
+  .hero-divider-line-right {
+    background: linear-gradient(to left, transparent, rgba(255, 255, 255, 0.14));
+  }
+
+  .hero-badge-inner {
+    border-radius: var(--kb-radius-pill);
+    background: var(--kb-surface-dark);
+    backdrop-filter: blur(var(--kb-blur-sm));
+    -webkit-backdrop-filter: blur(var(--kb-blur-sm));
+  }
+
+  .hero-info-num {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.64rem;
+    letter-spacing: 0.18em;
+    color: rgba(138, 106, 61, 0.74);
+  }
+
+  .hero-info-label {
+    margin: 0;
+    font-size: 0.66rem;
+    font-weight: 600;
+    line-height: 1.3;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.8);
+  }
+
+  .hero-info-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+  }
+
+  .hero-info-label {
+    font-size: 0.62rem;
+    color: rgba(255, 255, 255, 0.4);
+  }
+
+  @keyframes scroll-line {
+    0% {
+      transform: translateX(-130%);
+      opacity: 0;
+    }
+    18% {
+      opacity: 1;
+    }
+    100% {
+      transform: translateX(360%);
+      opacity: 0;
+    }
+  }
+
+  .animate-scroll-line {
+    animation: scroll-line 2.8s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  }
+
+  @media (max-width: 767px) {
+    .hero-grid {
+      background-size: 96px 100%, 100% 100%;
+    }
+
+    .hero-watermark {
+      font-size: clamp(10rem, 36vw, 16rem);
+    }
+
+  }
+</style>
+
+<script>
+  import gsap from 'gsap';
+
+  const scope = document.querySelector('[data-gsap-hero]');
+  if (scope) {
+    const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
+
+    tl.from(scope.querySelector('.hero-bg'), { scale: 1.08, opacity: 0, duration: 2.1 })
+      .from(scope.querySelector('.hero-overlay'), { opacity: 0, duration: 1.3 }, 0)
+      .from(scope.querySelector('.hero-watermark'), { opacity: 0, scale: 0.94, duration: 1.9 }, 0.2)
+      .from(scope.querySelectorAll('.hero-frame'), {
+        opacity: 0,
+        scale: 0.55,
+        duration: 0.9,
+        stagger: 0.06,
+      }, 0.35)
+      .from(scope.querySelector('.hero-badge'), { y: 16, opacity: 0, duration: 0.85 }, 0.7)
+      .from(scope.querySelector('.hero-kicker'), { y: 12, opacity: 0, duration: 0.75 }, 0.82)
+      .from(scope.querySelector('.hero-title-1'), { y: 40, opacity: 0, duration: 1.2 }, 0.95)
+      .from(scope.querySelector('.hero-title-2'), { y: 40, opacity: 0, duration: 1.2 }, 1.06)
+      .from(scope.querySelector('.hero-divider'), {
+        scaleX: 0,
+        opacity: 0,
+        duration: 0.8,
+        transformOrigin: 'center',
+      }, 1.2)
+      .from(scope.querySelector('.hero-sub'), { y: 18, opacity: 0, duration: 0.9 }, 1.3)
+      .from(scope.querySelector('.hero-cta-wrap'), { y: 14, opacity: 0, duration: 0.85 }, 1.42)
+      .from(scope.querySelector('.hero-bottom'), { y: 18, opacity: 0, duration: 0.75 }, 1.56)
+      .from(scope.querySelector('.hero-side-text'), { opacity: 0, duration: 1 }, 1.05)
+      .from(scope.querySelector('.hero-side-text-left'), { opacity: 0, duration: 1 }, 1.1);
+  }
+</script>

@@ -1,0 +1,451 @@
+---
+import Button from '../ui/Button.astro';
+import Icon from '../ui/Icon.astro';
+import { footerNav } from '../../data/navigation';
+
+const socialLinks = [
+  { label: 'Instagram', href: 'https://instagram.com/kingbelt', icon: 'instagram' as const },
+  { label: 'Email', href: 'mailto:hola@kingbelt.com', icon: 'mail' as const },
+];
+
+const workshopSpecs = [
+  { num: '01', label: 'Cuero grano completo' },
+  { num: '02', label: 'Hecho a mano' },
+  { num: '03', label: 'Producto 100% nacional' },
+  { num: '04', label: 'Acero 316L' },
+];
+
+const legalLinks = [
+  { label: 'Privacidad', href: '#' },
+  { label: 'Terminos', href: '#' },
+  { label: 'Envios', href: '#' },
+];
+---
+
+<footer id="contacto" class="overflow-x-hidden w-full max-w-full" data-gsap-footer>
+
+  {/* ====================== CTA BANNER ====================== */}
+  <section class="cta-shell relative overflow-hidden bg-[#0c0b0a] grain-overlay" data-cta-section>
+    {/* Background layers */}
+    <div class="cta-bg pointer-events-none absolute inset-0"></div>
+    <div class="cta-grid pointer-events-none absolute inset-0"></div>
+    <div class="cta-vignette pointer-events-none absolute inset-0"></div>
+    <div class="cta-spotlight pointer-events-none absolute inset-0"></div>
+    <div class="pointer-events-none absolute left-1/2 top-1/3 h-[28rem] w-[28rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-king-accent/[0.07] blur-[140px]"></div>
+
+    {/* Corner frames */}
+    <div class="absolute inset-8 z-[2] pointer-events-none md:inset-12 lg:inset-16">
+      <div class="cta-frame cta-frame-tl kb-corner-frame"></div>
+      <div class="cta-frame cta-frame-tr kb-corner-frame"></div>
+      <div class="cta-frame cta-frame-bl kb-corner-frame"></div>
+      <div class="cta-frame cta-frame-br kb-corner-frame"></div>
+    </div>
+
+    {/* Vertical side text */}
+    <div class="hidden lg:block absolute right-10 top-1/2 z-[3] -translate-y-1/2 xl:right-14">
+      <span
+        class="cta-side-text block text-[8px] font-medium uppercase tracking-[0.5em] text-white/[0.08]"
+        style="writing-mode: vertical-rl; text-orientation: mixed;"
+      >
+        Cuero • Acero • Mano
+      </span>
+    </div>
+    <div class="hidden lg:block absolute left-10 top-1/2 z-[3] -translate-y-1/2 xl:left-14">
+      <span
+        class="cta-side-text-left block text-[8px] font-medium uppercase tracking-[0.5em] text-white/[0.08]"
+        style="writing-mode: vertical-rl; text-orientation: mixed; transform: rotate(180deg);"
+      >
+        Est. 2026 • Espana
+      </span>
+    </div>
+
+    {/* Main content */}
+    <div class="kb-shell-wide relative z-10 py-24 text-center md:py-32 lg:py-40">
+
+      {/* Eyebrow */}
+      <div class="cta-eyebrow mb-8 flex items-center justify-center gap-0 md:mb-10">
+        <span class="h-px w-16 bg-gradient-to-r from-transparent to-white/10 md:w-24"></span>
+        <span class="mx-4 h-1 w-1 rounded-full bg-king-accent/30"></span>
+        <span class="text-[11px] font-medium uppercase tracking-[0.3em] text-white/30">
+          Hecho a mano en Espana
+        </span>
+        <span class="mx-4 h-1 w-1 rounded-full bg-king-accent/30"></span>
+        <span class="h-px w-16 bg-gradient-to-l from-transparent to-white/10 md:w-24"></span>
+      </div>
+
+      {/* Title — large serif */}
+      <h2 class="cta-title font-serif leading-[0.88] tracking-[-0.02em] mb-8 md:mb-10">
+        <span class="cta-title-line-1 block text-[2.6rem] font-light italic text-white sm:text-5xl md:text-6xl lg:text-7xl xl:text-[5rem]">
+          Listo para la
+        </span>
+        <span class="cta-title-line-2 block text-[2.6rem] font-light text-white sm:text-5xl md:text-6xl lg:text-7xl xl:text-[5rem] mt-2 md:mt-3">
+          carretera<span class="font-medium not-italic text-king-accent">?</span>
+        </span>
+      </h2>
+
+      {/* Divider */}
+      <div class="cta-divider flex items-center justify-center gap-0 mb-8 md:mb-10">
+        <span class="h-px w-20 bg-gradient-to-r from-transparent to-white/10 md:w-28"></span>
+        <span class="mx-4 h-1 w-1 rounded-full bg-king-accent/30"></span>
+        <span class="h-px w-20 bg-gradient-to-l from-transparent to-white/10 md:w-28"></span>
+      </div>
+
+      {/* Body */}
+      <p class="cta-body mx-auto mb-10 max-w-lg text-[15px] font-light leading-[1.85] text-white/70 md:mb-14 md:text-[16px]">
+        Unete a los que entienden que el estilo empieza por los detalles. Tu proximo cinturón te espera.
+      </p>
+
+      {/* CTA Button */}
+      <div class="cta-btn-wrap flex flex-col items-center justify-center gap-4 sm:flex-row">
+        <Button
+          href="/#coleccion"
+          variant="secondary"
+          size="md"
+          class="rounded-full shadow-[0_16px_40px_rgba(138,106,61,0.24)]"
+        >
+          Ver Coleccion Completa
+          <svg class="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12h14M12 5l7 7-7 7" />
+          </svg>
+        </Button>
+      </div>
+
+      {/* Bottom info strip */}
+      <div class="cta-bottom-strip relative mx-auto mt-16 max-w-2xl overflow-hidden rounded-[var(--kb-radius-lg)] border border-white/[0.06] bg-white/[0.03] px-6 py-5 backdrop-blur-[var(--kb-blur-sm)] md:mt-20 md:px-10 md:py-6">
+        <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(138,106,61,0.08),transparent_40%)]"></div>
+        <div class="relative flex flex-wrap items-center justify-center gap-x-6 gap-y-3 md:gap-x-10">
+          {workshopSpecs.map((spec) => (
+            <div class="cta-spec-item flex items-center gap-2">
+              <span class="font-mono text-[10px] tabular-nums text-king-accent/45">{spec.num}</span>
+              <span class="text-[10px] font-medium uppercase tracking-[0.16em] text-white/25">{spec.label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {/* ====================== FOOTER BOTTOM ====================== */}
+  <div class="footer-shell relative overflow-hidden bg-king-bg" data-footer-bottom>
+    {/* Background grid */}
+    <div class="footer-bg pointer-events-none absolute inset-0"></div>
+    <div class="footer-vignette pointer-events-none absolute inset-0"></div>
+
+    {/* Stitch line separator */}
+    <div class="footer-stitch relative z-10"></div>
+
+    <div class="kb-shell-wide relative z-10 pb-12 pt-16 md:pb-16 md:pt-20">
+
+      {/* Main grid */}
+      <div class="footer-grid grid grid-cols-1 gap-12 md:grid-cols-12 md:gap-8 mb-14 md:mb-16">
+
+        {/* Brand column */}
+        <div class="footer-brand-col md:col-span-5">
+          <a href="/" class="group inline-flex items-center gap-3 mb-5">
+            <span class="font-display text-xl tracking-[0.25em] uppercase text-king-text transition-colors duration-500 md:text-2xl">
+              KingBelt
+            </span>
+            <span class="hidden md:block h-px w-8 bg-king-accent/20 transition-all duration-500 group-hover:w-14 group-hover:bg-king-accent/40"></span>
+          </a>
+          <p class="mb-6 max-w-xs text-[13px] font-light leading-[1.8] text-king-muted/70">
+            Cinturones masculinos de inspiracion motera. Diseno contemporaneo, materiales premium y artesania sin concesiones.
+          </p>
+
+          {/* Social icons */}
+          <div class="flex items-center gap-3">
+            {socialLinks.map((s) => (
+              <a
+                href={s.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="footer-social relative flex h-9 w-9 items-center justify-center border border-king-border/50 text-king-muted/50 transition-all duration-500 hover:border-king-accent/40 hover:text-king-accent"
+                aria-label={s.label}
+              >
+                <span class="absolute inset-0 bg-king-accent/[0.04] opacity-0 transition-opacity duration-500 hover:opacity-100"></span>
+                <Icon name={s.icon} class="relative z-10 h-3.5 w-3.5" />
+              </a>
+            ))}
+          </div>
+        </div>
+
+        {/* Navigation column */}
+        <div class="footer-nav-col md:col-span-2 md:col-start-7">
+          <h4 class="footer-col-title mb-5 text-[10px] font-medium uppercase tracking-[0.22em] text-king-text">
+            Navegacion
+          </h4>
+          <nav class="flex flex-col gap-3">
+            {footerNav.map((item) => (
+              <a
+                href={item.href}
+                class="footer-nav-link relative text-[13px] font-light text-king-muted/60 transition-all duration-500 hover:text-king-text"
+              >
+                {item.label}
+              </a>
+            ))}
+          </nav>
+        </div>
+
+        {/* Contact column */}
+        <div class="footer-contact-col md:col-span-2">
+          <h4 class="footer-col-title mb-5 text-[10px] font-medium uppercase tracking-[0.22em] text-king-text">
+            Contacto
+          </h4>
+          <div class="flex flex-col gap-3">
+            <a
+              href="mailto:hola@kingbelt.com"
+              class="footer-link text-[13px] font-light text-king-muted/60 transition-colors duration-300 hover:text-king-accent"
+            >
+              hola@kingbelt.com
+            </a>
+            <a
+              href="https://wa.me/1234567890"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="footer-link text-[13px] font-light text-king-muted/60 transition-colors duration-300 hover:text-king-accent"
+            >
+              WhatsApp
+            </a>
+            <a
+              href="https://instagram.com/kingbelt"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="footer-link text-[13px] font-light text-king-muted/60 transition-colors duration-300 hover:text-king-accent"
+            >
+              Instagram
+            </a>
+          </div>
+        </div>
+
+        {/* Legal column */}
+        <div class="footer-legal-col md:col-span-2">
+          <h4 class="footer-col-title mb-5 text-[10px] font-medium uppercase tracking-[0.22em] text-king-text">
+            Legal
+          </h4>
+          <div class="flex flex-col gap-3">
+            {legalLinks.map((link) => (
+              <a
+                href={link.href}
+                class="footer-link text-[13px] font-light text-king-muted/60 transition-colors duration-300 hover:text-king-text"
+              >
+                {link.label}
+              </a>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom bar */}
+      <div class="footer-bottom-bar flex flex-col items-center gap-4 border-t border-king-border/25 pt-6 md:flex-row md:justify-between">
+        <p class="text-[10px] font-light text-king-muted/40">
+          &copy; {new Date().getFullYear()} KingBelt. Todos los derechos reservados.
+        </p>
+        <p class="text-[10px] font-light tracking-[0.05em] text-king-muted/40">
+          Disenado para hombres que se mueven diferente.
+        </p>
+      </div>
+    </div>
+
+    {/* ========== GIANT TYPOGRAPHY — fades into bottom edge ========== */}
+    <div
+      class="footer-giant-wrap relative mt-4 overflow-hidden text-center md:mt-6"
+      style="height: clamp(10rem, 20vw, 18rem); mask-image: linear-gradient(to bottom, black 0%, black 75%, transparent 100%); -webkit-mask-image: linear-gradient(to bottom, black 0%, black 75%, transparent 100%);"
+    >
+      <span
+        class="footer-giant font-display pointer-events-none inline-block select-none uppercase leading-[0.6] tracking-[0.06em] text-king-text"
+        style="font-size: 20vw; opacity: 0.04; transform: translateY(1.5rem);"
+      >
+        KINGBELT
+      </span>
+    </div>
+  </div>
+</footer>
+
+<style>
+  /* ===== CTA SECTION ===== */
+  .cta-shell {
+    isolation: isolate;
+  }
+
+  .cta-bg {
+    background:
+      radial-gradient(circle at 20% 30%, rgba(138, 106, 61, 0.05), transparent 32%),
+      radial-gradient(circle at 80% 70%, rgba(138, 106, 61, 0.03), transparent 28%);
+    mix-blend-mode: screen;
+  }
+
+  .cta-grid {
+    opacity: 0.03;
+    background-image:
+      linear-gradient(90deg, rgba(138, 106, 61, 0.1) 0, rgba(138, 106, 61, 0.1) 1px, transparent 1px, transparent 24%),
+      linear-gradient(rgba(138, 106, 61, 0.04) 1px, transparent 1px);
+    background-size: 140px 100%, 100% 100%;
+  }
+
+  .cta-vignette {
+    background: radial-gradient(ellipse 70% 60% at 50% 50%, transparent 0%, rgba(12, 11, 10, 0.5) 100%);
+  }
+
+  .cta-spotlight {
+    background:
+      radial-gradient(circle at 50% 40%, rgba(138, 106, 61, 0.06) 0%, transparent 50%),
+      radial-gradient(circle at 30% 60%, rgba(255, 255, 255, 0.02) 0%, transparent 40%);
+    mix-blend-mode: screen;
+  }
+
+  .cta-watermark {
+    font-size: clamp(14rem, 22vw, 22rem);
+    letter-spacing: -0.08em;
+  }
+
+  .cta-frame {
+    position: absolute;
+  }
+
+  .cta-frame-tl { top: 0; left: 0; }
+  .cta-frame-tr { top: 0; right: 0; transform: scaleX(-1); }
+  .cta-frame-bl { bottom: 0; left: 0; transform: scaleY(-1); }
+  .cta-frame-br { right: 0; bottom: 0; transform: scale(-1); }
+
+  .cta-bottom-strip {
+    box-shadow:
+      0 18px 50px rgba(0, 0, 0, 0.12),
+      inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+
+  /* ===== FOOTER BOTTOM ===== */
+  .footer-shell {
+    isolation: isolate;
+  }
+
+  .footer-bg {
+    opacity: 0.35;
+    background-image:
+      linear-gradient(90deg, rgba(138, 106, 61, 0.07) 0, rgba(138, 106, 61, 0.07) 1px, transparent 1px),
+      linear-gradient(rgba(26, 26, 26, 0.02) 1px, transparent 1px);
+    background-size: 12rem 100%, 100% 5rem;
+    mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.6), transparent 92%);
+  }
+
+  .footer-vignette {
+    background: radial-gradient(ellipse 70% 60% at 50% 50%, transparent 0%, rgba(247, 243, 238, 0.4) 100%);
+  }
+
+  .footer-stitch {
+    height: 1px;
+    background-image: repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 5px,
+      rgba(138, 106, 61, 0.15) 5px,
+      rgba(138, 106, 61, 0.15) 9px
+    );
+    background-size: 9px 1px;
+    background-repeat: repeat-x;
+  }
+
+  .footer-social {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  }
+
+  .footer-social:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      0 6px 20px rgba(138, 106, 61, 0.12),
+      inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  }
+
+  .footer-nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background: var(--color-king-accent);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  .footer-nav-link:hover::after {
+    transform: scaleX(1);
+  }
+
+  .footer-nav-link:hover {
+    transform: translateX(3px);
+  }
+
+  .footer-specs-strip {
+    box-shadow:
+      0 18px 50px rgba(18, 15, 12, 0.05),
+      inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  }
+
+  @media (max-width: 767px) {
+    .cta-watermark {
+      font-size: clamp(10rem, 32vw, 16rem);
+    }
+  }
+</style>
+
+<script>
+  import gsap from 'gsap';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+  gsap.registerPlugin(ScrollTrigger);
+
+  const footerScope = document.querySelector('[data-gsap-footer]');
+  if (footerScope) {
+    /* ── CTA Section Timeline ── */
+    const ctaSection = footerScope.querySelector('[data-cta-section]');
+    if (ctaSection) {
+      const ctaTl = gsap.timeline({
+        defaults: { ease: 'power3.out' },
+        scrollTrigger: {
+          trigger: ctaSection,
+          start: 'top 85%',
+          once: true,
+        },
+      });
+
+      ctaTl
+        .from(ctaSection.querySelector('.cta-bg'), { opacity: 0, duration: 1.2 })
+        .from(ctaSection.querySelector('.cta-grid'), { opacity: 0, duration: 1.0 }, 0.1)
+        .from(ctaSection.querySelector('.cta-watermark'), { opacity: 0, scale: 0.96, duration: 1.4 }, 0.1)
+        .from(ctaSection.querySelectorAll('.cta-frame'), { opacity: 0, scale: 0.55, duration: 0.9, stagger: 0.06 }, 0.25)
+        .from(ctaSection.querySelector('.cta-eyebrow'), { y: 16, opacity: 0, duration: 0.75 }, 0.35)
+        .from(ctaSection.querySelector('.cta-title-line-1'), { y: 30, opacity: 0, duration: 0.9 }, 0.45)
+        .from(ctaSection.querySelector('.cta-title-line-2'), { y: 30, opacity: 0, duration: 0.9 }, 0.55)
+        .from(ctaSection.querySelector('.cta-divider'), { scaleX: 0, opacity: 0, duration: 0.8, transformOrigin: 'center' }, 0.65)
+        .from(ctaSection.querySelector('.cta-body'), { y: 16, opacity: 0, duration: 0.8 }, 0.7)
+        .from(ctaSection.querySelector('.cta-btn-wrap'), { y: 12, opacity: 0, duration: 0.7 }, 0.85)
+        .from(ctaSection.querySelector('.cta-bottom-strip'), { y: 20, opacity: 0, duration: 0.8 }, 0.95)
+        .from(ctaSection.querySelectorAll('.cta-spec-item'), { y: 8, opacity: 0, duration: 0.5, stagger: 0.06 }, 1.05)
+        .from(ctaSection.querySelector('.cta-side-text'), { opacity: 0, duration: 0.9 }, 0.9)
+        .from(ctaSection.querySelector('.cta-side-text-left'), { opacity: 0, duration: 0.9 }, 0.95);
+    }
+
+    /* ── Footer Bottom Timeline ── */
+    const footerBottom = footerScope.querySelector('[data-footer-bottom]');
+    if (footerBottom) {
+      const footerTl = gsap.timeline({
+        defaults: { ease: 'power3.out' },
+        scrollTrigger: {
+          trigger: footerBottom,
+          start: 'top 90%',
+          once: true,
+        },
+      });
+
+      footerTl
+        .from(footerBottom.querySelector('.footer-bg'), { opacity: 0, duration: 1.0 })
+        .from(footerBottom.querySelector('.footer-stitch'), { scaleX: 0, duration: 0.8, transformOrigin: 'left center' }, 0.2)
+        .from(footerBottom.querySelector('.footer-brand-col'), { y: 20, opacity: 0, duration: 0.7 }, 0.3)
+        .from(footerBottom.querySelector('.footer-nav-col'), { y: 20, opacity: 0, duration: 0.7 }, 0.4)
+        .from(footerBottom.querySelector('.footer-contact-col'), { y: 20, opacity: 0, duration: 0.7 }, 0.5)
+        .from(footerBottom.querySelector('.footer-legal-col'), { y: 20, opacity: 0, duration: 0.7 }, 0.6)
+        .from(footerBottom.querySelector('.footer-giant'), { y: 40, opacity: 0, duration: 1.2 }, 0.5)
+        .from(footerBottom.querySelector('.footer-bottom-bar'), { y: 10, opacity: 0, duration: 0.6 }, 0.85);
+    }
+  }
+</script>

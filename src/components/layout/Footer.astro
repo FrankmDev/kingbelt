@@ -1,0 +1,314 @@
+---
+import { footerNav } from '../../data/navigation';
+import Icon from '../ui/Icon.astro';
+
+const socialLinks = [
+  { label: 'Instagram', href: 'https://instagram.com/kingbelt', icon: 'instagram' as const },
+  { label: 'WhatsApp', href: 'https://wa.me/1234567890', icon: 'paper-plane' as const },
+];
+
+const legalLinks = [
+  { label: 'Privacidad', href: '#' },
+  { label: 'Terminos', href: '#' },
+  { label: 'Envios', href: '#' },
+];
+---
+
+<footer class="footer-shell relative overflow-hidden bg-king-bg" data-gsap-footer-standalone>
+  {/* Background layers */}
+  <div class="footer-bg pointer-events-none absolute inset-0"></div>
+  <div class="footer-glow pointer-events-none absolute -left-32 top-24 h-[26rem] w-[26rem] rounded-full bg-king-accent/[0.06] blur-[130px]"></div>
+  <div class="footer-vignette pointer-events-none absolute inset-0"></div>
+  <div class="footer-noise pointer-events-none absolute inset-0"></div>
+
+  {/* Corner frames */}
+  <div class="absolute inset-8 z-[2] pointer-events-none md:inset-12 lg:inset-16">
+    <div class="footer-frame footer-frame-tl"></div>
+    <div class="footer-frame footer-frame-tr"></div>
+    <div class="footer-frame footer-frame-bl"></div>
+    <div class="footer-frame footer-frame-br"></div>
+  </div>
+
+  {/* Stitch line separator */}
+  <div class="footer-stitch relative z-10"></div>
+
+  <div class="kb-shell-wide relative z-10">
+
+    {/* Upper content band */}
+    <div class="footer-upper flex flex-col gap-12 pt-16 pb-10 md:flex-row md:items-start md:justify-between md:gap-8 md:pt-20 md:pb-14">
+
+      {/* Brand block */}
+      <div class="footer-brand max-w-xs">
+        <a href="/" class="group inline-flex items-center gap-3 mb-4">
+          <span class="font-display text-xl tracking-[0.25em] uppercase text-king-text transition-colors duration-500 md:text-2xl">
+            KingBelt
+          </span>
+          <span class="hidden md:block h-px w-8 bg-king-accent/20 transition-all duration-500 group-hover:w-14 group-hover:bg-king-accent/40"></span>
+        </a>
+        <p class="mb-5 text-[12px] font-light leading-[1.8] text-king-muted/60 md:text-[13px]">
+          Cinturones masculinos de inspiracion motera. Diseno contemporaneo y artesania sin concesiones.
+        </p>
+        <div class="flex items-center gap-3">
+          {socialLinks.map((s) => (
+            <a
+              href={s.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="footer-social relative flex h-9 w-9 items-center justify-center border border-king-border/60 text-king-muted/50 transition-all duration-500 hover:border-king-accent/50 hover:text-king-accent"
+              aria-label={s.label}
+            >
+              <span class="absolute inset-0 bg-king-accent/[0.04] opacity-0 transition-opacity duration-500 group-hover:opacity-100"></span>
+              <Icon name={s.icon} class="relative z-10 h-3.5 w-3.5" />
+            </a>
+          ))}
+        </div>
+      </div>
+
+      {/* Navigation */}
+      <div class="footer-nav">
+        <div class="flex items-center gap-2 mb-4">
+          <span class="h-px w-5 bg-king-accent/25"></span>
+          <h4 class="text-[9px] font-medium uppercase tracking-[0.25em] text-king-text">
+            Navegacion
+          </h4>
+        </div>
+        <nav class="flex flex-col gap-2.5">
+          {footerNav.map((item) => (
+            <a
+              href={item.href}
+              class="footer-nav-link relative inline-block text-[12px] font-light text-king-muted/60 transition-all duration-500 hover:text-king-text md:text-[13px]"
+            >
+              {item.label}
+            </a>
+          ))}
+        </nav>
+      </div>
+
+      {/* Contact */}
+      <div class="footer-contact">
+        <div class="flex items-center gap-2 mb-4">
+          <span class="h-px w-5 bg-king-accent/25"></span>
+          <h4 class="text-[9px] font-medium uppercase tracking-[0.25em] text-king-text">
+            Contacto
+          </h4>
+        </div>
+        <div class="flex flex-col gap-2.5">
+          <a
+            href="mailto:hola@kingbelt.com"
+            class="footer-link relative inline-block text-[12px] font-light text-king-muted/60 transition-all duration-500 hover:text-king-accent md:text-[13px]"
+          >
+            hola@kingbelt.com
+          </a>
+          <a
+            href="https://wa.me/1234567890"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="footer-link relative inline-block text-[12px] font-light text-king-muted/60 transition-all duration-500 hover:text-king-accent md:text-[13px]"
+          >
+            WhatsApp
+          </a>
+        </div>
+      </div>
+
+      {/* Legal */}
+      <div class="footer-legal">
+        <div class="flex items-center gap-2 mb-4">
+          <span class="h-px w-5 bg-king-accent/25"></span>
+          <h4 class="text-[9px] font-medium uppercase tracking-[0.25em] text-king-text">
+            Legal
+          </h4>
+        </div>
+        <div class="flex flex-col gap-2.5">
+          {legalLinks.map((link) => (
+            <a
+              href={link.href}
+              class="footer-link relative inline-block text-[12px] font-light text-king-muted/60 transition-all duration-500 hover:text-king-text md:text-[13px]"
+            >
+              {link.label}
+            </a>
+          ))}
+        </div>
+      </div>
+    </div>
+
+    {/* ========== GIANT TYPOGRAPHY ========== */}
+    <div class="footer-giant-wrap relative overflow-hidden" style="height: clamp(8rem, 16vw, 16rem);">
+      <span
+        class="footer-giant font-display absolute left-1/2 top-0 block -translate-x-1/2 select-none uppercase leading-[0.72] tracking-[0.06em] text-king-text"
+      >
+        KINGBELT
+      </span>
+    </div>
+
+    {/* Bottom bar — floats over the tail of the giant text */}
+    <div class="footer-bottom-bar relative z-10 flex flex-col items-center gap-4 border-t border-king-border/25 pt-6 pb-8 md:flex-row md:justify-between md:pb-10">
+      <div class="flex items-center gap-3">
+        <span class="flex h-5 w-5 items-center justify-center rounded-full border border-king-accent/20">
+          <span class="h-1.5 w-1.5 rounded-full bg-king-accent/40"></span>
+        </span>
+        <p class="text-[10px] font-light text-king-muted/40">
+          &copy; {new Date().getFullYear()} KingBelt. Todos los derechos reservados.
+        </p>
+      </div>
+      <p class="text-[10px] font-light tracking-[0.05em] text-king-muted/40">
+        Disenado para hombres que se mueven diferente.
+      </p>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .footer-shell {
+    isolation: isolate;
+  }
+
+  .footer-bg {
+    opacity: 0.35;
+    background-image:
+      linear-gradient(90deg, rgba(138, 106, 61, 0.06) 0, rgba(138, 106, 61, 0.06) 1px, transparent 1px),
+      linear-gradient(rgba(26, 26, 26, 0.015) 1px, transparent 1px);
+    background-size: 12rem 100%, 100% 5rem;
+    mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.5), transparent 92%);
+  }
+
+  .footer-vignette {
+    background: radial-gradient(ellipse 70% 60% at 50% 50%, transparent 0%, rgba(247, 243, 238, 0.5) 100%);
+  }
+
+  .footer-noise {
+    opacity: 0.025;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    background-size: 256px 256px;
+    mix-blend-mode: overlay;
+  }
+
+  .footer-stitch {
+    height: 1px;
+    background-image: repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 5px,
+      rgba(138, 106, 61, 0.18) 5px,
+      rgba(138, 106, 61, 0.18) 9px
+    );
+    background-size: 9px 1px;
+    background-repeat: repeat-x;
+  }
+
+  /* Corner frames for light background */
+  .footer-frame {
+    position: absolute;
+    width: 1.75rem;
+    height: 1.75rem;
+  }
+
+  .footer-frame::before,
+  .footer-frame::after {
+    content: '';
+    position: absolute;
+    background: rgba(138, 106, 61, 0.12);
+  }
+
+  .footer-frame::before {
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    box-shadow: 5px 5px 0 0 rgba(138, 106, 61, 0.10);
+  }
+
+  .footer-frame::after {
+    top: 0;
+    left: 0;
+    width: 1px;
+    height: 100%;
+    box-shadow: 5px 5px 0 0 rgba(138, 106, 61, 0.10);
+  }
+
+  .footer-frame-tr { top: 0; right: 0; transform: scaleX(-1); }
+  .footer-frame-bl { bottom: 0; left: 0; transform: scaleY(-1); }
+  .footer-frame-br { right: 0; bottom: 0; transform: scale(-1); }
+
+  .footer-social {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    border-radius: var(--kb-radius-xs);
+  }
+
+  .footer-social:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      0 6px 20px rgba(138, 106, 61, 0.10),
+      inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  }
+
+  .footer-nav-link::after,
+  .footer-link::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background: var(--color-king-accent);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.45s cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  .footer-nav-link:hover::after,
+  .footer-link:hover::after {
+    transform: scaleX(1);
+  }
+
+  .footer-nav-link:hover,
+  .footer-link:hover {
+    transform: translateX(3px);
+  }
+
+  /* Giant typography — clamped to viewport, overflow-hidden crops the bottom */
+  .footer-giant {
+    font-size: clamp(7rem, 18vw, 16rem);
+    white-space: nowrap;
+    opacity: 0.08;
+  }
+
+  @media (max-width: 767px) {
+    .footer-giant {
+      font-size: clamp(5.5rem, 22vw, 10rem);
+    }
+    .footer-giant-wrap {
+      height: clamp(5.5rem, 16vw, 9rem) !important;
+    }
+  }
+</style>
+
+<script>
+  import gsap from 'gsap';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+  gsap.registerPlugin(ScrollTrigger);
+
+  const footerScope = document.querySelector('[data-gsap-footer-standalone]');
+  if (footerScope) {
+    const footerTl = gsap.timeline({
+      defaults: { ease: 'power3.out' },
+      scrollTrigger: {
+        trigger: footerScope,
+        start: 'top 92%',
+        once: true,
+      },
+    });
+
+    footerTl
+      .from(footerScope.querySelector('.footer-bg'), { opacity: 0, duration: 1.0 })
+      .from(footerScope.querySelector('.footer-glow'), { opacity: 0, scale: 0.9, duration: 1.2 }, 0.1)
+      .from(footerScope.querySelectorAll('.footer-frame'), { opacity: 0, scale: 0.55, duration: 0.9, stagger: 0.06 }, 0.2)
+      .from(footerScope.querySelector('.footer-stitch'), { scaleX: 0, duration: 0.8, transformOrigin: 'left center' }, 0.25)
+      .from(footerScope.querySelector('.footer-brand'), { y: 20, opacity: 0, duration: 0.7 }, 0.3)
+      .from(footerScope.querySelector('.footer-nav'), { y: 20, opacity: 0, duration: 0.7 }, 0.4)
+      .from(footerScope.querySelector('.footer-contact'), { y: 20, opacity: 0, duration: 0.7 }, 0.5)
+      .from(footerScope.querySelector('.footer-legal'), { y: 20, opacity: 0, duration: 0.7 }, 0.6)
+      .from(footerScope.querySelector('.footer-giant'), { y: 40, opacity: 0, duration: 1.2 }, 0.5)
+      .from(footerScope.querySelector('.footer-bottom-bar'), { y: 10, opacity: 0, duration: 0.6 }, 0.85);
+  }
+</script>

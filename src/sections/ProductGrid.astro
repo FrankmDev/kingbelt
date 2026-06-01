@@ -51,72 +51,140 @@ const badgeType = (badge?: string) => {
       </SectionHeader>
     </div>
 
-    {/* Featured — cinematic magazine cover */}
+    {/* Featured — behaves like a normal card on mobile/tablet, banner on lg */}
     <a
       href={`/product/${featuredProduct.slug}`}
-      class="pg-featured group relative mb-8 block overflow-hidden rounded-[var(--kb-radius-lg)] lg:mb-12"
+      class="pg-featured pg-card group relative mb-6 block overflow-hidden rounded-[var(--kb-radius-lg)] lg:mb-12"
       data-pg-card
     >
-      <div class="relative aspect-[16/10] overflow-hidden md:aspect-[21/9] lg:aspect-[2.8/1]">
+      <div class="relative aspect-[3/4] overflow-hidden lg:aspect-[2.8/1]">
+        {/* Primary image */}
         <Image
           src={getImageForProduct(featuredIndex, 'primary')}
           alt={`${featuredProduct.name} — cinturón de cuero`}
-          class="h-full w-full object-cover transition-transform duration-[1400ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.03]"
+          class="pg-card-img absolute inset-0 h-full w-full object-cover transition-transform duration-[1400ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.04]"
           loading="eager"
           sizes="100vw"
         />
+        {/* Hover image */}
+        <Image
+          src={getImageForProduct(featuredIndex, 'hover')}
+          alt={`${featuredProduct.name} detalle`}
+          class="pg-card-hover-img absolute inset-0 h-full w-full scale-[1.06] object-cover opacity-0 transition-[opacity,transform] duration-[1000ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-100 group-hover:opacity-100"
+          loading="lazy"
+          sizes="100vw"
+        />
 
-        {/* Layered cinematic gradients */}
-        <div class="absolute inset-0 bg-gradient-to-r from-black/80 via-black/45 to-transparent"></div>
-        <div class="absolute inset-0 bg-gradient-to-t from-black/65 via-black/15 to-transparent"></div>
-        <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(138,106,61,0.12),transparent_40%)]"></div>
+        {/* Card overlays (mobile/tablet) */}
+        <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/10 lg:hidden"></div>
+        <div class="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-transparent lg:hidden"></div>
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(138,106,61,0.10),transparent_50%)] opacity-0 transition-opacity duration-700 group-hover:opacity-100 lg:hidden"></div>
+
+        {/* Banner overlays (lg) */}
+        <div class="hidden lg:absolute lg:inset-0 lg:block lg:bg-gradient-to-r lg:from-black/80 lg:via-black/45 lg:to-transparent"></div>
+        <div class="hidden lg:absolute lg:inset-0 lg:block lg:bg-gradient-to-t lg:from-black/65 lg:via-black/15 lg:to-transparent"></div>
+        <div class="hidden lg:absolute lg:inset-0 lg:block lg:bg-[radial-gradient(circle_at_top_right,rgba(138,106,61,0.12),transparent_40%)]"></div>
+
+        {/* Shimmer on hover */}
+        <div class="pg-shimmer absolute inset-0 opacity-0 transition-opacity duration-700 group-hover:opacity-100"></div>
 
         {/* Inner frame */}
-        <div class="pointer-events-none absolute inset-5 rounded-[calc(var(--kb-radius-lg)-0.5rem)] border border-white/[0.06] transition-colors duration-700 group-hover:border-white/[0.12]"></div>
+        <div class="pointer-events-none absolute inset-3 rounded-[calc(var(--kb-radius-lg)-0.5rem)] border border-white/[0.06] transition-colors duration-700 group-hover:border-white/[0.14] md:inset-5"></div>
 
         {/* Corner accents */}
-        <div class="pointer-events-none absolute inset-6 z-10 md:inset-7">
+        <div class="pointer-events-none absolute inset-4 z-10 md:inset-6 lg:inset-7">
           <span class="kb-corner-frame absolute left-0 top-0"></span>
           <span class="kb-corner-frame absolute right-0 top-0" style="transform: scaleX(-1);"></span>
           <span class="kb-corner-frame absolute bottom-0 left-0" style="transform: scaleY(-1);"></span>
           <span class="kb-corner-frame absolute bottom-0 right-0" style="transform: scale(-1);"></span>
         </div>
 
+        {/* Accent line top */}
+        <div class="absolute left-0 right-0 top-0 h-px bg-[linear-gradient(90deg,transparent_0%,var(--color-king-accent)_50%,transparent_100%)] opacity-0 transition-opacity duration-500 group-hover:opacity-50"></div>
+
         {/* Bottom accent line */}
         <div class="absolute bottom-0 left-0 h-[2px] w-full origin-left scale-x-0 bg-king-accent transition-transform duration-700 ease-out group-hover:scale-x-100"></div>
 
-        <div class="absolute bottom-0 left-0 p-6 md:p-10 lg:p-14">
-          <div class="mb-4">
+        {/* Outer border glow on hover */}
+        <div class="pointer-events-none absolute inset-0 rounded-[var(--kb-radius-lg)] border border-white/0 transition-colors duration-700 group-hover:border-white/[0.08]"></div>
+
+        {/* Card layout (mobile/tablet) */}
+        <div class="lg:hidden">
+          {/* Top bar: badge + ID */}
+          <div class="absolute left-4 right-4 top-4 z-10 flex items-start justify-between md:left-6 md:right-6 md:top-6">
             <Badge type="featured" />
-          </div>
-          <span class="font-mono text-[10px] uppercase tracking-[0.22em] text-king-accent/80">
-            {featuredProduct.id}
-          </span>
-          <h3 class="mt-2 font-display text-[2.2rem] font-light leading-[0.92] tracking-[-0.02em] md:text-[3.2rem] lg:text-[4rem]">
-            {featuredProduct.name}
-          </h3>
-          <p class="mt-3 max-w-lg text-[14px] leading-[1.7] text-white/70 md:text-[15px] lg:mt-4">
-            {featuredProduct.shortDescription}
-          </p>
-          <div class="mt-5 flex items-center gap-4">
-            {featuredProduct.colors.slice(0, 4).map((color) => (
-              <span
-                class="h-5 w-5 rounded-full border-2 border-white/40 shadow-sm transition-transform duration-300 group-hover:scale-110"
-                style={`background-color: ${color.hex}`}
-                title={color.name}
-              />
-            ))}
-            <span class="ml-3 inline-flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.18em] text-white/80 transition-all duration-500 group-hover:gap-3">
-              Ver detalle
-              <span class="pg-arrow h-px w-6 bg-king-accent transition-all duration-500 group-hover:w-10"></span>
+            <span class="font-mono text-[10px] uppercase tracking-[0.2em] text-white/40">
+              {featuredProduct.id}
             </span>
+          </div>
+
+          {/* Bottom info */}
+          <div class="absolute bottom-0 left-0 right-0 z-10 p-4 md:p-6">
+            <div class="pg-card-line mb-3 h-px w-8 bg-king-accent/80"></div>
+            <h3 class="font-display text-[1.5rem] font-light leading-[0.95] tracking-[-0.01em] md:text-[1.75rem]">
+              {featuredProduct.name}
+            </h3>
+            <p class="pg-card-desc mt-2 text-[13px] leading-[1.6] text-white/60 md:max-w-[28ch]">
+              {featuredProduct.shortDescription}
+            </p>
+            <div class="pg-card-meta mt-4 flex flex-wrap items-center gap-3">
+              <div class="flex items-center gap-2">
+                {featuredProduct.colors.slice(0, 3).map((color) => (
+                  <span
+                    class="inline-block h-3.5 w-3.5 rounded-full border border-white/30 shadow-sm transition-transform duration-300 group-hover:scale-110 md:h-4 md:w-4"
+                    style={`background-color: ${color.hex}`}
+                    title={color.name}
+                  />
+                ))}
+                {featuredProduct.colors.length > 3 && (
+                  <span class="ml-1 text-[9px] uppercase tracking-wider text-white/45">
+                    +{featuredProduct.colors.length - 3}
+                  </span>
+                )}
+              </div>
+              <span class="ml-auto inline-flex items-center gap-2 text-[10px] font-medium uppercase tracking-[0.18em] text-white/70">
+                Ver detalle
+                <span class="inline-block h-px w-5 bg-king-accent transition-all duration-500 group-hover:w-8"></span>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Banner layout (lg) */}
+        <div class="hidden lg:block">
+          <div class="absolute bottom-0 left-0 p-14">
+            <div class="mb-4">
+              <Badge type="featured" />
+            </div>
+            <span class="font-mono text-[10px] uppercase tracking-[0.22em] text-king-accent/80">
+              {featuredProduct.id}
+            </span>
+            <h3 class="mt-2 font-display text-[4rem] font-light leading-[0.92] tracking-[-0.02em]">
+              {featuredProduct.name}
+            </h3>
+            <p class="mt-4 max-w-lg text-[15px] leading-[1.7] text-white/70">
+              {featuredProduct.shortDescription}
+            </p>
+            <div class="mt-5 flex flex-wrap items-center gap-4">
+              {featuredProduct.colors.slice(0, 4).map((color) => (
+                <span
+                  class="h-5 w-5 rounded-full border-2 border-white/40 shadow-sm transition-transform duration-300 group-hover:scale-110"
+                  style={`background-color: ${color.hex}`}
+                  title={color.name}
+                />
+              ))}
+              <span class="ml-3 inline-flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.18em] text-white/80 transition-all duration-500 group-hover:gap-3">
+                Ver detalle
+                <span class="pg-arrow h-px w-6 bg-king-accent transition-all duration-500 group-hover:w-10"></span>
+              </span>
+            </div>
           </div>
         </div>
       </div>
     </a>
 
     {/* Grid — editorial lookbook */}
-    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3 lg:gap-6">
       {gridProducts.map((product) => {
         const originalIndex = products.indexOf(product);
 
@@ -153,10 +221,10 @@ const badgeType = (badge?: string) => {
               <div class="pg-shimmer absolute inset-0 opacity-0 transition-opacity duration-700 group-hover:opacity-100"></div>
 
               {/* Inner frame border */}
-              <div class="pointer-events-none absolute inset-4 rounded-[calc(var(--kb-radius-lg)-0.5rem)] border border-white/[0.06] transition-colors duration-700 group-hover:border-white/[0.14] md:inset-5"></div>
+              <div class="pointer-events-none absolute inset-3 rounded-[calc(var(--kb-radius-lg)-0.5rem)] border border-white/[0.06] transition-colors duration-700 group-hover:border-white/[0.14] md:inset-5"></div>
 
               {/* Corner accents */}
-              <div class="pointer-events-none absolute inset-5 z-10 md:inset-6">
+              <div class="pointer-events-none absolute inset-4 z-10 md:inset-6">
                 <span class="kb-corner-frame absolute left-0 top-0"></span>
                 <span class="kb-corner-frame absolute right-0 top-0" style="transform: scaleX(-1);"></span>
                 <span class="kb-corner-frame absolute bottom-0 left-0" style="transform: scaleY(-1);"></span>
@@ -164,7 +232,7 @@ const badgeType = (badge?: string) => {
               </div>
 
               {/* Top bar: badge + ID */}
-              <div class="absolute left-5 right-5 top-5 z-10 flex items-start justify-between md:left-6 md:right-6 md:top-6">
+              <div class="absolute left-4 right-4 top-4 z-10 flex items-start justify-between md:left-6 md:right-6 md:top-6">
                 <Badge type={badgeType(product.badge)} />
                 <span class="font-mono text-[10px] uppercase tracking-[0.2em] text-white/40">
                   {product.id}
@@ -175,7 +243,7 @@ const badgeType = (badge?: string) => {
               <div class="absolute left-0 right-0 top-0 h-px bg-[linear-gradient(90deg,transparent_0%,var(--color-king-accent)_50%,transparent_100%)] opacity-0 transition-opacity duration-500 group-hover:opacity-50"></div>
 
               {/* Bottom info */}
-              <div class="absolute bottom-0 left-0 right-0 z-10 p-5 md:p-6">
+              <div class="absolute bottom-0 left-0 right-0 z-10 p-4 md:p-6">
                 {/* Accent line */}
                 <div class="pg-card-line mb-3 h-px w-8 bg-king-accent/80"></div>
 
@@ -184,16 +252,16 @@ const badgeType = (badge?: string) => {
                 </h3>
 
                 {/* Description */}
-                <p class="pg-card-desc mt-2 max-w-[28ch] text-[13px] leading-[1.6] text-white/60">
+                <p class="pg-card-desc mt-2 text-[13px] leading-[1.6] text-white/60 md:max-w-[28ch]">
                   {product.shortDescription}
                 </p>
 
                 {/* Color swatches + CTA */}
-                <div class="pg-card-meta mt-4 flex items-center gap-3">
+                <div class="pg-card-meta mt-4 flex flex-wrap items-center gap-3">
                   <div class="flex items-center gap-2">
                     {product.colors.slice(0, 3).map((color) => (
                       <span
-                        class="inline-block h-4 w-4 rounded-full border border-white/30 shadow-sm transition-transform duration-300 group-hover:scale-110"
+                        class="inline-block h-3.5 w-3.5 rounded-full border border-white/30 shadow-sm transition-transform duration-300 group-hover:scale-110 md:h-4 md:w-4"
                         style={`background-color: ${color.hex}`}
                         title={color.name}
                       />
@@ -238,14 +306,12 @@ const badgeType = (badge?: string) => {
     mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.8), transparent 88%);
   }
 
-  .pg-featured {
-    box-shadow:
-      0 32px 80px rgba(18, 15, 12, 0.14),
-      0 12px 24px rgba(18, 15, 12, 0.08);
-  }
-
-  .pg-featured h3 {
-    color: #ffffff;
+  @media (min-width: 1024px) {
+    .pg-featured {
+      box-shadow:
+        0 32px 80px rgba(18, 15, 12, 0.14),
+        0 12px 24px rgba(18, 15, 12, 0.08);
+    }
   }
 
   .pg-card {
@@ -317,8 +383,8 @@ const badgeType = (badge?: string) => {
     .pg-card {
       border-radius: var(--kb-radius-md);
     }
-    .pg-card .pointer-events-none.absolute.inset-4,
-    .pg-card .pointer-events-none.absolute.inset-5 {
+    .pg-card .pointer-events-none.absolute.inset-3,
+    .pg-card .pointer-events-none.absolute.inset-4 {
       border-radius: calc(var(--kb-radius-md) - 0.5rem);
     }
   }

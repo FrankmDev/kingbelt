@@ -1,14 +1,14 @@
 @import "tailwindcss";
 
 @theme {
-  --color-king-bg: #F5F3F0;
+  --color-king-bg: #EDE8E0;
   --color-king-surface: #FFFFFF;
   --color-king-text: #1A1A1A;
   --color-king-muted: #6B6B6B;
-  --color-king-accent: #8A6A3D;
-  --color-king-accent-light: #A3824C;
-  --color-king-secondary: #EBE8E4;
-  --color-king-border: #E5E0DB;
+  --color-king-accent: #9C7238;
+  --color-king-accent-light: #B89352;
+  --color-king-secondary: #E5E0D8;
+  --color-king-border: #D9D4CE;
 
   --font-sans: 'Satoshi', sans-serif;
   --font-display: 'Cormorant Garamond', Georgia, serif;
@@ -53,11 +53,26 @@
 
   --kb-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 
-  --kb-label-size: 0.5625rem;
-  --kb-label-tracking: 0.34em;
+  --kb-label-size: 0.6875rem;
+  --kb-label-tracking: 0.26em;
   --kb-micro-size: 0.5rem;
   --kb-micro-tracking: 0.42em;
   --kb-title-tracking: -0.03em;
+
+  /* Fixed typography scale */
+  --kb-text-eyebrow: 0.6875rem;   /* 11px */
+  --kb-text-meta: 0.8125rem;      /* 13px */
+  --kb-text-body: 1rem;           /* 16px */
+  --kb-text-body-lg: 1.125rem;    /* 18px */
+  --kb-text-h3: clamp(1.5rem, 3.2vw, 2.15rem);
+  --kb-text-h2: clamp(2rem, 5.2vw, 3.5rem);
+  --kb-text-h1: clamp(2.625rem, 6.4vw, 6rem);
+
+  /* Fixed spacing scale */
+  --kb-space-section: clamp(3.5rem, 7vw, 6rem);
+  --kb-space-section-lg: clamp(4.5rem, 8vw, 8.5rem);
+  --kb-space-gap: clamp(1.25rem, 2vw, 2rem);
+  --kb-space-gap-lg: clamp(2rem, 3vw, 3rem);
 }
 
 html {
@@ -67,7 +82,7 @@ html {
 }
 
 body {
-  background-color: #F5F3F0;
+  background-color: #EDE8E0;
   color: #1A1A1A;
   font-family: 'Satoshi', sans-serif;
   font-size: 16px;
@@ -172,22 +187,35 @@ body::before {
 }
 
 .eyebrow-text {
-  font-size: 0.625rem;
+  font-size: var(--kb-text-eyebrow);
   font-weight: 500;
   line-height: 1.2;
   letter-spacing: 0.26em;
   text-transform: uppercase;
 }
 
+.meta-text {
+  font-size: var(--kb-text-meta);
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
 .body-copy {
-  font-size: clamp(0.9375rem, 0.88rem + 0.22vw, 1rem);
-  font-weight: 300;
-  line-height: 1.9;
+  font-size: clamp(0.9375rem, 0.88rem + 0.22vw, 1.0625rem);
+  font-weight: 400;
+  line-height: 1.8;
 }
 
 .section-spacing {
-  padding-top: var(--kb-section-space-y);
-  padding-bottom: var(--kb-section-space-y);
+  padding-top: var(--kb-space-section);
+  padding-bottom: var(--kb-space-section);
+}
+
+.section-spacing-lg {
+  padding-top: var(--kb-space-section-lg);
+  padding-bottom: var(--kb-space-section-lg);
 }
 
 .text-balance {

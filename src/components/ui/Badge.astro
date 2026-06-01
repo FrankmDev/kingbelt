@@ -1,18 +1,22 @@
 ---
 interface Props {
-  type: 'new' | 'bestseller';
+  type: 'new' | 'bestseller' | 'featured' | 'default';
 }
 
-const { type } = Astro.props;
+const { type = 'default' } = Astro.props;
 
 const labels = {
   new: 'Nuevo',
-  bestseller: 'Top Ventas',
+  bestseller: 'Más vendido',
+  featured: 'Destacado',
+  default: 'Selección',
 };
 
 const styles = {
   new: 'bg-king-text text-king-surface',
   bestseller: 'bg-king-accent text-king-surface',
+  featured: 'bg-king-text text-king-surface',
+  default: 'bg-black/16 text-white/74 backdrop-blur-md border border-white/14',
 };
 ---
 

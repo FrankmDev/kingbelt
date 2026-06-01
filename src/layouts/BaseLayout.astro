@@ -6,14 +6,18 @@ interface Props {
   description?: string;
   image?: string;
   canonicalURL?: string;
+  schema?: object;
 }
 
 const {
-  title = 'KingBelt — Cinturones Masculinos de Inspiración Biker',
+  title = 'KingBelt — Cinturones masculinos de inspiración motera',
   description = 'Diseño contemporáneo, materiales premium y artesanía sin concesiones. Especialistas en cinturones masculinos de inspiración motera.',
   image = '/images/og-default.jpg',
   canonicalURL = Astro.url.href,
+  schema,
 } = Astro.props;
+
+const schemaScript = schema ? JSON.stringify(schema) : null;
 ---
 
 <!doctype html>
@@ -55,6 +59,11 @@ const {
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={new URL(image, Astro.site || Astro.url).href} />
+
+    {/* Schema.org */}
+    {schemaScript && (
+      <script type="application/ld+json" set:html={schemaScript} />
+    )}
   </head>
   <body class="min-h-screen flex flex-col bg-king-bg">
     <slot name="header" />

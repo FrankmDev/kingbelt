@@ -29,7 +29,11 @@ const values = [
   },
 ] as const;
 
-const markers = ['Hecho a mano', 'Acero 316L', 'Cuero real', 'Uso diario'];
+const specs = [
+  { label: 'Grosor', value: '4.5 mm' },
+  { label: 'Modelos', value: '7' },
+  { label: 'Colores', value: '4' },
+] as const;
 ---
 
 <section id="marca" class="brand-about relative overflow-hidden bg-king-bg py-24 md:py-32 lg:py-36" data-gsap-brand>
@@ -37,78 +41,158 @@ const markers = ['Hecho a mano', 'Acero 316L', 'Cuero real', 'Uso diario'];
   <div class="brand-soft-glow pointer-events-none absolute right-[-12rem] top-24 h-[34rem] w-[34rem] rounded-full bg-king-accent/[0.065] blur-[150px]"></div>
 
   <div class="kb-shell-wide relative">
-    <div class="brand-hero mb-12 md:mb-16">
+    <div class="brand-hero mb-16 md:mb-20 lg:mb-24">
       <SectionHeader
         eyebrow="La marca"
-        body="KingBelt nace para hacer una pieza honesta: sólida en la mano, limpia en la forma y preparada para envejecer bien. No busca parecer nueva siempre; busca acompañarte mejor cada año."
-        ref="Est. España / Road gear"
+        body="KingBelt nace para crear cinturones honestos: sólidos en la mano, limpios en la forma y preparados para envejecer bien con el uso."
+        ref="España"
         size="xl"
+        number="01"
       >
         <Fragment slot="title">
           Carácter
-          <span class="block italic text-king-text/72">sin disfraz.</span>
+          <span class="block italic text-king-accent">sin disfraz.</span>
         </Fragment>
       </SectionHeader>
     </div>
 
-    <div class="brand-dossier grid gap-5 lg:grid-cols-[minmax(0,0.88fr)_20rem] lg:gap-6">
-      <div class="brand-image-panel group relative min-h-[32rem] overflow-hidden rounded-[var(--kb-radius-lg)] border border-king-text/[0.08] bg-[#14110d] md:min-h-[39rem] lg:min-h-[42rem]">
-        <Image
-          src={allImages[0]}
-          alt="Cinturon KingBelt en cuero natural"
-          class="brand-main-image absolute inset-0 h-full w-full object-cover"
-          loading="lazy"
-          sizes="(min-width: 1024px) 68vw, 100vw"
-        />
-        <div class="absolute inset-0 bg-[linear-gradient(180deg,rgba(9,8,7,0.02)_0%,rgba(9,8,7,0.16)_44%,rgba(9,8,7,0.72)_100%)]"></div>
-        <div class="absolute inset-5 rounded-[calc(var(--kb-radius-lg)-0.5rem)] border border-white/[0.075]"></div>
+    {/* Premium dual-card editorial layout */}
+    <div class="brand-layout relative grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-10 xl:gap-12">
+      {/* Left card: cinematic image panel */}
+      <div class="brand-image-col">
+        <div class="brand-image-card group relative overflow-hidden rounded-[var(--kb-radius-lg)] border border-king-text/[0.08] bg-[#14110d] shadow-[0_28px_80px_rgba(18,15,12,0.12)]">
+          <Image
+            src={allImages[0]}
+            alt="Cinturón KingBelt en cuero natural"
+            class="brand-main-image aspect-[3/2] w-full object-cover md:aspect-[16/10] lg:aspect-[3/2]"
+            loading="lazy"
+            sizes="(min-width: 1024px) 50vw, 100vw"
+          />
 
-        <div class="brand-image-caption absolute bottom-0 left-0 right-0 grid gap-6 p-5 md:grid-cols-[minmax(0,1fr)_auto] md:items-end md:p-8 lg:p-10">
-          <p class="max-w-[36rem] font-serif text-[2rem] italic leading-[1.03] text-white/88 md:text-[3rem] lg:text-[3.45rem]">
-            La diferencia se nota antes de leer la etiqueta.
-          </p>
-          <div class="inline-flex w-fit rounded-full border border-white/[0.12] bg-white/[0.055] px-4 py-2 text-[10px] font-medium uppercase tracking-[0.22em] text-white/58 backdrop-blur-[var(--kb-blur-sm)]">
-            Road gear, not fashion
+          {/* Bottom fade gradient */}
+          <div class="absolute inset-0 bg-[linear-gradient(180deg,rgba(9,8,7,0.02)_0%,rgba(9,8,7,0.16)_44%,rgba(9,8,7,0.72)_100%)]"></div>
+
+          {/* Inner frame */}
+          <div class="absolute inset-5 rounded-[calc(var(--kb-radius-lg)-0.5rem)] border border-white/[0.08]"></div>
+
+          {/* Floating top-left badge */}
+          <div class="absolute left-6 top-6 z-10">
+            <span class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.08] px-4 py-1.5 backdrop-blur-md">
+              <span class="h-1.5 w-1.5 rounded-full bg-king-accent"></span>
+              <span class="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/90">Hecho a mano</span>
+            </span>
+          </div>
+
+          {/* Bottom caption */}
+          <div class="brand-image-caption absolute bottom-0 left-0 right-0 p-6 md:p-8 lg:p-10">
+            <div class="mb-4 h-px w-12 bg-king-accent/70"></div>
+            <p class="max-w-md font-serif text-[1.5rem] italic leading-[1.1] text-white/90 md:text-[2rem] lg:text-[2.25rem]">
+              La diferencia se nota antes de leer la etiqueta.
+            </p>
           </div>
         </div>
       </div>
 
-      <aside class="brand-rail relative grid gap-3 lg:grid-rows-[1fr_auto]">
-        <div class="brand-note relative overflow-hidden rounded-[var(--kb-radius-lg)] border border-king-border/80 bg-white/34 p-6 backdrop-blur-[var(--kb-blur-sm)] lg:p-7">
-          <div class="absolute right-5 top-5 font-mono text-[10px] uppercase tracking-[0.18em] text-king-accent/64">ES-01</div>
-          <span class="mb-8 block text-[10px] font-medium uppercase tracking-[0.24em] text-king-muted/58">Taller</span>
-          <p class="font-serif text-[1.85rem] italic leading-[1.12] text-king-text/82">
-            Lo importante no se ve en una ficha técnica. Se nota al abrocharlo.
-          </p>
-        </div>
+      {/* Right card: editorial content panel */}
+      <div class="brand-content-col">
+        <div class="brand-content-card relative flex h-full flex-col justify-center rounded-[var(--kb-radius-lg)] border border-king-border/60 bg-king-surface/70 p-8 backdrop-blur-xl md:p-10 lg:p-10 lg:py-9 shadow-[0_28px_80px_rgba(18,15,12,0.08)]">
+          {/* Decorative corner accents */}
+          <div class="pointer-events-none absolute -top-2 -left-2 hidden h-6 w-6 border-t border-l border-king-accent/40 lg:block"></div>
+          <div class="pointer-events-none absolute -bottom-2 -right-2 hidden h-6 w-6 border-b border-r border-king-accent/40 lg:block"></div>
 
-        <div class="brand-marker-list rounded-[var(--kb-radius-lg)] border border-king-border/80 bg-king-bg/64 p-4">
-          {markers.map((marker) => (
-            <div class="flex items-center justify-between gap-4 border-b border-king-border/70 py-3 last:border-b-0">
-              <span class="text-[10px] font-medium uppercase tracking-[0.2em] text-king-text/66">{marker}</span>
-              <span class="h-1.5 w-1.5 rounded-full bg-king-accent/42"></span>
+          {/* Inner subtle texture line */}
+          <div class="pointer-events-none absolute inset-5 rounded-[calc(var(--kb-radius-lg)-0.5rem)] border border-king-text/[0.04]"></div>
+
+          {/* Artisan seal */}
+          <div class="pointer-events-none absolute right-8 top-8 hidden opacity-[0.18] lg:block">
+            <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="40" cy="40" r="38" stroke="#9C7238" stroke-width="0.8" />
+              <circle cx="40" cy="40" r="32" stroke="#9C7238" stroke-width="0.4" />
+              <circle cx="40" cy="40" r="26" stroke="#9C7238" stroke-width="0.4" stroke-dasharray="2 3" />
+              <text x="40" y="36" text-anchor="middle" fill="#9C7238" font-size="7" font-family="Satoshi, sans-serif" font-weight="600" letter-spacing="0.15em">ARTESANÍA</text>
+              <text x="40" y="48" text-anchor="middle" fill="#9C7238" font-size="5" font-family="Satoshi, sans-serif" font-weight="500" letter-spacing="0.2em">ESPAÑA</text>
+            </svg>
+          </div>
+
+          {/* Eyebrow */}
+          <div class="mb-6 flex items-center gap-4">
+            <span class="h-px w-10 bg-king-accent"></span>
+            <span class="text-[11px] font-semibold uppercase tracking-[0.26em] text-king-accent">Filosofía</span>
+          </div>
+
+          {/* Headline */}
+          <h3 class="brand-content-headline mb-5 font-serif text-[1.875rem] italic leading-[1.08] text-king-text md:text-[2.25rem] lg:text-[2.5rem]">
+            Lo importante no se ve en una ficha técnica.
+            <span class="brand-content-accent block mt-1 text-king-accent not-italic">Se nota al abrocharlo.</span>
+          </h3>
+
+          {/* Body */}
+          <div class="space-y-3">
+            <p class="text-[14px] leading-[1.7] text-king-muted md:text-[15px]">
+              Diseñamos para que la pieza gane sentido con el uso: el cuero que toma tu forma, la hebilla que mantiene el peso real, la costura que no cede.
+            </p>
+            <p class="text-[14px] leading-[1.7] text-king-muted md:text-[15px]">
+              Revisión manual pieza a pieza. Sin producción en masa, ni shortcuts.
+            </p>
+          </div>
+
+          {/* Craft detail strip */}
+          <div class="brand-craft-strip mt-5 flex flex-wrap items-center gap-x-6 gap-y-2">
+            {[
+              { label: 'Cuero de primera', mark: '01' },
+              { label: 'Hebilla maciza', mark: '02' },
+              { label: 'Costura reforzada', mark: '03' },
+            ].map((item) => (
+              <div class="brand-craft-item group flex items-center gap-2.5">
+                <span class="inline-flex h-5 w-5 items-center justify-center rounded-full border border-king-accent/25 bg-king-accent/[0.06] text-[7px] font-semibold text-king-accent/80 transition-colors duration-300 group-hover:border-king-accent/50 group-hover:bg-king-accent/10">
+                  {item.mark}
+                </span>
+                <span class="text-[11px] font-medium uppercase tracking-[0.14em] text-king-muted transition-colors duration-300 group-hover:text-king-text">
+                  {item.label}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {/* Spec strip */}
+          <div class="brand-specs mt-6 border-t border-king-border/50 pt-5">
+            <div class="grid grid-cols-3 gap-4">
+              {specs.map((spec, i) => (
+                <div class:list={['brand-spec-item relative text-center', i === 0 && 'text-left', i === 2 && 'text-right']}>
+                  {i > 0 && (
+                    <span class="pointer-events-none absolute left-0 top-1/2 hidden h-8 w-px -translate-y-1/2 bg-king-border/40 lg:block"></span>
+                  )}
+                  <span class="block font-display text-[2rem] font-light leading-none text-king-text md:text-[2.5rem]">
+                    {spec.value}
+                  </span>
+                  <span class="block mt-3 text-[10px] font-medium uppercase tracking-[0.2em] text-king-muted/55">
+                    {spec.label}
+                  </span>
+                </div>
+              ))}
             </div>
-          ))}
+          </div>
         </div>
-      </aside>
+      </div>
     </div>
 
-    <div class="brand-values mt-8 grid border-y border-king-border/80 md:mt-10 md:grid-cols-3">
+    {/* Values: premium card trio */}
+    <div class="brand-values mt-12 grid gap-5 md:mt-16 md:grid-cols-3">
       {values.map((value, index) => (
         <article
-          class:list={[
-            'brand-value group relative py-8 md:px-7 lg:px-9',
-            index < values.length - 1 ? 'md:border-r md:border-king-border/80' : '',
-          ]}
+          class="brand-value group relative overflow-hidden rounded-[var(--kb-radius-lg)] border border-king-border/60 bg-king-surface/60 p-8 backdrop-blur-sm transition-all duration-500 hover:border-king-accent/30 hover:bg-king-surface hover:shadow-[0_28px_80px_rgba(18,15,12,0.08)] md:p-10"
         >
+          {/* Top accent line */}
+          <div class="absolute left-0 right-0 top-0 h-px bg-[linear-gradient(90deg,transparent_0%,var(--color-king-accent)_50%,transparent_100%)] opacity-0 transition-opacity duration-500 group-hover:opacity-40"></div>
+
           <div class="mb-8 flex items-center justify-between gap-5">
             <span class="font-mono text-[10px] uppercase tracking-[0.18em] text-king-accent/70">{value.num}</span>
             <span class="h-px w-10 bg-king-accent/24 transition-all duration-500 group-hover:w-16"></span>
           </div>
-          <h3 class="mb-4 text-[1.85rem] font-light leading-[0.95] tracking-[var(--kb-title-tracking)] text-king-text md:text-[2.15rem]">
+          <h3 class="mb-4 text-[1.5rem] font-light leading-[0.95] tracking-[var(--kb-title-tracking)] text-king-text md:text-[1.75rem]">
             {value.title}
           </h3>
-          <p class="max-w-[25rem] text-[14px] leading-[1.75] text-king-muted">
+          <p class="max-w-[25rem] text-[13px] leading-[1.7] text-king-muted">
             {value.text}
           </p>
         </article>
@@ -148,21 +232,6 @@ const markers = ['Hecho a mano', 'Acero 316L', 'Cuero real', 'Uso diario'];
     transform: scale(1.04);
   }
 
-  .brand-note,
-  .brand-marker-list {
-    box-shadow:
-      0 18px 46px rgba(18, 15, 12, 0.08),
-      inset 0 1px 0 rgba(255, 255, 255, 0.66);
-  }
-
-  .brand-note::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    background: radial-gradient(circle at top right, rgba(138, 106, 61, 0.12), transparent 42%);
-  }
-
   .brand-value {
     transition: background-color 500ms var(--kb-ease-out);
   }
@@ -190,22 +259,27 @@ const markers = ['Hecho a mano', 'Acero 316L', 'Cuero real', 'Uso diario'];
       opacity: 0,
       duration: 0.75,
     })
-      .from(section.querySelector('.brand-image-panel'), {
+      .from(section.querySelector('.brand-image-col'), {
         y: 30,
         opacity: 0,
         duration: 0.85,
       }, 0.18)
-      .from(section.querySelectorAll('.brand-rail > *'), {
-        x: 18,
+      .from(section.querySelector('.brand-content-col'), {
+        x: 28,
         opacity: 0,
-        duration: 0.68,
-        stagger: 0.07,
+        duration: 0.8,
       }, 0.32)
+      .from(section.querySelectorAll('.brand-spec-item'), {
+        y: 12,
+        opacity: 0,
+        duration: 0.5,
+        stagger: 0.08,
+      }, 0.52)
       .from(section.querySelectorAll('.brand-value'), {
         y: 16,
         opacity: 0,
         duration: 0.52,
         stagger: 0.07,
-      }, 0.44);
+      }, 0.6);
   }
 </script>

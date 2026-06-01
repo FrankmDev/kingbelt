@@ -9,112 +9,86 @@ const steps = [
   },
   {
     num: '02',
-    title: 'Revisa colores y tallas',
-    desc: 'Dentro de cada ficha puedes comprobar variantes y la talla antes de cerrar la compra.',
+    title: 'Revisa color y talla',
+    desc: 'Dentro de cada ficha comprueba variantes y talla antes de cerrar la compra.',
   },
   {
     num: '03',
-    title: 'Compra o contacta',
-    desc: 'Finaliza en Amazon o escribe por WhatsApp si necesitas ayuda con talla, color o disponibilidad.',
+    title: 'Compra o consulta',
+    desc: 'Finaliza en Amazon o escríbenos si necesitas ayuda con talla, color o disponibilidad.',
   },
 ] as const;
 
 const channels = [
-  { label: 'Amazon', href: 'https://amazon.com/kingbelt' },
-  { label: 'WhatsApp', href: 'https://wa.me/1234567890' },
+  { label: 'Comprar en Amazon', href: 'https://amazon.com/kingbelt' },
+  { label: 'Consultar por WhatsApp', href: 'https://wa.me/1234567890' },
 ] as const;
-
-const assurances = ['Envío rápido', 'Pago seguro', 'Atención personal', 'Devolución 30 días'];
 ---
 
-<section id="como-comprar" class="buying-shell relative overflow-hidden bg-king-bg py-24 md:py-32 lg:py-36" data-gsap-buying>
+<section id="como-comprar" class="buying-shell relative overflow-hidden bg-king-bg py-24 md:py-32 lg:py-40" data-gsap-buying>
   <div class="buying-bg pointer-events-none absolute inset-0"></div>
   <div class="buying-glow pointer-events-none absolute left-[-10rem] top-24 h-[32rem] w-[32rem] rounded-full bg-king-accent/[0.06] blur-[145px]"></div>
-  <div class="buying-inner kb-shell-wide relative">
-    <div class="buying-heading mb-10 md:mb-14">
+  <div class="kb-shell-wide relative">
+    <div class="buying-heading mb-14 md:mb-20">
       <SectionHeader
         eyebrow="Cómo comprar"
         body="Compra en Amazon o contáctanos por WhatsApp si quieres ayuda con talla, color o disponibilidad."
-        ref="Compra directa"
+        ref="Compra disponible"
         size="lg"
       >
         <Fragment slot="title">
-          Tres pasos,
-          <span class="block italic text-king-text/74">sin fricciones.</span>
+          Compra directa.
         </Fragment>
       </SectionHeader>
     </div>
 
-    <div class="buying-steps relative grid grid-cols-1 gap-5 md:grid-cols-3 md:gap-0" data-buying-steps>
+    <div class="buying-steps relative grid grid-cols-1 gap-10 md:grid-cols-3 md:gap-0" data-buying-steps>
       {steps.map((step, i) => (
         <article
           class:list={[
             'buying-step group relative',
-            i < 2 && 'md:border-r md:border-king-border/70',
-            i === 0 && 'md:pr-7 lg:pr-9',
-            i === 1 && 'md:px-7 lg:px-9',
-            i === 2 && 'md:pl-7 lg:pl-9',
+            i < 2 && 'md:border-r md:border-king-border/60',
+            i === 0 && 'md:pr-10 lg:pr-14',
+            i === 1 && 'md:px-10 lg:px-14',
+            i === 2 && 'md:pl-10 lg:pl-14',
           ]}
           data-buying-step
         >
-          <div class="mb-6 flex items-center gap-4">
-            <span class="buying-step-num relative z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-king-border/90 bg-king-bg font-mono text-[12px] font-medium tracking-[-0.02em] text-king-accent shadow-[0_10px_28px_rgba(18,15,12,0.06)] transition-all duration-500 group-hover:border-king-accent/38 group-hover:bg-white/56">
+          <div class="relative">
+            <span class="buying-step-num mb-6 inline-flex h-10 w-10 items-center justify-center rounded-full border border-king-accent/25 bg-king-bg font-mono text-[11px] font-medium text-king-accent">
               {step.num}
             </span>
-            {i < 2 && <span class="h-px flex-1 bg-king-border/60 md:hidden"></span>}
-          </div>
-
-          <div class="buying-step-card relative overflow-hidden rounded-[var(--kb-radius-lg)] border border-king-border/80 bg-white/34 p-6 backdrop-blur-[var(--kb-blur-sm)] md:p-7">
-            <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(138,106,61,0.1),transparent_38%)] opacity-0 transition-opacity duration-500 group-hover:opacity-100"></div>
-            <div class="relative">
-              <div class="mb-4 flex items-center gap-3">
-                <span class="h-px w-6 bg-king-accent/28 transition-all duration-500 group-hover:w-10"></span>
-                <span class="text-[10px] font-medium uppercase tracking-[0.2em] text-king-accent/65">Paso {step.num}</span>
-              </div>
-              <h3 class="mb-3 text-[1.5rem] font-light leading-[0.98] tracking-[var(--kb-title-tracking)] text-king-text md:text-[1.75rem]">
-                {step.title}
-              </h3>
-              <p class="text-[14px] leading-[1.75] text-king-muted md:text-[15px]">
-                {step.desc}
-              </p>
-            </div>
-            <span class="absolute bottom-0 left-0 h-px w-0 bg-gradient-to-r from-king-accent/46 to-transparent transition-all duration-700 group-hover:w-full"></span>
+            <h3 class="mb-3 text-[1.5rem] font-light leading-[0.98] tracking-[var(--kb-title-tracking)] text-king-text md:text-[1.75rem]">
+              {step.title}
+            </h3>
+            <p class="text-[14px] leading-[1.75] text-king-muted md:text-[15px]">
+              {step.desc}
+            </p>
           </div>
         </article>
       ))}
     </div>
 
-    <div class="buying-cta-wrap flex flex-col items-center justify-center gap-3 sm:flex-row" data-buying-cta>
+    <div class="buying-cta-wrap mt-14 flex flex-col items-center justify-center gap-4 sm:flex-row md:mt-20" data-buying-cta>
       {channels.map((ch, index) => (
         <a
           href={ch.href}
           target="_blank"
           rel="noopener noreferrer"
           class:list={[
-            'buying-cta-btn group inline-flex items-center gap-3 rounded-full border px-6 py-3 text-[11px] font-medium uppercase tracking-[0.2em] transition-all duration-500',
+            'group inline-flex items-center gap-3 rounded-full border px-7 py-2.5 text-[10px] font-medium uppercase tracking-[0.2em] transition-all duration-500',
             index === 0
               ? 'border-king-text bg-king-text text-king-bg hover:border-king-accent hover:bg-king-accent'
-              : 'border-king-border/80 bg-white/38 text-king-text backdrop-blur-[var(--kb-blur-sm)] hover:border-king-accent/34 hover:bg-white/56 hover:text-king-accent',
+              : 'border-king-border/80 bg-white/40 text-king-text backdrop-blur-sm hover:border-king-accent/40 hover:bg-white/60 hover:text-king-accent',
           ]}
         >
           <span>{ch.label}</span>
-          <span class="h-px w-6 bg-current transition-all duration-500 group-hover:w-9"></span>
+          <span class="h-px w-5 bg-current transition-all duration-500 group-hover:w-8"></span>
           <svg class="h-3 w-3 transition-transform duration-300 group-hover:translate-x-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M5 12h14M12 5l7 7-7 7" />
           </svg>
         </a>
       ))}
-    </div>
-
-    <div class="buying-bottom mt-14 border-t border-king-border/60 pt-5 md:mt-16">
-      <div class="flex flex-wrap items-center justify-center gap-x-8 gap-y-3">
-        {assurances.map((item) => (
-          <div class="flex items-center gap-2.5">
-            <span class="h-1 w-1 rounded-full bg-king-accent/50"></span>
-            <span class="text-[11px] font-medium uppercase tracking-[0.2em] text-king-muted/70">{item}</span>
-          </div>
-        ))}
-      </div>
     </div>
   </div>
 </section>
@@ -125,41 +99,16 @@ const assurances = ['Envío rápido', 'Pago seguro', 'Atención personal', 'Devo
   }
 
   .buying-bg {
-    opacity: 0.4;
+    opacity: 0.35;
     background-image:
-      linear-gradient(90deg, rgba(138, 106, 61, 0.075) 0, rgba(138, 106, 61, 0.075) 1px, transparent 1px),
-      linear-gradient(rgba(26, 26, 26, 0.024) 1px, transparent 1px);
+      linear-gradient(90deg, rgba(138, 106, 61, 0.065) 0, rgba(138, 106, 61, 0.065) 1px, transparent 1px),
+      linear-gradient(rgba(26, 26, 26, 0.02) 1px, transparent 1px);
     background-size: 11rem 100%, 100% 5rem;
     mask-image: linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.8) 16%, transparent 92%);
   }
 
-  .buying-step-card,
-  .buying-cta-pill,
-  .buying-cta-btn {
-    box-shadow:
-      0 18px 50px rgba(18, 15, 12, 0.07),
-      inset 0 1px 0 rgba(255, 255, 255, 0.7);
-  }
-
-  .buying-step-card {
-    transition:
-      transform 600ms var(--kb-ease-out),
-      border-color 500ms var(--kb-ease-out),
-      background-color 500ms var(--kb-ease-out),
-      box-shadow 600ms var(--kb-ease-out);
-  }
-
-  .buying-step:hover .buying-step-card {
-    transform: translateY(-3px);
-    border-color: rgba(138, 106, 61, 0.24);
-    background-color: rgba(255, 255, 255, 0.54);
-    box-shadow:
-      0 24px 60px rgba(18, 15, 12, 0.1),
-      inset 0 1px 0 rgba(255, 255, 255, 0.74);
-  }
-
-  .buying-connect-line {
-    background: linear-gradient(90deg, rgba(138, 106, 61, 0.08), rgba(138, 106, 61, 0.36), rgba(138, 106, 61, 0.08));
+  .buying-step-num {
+    box-shadow: 0 8px 24px rgba(18, 15, 12, 0.06);
   }
 </style>
 
@@ -191,27 +140,10 @@ const assurances = ['Envío rápido', 'Pago seguro', 'Atención personal', 'Devo
         duration: 0.68,
         stagger: 0.09,
       }, 0.18)
-      .from(scope.querySelector('.buying-connect-line'), {
-        scaleX: 0,
-        opacity: 0,
-        duration: 0.75,
-        transformOrigin: 'left center',
-      }, 0.42)
-      .from(scope.querySelector('.buying-cta-divider'), {
-        scaleX: 0,
-        opacity: 0,
-        duration: 0.62,
-        transformOrigin: 'center',
-      }, 0.52)
       .from(scope.querySelector('.buying-cta-wrap'), {
         y: 14,
         opacity: 0,
         duration: 0.62,
-      }, 0.62)
-      .from(scope.querySelector('.buying-bottom'), {
-        y: 12,
-        opacity: 0,
-        duration: 0.55,
-      }, 0.72);
+      }, 0.62);
   }
 </script>

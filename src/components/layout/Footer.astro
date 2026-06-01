@@ -6,12 +6,6 @@ const socialLinks = [
   { label: 'Instagram', href: 'https://instagram.com/kingbelt', icon: 'instagram' as const },
   { label: 'WhatsApp', href: 'https://wa.me/1234567890', icon: 'paper-plane' as const },
 ];
-
-const legalLinks = [
-  { label: 'Privacidad', href: '#' },
-  { label: 'Terminos', href: '#' },
-  { label: 'Envios', href: '#' },
-];
 ---
 
 <footer class="footer-shell relative overflow-hidden bg-king-bg" data-gsap-footer-standalone>
@@ -45,8 +39,8 @@ const legalLinks = [
           </span>
           <span class="hidden md:block h-px w-8 bg-king-accent/20 transition-all duration-500 group-hover:w-14 group-hover:bg-king-accent/40"></span>
         </a>
-        <p class="mb-5 text-[12px] font-light leading-[1.8] text-king-muted/60 md:text-[13px]">
-          Cinturones masculinos de inspiracion motera. Diseno contemporaneo y artesania sin concesiones.
+        <p class="mb-5 text-[13px] font-light leading-[1.8] text-king-muted/60">
+          Cinturones masculinos de inspiración motera. Diseño contemporáneo y artesanía sin concesiones.
         </p>
         <div class="flex items-center gap-3">
           {socialLinks.map((s) => (
@@ -68,15 +62,15 @@ const legalLinks = [
       <div class="footer-nav">
         <div class="flex items-center gap-2 mb-4">
           <span class="h-px w-5 bg-king-accent/25"></span>
-          <h4 class="text-[9px] font-medium uppercase tracking-[0.25em] text-king-text">
-            Navegacion
+          <h4 class="text-[10px] font-medium uppercase tracking-[0.25em] text-king-text">
+            Navegación
           </h4>
         </div>
         <nav class="flex flex-col gap-2.5">
           {footerNav.map((item) => (
             <a
               href={item.href}
-              class="footer-nav-link relative inline-block text-[12px] font-light text-king-muted/60 transition-all duration-500 hover:text-king-text md:text-[13px]"
+              class="footer-nav-link relative inline-block text-[13px] font-light text-king-muted/60 transition-all duration-500 hover:text-king-text"
             >
               {item.label}
             </a>
@@ -88,50 +82,32 @@ const legalLinks = [
       <div class="footer-contact">
         <div class="flex items-center gap-2 mb-4">
           <span class="h-px w-5 bg-king-accent/25"></span>
-          <h4 class="text-[9px] font-medium uppercase tracking-[0.25em] text-king-text">
+          <h4 class="text-[10px] font-medium uppercase tracking-[0.25em] text-king-text">
             Contacto
           </h4>
         </div>
         <div class="flex flex-col gap-2.5">
           <a
-            href="mailto:hola@kingbelt.com"
-            class="footer-link relative inline-block text-[12px] font-light text-king-muted/60 transition-all duration-500 hover:text-king-accent md:text-[13px]"
-          >
-            hola@kingbelt.com
-          </a>
-          <a
             href="https://wa.me/1234567890"
             target="_blank"
             rel="noopener noreferrer"
-            class="footer-link relative inline-block text-[12px] font-light text-king-muted/60 transition-all duration-500 hover:text-king-accent md:text-[13px]"
+            class="footer-link relative inline-block text-[13px] font-light text-king-muted/60 transition-all duration-500 hover:text-king-accent"
           >
             WhatsApp
           </a>
-        </div>
-      </div>
-
-      {/* Legal */}
-      <div class="footer-legal">
-        <div class="flex items-center gap-2 mb-4">
-          <span class="h-px w-5 bg-king-accent/25"></span>
-          <h4 class="text-[9px] font-medium uppercase tracking-[0.25em] text-king-text">
-            Legal
-          </h4>
-        </div>
-        <div class="flex flex-col gap-2.5">
-          {legalLinks.map((link) => (
-            <a
-              href={link.href}
-              class="footer-link relative inline-block text-[12px] font-light text-king-muted/60 transition-all duration-500 hover:text-king-text md:text-[13px]"
-            >
-              {link.label}
-            </a>
-          ))}
+          <a
+            href="https://instagram.com/kingbelt"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="footer-link relative inline-block text-[13px] font-light text-king-muted/60 transition-all duration-500 hover:text-king-accent"
+          >
+            Instagram
+          </a>
         </div>
       </div>
     </div>
 
-    {/* ========== GIANT TYPOGRAPHY ========== */}
+    {/* Giant typography */}
     <div class="footer-giant-wrap relative overflow-hidden" style="height: clamp(8rem, 16vw, 16rem);">
       <span
         class="footer-giant font-display absolute left-1/2 top-0 block -translate-x-1/2 select-none uppercase leading-[0.72] tracking-[0.06em] text-king-text"
@@ -140,7 +116,7 @@ const legalLinks = [
       </span>
     </div>
 
-    {/* Bottom bar — floats over the tail of the giant text */}
+    {/* Bottom bar */}
     <div class="footer-bottom-bar relative z-10 flex flex-col items-center gap-4 border-t border-king-border/25 pt-6 pb-8 md:flex-row md:justify-between md:pb-10">
       <div class="flex items-center gap-3">
         <span class="flex h-5 w-5 items-center justify-center rounded-full border border-king-accent/20">
@@ -151,7 +127,7 @@ const legalLinks = [
         </p>
       </div>
       <p class="text-[10px] font-light tracking-[0.05em] text-king-muted/40">
-        Disenado para hombres que se mueven diferente.
+        Diseñado para hombres que se mueven diferente.
       </p>
     </div>
   </div>
@@ -195,7 +171,6 @@ const legalLinks = [
     background-repeat: repeat-x;
   }
 
-  /* Corner frames for light background */
   .footer-frame {
     position: absolute;
     width: 1.75rem;
@@ -265,7 +240,6 @@ const legalLinks = [
     transform: translateX(3px);
   }
 
-  /* Giant typography — clamped to viewport, overflow-hidden crops the bottom */
   .footer-giant {
     font-size: clamp(7rem, 18vw, 16rem);
     white-space: nowrap;
@@ -307,7 +281,6 @@ const legalLinks = [
       .from(footerScope.querySelector('.footer-brand'), { y: 20, opacity: 0, duration: 0.7 }, 0.3)
       .from(footerScope.querySelector('.footer-nav'), { y: 20, opacity: 0, duration: 0.7 }, 0.4)
       .from(footerScope.querySelector('.footer-contact'), { y: 20, opacity: 0, duration: 0.7 }, 0.5)
-      .from(footerScope.querySelector('.footer-legal'), { y: 20, opacity: 0, duration: 0.7 }, 0.6)
       .from(footerScope.querySelector('.footer-giant'), { y: 40, opacity: 0, duration: 1.2 }, 0.5)
       .from(footerScope.querySelector('.footer-bottom-bar'), { y: 10, opacity: 0, duration: 0.6 }, 0.85);
   }

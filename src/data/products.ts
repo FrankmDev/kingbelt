@@ -21,7 +21,7 @@ export const products: Product[] = [
     slug: 'roadmaster-classic',
     name: 'Roadmaster Classic',
     description:
-      'El cinturón definitivo para el hombre que vive en movimiento. Confeccionado en piel de vacuno de grano completo de 4mm de espesor, el Roadmaster Classic combina la robustez de la tradición motera con una silueta depurada y contemporánea. La hebilla de acero inoxidable cepillado aporta un punto de luz industrial que eleva cualquier look.',
+      'El cinturón definitivo para el hombre que vive en movimiento. Confeccionado en piel de vacuno de grano completo de 4 mm de espesor, el Roadmaster Classic combina la robustez de la tradición motera con una silueta depurada y contemporánea. La hebilla de acero inoxidable cepillado aporta un punto de luz industrial que eleva cualquier look.',
     shortDescription: 'Piel grano completo. Hebilla acero cepillado. El clásico reinventado.',
     images: [
       'https://picsum.photos/seed/kingbelt-roadmaster-1/800/1000',
@@ -59,12 +59,12 @@ export const products: Product[] = [
     sizes: ['85', '90', '95', '100', '105', '110'],
     amazonUrl: 'https://amazon.com/kingbelt-roadmaster-classic',
     whatsappMessage: 'Hola, estoy interesado en el modelo Roadmaster Classic de KingBelt.',
-    materials: ['Piel de vacuno grano completo', 'Forro interior de microfibra', 'Hebilla de acero inoxidable 316L'],
+    materials: ['Piel de vacuno grano completo', 'Forro interior de microfibra', 'Hebilla de acero inoxidable'],
     features: [
       'Costuras reforzadas a doble aguja',
       'Acabado envejecido a mano',
       'Resistente al agua y abrasión',
-      'Ancho: 4cm',
+      'Ancho: 4 cm',
     ],
     badge: 'bestseller',
   },
@@ -73,7 +73,7 @@ export const products: Product[] = [
     slug: 'iron-striker',
     name: 'Iron Striker',
     description:
-      'Diseñado para soportar el paso del tiempo sin perder identidad. El Iron Striker presenta una hebilla de doble pasador en acero bruto que evoca la estética de los talleres mecánicos de Detroit. La piel vaquetilla se oscurece con el uso, desarrollando una pátina única que cuenta tu historia.',
+      'Diseñado para soportar el paso del tiempo sin perder identidad. El Iron Striker presenta una hebilla de doble pasador en acero bruto que evoca la estética de los talleres mecánicos. La piel vaquetilla se oscurece con el uso, desarrollando una pátina única que cuenta tu historia.',
     shortDescription: 'Vaquetilla natural. Doble pasador. Evoluciona contigo.',
     images: [
       'https://picsum.photos/seed/kingbelt-iron-1/800/1000',
@@ -111,7 +111,7 @@ export const products: Product[] = [
       'Doble pasador de seguridad',
       'Pátina natural progresiva',
       'Borde bruñido a mano',
-      'Ancho: 3.8cm',
+      'Ancho: 3.8 cm',
     ],
   },
   {
@@ -119,7 +119,7 @@ export const products: Product[] = [
     slug: 'asphalt-rider',
     name: 'Asphalt Rider',
     description:
-      'Minimalismo extremo para el hombre que prefiere dejar que sus acciones hablen. El Asphalt Rider elimina lo superfluo para centrarse en la esencia: una banda de piel negra mate de altísima calidad y una hebilla de perfil bajo en negro mate. Invisible hasta que decides destacar.',
+      'Minimalismo extremo para el hombre que prefiere dejar que sus acciones hablen. El Asphalt Rider elimina lo superfluo para centrarse en la esencia: una banda de piel negra mate de altísima calidad y una hebilla de perfil bajo en negro mate.',
     shortDescription: 'Piel negra mate. Hebilla low-profile. Sutileza total.',
     images: [
       'https://picsum.photos/seed/kingbelt-asphalt-1/800/1000',
@@ -162,7 +162,7 @@ export const products: Product[] = [
       'Hebilla de perfil ultra-bajo',
       'Acabado mate resistente a arañazos',
       'Flexibilidad superior desde el primer uso',
-      'Ancho: 3.5cm',
+      'Ancho: 3.5 cm',
     ],
     badge: 'new',
   },
@@ -204,12 +204,12 @@ export const products: Product[] = [
     sizes: ['90', '95', '100', '105', '110', '115'],
     amazonUrl: 'https://amazon.com/kingbelt-tank-buckle',
     whatsappMessage: 'Hola, estoy interesado en el modelo Tank Buckle de KingBelt.',
-    materials: ['Piel de búfalo de 5mm', 'Hebilla de acero fundido', 'Remaches de cobre'],
+    materials: ['Piel de búfalo de 5 mm', 'Hebilla de acero fundido', 'Remaches de cobre'],
     features: [
       'Hebilla de placa completa estilo industrial',
       'Remaches decorativos funcionales',
       'Banda extra gruesa para máxima durabilidad',
-      'Ancho: 4.5cm',
+      'Ancho: 4.5 cm',
     ],
   },
   {
@@ -217,7 +217,7 @@ export const products: Product[] = [
     slug: 'night-crawler',
     name: 'Night Crawler',
     description:
-      'Elegancia nocturna con un twist subversivo. El Night Crawler combina piel de serpiente texturizada en relieve con una hebilla geométrica en tono antracita. Diseñado para la noche, funciona igual de bien con un traje oscuro que con una chaqueta de cuero.',
+      'Elegancia nocturna con un twist subversivo. El Night Crawler combina piel de vacuno texturizada en relieve con una hebilla geométrica en tono antracita. Diseñado para la noche, funciona igual de bien con un traje oscuro que con una chaqueta de cuero.',
     shortDescription: 'Textura reptil. Hebilla geométrica. Elegancia oscura.',
     images: [
       'https://picsum.photos/seed/kingbelt-night-1/800/1000',
@@ -255,7 +255,7 @@ export const products: Product[] = [
       'Textura en relieve con efecto 3D',
       'Hebilla geométrica de diseño exclusivo',
       'Tratamiento hidrófugo',
-      'Ancho: 3.5cm',
+      'Ancho: 3.5 cm',
     ],
   },
   {
@@ -305,8 +305,8 @@ export const products: Product[] = [
     features: [
       'Hebilla de latón con acabado envejecido',
       'Costuras selladas a calor',
-      'Garantía de por vida',
-      'Ancho: 4cm',
+      'Piel seleccionada a mano',
+      'Ancho: 4 cm',
     ],
     badge: 'bestseller',
   },
@@ -348,12 +348,12 @@ export const products: Product[] = [
     sizes: ['85', '90', '95', '100', '105', '110'],
     amazonUrl: 'https://amazon.com/kingbelt-steel-rebel',
     whatsappMessage: 'Hola, estoy interesado en el modelo Steel Rebel de KingBelt.',
-    materials: ['Piel de caballo full-grain', 'Cadena de acero inoxidable 304', 'Hebilla de seguridad de doble prong'],
+    materials: ['Piel de vacuno grano completo', 'Cadena de acero inoxidable', 'Hebilla de seguridad de doble prong'],
     features: [
       'Detalle de cadena decorativa funcional',
       'Doble prong para máxima sujeción',
       'Acabado distressed intencional',
-      'Ancho: 4cm',
+      'Ancho: 4 cm',
     ],
   },
 ];

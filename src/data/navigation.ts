@@ -4,16 +4,14 @@ export interface NavItem {
 }
 
 export const mainNav: NavItem[] = [
-  { label: 'Inicio', href: '/' },
   { label: 'Colección', href: '/#coleccion' },
-  { label: 'La Marca', href: '/#marca' },
+  { label: 'La marca', href: '/#marca' },
   { label: 'Contacto', href: '/#contacto' },
 ];
 
 export const footerNav: NavItem[] = [
-  { label: 'Inicio', href: '/' },
   { label: 'Colección', href: '/#coleccion' },
-  { label: 'La Marca', href: '/#marca' },
+  { label: 'La marca', href: '/#marca' },
   { label: 'Contacto', href: '/#contacto' },
 ];
 

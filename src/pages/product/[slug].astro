@@ -1,11 +1,12 @@
 ---
 import type { ImageMetadata } from 'astro';
-import { Image } from 'astro:assets';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Header from '../../components/layout/Header.astro';
 import FooterSection from '../../components/layout/FooterSection.astro';
 import ProductCard from '../../components/product/ProductCard.astro';
 import Button from '../../components/ui/Button.astro';
+import Badge from '../../components/ui/Badge.astro';
+import SectionHeader from '../../components/common/SectionHeader.astro';
 import { products, getProductBySlug, getRelatedProducts } from '../../data/products';
 
 export function getStaticPaths() {
@@ -46,122 +47,137 @@ const galleryItems = product.colors.map((color) => ({
   image: primaryImage.src,
   alt: `${product.name} acabado ${color.name}`,
 }));
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'Product',
+  name: product.name,
+  description: product.shortDescription,
+  image: primaryImage.src,
+  brand: {
+    '@type': 'Brand',
+    name: 'KingBelt',
+  },
+  offers: {
+    '@type': 'Offer',
+    url: product.amazonUrl,
+    availability: 'https://schema.org/InStock',
+    priceCurrency: 'EUR',
+  },
+};
 ---
 
-<BaseLayout title={pageTitle} description={pageDescription}>
+<BaseLayout title={pageTitle} description={pageDescription} schema={schema}>
   <Header slot="header" initialTheme="light" scrolledTheme="light" compactThreshold={36} />
 
-  <main class="relative pb-16 pt-24 md:pt-32">
-    <div
-      class="pointer-events-none absolute inset-0 opacity-[0.02]"
-      style="background-image: linear-gradient(90deg, rgba(138,106,61,0.14) 0, rgba(138,106,61,0.14) 1px, transparent 1px, transparent 24%), linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px); background-size: 160px 100%, 100% 100%;"
-    ></div>
+  <main class="relative overflow-hidden bg-king-bg" data-gsap-product-page>
+    {/* Ambient background grid */}
+    <div class="product-bg pointer-events-none absolute inset-0"></div>
+    <div class="pointer-events-none absolute right-[-10rem] top-24 h-[32rem] w-[32rem] rounded-full bg-king-accent/[0.06] blur-[145px]"></div>
 
-    <div class="relative mx-auto px-6 md:px-10 lg:px-16">
-      <nav class="mb-8 md:mb-12" aria-label="Breadcrumb">
+    <div class="kb-shell-wide relative pb-16 pt-28 md:pb-24 md:pt-36">
+      {/* ===== Breadcrumb ===== */}
+      <nav class="product-breadcrumb mb-10 md:mb-14" aria-label="Breadcrumb">
         <ol class="flex items-center gap-2 text-[10px] uppercase tracking-[0.25em] text-king-muted/50">
-          <li><a href="/" class="transition-colors duration-300 hover:text-king-text">Inicio</a></li>
+          <li><a href="/" class="transition-colors duration-300 hover:text-king-accent">Inicio</a></li>
           <li class="text-king-border">/</li>
-          <li><a href="/#coleccion" class="transition-colors duration-300 hover:text-king-text">Colección</a></li>
+          <li><a href="/#coleccion" class="transition-colors duration-300 hover:text-king-accent">Colección</a></li>
           <li class="text-king-border">/</li>
           <li class="font-medium text-king-text">{product.name}</li>
         </ol>
       </nav>
 
-      <div class="mb-24 grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-16">
-
-        {/* ===== LEFT: Full-height gallery ===== */}
+      {/* ===== Main product grid ===== */}
+      <div class="product-main-grid grid grid-cols-1 gap-12 lg:grid-cols-12 lg:gap-16">
+        {/* LEFT: Sticky gallery */}
         <div
-          class="lg:col-span-6 lg:sticky lg:top-28 lg:self-start lg:h-[calc(100svh-8rem)]"
+          class="lg:col-span-7 lg:sticky lg:top-28 lg:self-start lg:h-[calc(100svh-8rem)]"
           data-product-gallery
           data-gallery-items={JSON.stringify(galleryItems)}
           data-default-index="0"
         >
           <div
-            class="product-gallery-frame relative h-full overflow-hidden min-h-[clamp(28rem,68vh,48rem)] lg:min-h-0"
+            class="product-gallery-frame relative h-full min-h-[22rem] overflow-hidden md:min-h-[clamp(28rem,68vh,48rem)] lg:min-h-0"
             style={`--product-gallery-accent: ${defaultColorHex};`}
           >
-            {/* Background gradient tint */}
-            <div class="absolute inset-0 bg-[linear-gradient(160deg,rgba(255,255,255,0.92)_0%,rgba(235,232,228,0.96)_48%,rgba(215,206,196,0.88)_100%)]"></div>
-            <div class="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.72),transparent_42%)]"></div>
-            <div class="absolute inset-0 opacity-70" style="background: linear-gradient(180deg, color-mix(in srgb, var(--product-gallery-accent) 12%, transparent) 0%, transparent 26%, transparent 100%);"></div>
+            {/* Dark base + cinematic gradients */}
+            <div class="absolute inset-0 bg-[#14110d]"></div>
+            <div class="absolute inset-0 bg-gradient-to-t from-black/72 via-black/22 to-transparent"></div>
+            <div class="absolute inset-0 bg-gradient-to-r from-black/48 via-transparent to-transparent"></div>
+            <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(138,106,61,0.08),transparent_40%)]"></div>
 
-            {/* Blueprint corner marks */}
-            <div class="absolute inset-3 z-10 pointer-events-none md:inset-5">
-              <span class="absolute left-0 top-0 h-[1px] w-5 bg-king-accent/20"></span>
-              <span class="absolute left-0 top-0 h-5 w-[1px] bg-king-accent/20"></span>
-              <span class="absolute right-0 top-0 h-[1px] w-5 bg-king-accent/20"></span>
-              <span class="absolute right-0 top-0 h-5 w-[1px] bg-king-accent/20"></span>
-              <span class="absolute bottom-0 left-0 h-[1px] w-5 bg-king-accent/20"></span>
-              <span class="absolute bottom-0 left-0 h-5 w-[1px] bg-king-accent/20"></span>
-              <span class="absolute bottom-0 right-0 h-[1px] w-5 bg-king-accent/20"></span>
-              <span class="absolute bottom-0 right-0 h-5 w-[1px] bg-king-accent/20"></span>
+            {/* Inner frame border */}
+            <div class="pointer-events-none absolute inset-4 rounded-[calc(var(--kb-radius-lg)-0.5rem)] border border-white/[0.07] md:inset-5"></div>
+
+            {/* Corner frames */}
+            <div class="absolute inset-5 z-10 pointer-events-none md:inset-6">
+              <span class="kb-corner-frame absolute left-0 top-0"></span>
+              <span class="kb-corner-frame absolute right-0 top-0" style="transform: scaleX(-1);"></span>
+              <span class="kb-corner-frame absolute bottom-0 left-0" style="transform: scaleY(-1);"></span>
+              <span class="kb-corner-frame absolute bottom-0 right-0" style="transform: scale(-1);"></span>
             </div>
 
             {/* Product ID */}
-            <div class="absolute right-4 top-4 z-10 md:right-6 md:top-6">
-              <span class="text-[10px] font-mono uppercase tracking-[0.18em] text-king-text/15">{product.id}</span>
+            <div class="absolute right-5 top-5 z-10 md:right-6 md:top-6">
+              <span class="font-mono text-[10px] uppercase tracking-[0.18em] text-white/25">{product.id}</span>
             </div>
 
             {/* Badge */}
             {product.badge && (
-              <div class="absolute left-4 top-4 z-10 md:left-6 md:top-6">
-                <span
-                  class:list={[
-                    'inline-block px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em]',
-                    product.badge === 'new' ? 'bg-king-text text-king-surface' : 'bg-king-accent text-king-surface',
-                  ]}
-                >
-                  {product.badge === 'new' ? 'Nuevo' : 'Top Ventas'}
-                </span>
+              <div class="absolute left-5 top-5 z-10 md:left-6 md:top-6">
+                <Badge type={product.badge === 'new' ? 'new' : 'bestseller'} />
               </div>
             )}
 
-            {/* Main image — fills full height */}
+            {/* Main image */}
             <img
               src={primaryImage.src}
               width={primaryImage.width}
               height={primaryImage.height}
-              alt={`${product.name} acabado ${defaultColorName}`}
+              alt={`${product.name} — cinturón de cuero, acabado ${defaultColorName}`}
               class="product-main-image relative z-[1] h-full w-full object-cover object-center transition-opacity duration-300"
               loading="eager"
             />
 
             {/* Bottom fade */}
-            <div class="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/15 to-transparent"></div>
+            <div class="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/55 to-transparent"></div>
           </div>
         </div>
 
-        {/* ===== RIGHT: Product info ===== */}
-        <div class="flex flex-col lg:col-span-6" data-product-info>
-          <span class="mb-3 text-[10px] font-mono uppercase tracking-[0.2em] text-king-muted/40">{product.id}</span>
+        {/* RIGHT: Product info */}
+        <div class="product-info-col relative flex flex-col lg:col-span-5">
+          {/* Decorative corner accents */}
+          <div class="pointer-events-none absolute -top-2 -left-2 hidden h-6 w-6 border-t border-l border-king-accent/40 lg:block"></div>
+          <div class="pointer-events-none absolute -bottom-2 -right-2 hidden h-6 w-6 border-b border-r border-king-accent/40 lg:block"></div>
 
-          <h1 class="mb-5 font-serif text-4xl leading-[0.92] tracking-[-0.02em] text-king-text md:text-5xl lg:text-6xl">
+          <span class="product-id eyebrow-text mb-3 text-king-muted/45">{product.id}</span>
+
+          <h1 class="product-title font-display text-[2rem] leading-[0.92] tracking-[-0.02em] text-king-text sm:text-[2.5rem] md:text-5xl lg:text-[3.5rem]">
             {product.name}
           </h1>
 
-          <p class="mb-6 max-w-md text-[14px] leading-[1.8] text-king-muted md:text-[15px]">
+          <p class="product-short-desc body-copy mt-5 max-w-md text-king-muted">
             {product.shortDescription}
           </p>
 
-          <div class="mb-6 flex items-center gap-0">
-            <span class="h-[1px] w-10 bg-king-border"></span>
-            <span class="mx-3 h-1 w-1 rounded-full bg-king-accent/40"></span>
-            <span class="h-[1px] w-10 bg-king-border"></span>
+          <div class="product-divider my-8 flex items-center gap-3">
+            <span class="h-px flex-1 bg-king-border"></span>
+            <span class="kb-divider-dot"></span>
+            <span class="h-px flex-1 bg-king-border"></span>
           </div>
 
-          {/* Color selector — swatches only */}
-          <div class="mb-8" data-color-selector>
+          {/* Color selector */}
+          <div class="product-selector mb-8" data-color-selector>
             <div class="mb-3 flex items-center gap-3">
-              <span class="text-[10px] font-medium uppercase tracking-[0.2em] text-king-text">Color</span>
-              <span class="color-name text-[10px] uppercase tracking-[0.15em] text-king-muted/60">{defaultColorName}</span>
+              <span class="kb-eyebrow text-king-text">Color</span>
+              <span class="color-name meta-text text-king-muted/55">{defaultColorName}</span>
             </div>
             <div class="flex items-center gap-3">
               {product.colors.map((color, i) => (
                 <button
                   class:list={[
                     'color-swatch group relative h-9 w-9 rounded-full border-2 transition-all duration-300',
-                    i === 0 ? 'border-king-accent scale-110' : 'border-king-border/30 hover:border-king-accent/50',
+                    i === 0 ? 'border-king-accent scale-110' : 'border-king-border/40 hover:border-king-accent/60',
                   ]}
                   data-color-index={i}
                   type="button"
@@ -175,17 +191,19 @@ const galleryItems = product.colors.map((color) => ({
             </div>
           </div>
 
-          <div class="mb-8">
-            <p class="max-w-lg text-[14px] leading-[1.9] text-king-text/80 md:text-[15px]">
+          {/* Description */}
+          <div class="product-description mb-8">
+            <p class="body-copy max-w-lg text-king-text/80">
               {product.description}
             </p>
           </div>
 
-          <div class="mb-8">
-            <span class="mb-3 block text-[10px] font-medium uppercase tracking-[0.2em] text-king-text">Materiales</span>
+          {/* Materials */}
+          <div class="product-materials mb-8">
+            <span class="kb-eyebrow mb-3 block text-king-text">Materiales</span>
             <ul class="space-y-2">
               {product.materials.map((mat) => (
-                <li class="flex items-start gap-2.5 text-[14px] leading-relaxed text-king-muted">
+                <li class="flex items-start gap-2.5 text-[14px] leading-relaxed text-king-muted md:text-[15px]">
                   <span class="mt-[7px] h-1 w-1 shrink-0 rounded-full bg-king-accent/40"></span>
                   {mat}
                 </li>
@@ -193,19 +211,20 @@ const galleryItems = product.colors.map((color) => ({
             </ul>
           </div>
 
-          <div class="mb-10">
+          {/* Sizes */}
+          <div class="product-sizes mb-10">
             <div class="mb-3 flex items-center gap-3">
-              <span class="text-[10px] font-medium uppercase tracking-[0.2em] text-king-text">Talla</span>
-              <span class="size-name text-[10px] uppercase tracking-[0.15em] text-king-muted/60">{product.sizes[0]} cm</span>
+              <span class="kb-eyebrow text-king-text">Tallas disponibles</span>
+              <span class="size-name meta-text text-king-muted/55">{product.sizes[0]} cm</span>
             </div>
             <div class="flex flex-wrap gap-2" data-size-selector>
               {product.sizes.map((size, index) => (
                 <button
                   class:list={[
-                     'size-btn border px-3.5 py-1.5 text-[11px] font-medium uppercase tracking-[0.1em] transition-all duration-300',
+                    'size-btn border px-3.5 py-1.5 text-[11px] font-medium uppercase tracking-[0.1em] transition-all duration-300',
                     index === 0
                       ? 'border-king-accent bg-king-accent/5 text-king-accent'
-                      : 'border-king-border/50 text-king-muted hover:border-king-accent/40 hover:text-king-text',
+                      : 'border-king-border/60 text-king-muted hover:border-king-accent/40 hover:text-king-text',
                   ]}
                   data-size={size}
                   type="button"
@@ -216,13 +235,14 @@ const galleryItems = product.colors.map((color) => ({
             </div>
           </div>
 
-          <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {/* Actions */}
+          <div class="product-actions grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Button
               href={product.amazonUrl}
               target="_blank"
               rel="noopener noreferrer"
-              variant="secondary"
-              size="md"
+              variant="primary"
+              size="lg"
               class="w-full"
             >
               Comprar en Amazon
@@ -234,8 +254,8 @@ const galleryItems = product.colors.map((color) => ({
               href={whatsappUrl}
               target="_blank"
               rel="noopener noreferrer"
-              variant="surfaceOutline"
-              size="md"
+              variant="outline"
+              size="lg"
               class="w-full"
             >
               Pedir al fabricante
@@ -245,47 +265,70 @@ const galleryItems = product.colors.map((color) => ({
       </div>
 
       {/* ===== Features ===== */}
-      <div class="mb-24">
-        <div class="border-t border-king-border/60 pt-16">
-          <div class="mb-10 flex items-center gap-4">
-            <span class="text-[10px] font-mono uppercase tracking-[0.22em] text-king-accent/50">01</span>
-            <span class="h-px flex-1 bg-king-border/60"></span>
-            <h2 class="text-[11px] font-medium uppercase tracking-[0.22em] text-king-text">Detalles Artesanales</h2>
-            <span class="h-px flex-1 bg-king-border/60"></span>
-          </div>
-          <div class="grid grid-cols-1 gap-0 md:grid-cols-2 lg:grid-cols-4">
-            {product.features.map((feature, index) => (
-              <article class="group relative border-b border-king-border/40 px-5 py-6 last:!border-b-0 md:px-6 md:py-7 lg:border-b-0 lg:border-r last:!border-r-0">
-                <div class="mb-4 flex items-center gap-3">
-                  <span class="tabular-nums text-[10px] font-mono text-king-accent/50">0{index + 1}</span>
-                  <span class="h-px flex-1 bg-king-border/40 transition-colors duration-500 group-hover:bg-king-accent/30"></span>
-                </div>
-                <p class="text-[14px] leading-[1.75] text-king-text md:text-[15px]">{feature}</p>
-                <span class="absolute bottom-0 left-0 h-[1px] w-full origin-left scale-x-0 bg-king-accent transition-transform duration-500 group-hover:scale-x-100"></span>
-              </article>
-            ))}
-          </div>
+      <div class="product-features section-spacing-lg">
+        <SectionHeader
+          eyebrow="Ficha técnica"
+          body="Cada modelo se construye sobre los mismos principios: materiales honestos, acabado manual y una estética que mejora con el uso."
+          ref={product.id}
+          size="md"
+        >
+          <Fragment slot="title">
+            Detalles
+            <span class="block italic text-king-accent">artesanales.</span>
+          </Fragment>
+        </SectionHeader>
+
+        <div class="mt-12 grid grid-cols-1 gap-5 md:mt-16 md:grid-cols-2 lg:grid-cols-4">
+          {product.features.map((feature, index) => (
+            <article class="product-feature-card group relative overflow-hidden rounded-[var(--kb-radius-lg)] border border-king-border/60 bg-king-surface/60 p-8 backdrop-blur-sm transition-all duration-500 hover:border-king-accent/30 hover:bg-king-surface hover:shadow-[0_28px_80px_rgba(18,15,12,0.08)] md:p-10">
+              {/* Top accent line */}
+              <div class="absolute left-0 right-0 top-0 h-px bg-[linear-gradient(90deg,transparent_0%,var(--color-king-accent)_50%,transparent_100%)] opacity-0 transition-opacity duration-500 group-hover:opacity-40"></div>
+
+              <div class="mb-6 flex items-center justify-between gap-5">
+                <span class="font-mono text-[10px] uppercase tracking-[0.18em] text-king-accent/70">0{index + 1}</span>
+                <span class="h-px w-10 bg-king-accent/24 transition-all duration-500 group-hover:w-16"></span>
+              </div>
+              <p class="text-[15px] leading-[1.75] text-king-text md:text-[16px]">{feature}</p>
+            </article>
+          ))}
         </div>
       </div>
 
       {/* ===== Related products ===== */}
       {related.length > 0 && (
-        <div class="border-t border-king-border/60 pt-16">
-          <div class="mb-10 flex items-center gap-4">
-            <span class="text-[10px] font-mono uppercase tracking-[0.22em] text-king-accent/50">02</span>
-            <span class="h-px flex-1 bg-king-border/60"></span>
-            <h2 class="text-[11px] font-medium uppercase tracking-[0.22em] text-king-text">Más Modelos</h2>
-            <span class="h-px flex-1 bg-king-border/60"></span>
-            <a href="/#coleccion" class="text-[11px] uppercase tracking-[0.18em] text-king-muted/50 transition-colors duration-300 hover:text-king-accent">
-              Ver Todo
+        <div class="product-related section-spacing-lg border-t border-king-border/60">
+          <div class="flex flex-col items-start justify-between gap-8 md:flex-row md:items-end">
+            <SectionHeader
+              eyebrow="Colección"
+              body="Descubre otros cinturones construidos con la misma filosofía."
+              ref="7 modelos"
+              size="md"
+              class="flex-1"
+            >
+              <Fragment slot="title">
+                Más modelos,
+                <span class="block italic text-king-accent">misma actitud.</span>
+              </Fragment>
+            </SectionHeader>
+            <a
+              href="/#coleccion"
+              class="group inline-flex shrink-0 items-center gap-2.5 text-[11px] font-medium uppercase tracking-[0.18em] text-king-muted/55 transition-colors duration-300 hover:text-king-accent"
+            >
+              Ver todo
+              <span class="inline-block h-px w-5 bg-current transition-all duration-500 group-hover:w-8"></span>
             </a>
           </div>
-          <div class="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-6">
+
+          <div class="mt-12 grid grid-cols-1 gap-5 md:mt-16 md:grid-cols-3">
             {related.map((p) => {
               const idx = products.indexOf(p);
               const pPrimary = allImages[idx % allImages.length];
               const pHover = allImages[(idx + 3) % allImages.length] ?? fallbackHoverImage;
-              return <ProductCard product={p} imageSrc={pPrimary} hoverImageSrc={pHover} />;
+              return (
+                <div data-related-card>
+                  <ProductCard product={p} imageSrc={pPrimary} hoverImageSrc={pHover} />
+                </div>
+              );
             })}
           </div>
         </div>
@@ -296,7 +339,129 @@ const galleryItems = product.colors.map((color) => ({
   <FooterSection slot="footer" />
 </BaseLayout>
 
+<style>
+  .product-bg {
+    opacity: 0.35;
+    background-image:
+      linear-gradient(90deg, rgba(138, 106, 61, 0.065) 0, rgba(138, 106, 61, 0.065) 1px, transparent 1px),
+      linear-gradient(rgba(26, 26, 26, 0.02) 1px, transparent 1px);
+    background-size: 11rem 100%, 100% 5rem;
+    mask-image: linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.8) 10%, transparent 92%);
+  }
+
+  .product-gallery-frame {
+    border-radius: var(--kb-radius-lg);
+    box-shadow:
+      0 32px 80px rgba(18, 15, 12, 0.14),
+      0 12px 24px rgba(18, 15, 12, 0.08);
+  }
+
+  .product-feature-card {
+    transition:
+      transform 700ms var(--kb-ease-out),
+      border-color 500ms var(--kb-ease-out),
+      background-color 500ms var(--kb-ease-out),
+      box-shadow 700ms var(--kb-ease-out);
+  }
+
+  .product-feature-card:hover {
+    transform: translateY(-3px);
+  }
+
+  @media (max-width: 767px) {
+    .product-gallery-frame {
+      border-radius: var(--kb-radius-md);
+    }
+  }
+</style>
+
 <script>
+  import gsap from 'gsap';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+  gsap.registerPlugin(ScrollTrigger);
+
+  const scope = document.querySelector('[data-gsap-product-page]');
+  if (scope) {
+    /* ── Main product reveal ── */
+    const mainGrid = scope.querySelector('.product-main-grid');
+    if (mainGrid) {
+      const tl = gsap.timeline({
+        defaults: { ease: 'power3.out' },
+        scrollTrigger: {
+          trigger: mainGrid,
+          start: 'top 82%',
+          once: true,
+        },
+      });
+
+      tl.from(scope.querySelector('.product-breadcrumb'), {
+        y: 10,
+        opacity: 0,
+        duration: 0.6,
+      })
+        .from(scope.querySelector('.product-gallery-frame'), {
+          y: 40,
+          opacity: 0,
+          duration: 1.0,
+        }, 0.1)
+        .from(scope.querySelector('.product-info-col'), {
+          x: 30,
+          opacity: 0,
+          duration: 0.9,
+        }, 0.25);
+    }
+
+    /* ── Features reveal ── */
+    const features = scope.querySelector('.product-features');
+    if (features) {
+      gsap.timeline({
+        defaults: { ease: 'power3.out' },
+        scrollTrigger: {
+          trigger: features,
+          start: 'top 85%',
+          once: true,
+        },
+      })
+        .from(features.querySelector('.section-header'), {
+          y: 20,
+          opacity: 0,
+          duration: 0.75,
+        })
+        .from(features.querySelectorAll('.product-feature-card'), {
+          y: 24,
+          opacity: 0,
+          duration: 0.65,
+          stagger: 0.07,
+        }, 0.2);
+    }
+
+    /* ── Related products reveal ── */
+    const related = scope.querySelector('.product-related');
+    if (related) {
+      gsap.timeline({
+        defaults: { ease: 'power3.out' },
+        scrollTrigger: {
+          trigger: related,
+          start: 'top 85%',
+          once: true,
+        },
+      })
+        .from(related.querySelector('.section-header'), {
+          y: 20,
+          opacity: 0,
+          duration: 0.75,
+        })
+        .from(related.querySelectorAll('[data-related-card]'), {
+          y: 28,
+          opacity: 0,
+          duration: 0.68,
+          stagger: 0.07,
+        }, 0.2);
+    }
+  }
+
+  /* ── Gallery color logic ── */
   document.querySelectorAll<HTMLElement>('[data-product-gallery]').forEach((gallery) => {
     const mainImage = gallery.querySelector<HTMLImageElement>('.product-main-image');
     const frame = gallery.querySelector<HTMLElement>('.product-gallery-frame');
@@ -323,6 +488,7 @@ const galleryItems = product.colors.map((color) => ({
     updateGallery(currentIndex);
   });
 
+  /* ── Color & size selectors ── */
   document.querySelectorAll<HTMLElement>('[data-product-info]').forEach((info) => {
     const colorBtns = info.querySelectorAll<HTMLElement>('[data-color-index]');
     const colorNameEl = info.querySelector<HTMLElement>('.color-name');
@@ -340,10 +506,10 @@ const galleryItems = product.colors.map((color) => ({
 
         colorBtns.forEach((b) => {
           b.classList.remove('border-king-accent', 'scale-110');
-          b.classList.add('border-king-border/30');
+          b.classList.add('border-king-border/40');
           b.querySelector('.bg-king-accent')?.remove();
         });
-        btn.classList.remove('border-king-border/30');
+        btn.classList.remove('border-king-border/40');
         btn.classList.add('border-king-accent', 'scale-110');
         const dot = document.createElement('span');
         dot.className = 'absolute -bottom-1.5 left-1/2 h-[2px] w-2 -translate-x-1/2 rounded-full bg-king-accent';
@@ -359,9 +525,9 @@ const galleryItems = product.colors.map((color) => ({
         const size = btn.getAttribute('data-size') || '';
         sizeBtns.forEach((b) => {
           b.classList.remove('border-king-accent', 'text-king-accent', 'bg-king-accent/5');
-          b.classList.add('border-king-border/50', 'text-king-muted');
+          b.classList.add('border-king-border/60', 'text-king-muted');
         });
-        btn.classList.remove('border-king-border/50', 'text-king-muted');
+        btn.classList.remove('border-king-border/60', 'text-king-muted');
         btn.classList.add('border-king-accent', 'text-king-accent', 'bg-king-accent/5');
         if (sizeNameEl) sizeNameEl.textContent = `${size} cm`;
       });

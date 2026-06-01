@@ -18,7 +18,7 @@ const whatsappUrl = `https://wa.me/1234567890?text=${encodeURIComponent(product.
         'inline-block px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em]',
         product.badge === 'new' ? 'bg-king-text text-king-surface' : 'bg-king-accent text-king-surface'
       ]}>
-        {product.badge === 'new' ? 'Nuevo' : 'Top Ventas'}
+        {product.badge === 'new' ? 'Nuevo' : 'Más vendido'}
       </span>
     </div>
   )}
@@ -26,7 +26,7 @@ const whatsappUrl = `https://wa.me/1234567890?text=${encodeURIComponent(product.
   {/* Product ID */}
   <span class="text-[10px] font-mono uppercase tracking-[0.2em] text-king-muted/50 mb-3">{product.id}</span>
 
-  {/* Name — serif treatment */}
+  {/* Name */}
   <h1 class="font-serif text-4xl md:text-5xl lg:text-6xl text-king-text mb-4 tracking-[-0.02em] leading-[0.92]">
     {product.name}
   </h1>
@@ -70,7 +70,7 @@ const whatsappUrl = `https://wa.me/1234567890?text=${encodeURIComponent(product.
   {/* Sizes */}
   <div class="mb-8">
     <div class="flex items-center gap-3 mb-3">
-      <span class="text-[10px] uppercase tracking-[0.2em] text-king-text font-medium">Talla</span>
+      <span class="text-[10px] uppercase tracking-[0.2em] text-king-text font-medium">Tallas disponibles</span>
       <span class="text-[10px] uppercase tracking-[0.15em] text-king-muted/60 size-name">{product.sizes[0]} cm</span>
     </div>
     <div class="flex flex-wrap gap-2" data-size-selector>
@@ -89,7 +89,7 @@ const whatsappUrl = `https://wa.me/1234567890?text=${encodeURIComponent(product.
     </div>
   </div>
 
-  {/* Materials — compact list */}
+  {/* Materials */}
   <div class="mb-10">
     <span class="text-[10px] uppercase tracking-[0.2em] text-king-text font-medium mb-3 block">Materiales</span>
     <ul class="space-y-2">
@@ -125,7 +125,7 @@ const whatsappUrl = `https://wa.me/1234567890?text=${encodeURIComponent(product.
       size="md"
       class="w-full"
     >
-      Contactar Fabricante
+      Pedir al fabricante
     </Button>
   </div>
 </div>

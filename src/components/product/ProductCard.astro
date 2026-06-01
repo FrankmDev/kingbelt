@@ -17,13 +17,19 @@ const primaryImage = imageSrc ?? product.images[0];
 const secondaryImage = hoverImageSrc ?? product.images[1] ?? primaryImage;
 const usesLocalPrimary = typeof primaryImage !== 'string';
 const usesLocalSecondary = typeof secondaryImage !== 'string';
+
+const badgeType = (badge?: string) => {
+  if (badge === 'bestseller') return 'bestseller';
+  if (badge === 'new') return 'new';
+  return 'default';
+};
 ---
 
 <a
   href={`/product/${product.slug}`}
   class:list={[
     'group relative block w-full overflow-hidden border border-king-border/60 bg-king-secondary/90 shadow-[0_24px_80px_rgba(0,0,0,0.28)]',
-    featured ? 'aspect-[4/4.85] md:aspect-[5/4.9] lg:h-full min-h-[36rem]' : 'aspect-[4/5.3]',
+    featured ? 'aspect-[4/4.85] md:aspect-[5/4.9] lg:h-full min-h-[28rem] md:min-h-[36rem]' : 'aspect-[4/5.3]',
   ]}
   data-product-card
 >
@@ -32,7 +38,7 @@ const usesLocalSecondary = typeof secondaryImage !== 'string';
       usesLocalPrimary ? (
         <Image
           src={primaryImage}
-          alt={product.name}
+          alt={`${product.name} — cinturón de cuero`}
           class="absolute inset-0 h-full w-full object-cover transition-transform duration-[900ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.04]"
           loading="lazy"
           sizes={featured ? '(min-width: 1280px) 42vw, 100vw' : '(min-width: 1280px) 18vw, (min-width: 640px) 50vw, 100vw'}
@@ -40,7 +46,7 @@ const usesLocalSecondary = typeof secondaryImage !== 'string';
       ) : (
         <img
           src={primaryImage}
-          alt={product.name}
+          alt={`${product.name} — cinturón de cuero`}
           class="absolute inset-0 h-full w-full object-cover transition-transform duration-[900ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.04]"
           loading="lazy"
         />
@@ -74,11 +80,11 @@ const usesLocalSecondary = typeof secondaryImage !== 'string';
     <div class="flex items-center gap-3">
       {product.badge && (
         <div>
-          <Badge type={product.badge} />
+          <Badge type={badgeType(product.badge)} />
         </div>
       )}
       <span class="rounded-full border border-white/12 bg-black/20 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-white/70 backdrop-blur-sm">
-        {featured ? 'Destacado' : 'Seleccion'}
+        {featured ? 'Destacado' : 'Selección'}
       </span>
     </div>
     <span class="text-[10px] uppercase tracking-[0.32em] text-white/40">
@@ -92,7 +98,7 @@ const usesLocalSecondary = typeof secondaryImage !== 'string';
     </div>
 
     <div class="translate-y-3 transition-transform duration-700 ease-out group-hover:translate-y-0">
-      <p class="mb-4 text-[11px] uppercase tracking-[0.26em] text-white/46">
+      <p class="mb-3 text-[11px] uppercase tracking-[0.26em] text-white/46">
         {featured ? 'El buque insignia' : 'Piel, acero y uso real'}
       </p>
 
@@ -117,7 +123,7 @@ const usesLocalSecondary = typeof secondaryImage !== 'string';
       <div class="flex items-end justify-between gap-5 border-t border-white/10 pt-4">
         <ProductColorSwatches colors={product.colors} />
         <span class="inline-flex items-center gap-2 whitespace-nowrap text-[11px] uppercase tracking-[0.22em] text-white/78">
-          Ver producto
+          Ver detalle
           <span class="inline-block h-px w-8 bg-king-accent transition-all duration-500 group-hover:w-12"></span>
         </span>
       </div>

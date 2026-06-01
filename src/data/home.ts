@@ -1,10 +1,10 @@
 export const hero = {
   eyebrow: 'Hecho a mano en España',
-  title: 'Para los que no siguen el camino.',
-  body: 'Cinturones de cuero de alta calidad, fabricados a mano en España para hombres del mundo de las motos. Artesanía sin concesiones, diseñada para quienes crean su propio destino.',
+  title: 'Cinturones con carácter para hombres que van por libre.',
+  body: 'Piel seleccionada, herrajes sólidos y una estética motera depurada. Diseñados para durar, envejecer bien y acompañarte cada día.',
   image: 'https://picsum.photos/seed/motorcycle-highway/1920/1080',
-  imageAlt: 'Moto en carretera',
-  primaryCta: { label: 'Ver Colección', href: '#coleccion' },
+  imageAlt: 'Moto en carretera al atardecer',
+  primaryCta: { label: 'Ver colección', href: '#coleccion' },
   secondaryCta: { label: 'Comprar en Amazon', href: 'https://amazon.com/kingbelt' },
 };
 
@@ -78,12 +78,11 @@ export const bentoCards = [
 ] as const;
 
 export const marqueeItems = [
-  { icon: 'motorcycle', text: 'CUERO GENUINO' },
-  { icon: 'shield-check', text: 'ACERO 316L' },
-  { icon: 'lightning', text: 'DISEÑO BRUTAL' },
-  { icon: 'hammer', text: 'ARTESANÍA PURA' },
-  { icon: 'wrench', text: 'DURABILIDAD EXTREMA' },
-  { icon: 'engine', text: 'ESTILO MOTERO' },
+  'CUERO REAL',
+  'HERRAJES SÓLIDOS',
+  'HECHO EN ESPAÑA',
+  'ESTÉTICA MOTERA',
+  'USO DIARIO',
 ] as const;
 
 export const processSteps = [

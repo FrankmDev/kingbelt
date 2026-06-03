@@ -41,11 +41,11 @@ const badgeType = (badge?: string) => {
       <SectionHeader
         eyebrow="Colección"
         body="Materiales reales, herrajes con peso y una estética pensada para envejecer bien con el uso."
-        ref="7 modelos"
+        ref={`${products.length} modelos`}
         size="md"
       >
         <Fragment slot="title">
-          Siete modelos,
+          Hechos para durar,
           <span class="block italic text-king-text/78">una filosofía.</span>
         </Fragment>
       </SectionHeader>
@@ -183,111 +183,121 @@ const badgeType = (badge?: string) => {
       </div>
     </a>
 
-    {/* Grid — editorial lookbook */}
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3 lg:gap-6">
-      {gridProducts.map((product) => {
-        const originalIndex = products.indexOf(product);
+    {/* Horizontal scroll — editorial lookbook */}
+    <div class="relative">
+      {/* Left fade */}
+      <div class="pointer-events-none absolute inset-y-0 left-0 z-20 w-8 bg-gradient-to-r from-king-bg to-transparent sm:w-12 lg:w-16"></div>
+      {/* Right fade */}
+      <div class="pointer-events-none absolute inset-y-0 right-0 z-20 w-8 bg-gradient-to-l from-king-bg to-transparent sm:w-12 lg:w-16"></div>
 
-        return (
-          <a
-            href={`/product/${product.slug}`}
-            class="pg-card group relative block overflow-hidden rounded-[var(--kb-radius-lg)]"
-            data-pg-card
-          >
-            <div class="relative aspect-[3/4] overflow-hidden">
-              {/* Primary image */}
-              <Image
-                src={getImageForProduct(originalIndex, 'primary')}
-                alt={`${product.name} — cinturón de cuero`}
-                class="pg-card-img absolute inset-0 h-full w-full object-cover transition-transform duration-[1400ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.04]"
-                loading="lazy"
-                sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-              />
-              {/* Hover image */}
-              <Image
-                src={getImageForProduct(originalIndex, 'hover')}
-                alt={`${product.name} detalle`}
-                class="pg-card-hover-img absolute inset-0 h-full w-full scale-[1.06] object-cover opacity-0 transition-[opacity,transform] duration-[1000ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-100 group-hover:opacity-100"
-                loading="lazy"
-                sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-              />
+      <div
+        class="pg-scroll-track flex gap-4 overflow-x-auto pb-6 snap-x snap-mandatory sm:gap-5 lg:gap-6 lg:pb-8"
+        data-pg-scroll
+      >
+        {gridProducts.map((product) => {
+          const originalIndex = products.indexOf(product);
 
-              {/* Cinematic overlay layers */}
-              <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/10"></div>
-              <div class="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-transparent"></div>
-              <div class="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(138,106,61,0.10),transparent_50%)] opacity-0 transition-opacity duration-700 group-hover:opacity-100"></div>
+          return (
+            <a
+              href={`/product/${product.slug}`}
+              class="pg-card group relative block w-[78vw] flex-shrink-0 snap-start overflow-hidden rounded-[var(--kb-radius-lg)] sm:w-[45vw] lg:w-[32vw] xl:w-[28vw]"
+              data-pg-card
+            >
+              <div class="relative aspect-[3/4] overflow-hidden">
+                {/* Primary image */}
+                <Image
+                  src={getImageForProduct(originalIndex, 'primary')}
+                  alt={`${product.name} — cinturón de cuero`}
+                  class="pg-card-img absolute inset-0 h-full w-full object-cover transition-transform duration-[1400ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.04]"
+                  loading="lazy"
+                  sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                />
+                {/* Hover image */}
+                <Image
+                  src={getImageForProduct(originalIndex, 'hover')}
+                  alt={`${product.name} detalle`}
+                  class="pg-card-hover-img absolute inset-0 h-full w-full scale-[1.06] object-cover opacity-0 transition-[opacity,transform] duration-[1000ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-100 group-hover:opacity-100"
+                  loading="lazy"
+                  sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                />
 
-              {/* Shimmer on hover */}
-              <div class="pg-shimmer absolute inset-0 opacity-0 transition-opacity duration-700 group-hover:opacity-100"></div>
+                {/* Cinematic overlay layers */}
+                <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/10"></div>
+                <div class="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-transparent"></div>
+                <div class="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(138,106,61,0.10),transparent_50%)] opacity-0 transition-opacity duration-700 group-hover:opacity-100"></div>
 
-              {/* Inner frame border */}
-              <div class="pointer-events-none absolute inset-3 rounded-[calc(var(--kb-radius-lg)-0.5rem)] border border-white/[0.06] transition-colors duration-700 group-hover:border-white/[0.14] md:inset-5"></div>
+                {/* Shimmer on hover */}
+                <div class="pg-shimmer absolute inset-0 opacity-0 transition-opacity duration-700 group-hover:opacity-100"></div>
 
-              {/* Corner accents */}
-              <div class="pointer-events-none absolute inset-4 z-10 md:inset-6">
-                <span class="kb-corner-frame absolute left-0 top-0"></span>
-                <span class="kb-corner-frame absolute right-0 top-0" style="transform: scaleX(-1);"></span>
-                <span class="kb-corner-frame absolute bottom-0 left-0" style="transform: scaleY(-1);"></span>
-                <span class="kb-corner-frame absolute bottom-0 right-0" style="transform: scale(-1);"></span>
-              </div>
+                {/* Inner frame border */}
+                <div class="pointer-events-none absolute inset-3 rounded-[calc(var(--kb-radius-lg)-0.5rem)] border border-white/[0.06] transition-colors duration-700 group-hover:border-white/[0.14] md:inset-5"></div>
 
-              {/* Top bar: badge + ID */}
-              <div class="absolute left-4 right-4 top-4 z-10 flex items-start justify-between md:left-6 md:right-6 md:top-6">
-                <Badge type={badgeType(product.badge)} />
-                <span class="font-mono text-[10px] uppercase tracking-[0.2em] text-white/40">
-                  {product.id}
-                </span>
-              </div>
+                {/* Corner accents */}
+                <div class="pointer-events-none absolute inset-4 z-10 md:inset-6">
+                  <span class="kb-corner-frame absolute left-0 top-0"></span>
+                  <span class="kb-corner-frame absolute right-0 top-0" style="transform: scaleX(-1);"></span>
+                  <span class="kb-corner-frame absolute bottom-0 left-0" style="transform: scaleY(-1);"></span>
+                  <span class="kb-corner-frame absolute bottom-0 right-0" style="transform: scale(-1);"></span>
+                </div>
 
-              {/* Accent line top */}
-              <div class="absolute left-0 right-0 top-0 h-px bg-[linear-gradient(90deg,transparent_0%,var(--color-king-accent)_50%,transparent_100%)] opacity-0 transition-opacity duration-500 group-hover:opacity-50"></div>
-
-              {/* Bottom info */}
-              <div class="absolute bottom-0 left-0 right-0 z-10 p-4 md:p-6">
-                {/* Accent line */}
-                <div class="pg-card-line mb-3 h-px w-8 bg-king-accent/80"></div>
-
-                <h3 class="font-display text-[1.5rem] font-light leading-[0.95] tracking-[-0.01em] md:text-[1.75rem]">
-                  {product.name}
-                </h3>
-
-                {/* Description */}
-                <p class="pg-card-desc mt-2 text-[13px] leading-[1.6] text-white/60 md:max-w-[28ch]">
-                  {product.shortDescription}
-                </p>
-
-                {/* Color swatches + CTA */}
-                <div class="pg-card-meta mt-4 flex flex-wrap items-center gap-3">
-                  <div class="flex items-center gap-2">
-                    {product.colors.slice(0, 3).map((color) => (
-                      <span
-                        class="inline-block h-3.5 w-3.5 rounded-full border border-white/30 shadow-sm transition-transform duration-300 group-hover:scale-110 md:h-4 md:w-4"
-                        style={`background-color: ${color.hex}`}
-                        title={color.name}
-                      />
-                    ))}
-                    {product.colors.length > 3 && (
-                      <span class="ml-1 text-[9px] uppercase tracking-wider text-white/45">
-                        +{product.colors.length - 3}
-                      </span>
-                    )}
-                  </div>
-                  <span class="ml-auto inline-flex items-center gap-2 text-[10px] font-medium uppercase tracking-[0.18em] text-white/70">
-                    Ver detalle
-                    <span class="inline-block h-px w-5 bg-king-accent transition-all duration-500 group-hover:w-8"></span>
+                {/* Top bar: badge + ID */}
+                <div class="absolute left-4 right-4 top-4 z-10 flex items-start justify-between md:left-6 md:right-6 md:top-6">
+                  <Badge type={badgeType(product.badge)} />
+                  <span class="font-mono text-[10px] uppercase tracking-[0.2em] text-white/40">
+                    {product.id}
                   </span>
                 </div>
+
+                {/* Accent line top */}
+                <div class="absolute left-0 right-0 top-0 h-px bg-[linear-gradient(90deg,transparent_0%,var(--color-king-accent)_50%,transparent_100%)] opacity-0 transition-opacity duration-500 group-hover:opacity-50"></div>
+
+                {/* Bottom info */}
+                <div class="absolute bottom-0 left-0 right-0 z-10 p-4 md:p-6">
+                  {/* Accent line */}
+                  <div class="pg-card-line mb-3 h-px w-8 bg-king-accent/80"></div>
+
+                  <h3 class="font-display text-[1.5rem] font-light leading-[0.95] tracking-[-0.01em] md:text-[1.75rem]">
+                    {product.name}
+                  </h3>
+
+                  {/* Description */}
+                  <p class="pg-card-desc mt-2 text-[13px] leading-[1.6] text-white/60 md:max-w-[28ch]">
+                    {product.shortDescription}
+                  </p>
+
+                  {/* Color swatches + CTA */}
+                  <div class="pg-card-meta mt-4 flex flex-wrap items-center gap-3">
+                    <div class="flex items-center gap-2">
+                      {product.colors.slice(0, 3).map((color) => (
+                        <span
+                          class="inline-block h-3.5 w-3.5 rounded-full border border-white/30 shadow-sm transition-transform duration-300 group-hover:scale-110 md:h-4 md:w-4"
+                          style={`background-color: ${color.hex}`}
+                          title={color.name}
+                        />
+                      ))}
+                      {product.colors.length > 3 && (
+                        <span class="ml-1 text-[9px] uppercase tracking-wider text-white/45">
+                          +{product.colors.length - 3}
+                        </span>
+                      )}
+                    </div>
+                    <span class="ml-auto inline-flex items-center gap-2 text-[10px] font-medium uppercase tracking-[0.18em] text-white/70">
+                      Ver detalle
+                      <span class="inline-block h-px w-5 bg-king-accent transition-all duration-500 group-hover:w-8"></span>
+                    </span>
+                  </div>
+                </div>
+
+                {/* Bottom accent line */}
+                <div class="absolute bottom-0 left-0 h-[2px] w-full origin-left scale-x-0 bg-king-accent transition-transform duration-700 ease-out group-hover:scale-x-100"></div>
+
+                {/* Outer border glow on hover */}
+                <div class="pointer-events-none absolute inset-0 rounded-[var(--kb-radius-lg)] border border-white/0 transition-colors duration-700 group-hover:border-white/[0.08]"></div>
               </div>
-
-              {/* Bottom accent line */}
-              <div class="absolute bottom-0 left-0 h-[2px] w-full origin-left scale-x-0 bg-king-accent transition-transform duration-700 ease-out group-hover:scale-x-100"></div>
-
-              {/* Outer border glow on hover */}
-              <div class="pointer-events-none absolute inset-0 rounded-[var(--kb-radius-lg)] border border-white/0 transition-colors duration-700 group-hover:border-white/[0.08]"></div>
-            </div>
-          </a>
-        );
-      })}
+            </a>
+          );
+        })}
+      </div>
     </div>
   </div>
 </section>
@@ -379,6 +389,14 @@ const badgeType = (badge?: string) => {
     transform: translateX(4px);
   }
 
+  .pg-scroll-track {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .pg-scroll-track::-webkit-scrollbar {
+    display: none;
+  }
+
   @media (max-width: 767px) {
     .pg-card {
       border-radius: var(--kb-radius-md);
@@ -415,10 +433,10 @@ const badgeType = (badge?: string) => {
         duration: 1.0,
       }, 0.22)
       .from(scope.querySelectorAll('[data-pg-card]:not(.pg-featured)'), {
-        y: 28,
+        x: 30,
         opacity: 0,
         duration: 0.78,
-        stagger: 0.07,
+        stagger: 0.08,
       }, 0.5);
   }
 </script>

@@ -13,348 +13,439 @@ export interface Product {
   materials: string[];
   features: string[];
   badge?: 'new' | 'bestseller';
+  price: number;
+  sizeEquivalence?: Record<string, number>;
 }
 
 export const products: Product[] = [
   {
-    id: 'kb-001',
-    slug: 'roadmaster-classic',
-    name: 'Roadmaster Classic',
+    id: 'MOD-180/35',
+    slug: 'vestir-premium-180',
+    name: 'Vestir Premium 180',
     description:
-      'El cinturón definitivo para el hombre que vive en movimiento. Confeccionado en piel de vacuno de grano completo de 4 mm de espesor, el Roadmaster Classic combina la robustez de la tradición motera con una silueta depurada y contemporánea. La hebilla de acero inoxidable cepillado aporta un punto de luz industrial que eleva cualquier look.',
-    shortDescription: 'Piel grano completo. Hebilla acero cepillado. El clásico reinventado.',
+      'El cinturón de vestir definitivo para el hombre que exige distinción en cada detalle. Confeccionado en piel napa box de primera calidad, el modelo 180/35 destaca por su perfil elegante de 3,5 cm de ancho, perfecto para conjuntos de traje o looks smart-casual. El forro interior en cuero regenerado garantiza una sujeción cómoda durante todo el día, mientras que la hebilla de zamak pulido aporta un cierre seguro con un acabado refinado. Un básico de armario que eleva cualquier atuendo con sutileza y clase.',
+    shortDescription: 'Piel napa box. Forro cuero regenerado. Hebilla zamak. Elegancia sin concesiones.',
     images: [
-      'https://picsum.photos/seed/kingbelt-roadmaster-1/800/1000',
-      'https://picsum.photos/seed/kingbelt-roadmaster-2/800/1000',
-      'https://picsum.photos/seed/kingbelt-roadmaster-3/800/1000',
+      'https://picsum.photos/seed/kingbelt-180-1/800/1000',
+      'https://picsum.photos/seed/kingbelt-180-2/800/1000',
+      'https://picsum.photos/seed/kingbelt-180-3/800/1000',
     ],
     colorImages: {
-      'Noir': [
-        'https://picsum.photos/seed/roadmaster-noir-1/800/1000',
-        'https://picsum.photos/seed/roadmaster-noir-2/800/1000',
-        'https://picsum.photos/seed/roadmaster-noir-3/800/1000',
+      'Negro': [
+        'https://picsum.photos/seed/180-negro-1/800/1000',
+        'https://picsum.photos/seed/180-negro-2/800/1000',
       ],
-      'Cognac': [
-        'https://picsum.photos/seed/roadmaster-cognac-1/800/1000',
-        'https://picsum.photos/seed/roadmaster-cognac-2/800/1000',
-        'https://picsum.photos/seed/roadmaster-cognac-3/800/1000',
+      'Marrón': [
+        'https://picsum.photos/seed/180-marron-1/800/1000',
+        'https://picsum.photos/seed/180-marron-2/800/1000',
       ],
-      'Graphite': [
-        'https://picsum.photos/seed/roadmaster-graphite-1/800/1000',
-        'https://picsum.photos/seed/roadmaster-graphite-2/800/1000',
-        'https://picsum.photos/seed/roadmaster-graphite-3/800/1000',
+      'Cuero': [
+        'https://picsum.photos/seed/180-cuero-1/800/1000',
+        'https://picsum.photos/seed/180-cuero-2/800/1000',
       ],
-      'Saddle': [
-        'https://picsum.photos/seed/roadmaster-saddle-1/800/1000',
-        'https://picsum.photos/seed/roadmaster-saddle-2/800/1000',
-        'https://picsum.photos/seed/roadmaster-saddle-3/800/1000',
+      'Azul Marino': [
+        'https://picsum.photos/seed/180-azul-1/800/1000',
+        'https://picsum.photos/seed/180-azul-2/800/1000',
       ],
     },
     colors: [
-      { name: 'Noir', hex: '#1A1A1A' },
-      { name: 'Cognac', hex: '#6B3A1F' },
-      { name: 'Graphite', hex: '#3A3A3A' },
-      { name: 'Saddle', hex: '#8B5A2B' },
-    ],
-    sizes: ['85', '90', '95', '100', '105', '110'],
-    amazonUrl: 'https://amazon.com/kingbelt-roadmaster-classic',
-    whatsappMessage: 'Hola, estoy interesado en el modelo Roadmaster Classic de KingBelt.',
-    materials: ['Piel de vacuno grano completo', 'Forro interior de microfibra', 'Hebilla de acero inoxidable'],
-    features: [
-      'Costuras reforzadas a doble aguja',
-      'Acabado envejecido a mano',
-      'Resistente al agua y abrasión',
-      'Ancho: 4 cm',
-    ],
-    badge: 'bestseller',
-  },
-  {
-    id: 'kb-002',
-    slug: 'iron-striker',
-    name: 'Iron Striker',
-    description:
-      'Diseñado para soportar el paso del tiempo sin perder identidad. El Iron Striker presenta una hebilla de doble pasador en acero bruto que evoca la estética de los talleres mecánicos. La piel vaquetilla se oscurece con el uso, desarrollando una pátina única que cuenta tu historia.',
-    shortDescription: 'Vaquetilla natural. Doble pasador. Evoluciona contigo.',
-    images: [
-      'https://picsum.photos/seed/kingbelt-iron-1/800/1000',
-      'https://picsum.photos/seed/kingbelt-iron-2/800/1000',
-    ],
-    colorImages: {
-      'Midnight': [
-        'https://picsum.photos/seed/iron-midnight-1/800/1000',
-        'https://picsum.photos/seed/iron-midnight-2/800/1000',
-      ],
-      'Tan': [
-        'https://picsum.photos/seed/iron-tan-1/800/1000',
-        'https://picsum.photos/seed/iron-tan-2/800/1000',
-      ],
-      'Saddle': [
-        'https://picsum.photos/seed/iron-saddle-1/800/1000',
-        'https://picsum.photos/seed/iron-saddle-2/800/1000',
-      ],
-      'Graphite': [
-        'https://picsum.photos/seed/iron-graphite-1/800/1000',
-        'https://picsum.photos/seed/iron-graphite-2/800/1000',
-      ],
-    },
-    colors: [
-      { name: 'Midnight', hex: '#0F0F0F' },
-      { name: 'Tan', hex: '#8B5A2B' },
-      { name: 'Saddle', hex: '#7B4E2D' },
-      { name: 'Graphite', hex: '#3A3A3A' },
-    ],
-    sizes: ['90', '95', '100', '105', '110'],
-    amazonUrl: 'https://amazon.com/kingbelt-iron-striker',
-    whatsappMessage: 'Hola, estoy interesado en el modelo Iron Striker de KingBelt.',
-    materials: ['Vaquetilla de curtición vegetal', 'Hebilla de acero bruto', 'Herrajes de latón'],
-    features: [
-      'Doble pasador de seguridad',
-      'Pátina natural progresiva',
-      'Borde bruñido a mano',
-      'Ancho: 3.8 cm',
-    ],
-  },
-  {
-    id: 'kb-003',
-    slug: 'asphalt-rider',
-    name: 'Asphalt Rider',
-    description:
-      'Minimalismo extremo para el hombre que prefiere dejar que sus acciones hablen. El Asphalt Rider elimina lo superfluo para centrarse en la esencia: una banda de piel negra mate de altísima calidad y una hebilla de perfil bajo en negro mate.',
-    shortDescription: 'Piel negra mate. Hebilla low-profile. Sutileza total.',
-    images: [
-      'https://picsum.photos/seed/kingbelt-asphalt-1/800/1000',
-      'https://picsum.photos/seed/kingbelt-asphalt-2/800/1000',
-      'https://picsum.photos/seed/kingbelt-asphalt-3/800/1000',
-    ],
-    colorImages: {
-      'Stealth': [
-        'https://picsum.photos/seed/asphalt-stealth-1/800/1000',
-        'https://picsum.photos/seed/asphalt-stealth-2/800/1000',
-        'https://picsum.photos/seed/asphalt-stealth-3/800/1000',
-      ],
-      'Charcoal': [
-        'https://picsum.photos/seed/asphalt-charcoal-1/800/1000',
-        'https://picsum.photos/seed/asphalt-charcoal-2/800/1000',
-        'https://picsum.photos/seed/asphalt-charcoal-3/800/1000',
-      ],
-      'Obsidian': [
-        'https://picsum.photos/seed/asphalt-obsidian-1/800/1000',
-        'https://picsum.photos/seed/asphalt-obsidian-2/800/1000',
-        'https://picsum.photos/seed/asphalt-obsidian-3/800/1000',
-      ],
-      'Slate': [
-        'https://picsum.photos/seed/asphalt-slate-1/800/1000',
-        'https://picsum.photos/seed/asphalt-slate-2/800/1000',
-        'https://picsum.photos/seed/asphalt-slate-3/800/1000',
-      ],
-    },
-    colors: [
-      { name: 'Stealth', hex: '#0A0A0A' },
-      { name: 'Charcoal', hex: '#2D2D2D' },
-      { name: 'Obsidian', hex: '#111111' },
-      { name: 'Slate', hex: '#4A4A4A' },
-    ],
-    sizes: ['85', '90', '95', '100', '105'],
-    amazonUrl: 'https://amazon.com/kingbelt-asphalt-rider',
-    whatsappMessage: 'Hola, estoy interesado en el modelo Asphalt Rider de KingBelt.',
-    materials: ['Piel de becerro napa', 'Hebilla de zamak con PVD negro mate', 'Forro de algodón orgánico'],
-    features: [
-      'Hebilla de perfil ultra-bajo',
-      'Acabado mate resistente a arañazos',
-      'Flexibilidad superior desde el primer uso',
-      'Ancho: 3.5 cm',
-    ],
-    badge: 'new',
-  },
-  {
-    id: 'kb-004',
-    slug: 'tank-buckle',
-    name: 'Tank Buckle',
-    description:
-      'La hebilla más imponente de la colección. Inspirada en las chapas de blindaje de los vehículos industriales, la hebilla del Tank tiene un peso y una presencia física real. Equilibrada por una banda de piel gruesa que distribuye la tensión con maestría.',
-    shortDescription: 'Hebilla statement. Piel gruesa. Presencia innegable.',
-    images: [
-      'https://picsum.photos/seed/kingbelt-tank-1/800/1000',
-      'https://picsum.photos/seed/kingbelt-tank-2/800/1000',
-    ],
-    colorImages: {
-      'Raw Black': [
-        'https://picsum.photos/seed/tank-rawblack-1/800/1000',
-        'https://picsum.photos/seed/tank-rawblack-2/800/1000',
-      ],
-      'Saddle': [
-        'https://picsum.photos/seed/tank-saddle-1/800/1000',
-        'https://picsum.photos/seed/tank-saddle-2/800/1000',
-      ],
-      'Graphite': [
-        'https://picsum.photos/seed/tank-graphite-1/800/1000',
-        'https://picsum.photos/seed/tank-graphite-2/800/1000',
-      ],
-      'Cognac': [
-        'https://picsum.photos/seed/tank-cognac-1/800/1000',
-        'https://picsum.photos/seed/tank-cognac-2/800/1000',
-      ],
-    },
-    colors: [
-      { name: 'Raw Black', hex: '#111111' },
-      { name: 'Saddle', hex: '#7B4E2D' },
-      { name: 'Graphite', hex: '#3A3A3A' },
-      { name: 'Cognac', hex: '#6B3A1F' },
+      { name: 'Negro', hex: '#1A1A1A' },
+      { name: 'Marrón', hex: '#6B3A1F' },
+      { name: 'Cuero', hex: '#8B5A2B' },
+      { name: 'Azul Marino', hex: '#1A2F4B' },
     ],
     sizes: ['90', '95', '100', '105', '110', '115'],
-    amazonUrl: 'https://amazon.com/kingbelt-tank-buckle',
-    whatsappMessage: 'Hola, estoy interesado en el modelo Tank Buckle de KingBelt.',
-    materials: ['Piel de búfalo de 5 mm', 'Hebilla de acero fundido', 'Remaches de cobre'],
-    features: [
-      'Hebilla de placa completa estilo industrial',
-      'Remaches decorativos funcionales',
-      'Banda extra gruesa para máxima durabilidad',
-      'Ancho: 4.5 cm',
-    ],
-  },
-  {
-    id: 'kb-005',
-    slug: 'night-crawler',
-    name: 'Night Crawler',
-    description:
-      'Elegancia nocturna con un twist subversivo. El Night Crawler combina piel de vacuno texturizada en relieve con una hebilla geométrica en tono antracita. Diseñado para la noche, funciona igual de bien con un traje oscuro que con una chaqueta de cuero.',
-    shortDescription: 'Textura reptil. Hebilla geométrica. Elegancia oscura.',
-    images: [
-      'https://picsum.photos/seed/kingbelt-night-1/800/1000',
-      'https://picsum.photos/seed/kingbelt-night-2/800/1000',
-    ],
-    colorImages: {
-      'Onyx': [
-        'https://picsum.photos/seed/night-onyx-1/800/1000',
-        'https://picsum.photos/seed/night-onyx-2/800/1000',
-      ],
-      'Viper': [
-        'https://picsum.photos/seed/night-viper-1/800/1000',
-        'https://picsum.photos/seed/night-viper-2/800/1000',
-      ],
-      'Obsidian': [
-        'https://picsum.photos/seed/night-obsidian-1/800/1000',
-        'https://picsum.photos/seed/night-obsidian-2/800/1000',
-      ],
-      'Saddle': [
-        'https://picsum.photos/seed/night-saddle-1/800/1000',
-        'https://picsum.photos/seed/night-saddle-2/800/1000',
-      ],
+    sizeEquivalence: {
+      '90': 105,
+      '95': 110,
+      '100': 115,
+      '105': 120,
+      '110': 130,
+      '115': 135,
     },
-    colors: [
-      { name: 'Onyx', hex: '#0D0D0D' },
-      { name: 'Viper', hex: '#3D2B1F' },
-      { name: 'Obsidian', hex: '#1A1A1A' },
-      { name: 'Saddle', hex: '#8B5A2B' },
-    ],
-    sizes: ['85', '90', '95', '100', '105'],
-    amazonUrl: 'https://amazon.com/kingbelt-night-crawler',
-    whatsappMessage: 'Hola, estoy interesado en el modelo Night Crawler de KingBelt.',
-    materials: ['Piel de vacuno con grabado reptil', 'Hebilla de aleación de zinc', 'Barniz protector mate'],
+    amazonUrl: 'https://amazon.com/kingbelt-vestir-premium-180',
+    whatsappMessage: 'Hola, estoy interesado en el modelo Vestir Premium 180 de KingBelt.',
+    materials: ['Piel napa box', 'Forro cuero regenerado', 'Hebilla zamak pulido'],
     features: [
-      'Textura en relieve con efecto 3D',
-      'Hebilla geométrica de diseño exclusivo',
-      'Tratamiento hidrófugo',
-      'Ancho: 3.5 cm',
-    ],
-  },
-  {
-    id: 'kb-006',
-    slug: 'highway-king',
-    name: 'Highway King',
-    description:
-      'El flagship de KingBelt. El Highway King es la síntesis perfecta entre lujo artesanal y utilidad motera. Construido con tiras de piel seleccionadas a mano, presenta una hebilla de latón macizo con acabado vintage que recuerda a las insignias de las carreteras americanas.',
-    shortDescription: 'Latón macizo. Piel seleccionada a mano. El buque insignia.',
-    images: [
-      'https://picsum.photos/seed/kingbelt-highway-1/800/1000',
-      'https://picsum.photos/seed/kingbelt-highway-2/800/1000',
-      'https://picsum.photos/seed/kingbelt-highway-3/800/1000',
-    ],
-    colorImages: {
-      'Burnished': [
-        'https://picsum.photos/seed/highway-burnished-1/800/1000',
-        'https://picsum.photos/seed/highway-burnished-2/800/1000',
-        'https://picsum.photos/seed/highway-burnished-3/800/1000',
-      ],
-      'Jet': [
-        'https://picsum.photos/seed/highway-jet-1/800/1000',
-        'https://picsum.photos/seed/highway-jet-2/800/1000',
-        'https://picsum.photos/seed/highway-jet-3/800/1000',
-      ],
-      'Cognac': [
-        'https://picsum.photos/seed/highway-cognac-1/800/1000',
-        'https://picsum.photos/seed/highway-cognac-2/800/1000',
-        'https://picsum.photos/seed/highway-cognac-3/800/1000',
-      ],
-      'Graphite': [
-        'https://picsum.photos/seed/highway-graphite-1/800/1000',
-        'https://picsum.photos/seed/highway-graphite-2/800/1000',
-        'https://picsum.photos/seed/highway-graphite-3/800/1000',
-      ],
-    },
-    colors: [
-      { name: 'Burnished', hex: '#4A2C17' },
-      { name: 'Jet', hex: '#151515' },
-      { name: 'Cognac', hex: '#6B3A1F' },
-      { name: 'Graphite', hex: '#3A3A3A' },
-    ],
-    sizes: ['90', '95', '100', '105', '110'],
-    amazonUrl: 'https://amazon.com/kingbelt-highway-king',
-    whatsappMessage: 'Hola, estoy interesado en el modelo Highway King de KingBelt.',
-    materials: ['Piel de vacuno selección premium', 'Hebilla de latón macizo fundido', 'Tratamiento de cera de abeja'],
-    features: [
-      'Hebilla de latón con acabado envejecido',
-      'Costuras selladas a calor',
-      'Piel seleccionada a mano',
-      'Ancho: 4 cm',
+      'Ancho: 3,5 cm — perfil ideal para vestir',
+      'Sistema de tornillo para ajuste personalizado',
+      'Incluye llavero de regalo',
+      'Presentado en bolsa de tela para conservación óptima',
     ],
     badge: 'bestseller',
+    price: 32.90,
   },
   {
-    id: 'kb-007',
-    slug: 'steel-rebel',
-    name: 'Steel Rebel',
+    id: 'MOD-4643/30',
+    slug: 'vestir-slim-4643',
+    name: 'Vestir Slim 4643',
     description:
-      'Para quienes rechazan las reglas pero respetan la calidad. El Steel Rebel integra una cadena de acero entretejida en la puntera como detalle distintivo, mientras mantiene la funcionalidad impecable de un cinturón de alto rendimiento.',
-    shortDescription: 'Detalle cadena. Actitud sin sacrificar calidad.',
+      'La síntesis de la elegancia minimalista. Con un ancho reducido de 3 cm, el modelo 4643/30 está pensado para el hombre contemporáneo que busca un cinturón de vestir fino, discreto y sofisticado. La piel napa box confiere una suavidad inigualable y un brillo natural que mejora con el uso. El forro en cuero regenerado y la hebilla de zamak completan un diseño depurado donde menos es más, y cada milímetro cuenta.',
+    shortDescription: 'Piel napa box. Perfil slim de 3 cm. Discreción y sofisticación.',
     images: [
-      'https://picsum.photos/seed/kingbelt-steel-1/800/1000',
-      'https://picsum.photos/seed/kingbelt-steel-2/800/1000',
+      'https://picsum.photos/seed/kingbelt-4643-1/800/1000',
+      'https://picsum.photos/seed/kingbelt-4643-2/800/1000',
     ],
     colorImages: {
-      'Gunmetal': [
-        'https://picsum.photos/seed/steel-gunmetal-1/800/1000',
-        'https://picsum.photos/seed/steel-gunmetal-2/800/1000',
+      'Negro': [
+        'https://picsum.photos/seed/4643-negro-1/800/1000',
+        'https://picsum.photos/seed/4643-negro-2/800/1000',
       ],
-      'Obsidian': [
-        'https://picsum.photos/seed/steel-obsidian-1/800/1000',
-        'https://picsum.photos/seed/steel-obsidian-2/800/1000',
+      'Marrón': [
+        'https://picsum.photos/seed/4643-marron-1/800/1000',
+        'https://picsum.photos/seed/4643-marron-2/800/1000',
       ],
-      'Saddle': [
-        'https://picsum.photos/seed/steel-saddle-1/800/1000',
-        'https://picsum.photos/seed/steel-saddle-2/800/1000',
+      'Cuero': [
+        'https://picsum.photos/seed/4643-cuero-1/800/1000',
+        'https://picsum.photos/seed/4643-cuero-2/800/1000',
       ],
-      'Cognac': [
-        'https://picsum.photos/seed/steel-cognac-1/800/1000',
-        'https://picsum.photos/seed/steel-cognac-2/800/1000',
+      'Azul Marino': [
+        'https://picsum.photos/seed/4643-azul-1/800/1000',
+        'https://picsum.photos/seed/4643-azul-2/800/1000',
       ],
     },
     colors: [
-      { name: 'Gunmetal', hex: '#2A2A2A' },
-      { name: 'Obsidian', hex: '#0A0A0A' },
-      { name: 'Saddle', hex: '#8B5A2B' },
-      { name: 'Cognac', hex: '#6B3A1F' },
+      { name: 'Negro', hex: '#1A1A1A' },
+      { name: 'Marrón', hex: '#6B3A1F' },
+      { name: 'Cuero', hex: '#8B5A2B' },
+      { name: 'Azul Marino', hex: '#1A2F4B' },
     ],
-    sizes: ['85', '90', '95', '100', '105', '110'],
-    amazonUrl: 'https://amazon.com/kingbelt-steel-rebel',
-    whatsappMessage: 'Hola, estoy interesado en el modelo Steel Rebel de KingBelt.',
-    materials: ['Piel de vacuno grano completo', 'Cadena de acero inoxidable', 'Hebilla de seguridad de doble prong'],
+    sizes: ['90', '95', '100', '105', '110', '115'],
+    sizeEquivalence: {
+      '90': 105,
+      '95': 110,
+      '100': 115,
+      '105': 120,
+      '110': 130,
+      '115': 135,
+    },
+    amazonUrl: 'https://amazon.com/kingbelt-vestir-slim-4643',
+    whatsappMessage: 'Hola, estoy interesado en el modelo Vestir Slim 4643 de KingBelt.',
+    materials: ['Piel napa box', 'Forro cuero regenerado', 'Hebilla zamak'],
     features: [
-      'Detalle de cadena decorativa funcional',
-      'Doble prong para máxima sujeción',
-      'Acabado distressed intencional',
-      'Ancho: 4 cm',
+      'Ancho: 3 cm — perfil extra fino para trajes ajustados',
+      'Sistema de tornillo para ajuste personalizado',
+      'Incluye llavero de regalo',
+      'Presentado en bolsa de tela para conservación óptima',
     ],
+    badge: 'new',
+    price: 26.90,
+  },
+  {
+    id: 'MOD-5222/35',
+    slug: 'carraca-automatica-5222',
+    name: 'Carraca Automática 5222',
+    description:
+      'Versatilidad redefinida. El modelo 5222/35 combina la elegancia de un cinturón de vestir con la comodidad de un cierre automático tipo carraca. Su hebilla de zamak incorpora un sistema de cierre microajustable que permite una sujeción perfecta al milímetro, eliminando los orificios tradicionales. Ideal para el hombre dinámico que alterna entre el entorno profesional y el casual sin tiempo que perder.',
+    shortDescription: 'Cierre automático carraca. Ajuste milimétrico. Vestir y casual.',
+    images: [
+      'https://picsum.photos/seed/kingbelt-5222-1/800/1000',
+      'https://picsum.photos/seed/kingbelt-5222-2/800/1000',
+      'https://picsum.photos/seed/kingbelt-5222-3/800/1000',
+    ],
+    colorImages: {
+      'Negro': [
+        'https://picsum.photos/seed/5222-negro-1/800/1000',
+        'https://picsum.photos/seed/5222-negro-2/800/1000',
+      ],
+      'Marrón': [
+        'https://picsum.photos/seed/5222-marron-1/800/1000',
+        'https://picsum.photos/seed/5222-marron-2/800/1000',
+      ],
+      'Cuero': [
+        'https://picsum.photos/seed/5222-cuero-1/800/1000',
+        'https://picsum.photos/seed/5222-cuero-2/800/1000',
+      ],
+      'Azul Marino': [
+        'https://picsum.photos/seed/5222-azul-1/800/1000',
+        'https://picsum.photos/seed/5222-azul-2/800/1000',
+      ],
+    },
+    colors: [
+      { name: 'Negro', hex: '#1A1A1A' },
+      { name: 'Marrón', hex: '#6B3A1F' },
+      { name: 'Cuero', hex: '#8B5A2B' },
+      { name: 'Azul Marino', hex: '#1A2F4B' },
+    ],
+    sizes: ['90', '95', '100', '105', '110', '115'],
+    sizeEquivalence: {
+      '90': 105,
+      '95': 110,
+      '100': 115,
+      '105': 120,
+      '110': 130,
+      '115': 135,
+    },
+    amazonUrl: 'https://amazon.com/kingbelt-carraca-5222',
+    whatsappMessage: 'Hola, estoy interesado en el modelo Carraca Automática 5222 de KingBelt.',
+    materials: ['Piel napa box', 'Forro cuero regenerado', 'Hebilla zamak con cierre automático'],
+    features: [
+      'Cierre automático carraca — ajuste milimétrico sin orificios',
+      'Ancho: 3,5 cm — versátil para vestir o casual',
+      'Sistema de tornillo para ajuste personalizado',
+      'Incluye llavero de regalo y bolsa de tela',
+    ],
+    price: 34.90,
+  },
+  {
+    id: 'MOD-5215/35',
+    slug: 'reversible-5215',
+    name: 'Reversible 5215',
+    description:
+      'Dos colores, un solo cinturón, infinitas posibilidades. El modelo 5215/35 es la elección inteligente del hombre práctico que viaja ligero pero nunca pierde estilo. Con una banda reversible de piel napa box, puedes alternar entre dos tonos según el momento: negro para la oficina, cuero o marrón para el afterwork. La hebilla de zamak giratoria completa un diseño funcional que duplica tu armario con una sola pieza.',
+    shortDescription: 'Piel napa box reversible. Dos tonos en uno. Práctico y versátil.',
+    images: [
+      'https://picsum.photos/seed/kingbelt-5215-1/800/1000',
+      'https://picsum.photos/seed/kingbelt-5215-2/800/1000',
+    ],
+    colorImages: {
+      'Negro / Cuero': [
+        'https://picsum.photos/seed/5215-nc-1/800/1000',
+        'https://picsum.photos/seed/5215-nc-2/800/1000',
+      ],
+      'Negro / Marrón': [
+        'https://picsum.photos/seed/5215-nm-1/800/1000',
+        'https://picsum.photos/seed/5215-nm-2/800/1000',
+      ],
+      'Negro / Azul Marino': [
+        'https://picsum.photos/seed/5215-na-1/800/1000',
+        'https://picsum.photos/seed/5215-na-2/800/1000',
+      ],
+    },
+    colors: [
+      { name: 'Negro / Cuero', hex: '#2D2518' },
+      { name: 'Negro / Marrón', hex: '#3B2418' },
+      { name: 'Negro / Azul Marino', hex: '#1A2230' },
+    ],
+    sizes: ['90', '95', '100', '105', '110', '115'],
+    sizeEquivalence: {
+      '90': 105,
+      '95': 110,
+      '100': 115,
+      '105': 120,
+      '110': 130,
+      '115': 135,
+    },
+    amazonUrl: 'https://amazon.com/kingbelt-reversible-5215',
+    whatsappMessage: 'Hola, estoy interesado en el modelo Reversible 5215 de KingBelt.',
+    materials: ['Piel napa box reversible', 'Hebilla zamak giratoria'],
+    features: [
+      'Diseño reversible — dos colores en una sola pieza',
+      'Hebilla giratoria para cambio de tono en segundos',
+      'Ancho: 3,5 cm',
+      'Incluye llavero de regalo y bolsa de tela',
+    ],
+    price: 34.90,
+  },
+  {
+    id: 'MOD-5032/35',
+    slug: 'casual-vacuno-5032',
+    name: 'Casual Vacuno 5032',
+    description:
+      'Robustez sin renunciar a la elegancia. El modelo 5032/35 está confeccionado en piel de vacuno genuina, con un doble cosido al tono que refuerza la estructura y aporta un detalle visual de artesanía. Su hebilla de zamak y el ancho de 3,5 cm lo convierten en el aliado perfecto para looks casuales con actitud: vaqueros, chinos o incluso un look smart informal. Un cinturón que se siente sólido desde el primer contacto.',
+    shortDescription: 'Piel de vacuno. Doble cosido al tono. Robusto y casual.',
+    images: [
+      'https://picsum.photos/seed/kingbelt-5032-1/800/1000',
+      'https://picsum.photos/seed/kingbelt-5032-2/800/1000',
+    ],
+    colorImages: {
+      'Negro': [
+        'https://picsum.photos/seed/5032-negro-1/800/1000',
+        'https://picsum.photos/seed/5032-negro-2/800/1000',
+      ],
+      'Marrón': [
+        'https://picsum.photos/seed/5032-marron-1/800/1000',
+        'https://picsum.photos/seed/5032-marron-2/800/1000',
+      ],
+      'Cuero': [
+        'https://picsum.photos/seed/5032-cuero-1/800/1000',
+        'https://picsum.photos/seed/5032-cuero-2/800/1000',
+      ],
+    },
+    colors: [
+      { name: 'Negro', hex: '#1A1A1A' },
+      { name: 'Marrón', hex: '#6B3A1F' },
+      { name: 'Cuero', hex: '#8B5A2B' },
+    ],
+    sizes: ['90', '95', '100', '105', '110', '115'],
+    sizeEquivalence: {
+      '90': 105,
+      '95': 110,
+      '100': 115,
+      '105': 120,
+      '110': 130,
+      '115': 135,
+    },
+    amazonUrl: 'https://amazon.com/kingbelt-casual-5032',
+    whatsappMessage: 'Hola, estoy interesado en el modelo Casual Vacuno 5032 de KingBelt.',
+    materials: ['Piel de vacuno', 'Hebilla zamak'],
+    features: [
+      'Doble cosido al tono — resistencia y estética',
+      'Ancho: 3,5 cm',
+      'Sistema de tornillo para ajuste personalizado',
+      'Incluye llavero de regalo y bolsa de tela',
+    ],
+    price: 34.90,
+  },
+  {
+    id: 'MOD-5004/35',
+    slug: 'casual-grabado-5004',
+    name: 'Casual Grabado 5004',
+    description:
+      'Textura con personalidad. El modelo 5004/35 destaca por su grabado central en piel de vacuno, un detalle decorativo que aporta profundidad y carácter a cualquier look casual. La hebilla de zamak y el ancho de 3,5 cm mantienen la proporción ideal para combinarlo con vaqueros o pantalones chinos. Un cinturón que no pasa desapercibido pero nunca grita: la confianza del detalle bien resuelto.',
+    shortDescription: 'Piel de vacuno con grabado central. Textura y carácter.',
+    images: [
+      'https://picsum.photos/seed/kingbelt-5004-1/800/1000',
+      'https://picsum.photos/seed/kingbelt-5004-2/800/1000',
+    ],
+    colorImages: {
+      'Negro': [
+        'https://picsum.photos/seed/5004-negro-1/800/1000',
+        'https://picsum.photos/seed/5004-negro-2/800/1000',
+      ],
+      'Marrón': [
+        'https://picsum.photos/seed/5004-marron-1/800/1000',
+        'https://picsum.photos/seed/5004-marron-2/800/1000',
+      ],
+      'Cuero': [
+        'https://picsum.photos/seed/5004-cuero-1/800/1000',
+        'https://picsum.photos/seed/5004-cuero-2/800/1000',
+      ],
+    },
+    colors: [
+      { name: 'Negro', hex: '#1A1A1A' },
+      { name: 'Marrón', hex: '#6B3A1F' },
+      { name: 'Cuero', hex: '#8B5A2B' },
+    ],
+    sizes: ['90', '95', '100', '105', '110', '115'],
+    sizeEquivalence: {
+      '90': 105,
+      '95': 110,
+      '100': 115,
+      '105': 120,
+      '110': 130,
+      '115': 135,
+    },
+    amazonUrl: 'https://amazon.com/kingbelt-casual-5004',
+    whatsappMessage: 'Hola, estoy interesado en el modelo Casual Grabado 5004 de KingBelt.',
+    materials: ['Piel de vacuno con grabado central', 'Hebilla zamak'],
+    features: [
+      'Grabado central decorativo en relieve',
+      'Ancho: 3,5 cm',
+      'Sistema de tornillo para ajuste personalizado',
+      'Incluye llavero de regalo y bolsa de tela',
+    ],
+    price: 34.90,
+  },
+  {
+    id: 'MOD-4704/35',
+    slug: 'casual-serraje-4704',
+    name: 'Casual Serraje 4704',
+    description:
+      'La suavidad del ante en su expresión más pura. El modelo 4704/35 está confeccionado en piel serraje de tacto aterciopelado, con forro interior en cuero regenerado que garantiza comodidad y durabilidad. Su hebilla de zamak y el ancho de 3,5 cm lo convierten en una pieza casual distinguida, perfecta para quienes buscan texturas diferentes sin abandonar la elegancia. Un acabado que evoca tradición artesanal.',
+    shortDescription: 'Piel serraje/ante. Tacto aterciopelado. Tradición artesanal.',
+    images: [
+      'https://picsum.photos/seed/kingbelt-4704-1/800/1000',
+      'https://picsum.photos/seed/kingbelt-4704-2/800/1000',
+    ],
+    colorImages: {
+      'Negro': [
+        'https://picsum.photos/seed/4704-negro-1/800/1000',
+        'https://picsum.photos/seed/4704-negro-2/800/1000',
+      ],
+      'Marrón': [
+        'https://picsum.photos/seed/4704-marron-1/800/1000',
+        'https://picsum.photos/seed/4704-marron-2/800/1000',
+      ],
+      'Cuero': [
+        'https://picsum.photos/seed/4704-cuero-1/800/1000',
+        'https://picsum.photos/seed/4704-cuero-2/800/1000',
+      ],
+      'Azul Marino': [
+        'https://picsum.photos/seed/4704-azul-1/800/1000',
+        'https://picsum.photos/seed/4704-azul-2/800/1000',
+      ],
+    },
+    colors: [
+      { name: 'Negro', hex: '#1A1A1A' },
+      { name: 'Marrón', hex: '#6B3A1F' },
+      { name: 'Cuero', hex: '#8B5A2B' },
+      { name: 'Azul Marino', hex: '#1A2F4B' },
+    ],
+    sizes: ['90', '95', '100', '105', '110', '115'],
+    sizeEquivalence: {
+      '90': 105,
+      '95': 110,
+      '100': 115,
+      '105': 120,
+      '110': 130,
+      '115': 135,
+    },
+    amazonUrl: 'https://amazon.com/kingbelt-serraje-4704',
+    whatsappMessage: 'Hola, estoy interesado en el modelo Casual Serraje 4704 de KingBelt.',
+    materials: ['Piel serraje/ante', 'Forro cuero regenerado', 'Hebilla zamak'],
+    features: [
+      'Piel serraje de tacto aterciopelado',
+      'Ancho: 3,5 cm',
+      'Sistema de tornillo para ajuste personalizado',
+      'Incluye llavero de regalo y bolsa de tela',
+    ],
+    price: 32.90,
+  },
+  {
+    id: 'MOD-5444/35',
+    slug: 'casual-combinado-5444',
+    name: 'Casual Combinado 5444',
+    description:
+      'La armonía de dos mundos. El modelo 5444/35 combina piel de vacuno lisa con insertos de serraje/ante en un diseño que juega con contrates de textura y matiz. La hebilla de zamak une ambos mundos con elegancia, mientras que el ancho de 3,5 cm mantiene la proporción ideal para looks casuales con personalidad. Para el hombre que no teme mezclar y que entiende que la autenticidad está en los detalles.',
+    shortDescription: 'Piel vacuno combinada con serraje. Texturas y contrastes.',
+    images: [
+      'https://picsum.photos/seed/kingbelt-5444-1/800/1000',
+      'https://picsum.photos/seed/kingbelt-5444-2/800/1000',
+    ],
+    colorImages: {
+      'Negro': [
+        'https://picsum.photos/seed/5444-negro-1/800/1000',
+        'https://picsum.photos/seed/5444-negro-2/800/1000',
+      ],
+      'Marrón': [
+        'https://picsum.photos/seed/5444-marron-1/800/1000',
+        'https://picsum.photos/seed/5444-marron-2/800/1000',
+      ],
+      'Cuero': [
+        'https://picsum.photos/seed/5444-cuero-1/800/1000',
+        'https://picsum.photos/seed/5444-cuero-2/800/1000',
+      ],
+      'Azul Marino': [
+        'https://picsum.photos/seed/5444-azul-1/800/1000',
+        'https://picsum.photos/seed/5444-azul-2/800/1000',
+      ],
+    },
+    colors: [
+      { name: 'Negro', hex: '#1A1A1A' },
+      { name: 'Marrón', hex: '#6B3A1F' },
+      { name: 'Cuero', hex: '#8B5A2B' },
+      { name: 'Azul Marino', hex: '#1A2F4B' },
+    ],
+    sizes: ['90', '95', '100', '105', '110', '115'],
+    sizeEquivalence: {
+      '90': 105,
+      '95': 110,
+      '100': 115,
+      '105': 120,
+      '110': 130,
+      '115': 135,
+    },
+    amazonUrl: 'https://amazon.com/kingbelt-combinado-5444',
+    whatsappMessage: 'Hola, estoy interesado en el modelo Casual Combinado 5444 de KingBelt.',
+    materials: ['Piel de vacuno', 'Piel serraje/ante', 'Hebilla zamak'],
+    features: [
+      'Combinación de piel lisa y serraje en un solo diseño',
+      'Ancho: 3,5 cm',
+      'Sistema de tornillo para ajuste personalizado',
+      'Incluye llavero de regalo y bolsa de tela',
+    ],
+    price: 34.90,
   },
 ];
 

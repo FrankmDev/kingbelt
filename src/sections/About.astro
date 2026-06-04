@@ -10,7 +10,7 @@ const features = [
 ];
 ---
 
-<section id="marca" class="relative py-24 md:py-32 bg-king-secondary overflow-hidden">
+<section id="nosotros" class="relative py-24 md:py-32 bg-king-secondary overflow-hidden">
   <div class="mx-auto px-6 md:px-10 lg:px-16">
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
       {/* Image Column */}
@@ -33,11 +33,13 @@ const features = [
       <div class="lg:col-span-5 lg:col-start-8 animate-on-scroll animate-delay-1">
         <SectionHeader
           eyebrow="La Marca"
-          title="BUILT FOR MEN WHO CARRY CHARACTER"
-          size="md"
           class="mb-8"
-          titleClass="mb-0 tracking-wide leading-[0.95]"
-        />
+        >
+          <Fragment slot="title">
+            BUILT FOR MEN WHO<br />
+            CARRY CHARACTER
+          </Fragment>
+        </SectionHeader>
         <div class="space-y-6 text-king-muted leading-relaxed">
           <p>
             KingBelt nace de la tradición del cuero y la identidad masculina. Diseñado para hombres que valoran el detalle, la resistencia y el carácter en cada pieza.

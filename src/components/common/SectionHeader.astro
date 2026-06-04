@@ -3,54 +3,73 @@ interface Props {
   eyebrow?: string;
   title?: string;
   body?: string;
+  meta?: string;
   align?: 'left' | 'center';
-  size?: 'sm' | 'md' | 'lg' | 'xl';
   tone?: 'light' | 'dark';
   class?: string;
-  titleClass?: string;
-  bodyClass?: string;
-  ref?: string;
-  number?: string;
 }
 
 const {
   eyebrow,
   title,
   body,
+  meta,
   align = 'left',
-  size = 'lg',
   tone = 'light',
   class: className = '',
-  titleClass = '',
-  bodyClass = '',
-  ref,
-  number,
 } = Astro.props;
 
-const hasAside = Boolean(body || ref);
+const hasTitle = Boolean(title || Astro.slots.has('title'));
+const hasCopy = Boolean(body || meta);
 ---
+
+<header
+  class:list={['section-header', className]}
+  data-align={align}
+  data-tone={tone}
+  aria-label={eyebrow}
+>
+  <div class="sh-rule" aria-hidden="true"></div>
+
+  {(eyebrow || meta) && (
+    <div class="sh-meta-row">
+      {eyebrow && <p class="sh-eyebrow">{eyebrow}</p>}
+      {meta && <p class="sh-meta">{meta}</p>}
+    </div>
+  )}
+
+  <div class:list={['sh-content', hasCopy && 'has-copy']}>
+    {hasTitle && (
+      <h2 class="sh-title">
+        {Astro.slots.has('title') ? <slot name="title" /> : title}
+      </h2>
+    )}
+
+    {hasCopy && (
+      <div class="sh-copy">
+        {body && <p>{body}</p>}
+        {meta && <p class="sh-meta-mobile">{meta}</p>}
+      </div>
+    )}
+  </div>
+</header>
 
 <style>
   .section-header {
     --sh-ink: var(--color-king-text);
-    --sh-muted: rgba(26, 26, 26, 0.6);
-    --sh-soft: rgba(26, 26, 26, 0.08);
-    --sh-line: rgba(26, 26, 26, 0.08);
+    --sh-muted: rgba(26, 26, 26, 0.62);
+    --sh-line: rgba(26, 26, 26, 0.1);
     --sh-accent: var(--color-king-accent);
-    --sh-surface: rgba(255, 255, 255, 0.5);
-    position: relative;
-    isolation: isolate;
+
     width: 100%;
     color: var(--sh-ink);
   }
 
   .section-header[data-tone='dark'] {
     --sh-ink: rgba(255, 250, 241, 0.96);
-    --sh-muted: rgba(255, 250, 241, 0.62);
-    --sh-soft: rgba(255, 255, 255, 0.1);
-    --sh-line: rgba(255, 255, 255, 0.1);
+    --sh-muted: rgba(255, 250, 241, 0.64);
+    --sh-line: rgba(255, 255, 255, 0.12);
     --sh-accent: #d6b16e;
-    --sh-surface: rgba(255, 255, 255, 0.06);
   }
 
   .section-header[data-align='center'] {
@@ -58,62 +77,44 @@ const hasAside = Boolean(body || ref);
     text-align: center;
   }
 
-  .section-header[data-size='sm'] { --sh-title: clamp(2.25rem, 5.6vw, 3.65rem); }
-  .section-header[data-size='md'] { --sh-title: clamp(2.65rem, 6.4vw, 4.55rem); }
-  .section-header[data-size='lg'] { --sh-title: clamp(3rem, 7.4vw, 5.55rem); }
-  .section-header[data-size='xl'] { --sh-title: clamp(3.25rem, 8.8vw, 6.65rem); }
-
-  .sh-frame {
+  .sh-rule {
     position: relative;
-    border-top: 1px solid var(--sh-line);
-    padding-top: clamp(0.85rem, 1.6vw, 1.15rem);
+    height: 1px;
+    margin-bottom: clamp(0.95rem, 1.8vw, 1.35rem);
+    background: var(--sh-line);
   }
 
-  .sh-frame::before {
+  .sh-rule::before {
     content: '';
     position: absolute;
-    top: -1px;
+    inset-block: 0;
     left: 0;
     width: clamp(4.5rem, 12vw, 9rem);
-    height: 1px;
-    background: var(--sh-accent);
-    transform: scaleX(0.25);
-    transform-origin: left center;
-    opacity: 0;
-    transition:
-      opacity 0.75s var(--kb-ease-out),
-      transform 0.95s var(--kb-ease-out);
+    background: linear-gradient(90deg, var(--sh-accent), transparent);
   }
 
-  .section-header[data-align='center'] .sh-frame::before {
+  .section-header[data-align='center'] .sh-rule::before {
     left: 50%;
-    transform: translateX(-50%) scaleX(0.25);
-    transform-origin: center;
+    transform: translateX(-50%);
+    background: linear-gradient(90deg, transparent, var(--sh-accent), transparent);
   }
 
-  .sh-meta {
+  .sh-meta-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
-    margin-bottom: clamp(1.05rem, 2.2vw, 1.6rem);
-    opacity: 0;
-    transform: translateY(0.65rem);
-    transition:
-      opacity 0.75s var(--kb-ease-out),
-      transform 0.75s var(--kb-ease-out);
+    margin-bottom: clamp(1rem, 2vw, 1.5rem);
   }
 
-  .section-header[data-align='center'] .sh-meta {
+  .section-header[data-align='center'] .sh-meta-row {
     justify-content: center;
   }
 
-  .sh-kicker {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.58rem;
-    min-width: 0;
-    color: var(--sh-accent);
+  .sh-eyebrow,
+  .sh-meta,
+  .sh-meta-mobile {
+    margin: 0;
     font-family: var(--font-sans);
     font-size: var(--kb-label-size);
     font-weight: 700;
@@ -122,156 +123,65 @@ const hasAside = Boolean(body || ref);
     text-transform: uppercase;
   }
 
-  .sh-kicker::before {
-    content: '';
-    width: 0.48rem;
-    height: 0.48rem;
-    border: 1px solid currentColor;
-    border-radius: var(--kb-radius-pill);
-    background: color-mix(in srgb, currentColor 14%, transparent);
-    box-shadow: 0 0 0 0.28rem color-mix(in srgb, currentColor 8%, transparent);
-  }
-
-  .sh-ref-top {
+  .sh-eyebrow {
     display: inline-flex;
     align-items: center;
     gap: 0.65rem;
+    color: var(--sh-accent);
+  }
+
+  .sh-eyebrow::before {
+    content: '';
+    width: 0.42rem;
+    height: 0.42rem;
+    border: 1px solid currentColor;
+    background: color-mix(in srgb, currentColor 16%, transparent);
+    transform: rotate(45deg);
+  }
+
+  .sh-meta {
     color: color-mix(in srgb, var(--sh-ink) 38%, transparent);
-    font-size: var(--kb-label-size);
-    font-weight: 600;
-    letter-spacing: var(--kb-label-tracking);
-    line-height: 1;
-    text-transform: uppercase;
     white-space: nowrap;
   }
 
-  .sh-ref-top::before {
-    content: '';
-    width: 1.75rem;
-    height: 1px;
-    background: var(--sh-accent);
-    opacity: 0.46;
-  }
-
-  .section-header[data-align='center'] .sh-ref-top {
-    display: none;
-  }
-
-  .sh-layout {
-    position: relative;
+  .sh-content {
     display: grid;
-    grid-template-columns: minmax(0, 1.1fr) minmax(17rem, 0.74fr);
+    grid-template-columns: minmax(0, 1.1fr) minmax(17rem, 0.72fr);
     align-items: end;
     gap: clamp(1.25rem, 3.2vw, 3.2rem);
   }
 
-  .section-header[data-align='center'] .sh-layout,
-  .section-header:not(.has-aside) .sh-layout {
+  .sh-content:not(.has-copy),
+  .section-header[data-align='center'] .sh-content {
     display: block;
   }
 
-  .sh-title-wrap {
-    position: relative;
-    min-width: 0;
-  }
-
-  .sh-number {
-    position: absolute;
-    z-index: -1;
-    right: 0.02em;
-    bottom: -0.12em;
-    color: var(--sh-accent);
-    font-family: var(--font-display);
-    font-size: clamp(5.5rem, 13vw, 14rem);
-    font-weight: 300;
-    letter-spacing: -0.08em;
-    line-height: 0.7;
-    opacity: 0;
-    pointer-events: none;
-    user-select: none;
-    transition: opacity 0.95s var(--kb-ease-out) 0.15s;
-  }
-
-  .section-header[data-align='center'] .sh-number {
-    right: 50%;
-    transform: translateX(50%);
-  }
-
   .sh-title {
-    position: relative;
-    z-index: 1;
-    max-width: 12.2ch;
+    max-width: 12.5ch;
     margin: 0;
     color: var(--sh-ink);
     font-family: var(--font-display);
-    font-size: var(--sh-title);
+    font-size: clamp(2.65rem, 6.4vw, 4.6rem);
     font-weight: 300;
     letter-spacing: var(--kb-title-tracking);
-    line-height: 0.88;
+    line-height: 0.9;
     text-wrap: balance;
   }
 
   .section-header[data-align='center'] .sh-title {
-    max-width: 13.5ch;
+    max-width: 14ch;
     margin-inline: auto;
   }
 
-  .section-header:not(.has-aside) .sh-title {
-    max-width: 13.25ch;
-  }
-
-  .sh-title-inner {
-    display: block;
-    opacity: 0;
-    transform: translateY(1rem);
-    filter: blur(9px);
-    transition:
-      opacity 0.9s var(--kb-ease-out) 0.08s,
-      transform 0.9s var(--kb-ease-out) 0.08s,
-      filter 0.9s var(--kb-ease-out) 0.08s;
-  }
-
-  .sh-title em,
   .sh-title :global(em) {
     color: var(--sh-accent);
     font-style: italic;
   }
 
-  .sh-aside {
+  .sh-copy {
     position: relative;
-    min-width: 0;
-    margin-bottom: clamp(0.25rem, 0.8vw, 0.65rem);
-    padding: clamp(1rem, 2vw, 1.35rem);
-    border: 1px solid var(--sh-soft);
-    border-radius: var(--kb-radius-lg);
-    background:
-      linear-gradient(135deg, var(--sh-surface), transparent 76%),
-      color-mix(in srgb, var(--color-king-bg) 44%, transparent);
-    box-shadow: 0 1.1rem 3rem rgba(18, 14, 10, 0.055);
-    opacity: 0;
-    transform: translateY(0.9rem);
-    transition:
-      opacity 0.85s var(--kb-ease-out) 0.2s,
-      transform 0.85s var(--kb-ease-out) 0.2s,
-      border-color 0.35s var(--kb-ease-out),
-      box-shadow 0.35s var(--kb-ease-out);
-  }
-
-  .sh-aside::before {
-    content: '';
-    position: absolute;
-    top: clamp(1rem, 2vw, 1.35rem);
-    left: clamp(1rem, 2vw, 1.35rem);
-    width: 2.6rem;
-    height: 1px;
-    background: var(--sh-accent);
-    opacity: 0.5;
-  }
-
-  .sh-body {
-    margin: 0;
-    padding-top: 0.85rem;
     max-width: 34rem;
+    padding-top: 0.95rem;
     color: var(--sh-muted);
     font-size: clamp(0.94rem, 0.9rem + 0.22vw, 1.06rem);
     font-weight: 350;
@@ -279,208 +189,77 @@ const hasAside = Boolean(body || ref);
     line-height: 1.78;
   }
 
-  .section-header[data-align='center'] .sh-aside {
-    width: min(100%, 42rem);
-    margin: clamp(1.2rem, 2.6vw, 1.8rem) auto 0;
-    padding: 0;
-    border: 0;
-    border-radius: 0;
-    background: transparent;
-    box-shadow: none;
+  .sh-copy::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 2.75rem;
+    height: 1px;
+    background: var(--sh-accent);
+    opacity: 0.45;
   }
 
-  .section-header[data-align='center'] .sh-aside::before {
+  .section-header[data-align='center'] .sh-copy {
+    width: min(100%, 42rem);
+    margin: clamp(1.2rem, 2.6vw, 1.8rem) auto 0;
+  }
+
+  .section-header[data-align='center'] .sh-copy::before {
     left: 50%;
-    top: 0;
     transform: translateX(-50%);
     width: 4.5rem;
   }
 
-  .section-header[data-align='center'] .sh-body {
-    margin-inline: auto;
-    padding-top: 1.35rem;
+  .sh-copy p {
+    margin: 0;
   }
 
-  .sh-ref-bottom {
+  .sh-meta-mobile {
     display: none;
-    margin-top: 1rem;
+    margin-top: 0.85rem;
     color: color-mix(in srgb, var(--sh-ink) 38%, transparent);
-    font-size: var(--kb-micro-size);
-    font-weight: 700;
-    letter-spacing: var(--kb-micro-tracking);
-    line-height: 1;
-    text-transform: uppercase;
-  }
-
-  .section-header[data-align='center'] .sh-ref-bottom {
-    display: inline-flex;
-    justify-content: center;
-  }
-
-  .section-header.is-visible .sh-frame::before {
-    opacity: 1;
-    transform: scaleX(1);
-  }
-
-  .section-header.is-visible[data-align='center'] .sh-frame::before {
-    transform: translateX(-50%) scaleX(1);
-  }
-
-  .section-header.is-visible .sh-meta,
-  .section-header.is-visible .sh-aside {
-    opacity: 1;
-    transform: translateY(0);
-  }
-
-  .section-header.is-visible .sh-title-inner {
-    opacity: 1;
-    transform: translateY(0);
-    filter: blur(0);
-  }
-
-  .section-header.is-visible .sh-number {
-    opacity: 0.055;
-  }
-
-  @media (hover: hover) {
-    .section-header:hover .sh-aside {
-      border-color: color-mix(in srgb, var(--sh-accent) 26%, transparent);
-      box-shadow: 0 1.35rem 3.4rem rgba(18, 14, 10, 0.075);
-    }
   }
 
   @media (max-width: 900px) {
-    .sh-layout {
+    .sh-content {
       display: block;
     }
 
-    .sh-title {
-      max-width: 13.5ch;
-    }
-
-    .sh-aside {
+    .sh-copy {
       width: min(100%, 40rem);
       margin-top: clamp(1.15rem, 3vw, 1.6rem);
-      margin-bottom: 0;
     }
   }
 
   @media (max-width: 640px) {
-    .sh-frame {
-      padding-top: 0.95rem;
+    .sh-rule {
+      margin-bottom: 0.9rem;
     }
 
-    .sh-meta {
+    .sh-meta-row {
       align-items: flex-start;
       margin-bottom: 1rem;
     }
 
-    .sh-ref-top {
+    .sh-meta {
       display: none;
     }
 
-    .sh-kicker {
+    .sh-meta-mobile {
+      display: block;
+    }
+
+    .sh-eyebrow,
+    .sh-meta-mobile {
       font-size: 0.5rem;
       letter-spacing: 0.3em;
     }
 
     .sh-title {
       max-width: 12.5ch;
-      line-height: 0.9;
-    }
-
-    .sh-aside {
-      padding: 0.95rem;
-      border-radius: var(--kb-radius-md);
-    }
-
-    .section-header[data-align='center'] .sh-aside {
-      padding: 0;
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .sh-frame::before,
-    .sh-meta,
-    .sh-title-inner,
-    .sh-aside,
-    .sh-number {
-      transition: none !important;
-      transform: none !important;
-      filter: none !important;
+      font-size: clamp(2.35rem, 12vw, 3.4rem);
+      line-height: 0.92;
     }
   }
 </style>
-
-<div
-  class={`section-header ${hasAside ? 'has-aside' : ''} ${className}`}
-  data-section-header
-  data-align={align}
-  data-size={size}
-  data-tone={tone}
->
-  <div class="sh-frame">
-    {(eyebrow || ref) && (
-      <div class="sh-meta">
-        {eyebrow && <span class="sh-kicker">{eyebrow}</span>}
-        {ref && <span class="sh-ref-top">{ref}</span>}
-      </div>
-    )}
-
-    <div class="sh-layout">
-      <div class="sh-title-wrap">
-        {number && (
-          <span class="sh-number" aria-hidden="true">
-            {number}
-          </span>
-        )}
-
-        <h2 class={`sh-title ${titleClass}`}>
-          <span class="sh-title-inner">
-            {Astro.slots.has('title') ? <slot name="title" /> : title}
-          </span>
-        </h2>
-      </div>
-
-      {hasAside && (
-        <div class="sh-aside">
-          {body && <p class={`sh-body ${bodyClass}`}>{body}</p>}
-          {ref && <span class="sh-ref-bottom">{ref}</span>}
-        </div>
-      )}
-    </div>
-  </div>
-</div>
-
-<script>
-  const initSectionHeaders = () => {
-    const headers = document.querySelectorAll<HTMLElement>('[data-section-header]:not([data-section-header-ready])');
-
-    if (!('IntersectionObserver' in window)) {
-      headers.forEach((header) => {
-        header.classList.add('is-visible');
-        header.dataset.sectionHeaderReady = 'true';
-      });
-      return;
-    }
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('is-visible');
-            observer.unobserve(entry.target);
-          }
-        });
-      },
-      { threshold: 0.16, rootMargin: '0px 0px -8% 0px' }
-    );
-
-    headers.forEach((header) => {
-      header.dataset.sectionHeaderReady = 'true';
-      observer.observe(header);
-    });
-  };
-
-  initSectionHeaders();
-</script>

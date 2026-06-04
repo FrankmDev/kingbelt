@@ -1,8 +1,8 @@
 ---
 import type { ImageMetadata } from 'astro';
-import { Image } from 'astro:assets';
 import SectionHeader from '../components/common/SectionHeader.astro';
-import { products } from '../data/products';
+import ProductVisualImage from '../components/product/ProductVisualImage.astro';
+import { products, type ProductImage } from '../data/products';
 import Badge from '../components/ui/Badge.astro';
 
 const allImages = Object.values(
@@ -13,15 +13,17 @@ const allImages = Object.values(
   .map((entry) => entry.default)
   .sort((a, b) => a.src.localeCompare(b.src));
 
-const featuredProduct = products.find((p) => p.slug === 'highway-king') ?? products[0];
-const gridProducts = products.filter((p) => p.slug !== featuredProduct.slug);
+const gridProducts = products;
 
 const getImageForProduct = (productIndex: number, variant: 'primary' | 'hover') => {
   const offset = variant === 'hover' ? 3 : 0;
   return allImages[(productIndex + offset) % allImages.length];
 };
 
-const featuredIndex = products.indexOf(featuredProduct);
+const getDisplayImageForProduct = (product: (typeof products)[number], productIndex: number, variant: 'primary' | 'hover'): ProductImage => {
+  const productImageIndex = variant === 'hover' ? 1 : 0;
+  return product.images[productImageIndex] ?? getImageForProduct(productIndex, variant);
+};
 
 const badgeType = (badge?: string) => {
   if (badge === 'bestseller') return 'bestseller';
@@ -41,8 +43,7 @@ const badgeType = (badge?: string) => {
       <SectionHeader
         eyebrow="Colección"
         body="Materiales reales, herrajes con peso y una estética pensada para envejecer bien con el uso."
-        ref={`${products.length} modelos`}
-        size="md"
+        meta={`${products.length} modelos`}
       >
         <Fragment slot="title">
           Hechos para durar,
@@ -50,138 +51,6 @@ const badgeType = (badge?: string) => {
         </Fragment>
       </SectionHeader>
     </div>
-
-    {/* Featured — behaves like a normal card on mobile/tablet, banner on lg */}
-    <a
-      href={`/product/${featuredProduct.slug}`}
-      class="pg-featured pg-card group relative mb-6 block overflow-hidden rounded-[var(--kb-radius-lg)] lg:mb-12"
-      data-pg-card
-    >
-      <div class="relative aspect-[3/4] overflow-hidden lg:aspect-[2.8/1]">
-        {/* Primary image */}
-        <Image
-          src={getImageForProduct(featuredIndex, 'primary')}
-          alt={`${featuredProduct.name} — cinturón de cuero`}
-          class="pg-card-img absolute inset-0 h-full w-full object-cover transition-transform duration-[1400ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.04]"
-          loading="eager"
-          sizes="100vw"
-        />
-        {/* Hover image */}
-        <Image
-          src={getImageForProduct(featuredIndex, 'hover')}
-          alt={`${featuredProduct.name} detalle`}
-          class="pg-card-hover-img absolute inset-0 h-full w-full scale-[1.06] object-cover opacity-0 transition-[opacity,transform] duration-[1000ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-100 group-hover:opacity-100"
-          loading="lazy"
-          sizes="100vw"
-        />
-
-        {/* Card overlays (mobile/tablet) */}
-        <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/10 lg:hidden"></div>
-        <div class="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-transparent lg:hidden"></div>
-        <div class="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(138,106,61,0.10),transparent_50%)] opacity-0 transition-opacity duration-700 group-hover:opacity-100 lg:hidden"></div>
-
-        {/* Banner overlays (lg) */}
-        <div class="hidden lg:absolute lg:inset-0 lg:block lg:bg-gradient-to-r lg:from-black/80 lg:via-black/45 lg:to-transparent"></div>
-        <div class="hidden lg:absolute lg:inset-0 lg:block lg:bg-gradient-to-t lg:from-black/65 lg:via-black/15 lg:to-transparent"></div>
-        <div class="hidden lg:absolute lg:inset-0 lg:block lg:bg-[radial-gradient(circle_at_top_right,rgba(138,106,61,0.12),transparent_40%)]"></div>
-
-        {/* Shimmer on hover */}
-        <div class="pg-shimmer absolute inset-0 opacity-0 transition-opacity duration-700 group-hover:opacity-100"></div>
-
-        {/* Inner frame */}
-        <div class="pointer-events-none absolute inset-3 rounded-[calc(var(--kb-radius-lg)-0.5rem)] border border-white/[0.06] transition-colors duration-700 group-hover:border-white/[0.14] md:inset-5"></div>
-
-        {/* Corner accents */}
-        <div class="pointer-events-none absolute inset-4 z-10 md:inset-6 lg:inset-7">
-          <span class="kb-corner-frame absolute left-0 top-0"></span>
-          <span class="kb-corner-frame absolute right-0 top-0" style="transform: scaleX(-1);"></span>
-          <span class="kb-corner-frame absolute bottom-0 left-0" style="transform: scaleY(-1);"></span>
-          <span class="kb-corner-frame absolute bottom-0 right-0" style="transform: scale(-1);"></span>
-        </div>
-
-        {/* Accent line top */}
-        <div class="absolute left-0 right-0 top-0 h-px bg-[linear-gradient(90deg,transparent_0%,var(--color-king-accent)_50%,transparent_100%)] opacity-0 transition-opacity duration-500 group-hover:opacity-50"></div>
-
-        {/* Bottom accent line */}
-        <div class="absolute bottom-0 left-0 h-[2px] w-full origin-left scale-x-0 bg-king-accent transition-transform duration-700 ease-out group-hover:scale-x-100"></div>
-
-        {/* Outer border glow on hover */}
-        <div class="pointer-events-none absolute inset-0 rounded-[var(--kb-radius-lg)] border border-white/0 transition-colors duration-700 group-hover:border-white/[0.08]"></div>
-
-        {/* Card layout (mobile/tablet) */}
-        <div class="lg:hidden">
-          {/* Top bar: badge + ID */}
-          <div class="absolute left-4 right-4 top-4 z-10 flex items-start justify-between md:left-6 md:right-6 md:top-6">
-            <Badge type="featured" />
-            <span class="font-mono text-[10px] uppercase tracking-[0.2em] text-white/40">
-              {featuredProduct.id}
-            </span>
-          </div>
-
-          {/* Bottom info */}
-          <div class="absolute bottom-0 left-0 right-0 z-10 p-4 md:p-6">
-            <div class="pg-card-line mb-3 h-px w-8 bg-king-accent/80"></div>
-            <h3 class="font-display text-[1.5rem] font-light leading-[0.95] tracking-[-0.01em] md:text-[1.75rem]">
-              {featuredProduct.name}
-            </h3>
-            <p class="pg-card-desc mt-2 text-[13px] leading-[1.6] text-white/60 md:max-w-[28ch]">
-              {featuredProduct.shortDescription}
-            </p>
-            <div class="pg-card-meta mt-4 flex flex-wrap items-center gap-3">
-              <div class="flex items-center gap-2">
-                {featuredProduct.colors.slice(0, 3).map((color) => (
-                  <span
-                    class="inline-block h-3.5 w-3.5 rounded-full border border-white/30 shadow-sm transition-transform duration-300 group-hover:scale-110 md:h-4 md:w-4"
-                    style={`background-color: ${color.hex}`}
-                    title={color.name}
-                  />
-                ))}
-                {featuredProduct.colors.length > 3 && (
-                  <span class="ml-1 text-[9px] uppercase tracking-wider text-white/45">
-                    +{featuredProduct.colors.length - 3}
-                  </span>
-                )}
-              </div>
-              <span class="ml-auto inline-flex items-center gap-2 text-[10px] font-medium uppercase tracking-[0.18em] text-white/70">
-                Ver detalle
-                <span class="inline-block h-px w-5 bg-king-accent transition-all duration-500 group-hover:w-8"></span>
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Banner layout (lg) */}
-        <div class="hidden lg:block">
-          <div class="absolute bottom-0 left-0 p-14">
-            <div class="mb-4">
-              <Badge type="featured" />
-            </div>
-            <span class="font-mono text-[10px] uppercase tracking-[0.22em] text-king-accent/80">
-              {featuredProduct.id}
-            </span>
-            <h3 class="mt-2 font-display text-[4rem] font-light leading-[0.92] tracking-[-0.02em]">
-              {featuredProduct.name}
-            </h3>
-            <p class="mt-4 max-w-lg text-[15px] leading-[1.7] text-white/70">
-              {featuredProduct.shortDescription}
-            </p>
-            <div class="mt-5 flex flex-wrap items-center gap-4">
-              {featuredProduct.colors.slice(0, 4).map((color) => (
-                <span
-                  class="h-5 w-5 rounded-full border-2 border-white/40 shadow-sm transition-transform duration-300 group-hover:scale-110"
-                  style={`background-color: ${color.hex}`}
-                  title={color.name}
-                />
-              ))}
-              <span class="ml-3 inline-flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.18em] text-white/80 transition-all duration-500 group-hover:gap-3">
-                Ver detalle
-                <span class="pg-arrow h-px w-6 bg-king-accent transition-all duration-500 group-hover:w-10"></span>
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </a>
 
     {/* Horizontal scroll — editorial lookbook */}
     <div class="relative">
@@ -191,11 +60,14 @@ const badgeType = (badge?: string) => {
       <div class="pointer-events-none absolute inset-y-0 right-0 z-20 w-8 bg-gradient-to-l from-king-bg to-transparent sm:w-12 lg:w-16"></div>
 
       <div
-        class="pg-scroll-track flex gap-4 overflow-x-auto pb-6 snap-x snap-mandatory sm:gap-5 lg:gap-6 lg:pb-8"
+        class="pg-scroll-track flex cursor-grab select-none gap-4 overflow-x-auto pb-6 snap-x snap-mandatory active:cursor-grabbing sm:gap-5 lg:gap-6 lg:pb-8"
         data-pg-scroll
+        aria-label="Galería de productos"
       >
         {gridProducts.map((product) => {
           const originalIndex = products.indexOf(product);
+          const primaryImage = getDisplayImageForProduct(product, originalIndex, 'primary');
+          const hoverImage = originalIndex === 0 ? primaryImage : getDisplayImageForProduct(product, originalIndex, 'hover');
 
           return (
             <a
@@ -203,22 +75,26 @@ const badgeType = (badge?: string) => {
               class="pg-card group relative block w-[78vw] flex-shrink-0 snap-start overflow-hidden rounded-[var(--kb-radius-lg)] sm:w-[45vw] lg:w-[32vw] xl:w-[28vw]"
               data-pg-card
             >
-              <div class="relative aspect-[3/4] overflow-hidden">
+              <div class="relative aspect-[5/5.8] overflow-hidden">
                 {/* Primary image */}
-                <Image
-                  src={getImageForProduct(originalIndex, 'primary')}
+                <ProductVisualImage
+                  src={primaryImage}
                   alt={`${product.name} — cinturón de cuero`}
                   class="pg-card-img absolute inset-0 h-full w-full object-cover transition-transform duration-[1400ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.04]"
                   loading="lazy"
                   sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                  format="webp"
+                  quality={84}
                 />
                 {/* Hover image */}
-                <Image
-                  src={getImageForProduct(originalIndex, 'hover')}
+                <ProductVisualImage
+                  src={hoverImage}
                   alt={`${product.name} detalle`}
                   class="pg-card-hover-img absolute inset-0 h-full w-full scale-[1.06] object-cover opacity-0 transition-[opacity,transform] duration-[1000ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-100 group-hover:opacity-100"
                   loading="lazy"
                   sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                  format="webp"
+                  quality={82}
                 />
 
                 {/* Cinematic overlay layers */}
@@ -316,14 +192,6 @@ const badgeType = (badge?: string) => {
     mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.8), transparent 88%);
   }
 
-  @media (min-width: 1024px) {
-    .pg-featured {
-      box-shadow:
-        0 32px 80px rgba(18, 15, 12, 0.14),
-        0 12px 24px rgba(18, 15, 12, 0.08);
-    }
-  }
-
   .pg-card {
     box-shadow:
       0 20px 50px rgba(18, 15, 12, 0.12),
@@ -381,20 +249,33 @@ const badgeType = (badge?: string) => {
     100% { background-position: -200% 0; }
   }
 
-  .pg-arrow {
-    transform-origin: left center;
-  }
-
-  .pg-featured:hover .pg-arrow {
-    transform: translateX(4px);
-  }
-
   .pg-scroll-track {
     -ms-overflow-style: none;
+    overscroll-behavior-x: contain;
+    scroll-behavior: smooth;
+    scroll-padding-inline: 1rem;
     scrollbar-width: none;
+    touch-action: pan-x pan-y;
+    user-select: none;
+    -webkit-user-select: none;
   }
   .pg-scroll-track::-webkit-scrollbar {
     display: none;
+  }
+
+  .pg-scroll-track.is-dragging {
+    scroll-behavior: auto;
+    scroll-snap-type: none;
+  }
+
+  .pg-scroll-track.is-dragging .pg-card {
+    pointer-events: none;
+  }
+
+  .pg-scroll-track img,
+  .pg-scroll-track a {
+    -webkit-user-drag: none;
+    user-drag: none;
   }
 
   @media (max-width: 767px) {
@@ -427,16 +308,111 @@ const badgeType = (badge?: string) => {
       opacity: 0,
       duration: 0.8,
     })
-      .from(scope.querySelector('.pg-featured'), {
-        y: 40,
-        opacity: 0,
-        duration: 1.0,
-      }, 0.22)
-      .from(scope.querySelectorAll('[data-pg-card]:not(.pg-featured)'), {
+      .from(scope.querySelectorAll('[data-pg-card]'), {
         x: 30,
         opacity: 0,
         duration: 0.78,
         stagger: 0.08,
-      }, 0.5);
+      }, 0.22);
   }
+
+  document.querySelectorAll<HTMLElement>('[data-pg-scroll]').forEach((track) => {
+    let isDraggingIntent = false;
+    let isMouseDown = false;
+    let didDrag = false;
+    let startX = 0;
+    let startScrollLeft = 0;
+    let suppressClick = false;
+
+    const stopDrag = () => {
+      if (!isMouseDown) return;
+
+      isMouseDown = false;
+      isDraggingIntent = false;
+      track.classList.remove('is-dragging');
+
+      window.setTimeout(() => {
+        didDrag = false;
+        suppressClick = false;
+      }, 120);
+    };
+
+    const startDrag = (clientX: number) => {
+      isMouseDown = true;
+      isDraggingIntent = false;
+      didDrag = false;
+      suppressClick = false;
+      startX = clientX;
+      startScrollLeft = track.scrollLeft;
+    };
+
+    const moveDrag = (clientX: number) => {
+      if (!isMouseDown) return;
+
+      const deltaX = clientX - startX;
+      if (Math.abs(deltaX) > 4) {
+        isDraggingIntent = true;
+        didDrag = true;
+        suppressClick = true;
+        track.classList.add('is-dragging');
+      }
+
+      if (isDraggingIntent) {
+        track.scrollLeft = startScrollLeft - deltaX;
+      }
+    };
+
+    track.addEventListener('dragstart', (event) => {
+      event.preventDefault();
+    });
+
+    track.addEventListener('pointerdown', (event) => {
+      if (event.pointerType !== 'mouse' || event.button !== 0) return;
+
+      startDrag(event.clientX);
+    });
+
+    window.addEventListener('pointermove', (event) => {
+      if (!isMouseDown) return;
+      if (event.pointerType !== 'mouse') return;
+
+      moveDrag(event.clientX);
+
+      if (didDrag) {
+        event.preventDefault();
+      }
+    });
+
+    window.addEventListener('pointerup', stopDrag);
+    window.addEventListener('pointercancel', stopDrag);
+
+    track.addEventListener('mousedown', (event) => {
+      if (event.button !== 0) return;
+
+      startDrag(event.clientX);
+    });
+
+    window.addEventListener('mousemove', (event) => {
+      if (!isMouseDown) return;
+
+      moveDrag(event.clientX);
+
+      if (didDrag) {
+        event.preventDefault();
+      }
+    });
+
+    window.addEventListener('mouseup', stopDrag);
+
+    track.addEventListener(
+      'click',
+      (event) => {
+        if (!suppressClick && !didDrag) return;
+
+        event.preventDefault();
+        event.stopPropagation();
+      },
+      true,
+    );
+  });
 </script>

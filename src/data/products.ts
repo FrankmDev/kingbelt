@@ -1,11 +1,52 @@
+import type { ImageMetadata } from 'astro';
+
+export type ProductImage = string | ImageMetadata;
+
+const productAssetModules = import.meta.glob<{ default: ImageMetadata }>(
+  '../assets/products/**/*.{avif,jpg,jpeg,png,webp}',
+  { eager: true },
+);
+
+function productAsset(path: string): ImageMetadata {
+  const module = productAssetModules[`../assets/products/${path}`];
+  if (!module) {
+    throw new Error(`Missing product asset: src/assets/products/${path}`);
+  }
+
+  return module.default;
+}
+
+const producto1ColorImages: Record<string, ProductImage[]> = {
+  Marrón: [
+    productAsset('producto1/1-1/portada.jpg'),
+    productAsset('producto1/1-1/perspectiva1.png'),
+    productAsset('producto1/1-1/perspectiva2.png'),
+  ],
+  'Azul Marino': [
+    productAsset('producto1/1-2/portada.png'),
+    productAsset('producto1/1-2/perspectiva1.png'),
+    productAsset('producto1/1-2/perspectiva2.png'),
+  ],
+  Cuero: [
+    productAsset('producto1/1-3/portada.png'),
+    productAsset('producto1/1-3/perspectiva1.png'),
+    productAsset('producto1/1-3/perspectiva2.png'),
+  ],
+  Negro: [
+    productAsset('producto1/1-4/portada.png'),
+    productAsset('producto1/1-4/perspectiva1.png'),
+    productAsset('producto1/1-4/perspectiva2.png'),
+  ],
+};
+
 export interface Product {
   id: string;
   slug: string;
   name: string;
   description: string;
   shortDescription: string;
-  images: string[];
-  colorImages: Record<string, string[]>;
+  images: ProductImage[];
+  colorImages: Record<string, ProductImage[]>;
   colors: { name: string; hex: string }[];
   sizes: string[];
   amazonUrl: string;
@@ -25,34 +66,13 @@ export const products: Product[] = [
     description:
       'El cinturón de vestir definitivo para el hombre que exige distinción en cada detalle. Confeccionado en piel napa box de primera calidad, el modelo 180/35 destaca por su perfil elegante de 3,5 cm de ancho, perfecto para conjuntos de traje o looks smart-casual. El forro interior en cuero regenerado garantiza una sujeción cómoda durante todo el día, mientras que la hebilla de zamak pulido aporta un cierre seguro con un acabado refinado. Un básico de armario que eleva cualquier atuendo con sutileza y clase.',
     shortDescription: 'Piel napa box. Forro cuero regenerado. Hebilla zamak. Elegancia sin concesiones.',
-    images: [
-      'https://picsum.photos/seed/kingbelt-180-1/800/1000',
-      'https://picsum.photos/seed/kingbelt-180-2/800/1000',
-      'https://picsum.photos/seed/kingbelt-180-3/800/1000',
-    ],
-    colorImages: {
-      'Negro': [
-        'https://picsum.photos/seed/180-negro-1/800/1000',
-        'https://picsum.photos/seed/180-negro-2/800/1000',
-      ],
-      'Marrón': [
-        'https://picsum.photos/seed/180-marron-1/800/1000',
-        'https://picsum.photos/seed/180-marron-2/800/1000',
-      ],
-      'Cuero': [
-        'https://picsum.photos/seed/180-cuero-1/800/1000',
-        'https://picsum.photos/seed/180-cuero-2/800/1000',
-      ],
-      'Azul Marino': [
-        'https://picsum.photos/seed/180-azul-1/800/1000',
-        'https://picsum.photos/seed/180-azul-2/800/1000',
-      ],
-    },
+    images: producto1ColorImages.Marrón,
+    colorImages: producto1ColorImages,
     colors: [
-      { name: 'Negro', hex: '#1A1A1A' },
-      { name: 'Marrón', hex: '#6B3A1F' },
-      { name: 'Cuero', hex: '#8B5A2B' },
-      { name: 'Azul Marino', hex: '#1A2F4B' },
+      { name: 'Marrón', hex: '#3A2419' },
+      { name: 'Azul Marino', hex: '#111823' },
+      { name: 'Cuero', hex: '#8B4F2E' },
+      { name: 'Negro', hex: '#0B0B0A' },
     ],
     sizes: ['90', '95', '100', '105', '110', '115'],
     sizeEquivalence: {

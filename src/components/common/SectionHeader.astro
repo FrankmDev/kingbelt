@@ -4,6 +4,8 @@ interface Props {
   title?: string;
   body?: string;
   meta?: string;
+  number?: string;
+  numberTotal?: string;
   align?: 'left' | 'center';
   tone?: 'light' | 'dark';
   class?: string;
@@ -14,13 +16,15 @@ const {
   title,
   body,
   meta,
+  number,
+  numberTotal,
   align = 'left',
   tone = 'light',
   class: className = '',
 } = Astro.props;
 
 const hasTitle = Boolean(title || Astro.slots.has('title'));
-const hasCopy = Boolean(body || meta);
+const hasCopy = Boolean(body);
 ---
 
 <header
@@ -29,11 +33,33 @@ const hasCopy = Boolean(body || meta);
   data-tone={tone}
   aria-label={eyebrow}
 >
-  <div class="sh-rule" aria-hidden="true"></div>
+  {number && (
+    <div class="sh-number" aria-hidden="true">
+      <span class="sh-number-rule"></span>
+      <span class="sh-number-text">
+        <span class="sh-number-current">{number}</span>
+        {numberTotal && (
+          <>
+            <span class="sh-number-divider">/</span>
+            <span class="sh-number-total">{numberTotal}</span>
+          </>
+        )}
+      </span>
+    </div>
+  )}
+
+  <div class="sh-rule" aria-hidden="true">
+    <span class="sh-rule-accent"></span>
+  </div>
 
   {(eyebrow || meta) && (
     <div class="sh-meta-row">
-      {eyebrow && <p class="sh-eyebrow">{eyebrow}</p>}
+      {eyebrow && (
+        <p class="sh-eyebrow">
+          <span class="sh-eyebrow-mark" aria-hidden="true"></span>
+          <span class="sh-eyebrow-text">{eyebrow}</span>
+        </p>
+      )}
       {meta && <p class="sh-meta">{meta}</p>}
     </div>
   )}
@@ -47,8 +73,7 @@ const hasCopy = Boolean(body || meta);
 
     {hasCopy && (
       <div class="sh-copy">
-        {body && <p>{body}</p>}
-        {meta && <p class="sh-meta-mobile">{meta}</p>}
+        <p>{body}</p>
       </div>
     )}
   </div>
@@ -56,10 +81,17 @@ const hasCopy = Boolean(body || meta);
 
 <style>
   .section-header {
-    --sh-ink: var(--color-king-text);
+    /* Ink palette */
+    --sh-ink: #1A1A1A;
     --sh-muted: rgba(26, 26, 26, 0.62);
     --sh-line: rgba(26, 26, 26, 0.1);
     --sh-accent: var(--color-king-accent);
+
+    /* Editorial rhythm */
+    --sh-gap-number: 0.85rem;
+    --sh-gap-rule: clamp(1.2rem, 2.2vw, 1.7rem);
+    --sh-gap-meta: clamp(1.5rem, 2.6vw, 2rem);
+    --sh-gap-content: clamp(2rem, 4vw, 3.5rem);
 
     width: 100%;
     color: var(--sh-ink);
@@ -77,34 +109,85 @@ const hasCopy = Boolean(body || meta);
     text-align: center;
   }
 
+  /* ============ Number mark (folio) ============ */
+  .sh-number {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: var(--sh-gap-number);
+    line-height: 1;
+  }
+
+  .section-header[data-align='center'] .sh-number {
+    justify-content: center;
+  }
+
+  .sh-number-rule {
+    display: block;
+    width: 2.25rem;
+    height: 1px;
+    background: var(--sh-accent);
+    opacity: 0.55;
+  }
+
+  .sh-number-text {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.45rem;
+    font-family: var(--font-sans, 'Satoshi', sans-serif);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--sh-accent);
+    font-variant-numeric: tabular-nums lining-nums;
+    font-feature-settings: 'tnum' on, 'lnum' on;
+  }
+
+  .sh-number-divider {
+    font-weight: 400;
+    opacity: 0.4;
+    margin-inline: 0.05rem;
+  }
+
+  .sh-number-total {
+    font-weight: 500;
+    opacity: 0.55;
+  }
+
+  /* ============ Hairline rule with copper accent ============ */
   .sh-rule {
     position: relative;
     height: 1px;
-    margin-bottom: clamp(0.95rem, 1.8vw, 1.35rem);
+    margin-bottom: var(--sh-gap-rule);
     background: var(--sh-line);
   }
 
-  .sh-rule::before {
-    content: '';
+  .sh-rule-accent {
     position: absolute;
-    inset-block: 0;
+    inset-block: -0.5px;
     left: 0;
-    width: clamp(4.5rem, 12vw, 9rem);
-    background: linear-gradient(90deg, var(--sh-accent), transparent);
+    width: clamp(3.5rem, 9vw, 6.5rem);
+    height: 2px;
+    background: var(--sh-accent);
+    border-radius: 1px;
+    box-shadow: 0 0 0 0.5px color-mix(in srgb, var(--sh-accent) 25%, transparent);
   }
 
-  .section-header[data-align='center'] .sh-rule::before {
+  .section-header[data-align='center'] .sh-rule-accent {
     left: 50%;
     transform: translateX(-50%);
-    background: linear-gradient(90deg, transparent, var(--sh-accent), transparent);
   }
 
+  /* ============ Meta row (eyebrow + meta) ============ */
   .sh-meta-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 1rem;
-    margin-bottom: clamp(1rem, 2vw, 1.5rem);
+    flex-wrap: wrap;
+    gap: 0.75rem 1.5rem;
+    margin-bottom: var(--sh-gap-meta);
+    min-height: 1.4rem;
   }
 
   .section-header[data-align='center'] .sh-meta-row {
@@ -112,43 +195,47 @@ const hasCopy = Boolean(body || meta);
   }
 
   .sh-eyebrow,
-  .sh-meta,
-  .sh-meta-mobile {
+  .sh-meta {
     margin: 0;
-    font-family: var(--font-sans);
-    font-size: var(--kb-label-size);
-    font-weight: 700;
-    letter-spacing: var(--kb-label-tracking);
-    line-height: 1.1;
+    display: inline-flex;
+    align-items: center;
+    font-family: var(--font-sans, 'Satoshi', sans-serif);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.26em;
+    line-height: 1.2;
     text-transform: uppercase;
   }
 
   .sh-eyebrow {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.65rem;
+    gap: 0.7rem;
     color: var(--sh-accent);
   }
 
-  .sh-eyebrow::before {
-    content: '';
-    width: 0.42rem;
-    height: 0.42rem;
+  .sh-eyebrow-mark {
+    display: inline-block;
+    width: 0.4375rem;
+    height: 0.4375rem;
     border: 1px solid currentColor;
-    background: color-mix(in srgb, currentColor 16%, transparent);
+    background: color-mix(in srgb, currentColor 14%, transparent);
     transform: rotate(45deg);
+    flex-shrink: 0;
   }
 
   .sh-meta {
-    color: color-mix(in srgb, var(--sh-ink) 38%, transparent);
+    color: color-mix(in srgb, var(--sh-ink) 36%, transparent);
+    font-weight: 500;
+    letter-spacing: 0.22em;
     white-space: nowrap;
   }
 
+  /* ============ Content (title + copy) ============ */
   .sh-content {
     display: grid;
-    grid-template-columns: minmax(0, 1.1fr) minmax(17rem, 0.72fr);
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
     align-items: end;
-    gap: clamp(1.25rem, 3.2vw, 3.2rem);
+    column-gap: var(--sh-gap-content);
+    row-gap: clamp(1.25rem, 2.4vw, 1.75rem);
   }
 
   .sh-content:not(.has-copy),
@@ -156,37 +243,41 @@ const hasCopy = Boolean(body || meta);
     display: block;
   }
 
+  /* Title — display serif */
   .sh-title {
-    max-width: 12.5ch;
     margin: 0;
+    max-width: 18ch;
     color: var(--sh-ink);
-    font-family: var(--font-display);
-    font-size: clamp(2.65rem, 6.4vw, 4.6rem);
+    font-family: var(--font-display, 'Cormorant Garamond', Georgia, serif);
+    font-size: clamp(2.5rem, 5.6vw, 4.5rem);
     font-weight: 300;
-    letter-spacing: var(--kb-title-tracking);
-    line-height: 0.9;
+    letter-spacing: -0.025em;
+    line-height: 0.98;
     text-wrap: balance;
+    font-feature-settings: 'liga' on, 'dlig' on, 'calt' on, 'kern' on;
   }
 
   .section-header[data-align='center'] .sh-title {
-    max-width: 14ch;
+    max-width: 22ch;
     margin-inline: auto;
   }
 
   .sh-title :global(em) {
     color: var(--sh-accent);
     font-style: italic;
+    font-weight: 300;
   }
 
+  /* Copy — refined lede */
   .sh-copy {
     position: relative;
-    max-width: 34rem;
-    padding-top: 0.95rem;
+    max-width: 32rem;
+    padding-top: 0.9rem;
     color: var(--sh-muted);
-    font-size: clamp(0.94rem, 0.9rem + 0.22vw, 1.06rem);
-    font-weight: 350;
-    letter-spacing: 0.01em;
-    line-height: 1.78;
+    font-size: clamp(0.95rem, 0.9rem + 0.2vw, 1.0625rem);
+    font-weight: 400;
+    letter-spacing: 0.005em;
+    line-height: 1.75;
   }
 
   .sh-copy::before {
@@ -194,72 +285,96 @@ const hasCopy = Boolean(body || meta);
     position: absolute;
     top: 0;
     left: 0;
-    width: 2.75rem;
+    width: 2rem;
     height: 1px;
     background: var(--sh-accent);
-    opacity: 0.45;
-  }
-
-  .section-header[data-align='center'] .sh-copy {
-    width: min(100%, 42rem);
-    margin: clamp(1.2rem, 2.6vw, 1.8rem) auto 0;
-  }
-
-  .section-header[data-align='center'] .sh-copy::before {
-    left: 50%;
-    transform: translateX(-50%);
-    width: 4.5rem;
+    opacity: 0.5;
   }
 
   .sh-copy p {
     margin: 0;
   }
 
-  .sh-meta-mobile {
-    display: none;
-    margin-top: 0.85rem;
-    color: color-mix(in srgb, var(--sh-ink) 38%, transparent);
+  .section-header[data-align='center'] .sh-copy {
+    width: min(100%, 40rem);
+    margin: clamp(1.4rem, 2.6vw, 1.85rem) auto 0;
   }
 
-  @media (max-width: 900px) {
+  .section-header[data-align='center'] .sh-copy::before {
+    left: 50%;
+    transform: translateX(-50%);
+    width: 3.5rem;
+  }
+
+  /* ============ Tablet ============ */
+  @media (max-width: 960px) {
     .sh-content {
-      display: block;
+      grid-template-columns: 1fr;
+      row-gap: clamp(1rem, 2.4vw, 1.5rem);
     }
 
     .sh-copy {
-      width: min(100%, 40rem);
-      margin-top: clamp(1.15rem, 3vw, 1.6rem);
+      width: min(100%, 38rem);
+      padding-top: 0.85rem;
+    }
+
+    .sh-title {
+      max-width: 16ch;
     }
   }
 
+  /* ============ Mobile ============ */
   @media (max-width: 640px) {
-    .sh-rule {
-      margin-bottom: 0.9rem;
+    .section-header {
+      --sh-gap-number: 0.7rem;
+      --sh-gap-rule: 1.05rem;
+      --sh-gap-meta: 1.1rem;
+    }
+
+    .sh-number-rule {
+      width: 1.75rem;
+    }
+
+    .sh-number-text {
+      font-size: 0.625rem;
+      letter-spacing: 0.28em;
+    }
+
+    .sh-rule-accent {
+      width: 2.75rem;
     }
 
     .sh-meta-row {
       align-items: flex-start;
-      margin-bottom: 1rem;
+      flex-direction: column;
+      gap: 0.4rem;
+      min-height: 0;
     }
 
-    .sh-meta {
-      display: none;
-    }
-
-    .sh-meta-mobile {
-      display: block;
+    .section-header[data-align='center'] .sh-meta-row {
+      align-items: center;
     }
 
     .sh-eyebrow,
-    .sh-meta-mobile {
-      font-size: 0.5rem;
-      letter-spacing: 0.3em;
+    .sh-meta {
+      font-size: 0.625rem;
+      letter-spacing: 0.24em;
     }
 
     .sh-title {
-      max-width: 12.5ch;
-      font-size: clamp(2.35rem, 12vw, 3.4rem);
-      line-height: 0.92;
+      max-width: 14ch;
+      font-size: clamp(2.2rem, 11vw, 3.1rem);
+      line-height: 1;
+    }
+
+    .sh-copy {
+      font-size: 0.95rem;
+      line-height: 1.7;
+      padding-top: 0.75rem;
+    }
+
+    .sh-copy::before {
+      width: 1.5rem;
     }
   }
 </style>

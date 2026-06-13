@@ -32,6 +32,7 @@ const channels = [
     <div class="buying-heading mb-14 md:mb-20">
       <SectionHeader
         eyebrow="Cómo comprar"
+        number="03" numberTotal="04"
         body="Compra en Amazon o contáctanos por WhatsApp si quieres ayuda con talla, color o disponibilidad."
         meta="Compra disponible"
       >
@@ -42,6 +43,11 @@ const channels = [
     </div>
 
     <div class="buying-steps relative grid grid-cols-1 gap-10 md:grid-cols-3 md:gap-0" data-buying-steps>
+      {/* Animated connector line — desktop only */}
+      <div class="buying-connector pointer-events-none absolute left-0 right-0 top-5 hidden md:block" aria-hidden="true">
+        <span class="buying-connector-line"></span>
+        <span class="buying-connector-trail"></span>
+      </div>
       {steps.map((step, i) => (
         <article
           class:list={[
@@ -109,6 +115,46 @@ const channels = [
   .buying-step-num {
     box-shadow: 0 8px 24px rgba(18, 15, 12, 0.06);
   }
+
+  /* Connector line between steps */
+  .buying-connector {
+    height: 1px;
+    z-index: 0;
+  }
+
+  .buying-connector-line {
+    position: absolute;
+    inset: 0;
+    background-image: repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 4px,
+      rgba(156, 114, 56, 0.25) 4px,
+      rgba(156, 114, 56, 0.25) 8px
+    );
+    background-size: 8px 1px;
+    background-repeat: repeat-x;
+  }
+
+  .buying-connector-trail {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 1px;
+    width: 0;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      var(--color-king-accent) 50%,
+      transparent
+    );
+    box-shadow: 0 0 8px rgba(156, 114, 56, 0.4);
+    transition: width 1.4s var(--kb-ease-out, cubic-bezier(0.22, 1, 0.36, 1));
+  }
+
+  .buying-connector-trail.is-drawn {
+    width: 100%;
+  }
 </style>
 
 <script>
@@ -139,6 +185,10 @@ const channels = [
         duration: 0.68,
         stagger: 0.09,
       }, 0.18)
+      .add(() => {
+        const trail = scope.querySelector<HTMLElement>('.buying-connector-trail');
+        if (trail) trail.classList.add('is-drawn');
+      }, 0.5)
       .from(scope.querySelector('.buying-cta-wrap'), {
         y: 14,
         opacity: 0,

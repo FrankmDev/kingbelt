@@ -38,6 +38,7 @@ const workshopSpecs = [
 
       <SectionHeader
         eyebrow="Hecho a mano en España"
+        number="04" numberTotal="04"
         body="Siete modelos, cuatro colores y una estética pensada para diario, carretera y denim."
         align="center"
         tone="dark"
@@ -214,18 +215,18 @@ const workshopSpecs = [
       {/* Bottom bar */}
       <div class="footer-bottom-bar relative flex flex-col items-center gap-5 border-t border-king-border/20 pt-8 md:flex-row md:justify-between">
         <div class="flex items-center gap-4">
-          <span class="h-2 w-2 rotate-45 bg-king-accent/15"></span>
+          <span class="footer-dot-marker h-2 w-2 rotate-45 bg-king-accent/15"></span>
           <p class="text-[11px] font-light tracking-[0.06em] text-king-muted/30">
             &copy; {new Date().getFullYear()} KingBelt. Todos los derechos reservados.
           </p>
         </div>
-        
-        <div class="hidden md:flex items-center gap-3">
-          <span class="h-px w-8 bg-king-border/20"></span>
+
+        <div class="footer-bar-separator hidden items-center gap-3 md:flex">
+          <span class="h-px w-8 bg-gradient-to-r from-transparent to-king-border/30"></span>
           <span class="h-2.5 w-2.5 rotate-45 border border-king-accent/20"></span>
-          <span class="h-px w-8 bg-king-border/20"></span>
+          <span class="h-px w-8 bg-gradient-to-l from-transparent to-king-border/30"></span>
         </div>
-        
+
         <div class="flex items-center gap-7">
           <p class="text-[11px] font-light tracking-[0.06em] text-king-muted/30">
             Diseñado para hombres que se mueven diferente.
@@ -254,6 +255,14 @@ const workshopSpecs = [
         style="font-size: 20vw; opacity: 0.04; transform: translateY(1.5rem);"
       >
         KINGBELT
+      </span>
+      {/* Subtle ghosted wordmark layer for depth */}
+      <span
+        class="footer-giant-ghost font-display pointer-events-none absolute inset-0 flex select-none items-center justify-center overflow-hidden uppercase leading-[0.6] tracking-[0.06em] text-king-accent/[0.06]"
+        style="font-size: 20vw;"
+        aria-hidden="true"
+      >
+        <span class="footer-giant-drift inline-block">KINGBELT</span>
       </span>
     </div>
   </div>
@@ -420,6 +429,40 @@ const workshopSpecs = [
 
   .footer-link:hover {
     transform: translateX(4px);
+  }
+
+  /* Giant ghosted drift */
+  .footer-giant-drift {
+    animation: footer-drift 22s linear infinite;
+    will-change: transform;
+  }
+
+  @keyframes footer-drift {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-6%); }
+  }
+
+  .footer-giant-ghost {
+    mix-blend-mode: multiply;
+  }
+
+  /* Footer bar refinements */
+  .footer-dot-marker {
+    transition: transform 600ms var(--kb-ease-out, cubic-bezier(0.22, 1, 0.36, 1)),
+                background-color 400ms ease;
+  }
+
+  .footer-bottom-bar:hover .footer-dot-marker {
+    transform: rotate(45deg) scale(1.1);
+    background-color: rgba(156, 114, 56, 0.35);
+  }
+
+  .footer-bar-separator span:nth-child(2) {
+    transition: transform 600ms var(--kb-ease-out, cubic-bezier(0.22, 1, 0.36, 1));
+  }
+
+  .footer-bar-separator:hover span:nth-child(2) {
+    transform: rotate(45deg) scale(1.15);
   }
 
 </style>

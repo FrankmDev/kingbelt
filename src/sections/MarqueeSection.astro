@@ -12,10 +12,14 @@ const row = [...marqueeItems, ...marqueeItems, ...marqueeItems, ...marqueeItems,
     <div class="pointer-events-none absolute inset-y-0 right-0 z-10 w-24 bg-gradient-to-l from-king-bg to-transparent md:w-40"></div>
 
     <div class="flex animate-marquee-left whitespace-nowrap">
-      {row.map((item, i) => (
+      {row.map((item) => (
         <div class="flex items-center gap-5 mx-8 md:mx-10">
-          <span class="h-[5px] w-[5px] rotate-45 bg-king-accent/35"></span>
-          <span class="text-[13px] font-medium uppercase tracking-[0.18em] text-king-text/22 md:text-[14px]">{item}</span>
+          <span class="marquee-mark flex flex-col items-center gap-1.5 text-king-accent/40">
+            <span class="h-px w-3 bg-current"></span>
+            <span class="h-[5px] w-[5px] rotate-45 bg-current"></span>
+            <span class="h-px w-3 bg-current"></span>
+          </span>
+          <span class="text-[13px] font-medium uppercase tracking-[0.2em] text-king-text/22 md:text-[14px]">{item}</span>
         </div>
       ))}
     </div>
@@ -27,12 +31,22 @@ const row = [...marqueeItems, ...marqueeItems, ...marqueeItems, ...marqueeItems,
     <div class="pointer-events-none absolute inset-y-0 right-0 z-10 w-24 bg-gradient-to-l from-king-bg to-transparent md:w-40"></div>
 
     <div class="flex animate-marquee-right whitespace-nowrap">
-      {row.map((item, i) => (
+      {row.map((item) => (
         <div class="flex items-center gap-5 mx-8 md:mx-10">
-          <span class="text-[13px] font-medium uppercase tracking-[0.18em] text-king-text/22 md:text-[14px]">{item}</span>
-          <span class="h-[5px] w-[5px] rotate-45 bg-king-accent/35"></span>
+          <span class="text-[13px] font-medium uppercase tracking-[0.2em] text-king-text/22 md:text-[14px]">{item}</span>
+          <span class="marquee-mark flex flex-col items-center gap-1.5 text-king-accent/40">
+            <span class="h-px w-3 bg-current"></span>
+            <span class="h-[5px] w-[5px] rotate-45 bg-current"></span>
+            <span class="h-px w-3 bg-current"></span>
+          </span>
         </div>
       ))}
     </div>
   </div>
 </section>
+
+<style>
+  .marquee-mark {
+    transition: color 500ms ease, transform 700ms var(--kb-ease-out, cubic-bezier(0.22, 1, 0.36, 1));
+  }
+</style>

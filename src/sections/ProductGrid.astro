@@ -42,6 +42,7 @@ const badgeType = (badge?: string) => {
     <div class="pg-heading mb-10 lg:mb-14">
       <SectionHeader
         eyebrow="Colección"
+        number="02" numberTotal="04"
         body="Materiales reales, herrajes con peso y una estética pensada para envejecer bien con el uso."
         meta={`${products.length} modelos`}
       >
@@ -50,6 +51,19 @@ const badgeType = (badge?: string) => {
           <span class="block italic text-king-text/78">una filosofía.</span>
         </Fragment>
       </SectionHeader>
+    </div>
+
+    {/* Position counter — editorial detail */}
+    <div class="pg-counter mb-5 flex items-center justify-end gap-3 lg:mb-7" aria-live="polite">
+      <span class="pg-counter-line h-px w-8 bg-king-accent/30"></span>
+      <span class="pg-counter-current font-mono text-[11px] font-semibold tabular-nums tracking-[0.18em] text-king-text">01</span>
+      <span class="pg-counter-sep font-mono text-[10px] text-king-muted/40">/</span>
+      <span class="pg-counter-total font-mono text-[10px] tabular-nums tracking-[0.18em] text-king-muted/50">
+        {String(products.length).padStart(2, '0')}
+      </span>
+      <span class="pg-counter-label text-[9px] font-semibold uppercase tracking-[0.28em] text-king-muted/40">
+        En catálogo
+      </span>
     </div>
 
     {/* Horizontal scroll — editorial lookbook */}
@@ -414,5 +428,49 @@ const badgeType = (badge?: string) => {
       },
       true,
     );
+  });
+
+  /* ── Position counter (01 / N) ── */
+  document.querySelectorAll<HTMLElement>('[data-pg-scroll]').forEach((track) => {
+    const scope = track.closest('[data-gsap-product-grid]') as HTMLElement | null;
+    const counter = scope?.querySelector<HTMLElement>('.pg-counter-current');
+    if (!counter) return;
+
+    const cards = track.querySelectorAll<HTMLElement>('[data-pg-card]');
+    if (cards.length === 0) return;
+
+    let ticking = false;
+
+    const updateCounter = () => {
+      ticking = false;
+      const trackRect = track.getBoundingClientRect();
+      const trackCenter = trackRect.left + trackRect.width / 2;
+
+      let closestIndex = 0;
+      let closestDist = Infinity;
+
+      cards.forEach((card, i) => {
+        const cardRect = card.getBoundingClientRect();
+        const cardCenter = cardRect.left + cardRect.width / 2;
+        const dist = Math.abs(cardCenter - trackCenter);
+        if (dist < closestDist) {
+          closestDist = dist;
+          closestIndex = i;
+        }
+      });
+
+      counter.textContent = String(closestIndex + 1).padStart(2, '0');
+    };
+
+    const onScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(updateCounter);
+        ticking = true;
+      }
+    };
+
+    track.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    updateCounter();
   });
 </script>

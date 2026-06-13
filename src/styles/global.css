@@ -79,12 +79,14 @@ html {
   scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 body {
   background-color: #EDE8E0;
   color: #1A1A1A;
   font-family: 'Satoshi', sans-serif;
+  font-feature-settings: 'ss01' on, 'cv11' on, 'calt' on;
   font-size: 16px;
   font-weight: 400;
   line-height: 1.75;
@@ -113,6 +115,7 @@ h6 {
   letter-spacing: -0.02em;
   text-wrap: balance;
   color: inherit;
+  font-feature-settings: 'liga' on, 'dlig' on, 'calt' on, 'kern' on;
 }
 
 h1 em,
@@ -437,3 +440,102 @@ img[data-loading="true"] {
 .animate-delay-1 { transition-delay: 0.1s; }
 .animate-delay-2 { transition-delay: 0.2s; }
 .animate-delay-3 { transition-delay: 0.3s; }
+
+/* ============ Editorial refinements ============ */
+
+/* Smooth, refined focus ring */
+:focus-visible {
+  outline: 2px solid rgba(156, 114, 56, 0.55);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+button:focus-visible,
+a:focus-visible {
+  outline-offset: 4px;
+}
+
+/* Subtle, elegant selection */
+::selection {
+  background-color: rgba(156, 114, 56, 0.18);
+  color: #1a1a1a;
+}
+
+::-moz-selection {
+  background-color: rgba(156, 114, 56, 0.18);
+  color: #1a1a1a;
+}
+
+/* Refined link underline utility — used sparingly on text links */
+.kb-link {
+  position: relative;
+  display: inline-block;
+  background-image: linear-gradient(currentColor, currentColor);
+  background-size: 100% 1px;
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  background-color: transparent;
+  transition: background-size 600ms var(--kb-ease-out, cubic-bezier(0.22, 1, 0.36, 1)),
+              color 400ms ease;
+  padding-bottom: 2px;
+}
+
+.kb-link:hover {
+  background-size: 0% 1px;
+  background-position: 100% 100%;
+}
+
+/* Hairline divider with center accent */
+.kb-hairline {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: rgba(26, 26, 26, 0.18);
+}
+
+.kb-hairline::before,
+.kb-hairline::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.55;
+}
+
+/* Editorial section number marker (used in SectionHeader) */
+.kb-section-num {
+  font-family: var(--font-sans, 'Satoshi', sans-serif);
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: rgba(26, 26, 26, 0.4);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' on, 'lnum' on;
+}
+
+/* Tiny pulsing dot for "live" / status indicators */
+@keyframes kb-pulse-dot {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.18); }
+}
+
+.kb-pulse-dot {
+  animation: kb-pulse-dot 2.4s var(--kb-ease-out, cubic-bezier(0.22, 1, 0.36, 1)) infinite;
+}
+
+/* Respect users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .kb-pulse-dot {
+    animation: none;
+  }
+}

@@ -66,6 +66,9 @@ const links = [
     </nav>
 
     <div class="header-stitch h-px"></div>
+    <div class="header-progress" aria-hidden="true">
+      <span class="header-progress-bar"></span>
+    </div>
   </div>
 </header>
 
@@ -238,6 +241,42 @@ const links = [
     background-size: 10px 1px;
     opacity: calc(1 - (var(--scroll-progress) * 0.75));
     transition: opacity 400ms ease;
+  }
+
+  .header-progress {
+    position: relative;
+    height: 1px;
+    background: transparent;
+    overflow: hidden;
+    opacity: calc(0.4 + (var(--scroll-progress) * 0.6));
+    transition: opacity 400ms ease;
+  }
+
+  .header-progress-bar {
+    position: absolute;
+    inset-block: 0;
+    left: 0;
+    width: calc(var(--scroll-progress) * 100%);
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      var(--color-king-accent) 28%,
+      var(--color-king-accent-light) 72%,
+      transparent 100%
+    );
+    box-shadow: 0 0 8px rgba(156, 114, 56, 0.35);
+    transition: width 120ms linear;
+  }
+
+  #site-header[data-theme='dark'] .header-progress-bar {
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(214, 177, 110, 0.7) 28%,
+      rgba(214, 177, 110, 0.95) 72%,
+      transparent 100%
+    );
+    box-shadow: 0 0 8px rgba(214, 177, 110, 0.25);
   }
 
   #site-header[data-theme='dark'] {

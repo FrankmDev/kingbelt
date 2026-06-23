@@ -28,7 +28,7 @@ const getDisplayImageForProduct = (product: (typeof products)[number], productIn
 const badgeType = (badge?: string) => {
   if (badge === 'bestseller') return 'bestseller';
   if (badge === 'new') return 'new';
-  return 'default';
+  return undefined;
 };
 ---
 
@@ -103,7 +103,7 @@ const badgeType = (badge?: string) => {
                 {/* Hover image */}
                 <ProductVisualImage
                   src={hoverImage}
-                  alt={`${product.name} detalle`}
+                  alt={`${product.name} — vista alternativa`}
                   class="pg-card-hover-img absolute inset-0 h-full w-full scale-[1.06] object-cover opacity-0 transition-[opacity,transform] duration-[1000ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-100 group-hover:opacity-100"
                   loading="lazy"
                   sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
@@ -155,22 +155,11 @@ const badgeType = (badge?: string) => {
                     {product.shortDescription}
                   </p>
 
-                  {/* Color swatches + CTA */}
+                  {/* Material attribute + CTA */}
                   <div class="pg-card-meta mt-4 flex flex-wrap items-center gap-3">
-                    <div class="flex items-center gap-2">
-                      {product.colors.slice(0, 3).map((color) => (
-                        <span
-                          class="inline-block h-3.5 w-3.5 rounded-full border border-white/30 shadow-sm transition-transform duration-300 group-hover:scale-110 md:h-4 md:w-4"
-                          style={`background-color: ${color.hex}`}
-                          title={color.name}
-                        />
-                      ))}
-                      {product.colors.length > 3 && (
-                        <span class="ml-1 text-[9px] uppercase tracking-wider text-white/45">
-                          +{product.colors.length - 3}
-                        </span>
-                      )}
-                    </div>
+                    <span class="text-[11px] uppercase tracking-[0.12em] text-white/50">
+                      {product.materials[0] || 'Cuero seleccionado'}
+                    </span>
                     <span class="ml-auto inline-flex items-center gap-2 text-[10px] font-medium uppercase tracking-[0.18em] text-white/70">
                       Ver detalle
                       <span class="inline-block h-px w-5 bg-king-accent transition-all duration-500 group-hover:w-8"></span>

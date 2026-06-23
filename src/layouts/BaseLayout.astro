@@ -10,14 +10,15 @@ interface Props {
 }
 
 const {
-  title = 'KingBelt — Cinturones masculinos de inspiración motera',
-  description = 'Diseño contemporáneo, materiales premium y artesanía sin concesiones. Especialistas en cinturones masculinos de inspiración motera.',
-  image = '/images/og-default.jpg',
+  title = 'KingBelt — Cinturones de cuero hechos en España',
+  description = 'Cinturones masculinos de cuero, hechos en España. Piel con cuerpo, herrajes sólidos y estética motera depurada para el uso diario.',
+  image = '/favicon.svg',
   canonicalURL = Astro.url.href,
   schema,
 } = Astro.props;
 
 const schemaScript = schema ? JSON.stringify(schema) : null;
+const ogImageUrl = new URL(image, Astro.site || Astro.url).href;
 ---
 
 <!doctype html>
@@ -57,23 +58,31 @@ const schemaScript = schema ? JSON.stringify(schema) : null;
     <meta property="og:url" content={canonicalURL} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
-    <meta property="og:image" content={new URL(image, Astro.site || Astro.url).href} />
+    <meta property="og:image" content={ogImageUrl} />
+    <meta property="og:locale" content="es_ES" />
+    <meta property="og:site_name" content="KingBelt" />
 
     {/* Twitter */}
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:url" content={canonicalURL} />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
-    <meta name="twitter:image" content={new URL(image, Astro.site || Astro.url).href} />
+    <meta name="twitter:image" content={ogImageUrl} />
 
     {/* Schema.org */}
     {schemaScript && (
-      <script type="application/ld+json" set:html={schemaScript} />
+      <script is:inline type="application/ld+json" set:html={schemaScript} />
     )}
   </head>
   <body class="min-h-screen flex flex-col bg-king-bg">
+    <a
+      href="#main"
+      class="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[100] focus:rounded-full focus:bg-king-text focus:px-4 focus:py-2 focus:text-[11px] focus:font-medium focus:uppercase focus:tracking-[0.2em] focus:text-king-bg"
+    >
+      Saltar al contenido
+    </a>
     <slot name="header" />
-    <main class="flex-1 overflow-x-hidden w-full max-w-full">
+    <main id="main" class="flex-1 overflow-x-hidden w-full max-w-full">
       <slot />
     </main>
     <slot name="footer" />

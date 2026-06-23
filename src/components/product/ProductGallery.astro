@@ -1,5 +1,6 @@
 ---
-import type { Product } from '../../data/products';
+import type { Product, ProductImage } from '../../data/products';
+import ProductVisualImage from './ProductVisualImage.astro';
 
 interface Props {
   product: Product;
@@ -7,9 +8,16 @@ interface Props {
 
 const { product } = Astro.props;
 const defaultColor = product.colors[0]?.name;
+const imageSrc = (image: ProductImage) => (typeof image === 'string' ? image : image.src);
+const colorImagesPayload = Object.fromEntries(
+  Object.entries(product.colorImages).map(([color, images]) => [
+    color,
+    images.map(imageSrc),
+  ]),
+);
 ---
 
-<div class="lg:col-span-7" data-product-gallery data-color-images={JSON.stringify(product.colorImages)} data-default-color={defaultColor}>
+<div class="lg:col-span-7" data-product-gallery data-color-images={JSON.stringify(colorImagesPayload)} data-default-color={defaultColor}>
   {/* Main image — full bleed with blueprint corners */}
   <div class="relative aspect-[4/5] md:aspect-[3/4] bg-king-secondary overflow-hidden mb-4">
     {/* Blueprint corner marks */}
@@ -27,7 +35,7 @@ const defaultColor = product.colors[0]?.name;
     <div class="absolute top-4 right-4 md:top-6 md:right-6 z-10">
       <span class="text-[9px] font-mono uppercase tracking-[0.2em] text-king-text/20">{product.id}</span>
     </div>
-    <img
+    <ProductVisualImage
       id={`main-image-${product.slug}`}
       src={product.images[0]}
       alt={product.name}
@@ -43,12 +51,12 @@ const defaultColor = product.colors[0]?.name;
       {product.images.map((img, index) => (
         <button
           class={`thumbnail-btn aspect-square overflow-hidden border transition-all duration-300 ${index === 0 ? 'border-king-accent' : 'border-king-border/40 hover:border-king-accent/40'}`}
-          data-src={img}
+          data-src={imageSrc(img)}
           data-index={index}
           type="button"
           aria-label={`${product.name} vista ${index + 1}`}
         >
-          <img src={img} alt={`${product.name} vista ${index + 1}`} class="h-full w-full object-cover transition-opacity duration-300" loading="lazy" />
+          <ProductVisualImage src={img} alt={`${product.name} vista ${index + 1}`} class="h-full w-full object-cover transition-opacity duration-300" loading="lazy" />
         </button>
       ))}
     </div>
@@ -62,13 +70,11 @@ const defaultColor = product.colors[0]?.name;
     const colorImagesData = gallery.getAttribute('data-color-images');
     const colorImages: Record<string, string[]> = colorImagesData ? JSON.parse(colorImagesData) : {};
     let currentColor = gallery.getAttribute('data-default-color') || '';
-    let currentThumbIndex = 0;
 
     function updateGallery(color: string, thumbIdx = 0) {
       const imgs = colorImages[color];
       if (!imgs || !mainImage) return;
       currentColor = color;
-      currentThumbIndex = thumbIdx;
 
       mainImage.style.opacity = '0';
       setTimeout(() => {

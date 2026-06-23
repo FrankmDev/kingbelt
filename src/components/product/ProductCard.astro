@@ -3,7 +3,6 @@ import { Image } from 'astro:assets';
 import type { ImageMetadata } from 'astro';
 import type { Product } from '../../data/products';
 import Badge from '../ui/Badge.astro';
-import ProductColorSwatches from './ProductColorSwatches.astro';
 
 interface Props {
   product: Product;
@@ -17,12 +16,15 @@ const primaryImage = imageSrc ?? product.images[0];
 const secondaryImage = hoverImageSrc ?? product.images[1] ?? primaryImage;
 const usesLocalPrimary = typeof primaryImage !== 'string';
 const usesLocalSecondary = typeof secondaryImage !== 'string';
+const mainAttribute = product.materials[0] || 'Cuero seleccionado';
 
 const badgeType = (badge?: string) => {
   if (badge === 'bestseller') return 'bestseller';
   if (badge === 'new') return 'new';
-  return 'default';
+  return undefined;
 };
+
+const visualBadge = featured ? 'featured' : badgeType(product.badge);
 ---
 
 <a
@@ -78,14 +80,11 @@ const badgeType = (badge?: string) => {
 
   <div class="absolute inset-x-5 top-5 flex items-start justify-between gap-4 md:inset-x-6 md:top-6 lg:inset-x-7">
     <div class="flex items-center gap-3">
-      {product.badge && (
+      {visualBadge && (
         <div>
-          <Badge type={badgeType(product.badge)} />
+          <Badge type={visualBadge} />
         </div>
       )}
-      <span class="rounded-full border border-white/12 bg-black/20 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-white/70 backdrop-blur-sm">
-        {featured ? 'Destacado' : 'Selección'}
-      </span>
     </div>
     <span class="text-[10px] uppercase tracking-[0.32em] text-white/40">
       {product.id}
@@ -99,7 +98,7 @@ const badgeType = (badge?: string) => {
 
     <div class="translate-y-3 transition-transform duration-700 ease-out group-hover:translate-y-0">
       <p class="mb-3 text-[11px] uppercase tracking-[0.26em] text-white/46">
-        {featured ? 'El buque insignia' : 'Piel, acero y uso real'}
+        {mainAttribute}
       </p>
 
       <h3
@@ -121,7 +120,9 @@ const badgeType = (badge?: string) => {
       </p>
 
       <div class="flex items-end justify-between gap-5 border-t border-white/10 pt-4">
-        <ProductColorSwatches colors={product.colors} />
+        <span class="max-w-[18ch] text-[11px] uppercase tracking-[0.18em] text-white/52">
+          {mainAttribute}
+        </span>
         <span class="inline-flex items-center gap-2 whitespace-nowrap text-[11px] uppercase tracking-[0.22em] text-white/78">
           Ver detalle
           <span class="inline-block h-px w-8 bg-king-accent transition-all duration-500 group-hover:w-12"></span>

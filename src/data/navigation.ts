@@ -6,13 +6,13 @@ export interface NavItem {
 export const mainNav: NavItem[] = [
   { label: 'Colección', href: '/#coleccion' },
   { label: 'La marca', href: '/#marca' },
-  { label: 'Contacto', href: '/#contacto' },
+  { label: 'Cómo comprar', href: '/#como-comprar' },
 ];
 
 export const footerNav: NavItem[] = [
   { label: 'Colección', href: '/#coleccion' },
   { label: 'La marca', href: '/#marca' },
-  { label: 'Contacto', href: '/#contacto' },
+  { label: 'Cómo comprar', href: '/#como-comprar' },
 ];
 
 export const socialLinks = [

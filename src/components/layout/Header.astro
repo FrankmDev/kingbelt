@@ -14,7 +14,7 @@ const {
 const links = [
   { label: 'Colección', href: '/#coleccion' },
   { label: 'La marca', href: '/#marca' },
-  { label: 'Contacto', href: '/#contacto' },
+  { label: 'Cómo comprar', href: '/#como-comprar' },
 ];
 ---
 
@@ -32,9 +32,9 @@ const links = [
       id="header-nav"
       class="header-tier-2 mx-auto flex items-center justify-between px-5 md:px-8 lg:px-10"
     >
-      <a href="/" id="header-logo" class="group relative flex items-center gap-3 md:gap-4">
+      <a href="/" id="header-logo" class="group relative flex items-center gap-3 md:gap-4" aria-label="KingBelt — Inicio">
         <span class="header-wordmark font-display whitespace-nowrap uppercase">KingBelt</span>
-        <span class="header-logo-rule hidden h-[1px] bg-current md:block"></span>
+        <span class="header-logo-rule hidden h-[1px] bg-current md:block" aria-hidden="true"></span>
       </a>
 
       <div class="hidden items-center gap-1 lg:flex">

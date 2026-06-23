@@ -2,6 +2,7 @@
 import type { ImageMetadata } from 'astro';
 import { Image } from 'astro:assets';
 import SectionHeader from '../components/common/SectionHeader.astro';
+import { products } from '../data/products';
 
 const allImages = Object.values(
   import.meta.glob<{ default: ImageMetadata }>('../assets/products/*.avif', {
@@ -24,14 +25,14 @@ const values = [
   },
   {
     num: '03',
-    title: 'Cuero de alta calidad',
-    text: 'Piel con grosor, tacto y pátina. Una pieza que debe mejorar con el uso.',
+    title: 'Cuero con cuerpo',
+    text: 'Piel con grosor, tacto y pátina. Una pieza pensada para mejorar con el uso.',
   },
 ] as const;
 
 const specs = [
-  { label: 'Grosor', value: '4.5 mm' },
-  { label: 'Modelos', value: '7' },
+  { label: 'Ancho estándar', value: '3,5 cm' },
+  { label: 'Modelos', value: String(products.length).padStart(2, '0') },
   { label: 'Colores', value: '4' },
 ] as const;
 ---
@@ -177,7 +178,7 @@ const specs = [
 
     {/* Values: premium card trio */}
     <div class="brand-values mt-12 grid gap-5 md:mt-16 md:grid-cols-3">
-      {values.map((value, index) => (
+      {values.map((value) => (
         <article
           class="brand-value group relative overflow-hidden rounded-[var(--kb-radius-lg)] border border-king-border/60 bg-king-surface/60 p-8 backdrop-blur-sm transition-all duration-500 hover:border-king-accent/30 hover:bg-king-surface hover:shadow-[0_28px_80px_rgba(18,15,12,0.08)] md:p-10"
         >

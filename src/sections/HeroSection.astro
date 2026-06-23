@@ -47,20 +47,17 @@ import Button from '../components/ui/Button.astro';
         </div>
       </div>
 
-      <h1 class="font-serif leading-[0.9] tracking-[-0.03em] mb-4 md:mb-8">
-        <span class="hero-title-1 block text-white text-[2.1rem] sm:text-[3.25rem] md:text-[4rem] lg:text-[5rem] xl:text-[5.8rem]">
-          Cinturones con carácter.
-        </span>
-        <span class="hero-title-2 block text-white/94 text-[2.1rem] sm:text-[3.25rem] md:text-[4rem] lg:text-[5rem] xl:text-[5.8rem] italic mt-1 md:mt-2.5">
-          Hechos para <span class="not-italic font-medium text-king-accent">durar</span>.
+      <h1 class="font-serif leading-[0.95] tracking-[-0.03em] mb-4 md:mb-8">
+        <span class="hero-title-1 block text-white text-[1.9rem] sm:text-[3rem] md:text-[3.75rem] lg:text-[4.5rem] xl:text-[5.25rem]">
+          {hero.title}
         </span>
       </h1>
 
-      <p class="hero-sub mx-auto mb-5 max-w-[34rem] text-[13px] leading-[1.75] text-white/85 md:mb-14 md:text-[17px]">
+      <p class="hero-sub mx-auto mb-6 max-w-[36rem] text-[14px] leading-[1.75] text-white/80 md:mb-12 md:text-[17px]">
         {hero.body}
       </p>
 
-      <div class="hero-cta-wrap flex flex-col items-center justify-center gap-2.5 sm:flex-row md:gap-4">
+      <div class="hero-cta-wrap flex flex-col items-center justify-center gap-2.5 sm:flex-row sm:flex-wrap md:gap-3">
         <Button
           href={hero.primaryCta.href}
           variant="secondary"
@@ -78,7 +75,7 @@ import Button from '../components/ui/Button.astro';
           rel="noopener noreferrer"
           variant="surfaceOutline"
           size="md"
-          class="rounded-full border-white/18 text-white/68 hover:border-white/40 hover:bg-white/[0.04] hover:text-white"
+          class="rounded-full border-white/18 text-white/72 hover:border-white/40 hover:bg-white/[0.04] hover:text-white"
         >
           {hero.secondaryCta.label}
         </Button>
@@ -88,7 +85,7 @@ import Button from '../components/ui/Button.astro';
     {/* Vertical side labels — editorial detail */}
     <div class="hero-side-label hero-side-label-left pointer-events-none absolute left-0 top-1/2 z-10 hidden -translate-y-1/2 lg:block">
       <span class="hero-side-rule"></span>
-      <span class="hero-side-text">Colección · 2025</span>
+      <span class="hero-side-text">Colección · 2026</span>
     </div>
     <div class="hero-side-label hero-side-label-right pointer-events-none absolute right-0 top-1/2 z-10 hidden -translate-y-1/2 lg:block">
       <span class="hero-side-text">Est. España</span>
@@ -105,21 +102,13 @@ import Button from '../components/ui/Button.astro';
 
     <div class="hero-bottom absolute bottom-0 left-0 right-0 z-10 border-t border-white/[0.06]">
       <div class="hero-bottom-inner mx-auto px-5 md:px-10">
-        <div class="flex items-center justify-center gap-4 py-3.5 md:gap-10 md:py-6">
+        <div class="flex items-center justify-center gap-6 py-3.5 md:gap-8 md:py-5">
           <div class="hero-info-item">
-            <span class="hero-info-label">Cuero seleccionado</span>
+            <span class="hero-info-label">Colección 2026</span>
           </div>
           <span class="hidden h-3 w-px bg-white/[0.08] md:block"></span>
           <div class="hero-info-item">
-            <span class="hero-info-label">Herrajes sólidos</span>
-          </div>
-          <span class="hidden h-3 w-px bg-white/[0.08] md:block"></span>
-          <div class="hero-info-item hidden md:flex">
-            <span class="hero-info-label">Hecho en España</span>
-          </div>
-          <span class="hidden h-3 w-px bg-white/[0.08] lg:block"></span>
-          <div class="hero-info-item hidden lg:flex">
-            <span class="hero-info-label">Uso diario</span>
+            <span class="hero-info-label">Est. España</span>
           </div>
         </div>
       </div>
@@ -346,9 +335,8 @@ import Button from '../components/ui/Button.astro';
       }, 0.35)
       .from(scope.querySelector('.hero-badge'), { y: 16, opacity: 0, duration: 0.85 }, 0.7)
       .from(scope.querySelector('.hero-title-1'), { y: 40, opacity: 0, duration: 1.2 }, 0.95)
-      .from(scope.querySelector('.hero-title-2'), { y: 40, opacity: 0, duration: 1.2 }, 1.06)
-      .from(scope.querySelector('.hero-sub'), { y: 18, opacity: 0, duration: 0.9 }, 1.3)
-      .from(scope.querySelector('.hero-cta-wrap'), { y: 14, opacity: 0, duration: 0.85 }, 1.42)
-      .from(scope.querySelector('.hero-bottom'), { y: 18, opacity: 0, duration: 0.75 }, 1.56);
+      .from(scope.querySelector('.hero-sub'), { y: 18, opacity: 0, duration: 0.9 }, 1.18)
+      .from(scope.querySelector('.hero-cta-wrap'), { y: 14, opacity: 0, duration: 0.85 }, 1.3)
+      .from(scope.querySelector('.hero-bottom'), { y: 18, opacity: 0, duration: 0.75 }, 1.44);
   }
 </script>

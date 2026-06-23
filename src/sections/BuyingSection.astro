@@ -4,40 +4,40 @@ import SectionHeader from '../components/common/SectionHeader.astro';
 const steps = [
   {
     num: '01',
-    title: 'Elige tu modelo',
-    desc: 'Recorre la colección y decide qué cinturón encaja mejor por estilo, hebilla y carácter.',
+    title: 'Elige tu modelo.',
+    desc: 'Recorre la colección y decide qué cinturón encaja con tu estilo, hebilla y carácter.',
   },
   {
     num: '02',
-    title: 'Revisa color y talla',
-    desc: 'Dentro de cada ficha comprueba variantes y talla antes de cerrar la compra.',
+    title: 'Revisa color y talla.',
+    desc: 'Dentro de cada ficha comprueba variantes y la guía de tallas antes de comprar.',
   },
   {
     num: '03',
-    title: 'Compra o consulta',
-    desc: 'Finaliza en Amazon o escríbenos si necesitas ayuda con talla, color o disponibilidad.',
+    title: 'Compra en Amazon o consulta por WhatsApp.',
+    desc: 'Finaliza el pedido en Amazon o escríbenos para resolver dudas de color, talla o disponibilidad.',
   },
 ] as const;
 
-const channels = [
-  { label: 'Comprar en Amazon', href: 'https://amazon.com/kingbelt' },
-  { label: 'Consultar por WhatsApp', href: 'https://wa.me/1234567890' },
-] as const;
+const channels: Array<{ label: string; href: string; external: boolean }> = [
+  { label: 'Comprar en Amazon', href: 'https://amazon.com/kingbelt', external: true },
+  { label: 'Consultar por WhatsApp', href: 'https://wa.me/1234567890', external: true },
+];
 ---
 
-<section id="como-comprar" class="buying-shell relative overflow-hidden bg-king-bg py-24 md:py-32 lg:py-40" data-gsap-buying>
+<section id="como-comprar" class="buying-shell relative overflow-hidden bg-king-bg py-24 md:py-32 lg:py-36" data-gsap-buying>
   <div class="buying-bg pointer-events-none absolute inset-0"></div>
   <div class="buying-glow pointer-events-none absolute left-[-10rem] top-24 h-[32rem] w-[32rem] rounded-full bg-king-accent/[0.06] blur-[145px]"></div>
   <div class="kb-shell-wide relative">
-    <div class="buying-heading mb-14 md:mb-20">
+    <div class="buying-heading mb-14 md:mb-16">
       <SectionHeader
         eyebrow="Cómo comprar"
         number="03" numberTotal="04"
-        body="Compra en Amazon o contáctanos por WhatsApp si quieres ayuda con talla, color o disponibilidad."
-        meta="Compra disponible"
+        body="Elige modelo, revisa color y talla, y finaliza por Amazon o WhatsApp."
+        meta="3 pasos"
       >
         <Fragment slot="title">
-          Compra directa.
+          Compra por Amazon o contacto directo.
         </Fragment>
       </SectionHeader>
     </div>
@@ -63,7 +63,7 @@ const channels = [
             <span class="buying-step-num mb-6 inline-flex h-10 w-10 items-center justify-center rounded-full border border-king-accent/25 bg-king-bg font-mono text-[11px] font-medium text-king-accent">
               {step.num}
             </span>
-            <h3 class="mb-3 text-[1.5rem] font-light leading-[0.98] tracking-[var(--kb-title-tracking)] text-king-text md:text-[1.75rem]">
+            <h3 class="mb-3 text-[1.4rem] font-light leading-[1.05] tracking-[var(--kb-title-tracking)] text-king-text md:text-[1.65rem]">
               {step.title}
             </h3>
             <p class="text-[14px] leading-[1.75] text-king-muted md:text-[15px]">
@@ -74,16 +74,16 @@ const channels = [
       ))}
     </div>
 
-    <div class="buying-cta-wrap mt-14 flex flex-col items-center justify-center gap-4 sm:flex-row md:mt-20" data-buying-cta>
-      {channels.map((ch, index) => (
+    <div class="buying-cta-wrap mt-14 flex flex-col items-center justify-center gap-3 sm:flex-row sm:flex-wrap md:mt-16" data-buying-cta>
+      {channels.map((ch) => (
         <a
           href={ch.href}
-          target="_blank"
-          rel="noopener noreferrer"
+          target={ch.external ? '_blank' : undefined}
+          rel={ch.external ? 'noopener noreferrer' : undefined}
           class:list={[
-            'group inline-flex items-center gap-3 rounded-full border px-7 py-2.5 text-[10px] font-medium uppercase tracking-[0.2em] transition-all duration-500',
-            index === 0
-              ? 'border-king-text bg-king-text text-king-bg hover:border-king-accent hover:bg-king-accent'
+            'group inline-flex items-center gap-3 rounded-full border px-6 py-2.5 text-[10px] font-medium uppercase tracking-[0.2em] transition-all duration-500',
+            ch.label === 'Comprar en Amazon'
+              ? 'border-king-text bg-king-text text-king-bg hover:border-king-accent hover:bg-king-accent hover:text-king-bg'
               : 'border-king-border/80 bg-white/40 text-king-text backdrop-blur-sm hover:border-king-accent/40 hover:bg-white/60 hover:text-king-accent',
           ]}
         >

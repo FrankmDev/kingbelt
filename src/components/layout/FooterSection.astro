@@ -3,11 +3,18 @@ import Button from '../ui/Button.astro';
 import Icon from '../ui/Icon.astro';
 import SectionHeader from '../common/SectionHeader.astro';
 import { footerNav } from '../../data/navigation';
+import { products } from '../../data/products';
 
 const socialLinks = [
   { label: 'Instagram', href: 'https://instagram.com/kingbelt', icon: 'instagram' as const },
   { label: 'WhatsApp', href: 'https://wa.me/1234567890', icon: 'paper-plane' as const },
 ];
+
+const finalCtas = [
+  { label: 'Ver colección', href: '/#coleccion', external: false },
+  { label: 'Comprar en Amazon', href: 'https://amazon.com/kingbelt', external: true },
+  { label: 'Consultar por WhatsApp', href: 'https://wa.me/1234567890', external: true },
+] as const;
 
 const workshopSpecs = [
   { num: '01', label: 'Cuero seleccionado' },
@@ -37,9 +44,9 @@ const workshopSpecs = [
     <div class="kb-shell-wide relative z-10 py-28 text-center md:py-36 lg:py-44">
 
       <SectionHeader
-        eyebrow="Hecho a mano en España"
+        eyebrow="Hecho en España"
         number="04" numberTotal="04"
-        body="Siete modelos, cuatro colores y una estética pensada para diario, carretera y denim."
+        body={`${products.length} modelos, cuatro colores y una estética pensada para el día a día.`}
         align="center"
         tone="dark"
         class="cta-section-header mx-auto mb-10 max-w-4xl md:mb-14"
@@ -51,28 +58,28 @@ const workshopSpecs = [
       </SectionHeader>
 
       {/* CTA Buttons */}
-      <div class="cta-btn-wrap flex flex-col items-center justify-center gap-4 sm:flex-row">
-        <Button
-          href="/#coleccion"
-          variant="secondary"
-          size="md"
-          class="rounded-full"
-        >
-          Ver colección
-          <svg class="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M5 12h14M12 5l7 7-7 7" />
-          </svg>
-        </Button>
-        <Button
-          href="https://amazon.com/kingbelt"
-          target="_blank"
-          rel="noopener noreferrer"
-          variant="surfaceOutline"
-          size="md"
-          class="rounded-full border-white/10 text-white/50 hover:border-white/30 hover:bg-white/[0.03] hover:text-white/80"
-        >
-          Comprar en Amazon
-        </Button>
+      <div class="cta-btn-wrap flex flex-col items-center justify-center gap-3 sm:flex-row sm:flex-wrap">
+        {finalCtas.map((cta) => (
+          <Button
+            href={cta.href}
+            target={cta.external ? '_blank' : undefined}
+            rel={cta.external ? 'noopener noreferrer' : undefined}
+            variant={cta.label === 'Ver colección' ? 'secondary' : 'surfaceOutline'}
+            size="md"
+            class={`rounded-full ${
+              cta.label === 'Ver colección'
+                ? 'shadow-[0_16px_40px_rgba(138,106,61,0.24)]'
+                : 'border-white/10 text-white/55 hover:border-white/30 hover:bg-white/[0.03] hover:text-white/80'
+            }`}
+          >
+            {cta.label}
+            {cta.label === 'Ver colección' && (
+              <svg class="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
+            )}
+          </Button>
+        ))}
       </div>
 
       {/* Specs strip */}
@@ -146,7 +153,7 @@ const workshopSpecs = [
             <span class="hidden md:block h-px w-10 bg-king-accent/20 transition-all duration-500 group-hover:w-16 group-hover:bg-king-accent/40"></span>
           </a>
           <p class="mb-8 max-w-sm text-[14px] font-light leading-[1.85] text-king-muted/50">
-            Cinturones masculinos de inspiración motera. Diseño contemporáneo, materiales premium y artesanía sin concesiones.
+            Cinturones masculinos de cuero, hechos en España. Estética motera depurada para el uso diario.
           </p>
 
           {/* Social icons */}
@@ -190,6 +197,15 @@ const workshopSpecs = [
             Contacto
           </h4>
           <div class="flex flex-col gap-3">
+            <a
+              href="https://amazon.com/kingbelt"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="footer-link group relative inline-flex items-center gap-3 text-[14px] font-light text-king-muted/50 transition-colors duration-500 hover:text-king-accent"
+            >
+              <span class="h-px w-0 bg-king-accent/50 transition-all duration-500 group-hover:w-4"></span>
+              Amazon
+            </a>
             <a
               href="https://wa.me/1234567890"
               target="_blank"

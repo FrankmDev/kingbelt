@@ -108,6 +108,7 @@ const schema = {
     '@type': 'Offer',
     url: product.amazonUrl,
     availability: 'https://schema.org/InStock',
+    price: product.price,
     priceCurrency: 'EUR',
   },
 };
@@ -116,7 +117,7 @@ const schema = {
 <BaseLayout title={pageTitle} description={pageDescription} schema={schema}>
   <Header slot="header" initialTheme="light" scrolledTheme="light" compactThreshold={36} />
 
-  <main class="relative overflow-hidden bg-king-bg" data-gsap-product-page>
+  <div class="relative overflow-hidden bg-king-bg" data-gsap-product-page>
     {/* Ambient background grid */}
     <div class="product-bg pointer-events-none absolute inset-0"></div>
     <div class="pointer-events-none absolute right-[-10rem] top-24 h-[32rem] w-[32rem] rounded-full bg-king-accent/[0.06] blur-[145px]"></div>
@@ -190,7 +191,7 @@ const schema = {
             {/* Badge */}
             {product.badge && (
               <div class="absolute left-5 top-5 z-10 md:left-6 md:top-6">
-                <Badge type={product.badge === 'new' ? 'new' : 'bestseller'} />
+                <Badge type={product.badge} />
               </div>
             )}
 
@@ -336,21 +337,8 @@ const schema = {
             </p>
           </div>
 
-          {/* Materials */}
-          <div class="product-materials mb-6">
-            <span class="kb-eyebrow mb-3 block text-king-text">Materiales</span>
-            <ul class="space-y-2">
-              {product.materials.map((mat) => (
-                <li class="flex items-start gap-2.5 text-sm leading-relaxed text-king-muted">
-                  <span class="mt-[7px] h-1 w-1 shrink-0 rounded-full bg-king-accent/40"></span>
-                  {mat}
-                </li>
-              ))}
-            </ul>
-          </div>
-
           {/* Sizes */}
-          <div class="product-sizes mb-8">
+          <div class="product-sizes mb-6">
             <div class="mb-4 flex items-center gap-3">
               <span class="kb-eyebrow text-king-text">Tallas disponibles</span>
               <span class="h-px w-6 bg-king-border"></span>
@@ -377,17 +365,17 @@ const schema = {
             </div>
           </div>
 
-          {/* Trust badge */}
-          <div class="mb-6 flex items-center gap-3 rounded-[var(--kb-radius-sm)] border border-king-border/40 bg-king-surface/50 p-3 backdrop-blur-sm">
-            <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-king-accent/20 bg-king-accent/5">
-              <svg class="h-3.5 w-3.5 text-king-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-              </svg>
-            </div>
-            <div>
-              <p class="text-[11px] font-semibold uppercase tracking-[0.15em] text-king-text">Garantía de artesanía</p>
-              <p class="text-[11px] text-king-muted/70">Cuero 100% natural. Hecho a mano en España.</p>
-            </div>
+          {/* Materials */}
+          <div class="product-materials mb-8">
+            <span class="kb-eyebrow mb-3 block text-king-text">Materiales</span>
+            <ul class="space-y-2">
+              {product.materials.map((mat) => (
+                <li class="flex items-start gap-2.5 text-sm leading-relaxed text-king-muted">
+                  <span class="mt-[7px] h-1 w-1 shrink-0 rounded-full bg-king-accent/40"></span>
+                  {mat}
+                </li>
+              ))}
+            </ul>
           </div>
 
           {/* Actions */}
@@ -413,7 +401,7 @@ const schema = {
               size="sm"
               class="w-full"
             >
-              Pedir al fabricante
+              Consultar por WhatsApp
             </Button>
           </div>
         </div>
@@ -426,84 +414,6 @@ const schema = {
         <span class="h-px w-full max-w-[10rem] bg-gradient-to-r from-transparent via-king-border to-transparent"></span>
       </div>
 
-      {/* ===== Features ===== */}
-      <div class="product-features section-spacing-lg relative">
-        <div class="absolute left-1/2 top-0 h-px w-[120%] -translate-x-1/2 bg-gradient-to-r from-transparent via-king-accent/30 to-transparent"></div>
-
-        <SectionHeader
-          eyebrow="Ficha técnica"
-          number={`${product.id}`}
-          body="Cada modelo se construye sobre los mismos principios: materiales honestos, acabado manual y una estética que mejora con el uso."
-          meta="Modelo"
-        >
-          <Fragment slot="title">
-            Detalles
-            <span class="block italic text-king-accent">artesanales.</span>
-          </Fragment>
-        </SectionHeader>
-
-        <div class="feature-grid mt-10 grid grid-cols-1 gap-5 md:mt-14 md:grid-cols-2 lg:grid-cols-4">
-          {product.features.slice(0, 4).map((feature, index) => (
-            <div class="feature-card group relative overflow-hidden rounded-[var(--kb-radius-lg)] border border-king-border/50 bg-king-surface/40 p-8 backdrop-blur-sm transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] hover:border-king-accent/25 hover:bg-king-surface/70 hover:shadow-[0_28px_80px_rgba(18,15,12,0.06)] md:p-10">
-              {/* Top gold accent line */}
-              <div class="absolute left-0 right-0 top-0 h-px bg-[linear-gradient(90deg,transparent_0%,var(--color-king-accent)_50%,transparent_100%)] opacity-0 transition-opacity duration-700 group-hover:opacity-40"></div>
-
-              {/* Corner frames on hover */}
-              <div class="absolute inset-5 pointer-events-none opacity-0 transition-opacity duration-700 group-hover:opacity-100 md:inset-6">
-                <span class="kb-corner-frame absolute left-0 top-0" style="opacity:0.5;"></span>
-                <span class="kb-corner-frame absolute right-0 top-0" style="transform: scaleX(-1); opacity:0.5;"></span>
-                <span class="kb-corner-frame absolute bottom-0 left-0" style="transform: scaleY(-1); opacity:0.5;"></span>
-                <span class="kb-corner-frame absolute bottom-0 right-0" style="transform: scale(-1); opacity:0.5;"></span>
-              </div>
-
-              {/* Icon */}
-              <div class="relative mb-6 flex h-12 w-12 items-center justify-center rounded-full border border-king-accent/20 bg-king-accent/5 text-king-accent transition-all duration-500 group-hover:scale-110 group-hover:border-king-accent/30 group-hover:bg-king-accent/10">
-                {index === 0 && (
-                  <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M12 2L2 7l10 5 10-5-10-5z" />
-                    <path d="M2 17l10 5 10-5" />
-                    <path d="M2 12l10 5 10-5" />
-                  </svg>
-                )}
-                {index === 1 && (
-                  <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="3" />
-                    <path d="M12 2v4m0 12v4" />
-                    <path d="M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4" />
-                    <path d="M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83" />
-                  </svg>
-                )}
-                {index === 2 && (
-                  <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M17 3l4 4-4 4" />
-                    <path d="M21 7H9a4 4 0 00-4 4v1" />
-                    <path d="M13 17l-4 4-4-4" />
-                    <path d="M9 21V10" />
-                  </svg>
-                )}
-                {index === 3 && (
-                  <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                    <path d="M9 12l2 2 4-4" />
-                  </svg>
-                )}
-              </div>
-
-              {/* Number label */}
-              <div class="mb-4 flex items-center gap-3">
-                <span class="font-mono text-[10px] uppercase tracking-[0.22em] text-king-accent/60">0{index + 1}</span>
-                <span class="h-px w-6 bg-king-accent/20 transition-all duration-500 group-hover:w-10"></span>
-              </div>
-
-              {/* Feature text */}
-              <p class="relative text-[14px] leading-[1.7] text-king-text/85">
-                {feature}
-              </p>
-            </div>
-          ))}
-        </div>
-      </div>
-
       {/* ===== Related products ===== */}
       {related.length > 0 && (
         <div class="product-related section-spacing-lg relative">
@@ -514,13 +424,12 @@ const schema = {
           <div class="flex flex-col items-start justify-between gap-8 md:flex-row md:items-end">
             <SectionHeader
               eyebrow="Colección"
-              body="Descubre otros cinturones construidos con la misma filosofía."
+              body="Otros modelos de la misma línea. Mismos materiales, misma estética."
               meta={`${related.length} modelos`}
               class="flex-1"
             >
               <Fragment slot="title">
-                Más modelos,
-                <span class="block italic text-king-accent">misma actitud.</span>
+                También te interesa.
               </Fragment>
             </SectionHeader>
             <a
@@ -537,11 +446,6 @@ const schema = {
             {related.map((p) => {
               const pPrimary = p.images[0];
               const pHover = p.images[1] ?? pPrimary;
-              const badgeType = (badge?: string) => {
-                if (badge === 'bestseller') return 'bestseller';
-                if (badge === 'new') return 'new';
-                return 'default';
-              };
               return (
                 <a
                   href={`/product/${p.slug}`}
@@ -562,7 +466,7 @@ const schema = {
                     {/* Hover image */}
                     <ProductVisualImage
                       src={pHover}
-                      alt={`${p.name} detalle`}
+                      alt={`${p.name} — vista alternativa`}
                       class="pg-card-hover-img absolute inset-0 h-full w-full scale-[1.06] object-cover opacity-0"
                       loading="lazy"
                       sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
@@ -591,7 +495,7 @@ const schema = {
 
                     {/* Top bar: badge + ID */}
                     <div class="absolute left-4 right-4 top-4 z-10 flex items-start justify-between md:left-6 md:right-6 md:top-6">
-                      <Badge type={badgeType(p.badge)} />
+                      {p.badge && <Badge type={p.badge} />}
                       <span class="font-mono text-[10px] uppercase tracking-[0.2em] text-white/40">
                         {p.id}
                       </span>
@@ -613,20 +517,9 @@ const schema = {
                       </p>
 
                       <div class="pg-card-meta mt-4 flex flex-wrap items-center gap-3">
-                        <div class="flex items-center gap-2">
-                          {p.colors.slice(0, 3).map((color) => (
-                            <span
-                              class="inline-block h-3.5 w-3.5 rounded-full border border-white/30 shadow-sm transition-transform duration-300 group-hover:scale-110 md:h-4 md:w-4"
-                              style={`background-color: ${color.hex}`}
-                              title={color.name}
-                            />
-                          ))}
-                          {p.colors.length > 3 && (
-                            <span class="ml-1 text-[9px] uppercase tracking-wider text-white/45">
-                              +{p.colors.length - 3}
-                            </span>
-                          )}
-                        </div>
+                        <span class="text-[11px] uppercase tracking-[0.12em] text-white/50">
+                          {p.materials[0] || 'Cuero seleccionado'}
+                        </span>
                         <span class="ml-auto inline-flex items-center gap-2 text-[10px] font-medium uppercase tracking-[0.18em] text-white/70">
                           Ver detalle
                           <span class="inline-block h-px w-5 bg-king-accent transition-all duration-500 group-hover:w-8"></span>
@@ -647,7 +540,7 @@ const schema = {
         </div>
       )}
     </div>
-  </main>
+  </div>
 
   <FooterSection slot="footer" />
 </BaseLayout>
@@ -853,30 +746,6 @@ const schema = {
           opacity: 0,
           duration: 0.9,
         }, 0.25);
-    }
-
-    /* ── Features reveal ── */
-    const features = scope.querySelector('.product-features');
-    if (features) {
-      gsap.timeline({
-        defaults: { ease: 'power3.out' },
-        scrollTrigger: {
-          trigger: features,
-          start: 'top 85%',
-          once: true,
-        },
-      })
-        .from(features.querySelector('.section-header'), {
-          y: 20,
-          opacity: 0,
-          duration: 0.75,
-        })
-        .from(features.querySelectorAll('.feature-card'), {
-          y: 24,
-          opacity: 0,
-          duration: 0.65,
-          stagger: 0.07,
-        }, 0.2);
     }
 
     /* ── Related products reveal ── */

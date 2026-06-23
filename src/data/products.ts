@@ -64,8 +64,8 @@ export const products: Product[] = [
     slug: 'vestir-premium-180',
     name: 'Vestir Premium 180',
     description:
-      'El cinturón de vestir definitivo para el hombre que exige distinción en cada detalle. Confeccionado en piel napa box de primera calidad, el modelo 180/35 destaca por su perfil elegante de 3,5 cm de ancho, perfecto para conjuntos de traje o looks smart-casual. El forro interior en cuero regenerado garantiza una sujeción cómoda durante todo el día, mientras que la hebilla de zamak pulido aporta un cierre seguro con un acabado refinado. Un básico de armario que eleva cualquier atuendo con sutileza y clase.',
-    shortDescription: 'Piel napa box. Forro cuero regenerado. Hebilla zamak. Elegancia sin concesiones.',
+      'Cinturón de vestir confeccionado en piel napa box. Perfil de 3,5 cm de ancho, pensado para traje o looks smart-casual. Forro interior en cuero regenerado para sujeción cómoda. Hebilla de zamak pulido con cierre seguro y acabado refinado.',
+    shortDescription: 'Piel napa box. Forro cuero regenerado. Hebilla zamak pulido. 3,5 cm.',
     images: producto1ColorImages.Marrón,
     colorImages: producto1ColorImages,
     colors: [
@@ -89,8 +89,6 @@ export const products: Product[] = [
     features: [
       'Ancho: 3,5 cm — perfil ideal para vestir',
       'Sistema de tornillo para ajuste personalizado',
-      'Incluye llavero de regalo',
-      'Presentado en bolsa de tela para conservación óptima',
     ],
     badge: 'bestseller',
     price: 32.90,
@@ -100,8 +98,8 @@ export const products: Product[] = [
     slug: 'vestir-slim-4643',
     name: 'Vestir Slim 4643',
     description:
-      'La síntesis de la elegancia minimalista. Con un ancho reducido de 3 cm, el modelo 4643/30 está pensado para el hombre contemporáneo que busca un cinturón de vestir fino, discreto y sofisticado. La piel napa box confiere una suavidad inigualable y un brillo natural que mejora con el uso. El forro en cuero regenerado y la hebilla de zamak completan un diseño depurado donde menos es más, y cada milímetro cuenta.',
-    shortDescription: 'Piel napa box. Perfil slim de 3 cm. Discreción y sofisticación.',
+      'Cinturón de vestir con ancho reducido de 3 cm, perfil fino para trajes ajustados. Piel napa box con brillo natural que mejora con el uso. Forro en cuero regenerado y hebilla de zamak. Diseño depurado.',
+    shortDescription: 'Piel napa box. Perfil slim de 3 cm. Hebilla zamak.',
     images: [
       'https://picsum.photos/seed/kingbelt-4643-1/800/1000',
       'https://picsum.photos/seed/kingbelt-4643-2/800/1000',
@@ -145,8 +143,6 @@ export const products: Product[] = [
     features: [
       'Ancho: 3 cm — perfil extra fino para trajes ajustados',
       'Sistema de tornillo para ajuste personalizado',
-      'Incluye llavero de regalo',
-      'Presentado en bolsa de tela para conservación óptima',
     ],
     badge: 'new',
     price: 26.90,
@@ -156,7 +152,7 @@ export const products: Product[] = [
     slug: 'carraca-automatica-5222',
     name: 'Carraca Automática 5222',
     description:
-      'Versatilidad redefinida. El modelo 5222/35 combina la elegancia de un cinturón de vestir con la comodidad de un cierre automático tipo carraca. Su hebilla de zamak incorpora un sistema de cierre microajustable que permite una sujeción perfecta al milímetro, eliminando los orificios tradicionales. Ideal para el hombre dinámico que alterna entre el entorno profesional y el casual sin tiempo que perder.',
+      'Cinturón con cierre automático tipo carraca. Hebilla de zamak con sistema microajustable que permite una sujeción precisa al milímetro, sin orificios tradicionales. Para uso profesional y casual.',
     shortDescription: 'Cierre automático carraca. Ajuste milimétrico. Vestir y casual.',
     images: [
       'https://picsum.photos/seed/kingbelt-5222-1/800/1000',
@@ -203,7 +199,6 @@ export const products: Product[] = [
       'Cierre automático carraca — ajuste milimétrico sin orificios',
       'Ancho: 3,5 cm — versátil para vestir o casual',
       'Sistema de tornillo para ajuste personalizado',
-      'Incluye llavero de regalo y bolsa de tela',
     ],
     price: 34.90,
   },
@@ -212,8 +207,8 @@ export const products: Product[] = [
     slug: 'reversible-5215',
     name: 'Reversible 5215',
     description:
-      'Dos colores, un solo cinturón, infinitas posibilidades. El modelo 5215/35 es la elección inteligente del hombre práctico que viaja ligero pero nunca pierde estilo. Con una banda reversible de piel napa box, puedes alternar entre dos tonos según el momento: negro para la oficina, cuero o marrón para el afterwork. La hebilla de zamak giratoria completa un diseño funcional que duplica tu armario con una sola pieza.',
-    shortDescription: 'Piel napa box reversible. Dos tonos en uno. Práctico y versátil.',
+      'Cinturón reversible con banda de piel napa box en dos tonos. Alterna entre negro para oficina y cuero o marrón para el resto del día. Hebilla de zamak giratoria que permite cambiar de tono en segundos.',
+    shortDescription: 'Piel napa box reversible. Dos tonos en uno. Hebilla giratoria.',
     images: [
       'https://picsum.photos/seed/kingbelt-5215-1/800/1000',
       'https://picsum.photos/seed/kingbelt-5215-2/800/1000',
@@ -253,7 +248,6 @@ export const products: Product[] = [
       'Diseño reversible — dos colores en una sola pieza',
       'Hebilla giratoria para cambio de tono en segundos',
       'Ancho: 3,5 cm',
-      'Incluye llavero de regalo y bolsa de tela',
     ],
     price: 34.90,
   },
@@ -262,8 +256,8 @@ export const products: Product[] = [
     slug: 'casual-vacuno-5032',
     name: 'Casual Vacuno 5032',
     description:
-      'Robustez sin renunciar a la elegancia. El modelo 5032/35 está confeccionado en piel de vacuno genuina, con un doble cosido al tono que refuerza la estructura y aporta un detalle visual de artesanía. Su hebilla de zamak y el ancho de 3,5 cm lo convierten en el aliado perfecto para looks casuales con actitud: vaqueros, chinos o incluso un look smart informal. Un cinturón que se siente sólido desde el primer contacto.',
-    shortDescription: 'Piel de vacuno. Doble cosido al tono. Robusto y casual.',
+      'Cinturón en piel de vacuno con doble cosido al tono que refuerza la estructura. Hebilla de zamak, ancho 3,5 cm. Para vaqueros, chinos o smart informal.',
+    shortDescription: 'Piel de vacuno. Doble cosido al tono. 3,5 cm.',
     images: [
       'https://picsum.photos/seed/kingbelt-5032-1/800/1000',
       'https://picsum.photos/seed/kingbelt-5032-2/800/1000',
@@ -303,7 +297,6 @@ export const products: Product[] = [
       'Doble cosido al tono — resistencia y estética',
       'Ancho: 3,5 cm',
       'Sistema de tornillo para ajuste personalizado',
-      'Incluye llavero de regalo y bolsa de tela',
     ],
     price: 34.90,
   },
@@ -312,8 +305,8 @@ export const products: Product[] = [
     slug: 'casual-grabado-5004',
     name: 'Casual Grabado 5004',
     description:
-      'Textura con personalidad. El modelo 5004/35 destaca por su grabado central en piel de vacuno, un detalle decorativo que aporta profundidad y carácter a cualquier look casual. La hebilla de zamak y el ancho de 3,5 cm mantienen la proporción ideal para combinarlo con vaqueros o pantalones chinos. Un cinturón que no pasa desapercibido pero nunca grita: la confianza del detalle bien resuelto.',
-    shortDescription: 'Piel de vacuno con grabado central. Textura y carácter.',
+      'Cinturón con grabado central en piel de vacuno. Detalle decorativo en relieve que aporta profundidad al look casual. Hebilla de zamak, ancho 3,5 cm. Para vaqueros o chinos.',
+    shortDescription: 'Piel de vacuno con grabado central. 3,5 cm.',
     images: [
       'https://picsum.photos/seed/kingbelt-5004-1/800/1000',
       'https://picsum.photos/seed/kingbelt-5004-2/800/1000',
@@ -353,7 +346,6 @@ export const products: Product[] = [
       'Grabado central decorativo en relieve',
       'Ancho: 3,5 cm',
       'Sistema de tornillo para ajuste personalizado',
-      'Incluye llavero de regalo y bolsa de tela',
     ],
     price: 34.90,
   },
@@ -362,8 +354,8 @@ export const products: Product[] = [
     slug: 'casual-serraje-4704',
     name: 'Casual Serraje 4704',
     description:
-      'La suavidad del ante en su expresión más pura. El modelo 4704/35 está confeccionado en piel serraje de tacto aterciopelado, con forro interior en cuero regenerado que garantiza comodidad y durabilidad. Su hebilla de zamak y el ancho de 3,5 cm lo convierten en una pieza casual distinguida, perfecta para quienes buscan texturas diferentes sin abandonar la elegancia. Un acabado que evoca tradición artesanal.',
-    shortDescription: 'Piel serraje/ante. Tacto aterciopelado. Tradición artesanal.',
+      'Cinturón en piel serraje de tacto aterciopelado con forro interior en cuero regenerado. Hebilla de zamak, ancho 3,5 cm. Para looks casuales con textura y comodidad.',
+    shortDescription: 'Piel serraje/ante. Forro cuero regenerado. 3,5 cm.',
     images: [
       'https://picsum.photos/seed/kingbelt-4704-1/800/1000',
       'https://picsum.photos/seed/kingbelt-4704-2/800/1000',
@@ -408,7 +400,6 @@ export const products: Product[] = [
       'Piel serraje de tacto aterciopelado',
       'Ancho: 3,5 cm',
       'Sistema de tornillo para ajuste personalizado',
-      'Incluye llavero de regalo y bolsa de tela',
     ],
     price: 32.90,
   },
@@ -417,8 +408,8 @@ export const products: Product[] = [
     slug: 'casual-combinado-5444',
     name: 'Casual Combinado 5444',
     description:
-      'La armonía de dos mundos. El modelo 5444/35 combina piel de vacuno lisa con insertos de serraje/ante en un diseño que juega con contrates de textura y matiz. La hebilla de zamak une ambos mundos con elegancia, mientras que el ancho de 3,5 cm mantiene la proporción ideal para looks casuales con personalidad. Para el hombre que no teme mezclar y que entiende que la autenticidad está en los detalles.',
-    shortDescription: 'Piel vacuno combinada con serraje. Texturas y contrastes.',
+      'Cinturón que combina piel de vacuno lisa con insertos de serraje/ante. Contraste de texturas y matices. Hebilla de zamak, ancho 3,5 cm. Para looks casuales.',
+    shortDescription: 'Piel vacuno combinada con serraje. Contraste de texturas.',
     images: [
       'https://picsum.photos/seed/kingbelt-5444-1/800/1000',
       'https://picsum.photos/seed/kingbelt-5444-2/800/1000',
@@ -463,7 +454,6 @@ export const products: Product[] = [
       'Combinación de piel lisa y serraje en un solo diseño',
       'Ancho: 3,5 cm',
       'Sistema de tornillo para ajuste personalizado',
-      'Incluye llavero de regalo y bolsa de tela',
     ],
     price: 34.90,
   },

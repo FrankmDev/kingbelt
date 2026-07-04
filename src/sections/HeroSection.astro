@@ -1,6 +1,7 @@
 ---
 import { hero } from '../data/home';
 import Button from '../components/ui/Button.astro';
+import Icon from '../components/ui/Icon.astro';
 ---
 
 <section
@@ -15,6 +16,7 @@ import Button from '../components/ui/Button.astro';
       muted
       loop
       playsinline
+      aria-hidden="true"
       poster="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=1920&q=80"
       class="h-full w-full object-cover"
       style="filter: saturate(0.50) contrast(1.14) brightness(0.74);"
@@ -37,8 +39,6 @@ import Button from '../components/ui/Button.astro';
     <div class="hero-copy mx-auto">
       <div class="hero-badge mx-auto mb-4 inline-flex items-center md:mb-8">
         <div class="hero-badge-inner relative flex items-center gap-3 overflow-hidden px-5 py-2 md:px-7 md:py-3">
-          <span class="absolute inset-0 rounded-full border border-white/[0.08]"></span>
-          <span class="absolute inset-[5px] rounded-full border border-white/[0.04]"></span>
           <span class="kb-pulse-dot h-1.5 w-1.5 rounded-full bg-king-accent/70"></span>
           <span class="eyebrow-text text-white/58">
             {hero.eyebrow}
@@ -47,7 +47,7 @@ import Button from '../components/ui/Button.astro';
         </div>
       </div>
 
-      <h1 class="font-serif leading-[0.95] tracking-[-0.03em] mb-4 md:mb-8">
+      <h1 class="font-serif leading-[0.95] tracking-[-0.01em] mb-4 md:mb-8">
         <span class="hero-title-1 block text-white text-[1.9rem] sm:text-[3rem] md:text-[3.75rem] lg:text-[4.5rem] xl:text-[5.25rem]">
           {hero.title}
         </span>
@@ -62,12 +62,9 @@ import Button from '../components/ui/Button.astro';
           href={hero.primaryCta.href}
           variant="secondary"
           size="md"
-          class="rounded-full shadow-[0_16px_40px_rgba(138,106,61,0.24)]"
         >
           {hero.primaryCta.label}
-          <svg class="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M5 12h14M12 5l7 7-7 7" />
-          </svg>
+          <Icon name="arrow-right" class="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1" />
         </Button>
         <Button
           href={hero.secondaryCta.href}
@@ -75,40 +72,29 @@ import Button from '../components/ui/Button.astro';
           rel="noopener noreferrer"
           variant="surfaceOutline"
           size="md"
-          class="rounded-full border-white/18 text-white/72 hover:border-white/40 hover:bg-white/[0.04] hover:text-white"
         >
           {hero.secondaryCta.label}
         </Button>
       </div>
     </div>
 
-    {/* Vertical side labels — editorial detail */}
-    <div class="hero-side-label hero-side-label-left pointer-events-none absolute left-0 top-1/2 z-10 hidden -translate-y-1/2 lg:block">
-      <span class="hero-side-rule"></span>
-      <span class="hero-side-text">Colección · 2026</span>
-    </div>
-    <div class="hero-side-label hero-side-label-right pointer-events-none absolute right-0 top-1/2 z-10 hidden -translate-y-1/2 lg:block">
-      <span class="hero-side-text">Est. España</span>
-      <span class="hero-side-rule"></span>
-    </div>
-
     {/* Scroll indicator */}
-    <a href="#coleccion" class="hero-scroll-indicator group" aria-label="Descubrir colección">
+    <a href="#marca" class="hero-scroll-indicator group" aria-label="Descubrir la marca">
       <span class="hero-scroll-text">Descubrir</span>
       <span class="hero-scroll-line">
         <span class="hero-scroll-dot"></span>
       </span>
     </a>
 
-    <div class="hero-bottom absolute bottom-0 left-0 right-0 z-10 border-t border-white/[0.06]">
+    <div class="hero-bottom absolute bottom-0 left-0 right-0 z-10 border-t border-white/[0.08] bg-black/20 backdrop-blur-sm">
       <div class="hero-bottom-inner mx-auto px-5 md:px-10">
         <div class="flex items-center justify-center gap-6 py-3.5 md:gap-8 md:py-5">
           <div class="hero-info-item">
-            <span class="hero-info-label">Colección 2026</span>
+            <span class="hero-info-label">KingBelt · Est. 2026</span>
           </div>
-          <span class="hidden h-3 w-px bg-white/[0.08] md:block"></span>
+          <span class="hidden h-3 w-px bg-white/[0.12] md:block"></span>
           <div class="hero-info-item">
-            <span class="hero-info-label">Est. España</span>
+            <span class="hero-info-label">Hecho en España</span>
           </div>
         </div>
       </div>
@@ -119,32 +105,33 @@ import Button from '../components/ui/Button.astro';
 <style>
   .hero-shell {
     background:
-      radial-gradient(circle at top, rgba(138, 106, 61, 0.1), transparent 34%),
+      radial-gradient(circle at top, rgba(138, 90, 43, 0.1), transparent 34%),
       #0c0b0a;
   }
 
   .hero-overlay {
     background:
-      linear-gradient(to bottom, rgba(0, 0, 0, 0.22), rgba(0, 0, 0, 0.08) 32%, rgba(0, 0, 0, 0.62) 100%),
-      linear-gradient(100deg, rgba(7, 7, 7, 0.55) 10%, rgba(7, 7, 7, 0.12) 50%, rgba(7, 7, 7, 0.42) 100%);
+      linear-gradient(to bottom, rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.06) 30%, rgba(0, 0, 0, 0.55) 85%, rgba(0, 0, 0, 0.72) 100%),
+      linear-gradient(100deg, rgba(7, 7, 7, 0.5) 10%, rgba(7, 7, 7, 0.08) 50%, rgba(7, 7, 7, 0.4) 100%);
   }
 
   .hero-grid {
-    opacity: 0.28;
+    opacity: 0.22;
     background-image:
-      linear-gradient(90deg, rgba(138, 106, 61, 0.08) 0, rgba(138, 106, 61, 0.08) 1px, transparent 1px, transparent 24%),
-      linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+      linear-gradient(90deg, rgba(138, 90, 43, 0.06) 0, rgba(138, 90, 43, 0.06) 1px, transparent 1px, transparent 24%),
+      linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px);
     background-size: 150px 100%, 100% 100%;
   }
 
   .hero-vignette {
-    background: radial-gradient(ellipse 60% 56% at 50% 40%, transparent 0%, rgba(0, 0, 0, 0.10) 58%, rgba(0, 0, 0, 0.46) 100%);
+    background: radial-gradient(ellipse 60% 56% at 50% 40%, transparent 0%, rgba(0, 0, 0, 0.08) 55%, rgba(0, 0, 0, 0.42) 100%);
   }
 
   .hero-spotlight {
     background:
-      radial-gradient(circle at 50% 34%, rgba(255, 255, 255, 0.11), transparent 26%),
-      radial-gradient(circle at 50% 62%, rgba(138, 106, 61, 0.12), transparent 30%);
+      radial-gradient(circle at 50% 32%, rgba(255, 255, 255, 0.1), transparent 28%),
+      radial-gradient(circle at 50% 60%, rgba(138, 90, 43, 0.14), transparent 32%),
+      radial-gradient(ellipse 80% 50% at 50% 50%, rgba(138, 90, 43, 0.04), transparent 60%);
     mix-blend-mode: screen;
   }
 
@@ -174,12 +161,14 @@ import Button from '../components/ui/Button.astro';
   .hero-frame-bl { bottom: 0; left: 0; transform: scaleY(-1); }
   .hero-frame-br { right: 0; bottom: 0; transform: scale(-1); }
 
-  .hero-badge-inner {
-    border-radius: var(--kb-radius-pill);
-    background: var(--kb-surface-dark);
-    backdrop-filter: blur(var(--kb-blur-sm));
-    -webkit-backdrop-filter: blur(var(--kb-blur-sm));
-  }
+    .hero-badge-inner {
+  border-radius: var(--kb-radius-xs);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(12px) saturate(1.2);
+  -webkit-backdrop-filter: blur(12px) saturate(1.2);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
 
   .hero-info-label {
     font-size: 0.65rem;
@@ -188,48 +177,6 @@ import Button from '../components/ui/Button.astro';
     letter-spacing: 0.26em;
     text-transform: uppercase;
     color: rgba(255, 255, 255, 0.52);
-  }
-
-  /* Vertical side labels */
-  .hero-side-label {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding-inline: 1.5rem;
-  }
-
-  .hero-side-label-left {
-    flex-direction: row;
-  }
-
-  .hero-side-label-right {
-    flex-direction: row;
-  }
-
-  .hero-side-rule {
-    display: block;
-    width: 1px;
-    height: 3.5rem;
-    background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.22), transparent);
-  }
-
-  .hero-side-text {
-    writing-mode: vertical-rl;
-    transform: rotate(180deg);
-    font-size: 0.625rem;
-    font-weight: 500;
-    letter-spacing: 0.34em;
-    text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.42);
-    font-feature-settings: 'tnum' on;
-  }
-
-  .hero-side-label-left .hero-side-text {
-    transform: rotate(180deg);
-  }
-
-  .hero-side-label-right .hero-side-text {
-    transform: rotate(0deg);
   }
 
   /* Scroll indicator */

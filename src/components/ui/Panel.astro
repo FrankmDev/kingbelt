@@ -1,0 +1,17 @@
+---
+interface Props {
+  variant?: 'light' | 'dark';
+  class?: string;
+}
+
+const { variant = 'light', class: className } = Astro.props;
+---
+
+<div
+  class:list={[
+    variant === 'dark' ? 'kb-panel-dark' : 'kb-panel',
+    className,
+  ]}
+>
+  <slot />
+</div>

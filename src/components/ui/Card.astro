@@ -1,0 +1,17 @@
+---
+interface Props {
+  variant?: 'premium' | 'dry';
+  class?: string;
+}
+
+const { variant = 'premium', class: className } = Astro.props;
+---
+
+<div
+  class:list={[
+    variant === 'dry' ? 'kb-card-dry' : 'kb-card',
+    className,
+  ]}
+>
+  <slot />
+</div>

@@ -3,9 +3,10 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import Header from '../components/layout/Header.astro';
 import FooterSection from '../components/layout/FooterSection.astro';
 import Button from '../components/ui/Button.astro';
+import Icon from '../components/ui/Icon.astro';
 ---
 
-<BaseLayout title="Página No Encontrada — KingBelt" description="La página que buscas no existe. Explora nuestra colección de cinturones masculinos premium.">
+<BaseLayout title="Página No Encontrada — KingBelt" description="La página que buscas no existe. Vuelve al inicio de KingBelt.">
   <Header slot="header" initialTheme="light" scrolledTheme="light" compactThreshold={24} />
 
   <div class="flex-1 flex items-center justify-center min-h-[60vh]">
@@ -13,13 +14,11 @@ import Button from '../components/ui/Button.astro';
       <span class="font-display text-7xl md:text-9xl text-king-accent/20 block mb-4">404</span>
       <h1 class="font-display text-3xl md:text-4xl text-king-text mb-4 tracking-tight">Página No Encontrada</h1>
       <p class="text-king-muted mb-10 max-w-md mx-auto">
-        La página que buscas no existe o ha sido movida. Vuelve al inicio o explora nuestra colección.
+        La página que buscas no existe o ha sido movida. Vuelve al inicio para continuar navegando.
       </p>
       <Button href="/" variant="primary" size="md">
         Volver al Inicio
-        <svg class="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M5 12h14M12 5l7 7-7 7" />
-        </svg>
+        <Icon name="arrow-right" class="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1" />
       </Button>
     </div>
   </div>

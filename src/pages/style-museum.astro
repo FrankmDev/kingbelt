@@ -1,0 +1,98 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/layout/Header.astro';
+import Icon from '../components/ui/Icon.astro';
+import MuseumSection from '../components/common/MuseumSection.astro';
+import ButtonShowcase from '../components/museum/ButtonShowcase.astro';
+import IconShowcase from '../components/museum/IconShowcase.astro';
+import SectionHeaderShowcase from '../components/museum/SectionHeaderShowcase.astro';
+import DecorativeShowcase from '../components/museum/DecorativeShowcase.astro';
+import ComponentsRef from '../components/museum/ComponentsRef.astro';
+---
+
+<BaseLayout
+  title="Style Museum — KingBelt"
+  description="Sistema de diseño KingBelt — componentes y utilidades decorativas."
+>
+  <Header slot="header" initialTheme="light" scrolledTheme="light" compactThreshold={24} />
+
+  <section class="museum-hero relative overflow-hidden bg-king-asphalt pt-28 pb-16 md:pt-32 md:pb-20">
+    <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(156,114,56,0.08),transparent_50%)]"></div>
+    <div class="kb-shell-wide relative z-10">
+      <div class="flex items-center gap-3 mb-4">
+        <span class="h-[1px] w-10 bg-king-accent/40"></span>
+        <span class="text-[10px] font-medium uppercase tracking-[0.3em] text-king-accent/60">Design Archive</span>
+      </div>
+      <h1 class="font-display text-[clamp(2.5rem,6vw,5rem)] font-light leading-[0.88] tracking-[-0.03em] text-white mb-3">
+        Style <span class="italic text-king-brass">Museum</span>
+      </h1>
+      <p class="max-w-[36rem] text-[13px] leading-[1.7] text-white/35 font-light">
+        Componentes y utilidades decorativas del sistema KingBelt.
+      </p>
+    </div>
+  </section>
+
+  <nav class="sticky top-0 z-40 bg-king-bg/90 backdrop-blur-xl border-b border-king-border/20">
+    <div class="kb-shell-wide flex items-center gap-1 overflow-x-auto py-2.5 scrollbar-none">
+      {[
+        { id: 'deco', label: 'Decorativos' },
+        { id: 'button', label: 'Button' },
+        { id: 'icons', label: 'Icons' },
+        { id: 'common', label: 'Common' },
+        { id: 'layout', label: 'Layout' },
+        { id: 'sections', label: 'Sections' },
+      ].map((s) => (
+        <a
+          href={`#${s.id}`}
+          class="shrink-0 px-3 py-1.5 text-[10px] font-medium uppercase tracking-[0.15em] text-king-muted/60 hover:text-king-accent transition-colors duration-300 rounded-full hover:bg-king-accent/5"
+        >
+          {s.label}
+        </a>
+      ))}
+    </div>
+  </nav>
+
+  <MuseumSection id="deco" title="Decorative Utilities" tone="alt">
+    <DecorativeShowcase />
+  </MuseumSection>
+
+  <MuseumSection id="button" title="Button.astro" subtitle="6 variantes x 3 tamaños.">
+    <ButtonShowcase />
+  </MuseumSection>
+
+  <MuseumSection id="icons" title="Icon.astro" subtitle="16 SVG icons estilo Lucide." tone="alt">
+    <IconShowcase />
+  </MuseumSection>
+
+  <MuseumSection id="common" title="Common Components">
+    <SectionHeaderShowcase />
+  </MuseumSection>
+
+  <MuseumSection id="layout" title="Layout Components" tone="alt">
+    <ComponentsRef type="layout" />
+  </MuseumSection>
+
+  <MuseumSection id="sections" title="Sections Reference">
+    <ComponentsRef type="sections" />
+  </MuseumSection>
+
+  <div class="fixed bottom-6 right-6 z-50 flex items-center gap-3">
+    <a
+      href="/"
+      class="flex items-center gap-2.5 bg-king-text text-king-bg px-4 py-2.5 rounded-full text-[10px] font-medium uppercase tracking-[0.15em] hover:bg-king-accent transition-colors duration-300 shadow-lg"
+    >
+      <Icon name="arrow-left" class="h-3 w-3" />
+      Volver al home
+    </a>
+  </div>
+</BaseLayout>
+
+<style is:global>
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+</style>

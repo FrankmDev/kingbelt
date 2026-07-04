@@ -1,0 +1,19 @@
+---
+interface Props {
+  variant?: 'default' | 'accent' | 'brass';
+  class?: string;
+}
+
+const { variant = 'default', class: className } = Astro.props;
+---
+
+<span
+  class:list={[
+    'kb-tag',
+    variant === 'accent' ? 'kb-tag-accent' : '',
+    variant === 'brass' ? 'kb-tag-brass' : '',
+    className,
+  ]}
+>
+  <slot />
+</span>

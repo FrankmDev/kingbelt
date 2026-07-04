@@ -1,43 +1,43 @@
 ---
 import SectionHeader from '../components/common/SectionHeader.astro';
+import Button from '../components/ui/Button.astro';
+import Icon from '../components/ui/Icon.astro';
+import { contactChannels } from '../data/navigation';
 
 const steps = [
   {
     num: '01',
-    title: 'Elige tu modelo.',
-    desc: 'Recorre la colección y decide qué cinturón encaja con tu estilo, hebilla y carácter.',
+    title: 'Material con criterio.',
+    desc: 'Cuero seleccionado por grosor y cuerpo. Herrajes que aguantan el ritmo del día a día.',
   },
   {
     num: '02',
-    title: 'Revisa color y talla.',
-    desc: 'Dentro de cada ficha comprueba variantes y la guía de tallas antes de comprar.',
+    title: 'Acabado pensado.',
+    desc: 'Cada pieza se revisa antes de salir. Costura, remate y ajuste. Nada se delega al azar.',
   },
   {
     num: '03',
-    title: 'Compra en Amazon o consulta por WhatsApp.',
-    desc: 'Finaliza el pedido en Amazon o escríbenos para resolver dudas de color, talla o disponibilidad.',
+    title: 'Atención directa.',
+    desc: 'Consulta por WhatsApp o Instagram. Respondemos preguntas y te asesoramos sobre la mejor pieza para ti.',
   },
 ] as const;
 
-const channels: Array<{ label: string; href: string; external: boolean }> = [
-  { label: 'Comprar en Amazon', href: 'https://amazon.com/kingbelt', external: true },
-  { label: 'Consultar por WhatsApp', href: 'https://wa.me/1234567890', external: true },
-];
+const channels = contactChannels;
 ---
 
-<section id="como-comprar" class="buying-shell relative overflow-hidden bg-king-bg py-24 md:py-32 lg:py-36" data-gsap-buying>
+<section id="proceso" class="buying-shell relative overflow-hidden bg-king-bg py-24 md:py-32 lg:py-36" data-gsap-buying>
   <div class="buying-bg pointer-events-none absolute inset-0"></div>
   <div class="buying-glow pointer-events-none absolute left-[-10rem] top-24 h-[32rem] w-[32rem] rounded-full bg-king-accent/[0.06] blur-[145px]"></div>
   <div class="kb-shell-wide relative">
     <div class="buying-heading mb-14 md:mb-16">
       <SectionHeader
-        eyebrow="Cómo comprar"
-        number="03" numberTotal="04"
-        body="Elige modelo, revisa color y talla, y finaliza por Amazon o WhatsApp."
+        eyebrow="Proceso"
+        number="02" numberTotal="03"
+        body="Cada pieza tiene un recorrido: desde la selección del material hasta que llega a tus manos."
         meta="3 pasos"
       >
         <Fragment slot="title">
-          Compra por Amazon o contacto directo.
+          Pensado para moverse contigo.
         </Fragment>
       </SectionHeader>
     </div>
@@ -51,7 +51,7 @@ const channels: Array<{ label: string; href: string; external: boolean }> = [
       {steps.map((step, i) => (
         <article
           class:list={[
-            'buying-step group relative',
+            'buying-step group relative rounded-[var(--kb-radius-md)] p-6 transition-all duration-500 hover:bg-king-surface/60 md:rounded-none md:bg-transparent md:p-0',
             i < 2 && 'md:border-r md:border-king-border/60',
             i === 0 && 'md:pr-10 lg:pr-14',
             i === 1 && 'md:px-10 lg:px-14',
@@ -60,10 +60,10 @@ const channels: Array<{ label: string; href: string; external: boolean }> = [
           data-buying-step
         >
           <div class="relative">
-            <span class="buying-step-num mb-6 inline-flex h-10 w-10 items-center justify-center rounded-full border border-king-accent/25 bg-king-bg font-mono text-[11px] font-medium text-king-accent">
+            <span class="buying-step-num mb-6 inline-flex items-center justify-center rounded-[var(--kb-radius-xs)] border border-king-accent/30 bg-king-surface px-3 py-1.5 font-mono text-[11px] font-semibold text-king-accent shadow-[0_2px_6px_-2px_rgba(138,90,43,0.2),inset_0_1px_0_rgba(255,255,255,0.5)] transition-all duration-300 group-hover:border-king-accent/50 group-hover:shadow-[0_4px_12px_-3px_rgba(138,90,43,0.3),inset_0_1px_0_rgba(255,255,255,0.6)]">
               {step.num}
             </span>
-            <h3 class="mb-3 text-[1.4rem] font-light leading-[1.05] tracking-[var(--kb-title-tracking)] text-king-text md:text-[1.65rem]">
+            <h3 class="mb-3 text-[1.4rem] font-normal leading-[1.05] tracking-[var(--kb-title-tracking)] text-king-text md:text-[1.65rem]">
               {step.title}
             </h3>
             <p class="text-[14px] leading-[1.75] text-king-muted md:text-[15px]">
@@ -76,23 +76,16 @@ const channels: Array<{ label: string; href: string; external: boolean }> = [
 
     <div class="buying-cta-wrap mt-14 flex flex-col items-center justify-center gap-3 sm:flex-row sm:flex-wrap md:mt-16" data-buying-cta>
       {channels.map((ch) => (
-        <a
+        <Button
           href={ch.href}
           target={ch.external ? '_blank' : undefined}
           rel={ch.external ? 'noopener noreferrer' : undefined}
-          class:list={[
-            'group inline-flex items-center gap-3 rounded-full border px-6 py-2.5 text-[10px] font-medium uppercase tracking-[0.2em] transition-all duration-500',
-            ch.label === 'Comprar en Amazon'
-              ? 'border-king-text bg-king-text text-king-bg hover:border-king-accent hover:bg-king-accent hover:text-king-bg'
-              : 'border-king-border/80 bg-white/40 text-king-text backdrop-blur-sm hover:border-king-accent/40 hover:bg-white/60 hover:text-king-accent',
-          ]}
+          variant="outline"
+          size="md"
         >
-          <span>{ch.label}</span>
-          <span class="h-px w-5 bg-current transition-all duration-500 group-hover:w-8"></span>
-          <svg class="h-3 w-3 transition-transform duration-300 group-hover:translate-x-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M5 12h14M12 5l7 7-7 7" />
-          </svg>
-        </a>
+          {ch.label}
+          <Icon name="arrow-right" class="h-3 w-3 transition-transform duration-300 group-hover:translate-x-0.5" />
+        </Button>
       ))}
     </div>
   </div>
@@ -106,14 +99,10 @@ const channels: Array<{ label: string; href: string; external: boolean }> = [
   .buying-bg {
     opacity: 0.35;
     background-image:
-      linear-gradient(90deg, rgba(138, 106, 61, 0.065) 0, rgba(138, 106, 61, 0.065) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(138, 90, 43, 0.06) 0, rgba(138, 90, 43, 0.06) 1px, transparent 1px),
       linear-gradient(rgba(26, 26, 26, 0.02) 1px, transparent 1px);
     background-size: 11rem 100%, 100% 5rem;
     mask-image: linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.8) 16%, transparent 92%);
-  }
-
-  .buying-step-num {
-    box-shadow: 0 8px 24px rgba(18, 15, 12, 0.06);
   }
 
   /* Connector line between steps */
@@ -125,15 +114,7 @@ const channels: Array<{ label: string; href: string; external: boolean }> = [
   .buying-connector-line {
     position: absolute;
     inset: 0;
-    background-image: repeating-linear-gradient(
-      90deg,
-      transparent,
-      transparent 4px,
-      rgba(156, 114, 56, 0.25) 4px,
-      rgba(156, 114, 56, 0.25) 8px
-    );
-    background-size: 8px 1px;
-    background-repeat: repeat-x;
+    background: rgba(123, 125, 120, 0.25);
   }
 
   .buying-connector-trail {
@@ -148,7 +129,7 @@ const channels: Array<{ label: string; href: string; external: boolean }> = [
       var(--color-king-accent) 50%,
       transparent
     );
-    box-shadow: 0 0 8px rgba(156, 114, 56, 0.4);
+    box-shadow: 0 0 8px rgba(138, 90, 43, 0.4);
     transition: width 1.4s var(--kb-ease-out, cubic-bezier(0.22, 1, 0.36, 1));
   }
 

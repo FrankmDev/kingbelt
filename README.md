@@ -1,47 +1,33 @@
-# Astro Starter Kit: Basics
+# KingBelt
 
-```sh
-bun create astro@latest -- --template basics
-```
+Web Astro para la base de marca de KingBelt, preparada para escalar a ecommerce con Shopify.
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
-
-## 🚀 Project Structure
-
-Inside of your Astro project, you'll see the following folders and files:
+## Estructura
 
 ```text
-/
-├── public/
-│   └── favicon.svg
-├── src
-│   ├── assets
-│   │   └── astro.svg
-│   ├── components
-│   │   └── Welcome.astro
-│   ├── layouts
-│   │   └── Layout.astro
-│   └── pages
-│       └── index.astro
-└── package.json
+src/
+  components/
+    common/     Componentes editoriales compartidos
+    layout/     Header, footer y shell visual
+    ui/         Primitivas de interfaz reutilizables
+  data/         Navegación, home y configuración de marca
+  layouts/      Layout base con SEO, fuentes y globals
+  pages/        Rutas Astro
+  sections/     Secciones de home
+  styles/       Estilos globales y tokens Tailwind
 ```
 
-To learn more about the folder structure of an Astro project, refer to [our guide on project structure](https://docs.astro.build/en/basics/project-structure/).
+## Comandos
 
-## 🧞 Commands
+```sh
+bun install
+bun run dev
+bun run build
+bun run astro check
+```
 
-All commands are run from the root of the project, from a terminal:
+## Convenciones
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `bun install`             | Installs dependencies                            |
-| `bun dev`             | Starts local dev server at `localhost:4321`      |
-| `bun build`           | Build your production site to `./dist/`          |
-| `bun preview`         | Preview your build locally, before deploying     |
-| `bun astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `bun astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
-# kingbelt
+- Las páginas deben orquestar datos, SEO y layout; la UI vive en `components/` o `sections/`.
+- Los tokens visuales globales están en `src/styles/global.css`.
+- La integración de catálogo y checkout se añadirá desde cero con Shopify.

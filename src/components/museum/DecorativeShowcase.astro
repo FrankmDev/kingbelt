@@ -1,0 +1,109 @@
+---
+import Eyebrow from '../ui/Eyebrow.astro';
+import PulseDot from '../ui/PulseDot.astro';
+import Pill from '../ui/Pill.astro';
+import Tag from '../ui/Tag.astro';
+import Card from '../ui/Card.astro';
+---
+
+<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+
+  <div class="bg-king-surface rounded-lg p-4 border border-king-border/30 shadow-sm">
+    <span class="inline-block text-[8px] font-mono uppercase tracking-[0.12em] text-king-accent/60 bg-king-accent/5 px-2 py-0.5 rounded-full mb-3">Eyebrow</span>
+    <Eyebrow>eyebrow label</Eyebrow>
+  </div>
+
+  <div class="bg-king-surface rounded-lg p-4 border border-king-border/30 shadow-sm">
+    <span class="inline-block text-[8px] font-mono uppercase tracking-[0.12em] text-king-accent/60 bg-king-accent/5 px-2 py-0.5 rounded-full mb-3">Micro Label</span>
+    <p class="kb-micro-label text-king-muted">micro label</p>
+  </div>
+
+  <div class="bg-king-surface rounded-lg p-4 border border-king-border/30 shadow-sm">
+    <span class="inline-block text-[8px] font-mono uppercase tracking-[0.12em] text-king-accent/60 bg-king-accent/5 px-2 py-0.5 rounded-full mb-3">Divider Dots</span>
+    <div class="flex items-center gap-2">
+      <span class="kb-divider-dot"></span>
+      <span class="kb-divider-dot"></span>
+      <span class="kb-divider-dot"></span>
+    </div>
+  </div>
+
+  <div class="bg-king-surface rounded-lg p-4 border border-king-border/30 shadow-sm">
+    <span class="inline-block text-[8px] font-mono uppercase tracking-[0.12em] text-king-accent/60 bg-king-accent/5 px-2 py-0.5 rounded-full mb-3">Stitch Line</span>
+    <div class="kb-stitch-line h-px w-full"></div>
+  </div>
+
+  <div class="bg-king-surface rounded-lg p-4 border border-king-border/30 shadow-sm">
+    <span class="inline-block text-[8px] font-mono uppercase tracking-[0.12em] text-king-accent/60 bg-king-accent/5 px-2 py-0.5 rounded-full mb-3">Hairline</span>
+    <div class="kb-hairline text-king-muted/30"><span></span><span></span><span></span></div>
+  </div>
+
+  <div class="bg-king-surface rounded-lg p-4 border border-king-border/30 shadow-sm">
+    <span class="inline-block text-[8px] font-mono uppercase tracking-[0.12em] text-king-accent/60 bg-king-accent/5 px-2 py-0.5 rounded-full mb-3">Link</span>
+    <a href="#" class="kb-link text-[12px] text-king-text" onclick="return false">Hover link</a>
+  </div>
+
+  <div class="bg-king-surface rounded-lg p-4 border border-king-border/30 shadow-sm">
+    <span class="inline-block text-[8px] font-mono uppercase tracking-[0.12em] text-king-accent/60 bg-king-accent/5 px-2 py-0.5 rounded-full mb-3">Section Num</span>
+    <span class="kb-section-num text-base">01 / 04</span>
+  </div>
+
+  <div class="bg-king-surface rounded-lg p-4 border border-king-border/30 shadow-sm">
+    <span class="inline-block text-[8px] font-mono uppercase tracking-[0.12em] text-king-accent/60 bg-king-accent/5 px-2 py-0.5 rounded-full mb-3">Pulse Dot</span>
+    <PulseDot />
+  </div>
+
+  <div class="bg-king-surface rounded-lg p-4 border border-king-border/30 shadow-sm">
+    <span class="inline-block text-[8px] font-mono uppercase tracking-[0.12em] text-king-accent/60 bg-king-accent/5 px-2 py-0.5 rounded-full mb-3">Corner Frame</span>
+    <div class="relative h-10 w-10 mx-auto">
+      <div class="kb-corner-frame"></div>
+    </div>
+  </div>
+
+  <div class="bg-king-surface rounded-lg p-4 border border-king-border/30 shadow-sm">
+    <span class="inline-block text-[8px] font-mono uppercase tracking-[0.12em] text-king-accent/60 bg-king-accent/5 px-2 py-0.5 rounded-full mb-3">Grain Overlay</span>
+    <div class="w-full h-8 rounded-md bg-king-asphalt relative overflow-hidden">
+      <div class="grain-overlay absolute inset-0"></div>
+    </div>
+  </div>
+
+  <div class="bg-king-surface rounded-lg p-4 border border-king-border/30 shadow-sm">
+    <span class="inline-block text-[8px] font-mono uppercase tracking-[0.12em] text-king-accent/60 bg-king-accent/5 px-2 py-0.5 rounded-full mb-3">Pill</span>
+    <div class="flex flex-wrap gap-2">
+      <Pill>Label</Pill>
+      <Pill accent>Accent</Pill>
+    </div>
+  </div>
+
+  <div class="bg-king-surface rounded-lg p-4 border border-king-border/30 shadow-sm">
+    <span class="inline-block text-[8px] font-mono uppercase tracking-[0.12em] text-king-accent/60 bg-king-accent/5 px-2 py-0.5 rounded-full mb-3">Tag</span>
+    <div class="flex flex-wrap gap-2">
+      <Tag>Cuero</Tag>
+      <Tag variant="accent">Acero</Tag>
+      <Tag variant="brass">Brass</Tag>
+    </div>
+  </div>
+
+  <div class="bg-king-surface rounded-lg p-4 border border-king-border/30 shadow-sm">
+    <span class="inline-block text-[8px] font-mono uppercase tracking-[0.12em] text-king-accent/60 bg-king-accent/5 px-2 py-0.5 rounded-full mb-3">Display Font</span>
+    <p class="font-display text-base text-king-text">Display <span class="font-serif">serif</span></p>
+  </div>
+
+  <div class="bg-king-surface rounded-lg p-4 border border-king-border/30 shadow-sm">
+    <span class="inline-block text-[8px] font-mono uppercase tracking-[0.12em] text-king-accent/60 bg-king-accent/5 px-2 py-0.5 rounded-full mb-3">Eyebrow + Meta</span>
+    <p class="eyebrow-text text-king-accent">eyebrow</p>
+    <p class="meta-text text-king-muted mt-0.5">meta text</p>
+  </div>
+
+  <div class="bg-king-surface rounded-lg p-4 border border-king-border/30 shadow-sm">
+    <span class="inline-block text-[8px] font-mono uppercase tracking-[0.12em] text-king-accent/60 bg-king-accent/5 px-2 py-0.5 rounded-full mb-3">Card Dry</span>
+    <Card variant="dry" class="p-3">
+      <span class="text-[9px] font-medium text-king-text">Gear card</span>
+    </Card>
+  </div>
+
+  <div class="bg-king-surface rounded-lg p-4 border border-king-border/30 shadow-sm">
+    <span class="inline-block text-[8px] font-mono uppercase tracking-[0.12em] text-king-accent/60 bg-king-accent/5 px-2 py-0.5 rounded-full mb-3">Stitch Line (alt)</span>
+    <div class="stitch-line h-px w-full text-king-accent/30"></div>
+  </div>
+
+</div>

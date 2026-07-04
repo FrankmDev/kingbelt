@@ -1,0 +1,28 @@
+---
+interface Props {
+  id: string;
+  title: string;
+  subtitle?: string;
+  tone?: 'light' | 'alt';
+}
+
+const { id, title, subtitle, tone = 'light' } = Astro.props;
+---
+
+<section
+  id={id}
+  class:list={[
+    'py-12 md:py-16',
+    tone === 'alt' ? 'bg-[#E6E2DA]' : 'bg-king-bg',
+  ]}
+>
+  <div class="kb-shell-wide">
+    <h2 class="font-display text-[clamp(1.6rem,3vw,2.4rem)] font-light text-king-text tracking-[-0.02em] mb-6">
+      {title}
+    </h2>
+    {subtitle && (
+      <p class="text-[11px] text-king-muted/60 mb-6 font-light">{subtitle}</p>
+    )}
+    <slot />
+  </div>
+</section>

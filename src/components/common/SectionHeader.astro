@@ -31,7 +31,6 @@ const hasCopy = Boolean(body);
   class:list={['section-header', className]}
   data-align={align}
   data-tone={tone}
-  aria-label={eyebrow}
 >
   {number && (
     <div class="sh-number" aria-hidden="true">
@@ -126,8 +125,8 @@ const hasCopy = Boolean(body);
     display: block;
     width: 2.25rem;
     height: 1px;
-    background: var(--sh-accent);
-    opacity: 0.55;
+    background: linear-gradient(90deg, var(--sh-accent), transparent);
+    opacity: 0.6;
   }
 
   .sh-number-text {
@@ -167,11 +166,17 @@ const hasCopy = Boolean(body);
     position: absolute;
     inset-block: -0.5px;
     left: 0;
-    width: clamp(3.5rem, 9vw, 6.5rem);
+    width: clamp(4rem, 10vw, 7rem);
     height: 2px;
-    background: var(--sh-accent);
+    background: linear-gradient(
+      90deg,
+      var(--sh-accent),
+      color-mix(in srgb, var(--sh-accent) 40%, transparent)
+    );
     border-radius: 1px;
-    box-shadow: 0 0 0 0.5px color-mix(in srgb, var(--sh-accent) 25%, transparent);
+    box-shadow:
+      0 0 12px color-mix(in srgb, var(--sh-accent) 20%, transparent),
+      0 0 4px color-mix(in srgb, var(--sh-accent) 30%, transparent);
   }
 
   .section-header[data-align='center'] .sh-rule-accent {
@@ -202,7 +207,7 @@ const hasCopy = Boolean(body);
     font-family: var(--font-sans, 'Satoshi', sans-serif);
     font-size: 0.6875rem;
     font-weight: 600;
-    letter-spacing: 0.26em;
+    letter-spacing: 0.2em;
     line-height: 1.2;
     text-transform: uppercase;
   }
@@ -214,11 +219,10 @@ const hasCopy = Boolean(body);
 
   .sh-eyebrow-mark {
     display: inline-block;
-    width: 0.4375rem;
-    height: 0.4375rem;
-    border: 1px solid currentColor;
-    background: color-mix(in srgb, currentColor 14%, transparent);
-    transform: rotate(45deg);
+    width: 1.25rem;
+    height: 1px;
+    background: currentColor;
+    opacity: 0.55;
     flex-shrink: 0;
   }
 
@@ -248,13 +252,12 @@ const hasCopy = Boolean(body);
     margin: 0;
     max-width: 18ch;
     color: var(--sh-ink);
-    font-family: var(--font-display, 'Cormorant Garamond', Georgia, serif);
-    font-size: clamp(2.5rem, 5.6vw, 4.5rem);
-    font-weight: 300;
-    letter-spacing: -0.025em;
-    line-height: 0.98;
+    font-family: var(--font-display, 'Bitter', Georgia, serif);
+    font-size: clamp(1.875rem, 4vw, 2.75rem);
+    font-weight: 400;
+    letter-spacing: -0.015em;
+    line-height: 1.05;
     text-wrap: balance;
-    font-feature-settings: 'liga' on, 'dlig' on, 'calt' on, 'kern' on;
   }
 
   .section-header[data-align='center'] .sh-title {
@@ -265,14 +268,14 @@ const hasCopy = Boolean(body);
   .sh-title :global(em) {
     color: var(--sh-accent);
     font-style: italic;
-    font-weight: 300;
+    font-weight: 400;
   }
 
   /* Copy — refined lede */
   .sh-copy {
     position: relative;
     max-width: 32rem;
-    padding-top: 0.9rem;
+    padding-top: 1rem;
     color: var(--sh-muted);
     font-size: clamp(0.95rem, 0.9rem + 0.2vw, 1.0625rem);
     font-weight: 400;
@@ -285,10 +288,10 @@ const hasCopy = Boolean(body);
     position: absolute;
     top: 0;
     left: 0;
-    width: 2rem;
+    width: 2.5rem;
     height: 1px;
-    background: var(--sh-accent);
-    opacity: 0.5;
+    background: linear-gradient(90deg, var(--sh-accent), transparent);
+    opacity: 0.6;
   }
 
   .sh-copy p {
@@ -363,8 +366,8 @@ const hasCopy = Boolean(body);
 
     .sh-title {
       max-width: 14ch;
-      font-size: clamp(2.2rem, 11vw, 3.1rem);
-      line-height: 1;
+      font-size: clamp(1.75rem, 8vw, 2.25rem);
+      line-height: 1.05;
     }
 
     .sh-copy {

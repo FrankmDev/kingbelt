@@ -2,19 +2,10 @@
 import Button from '../ui/Button.astro';
 import Icon from '../ui/Icon.astro';
 import SectionHeader from '../common/SectionHeader.astro';
-import { footerNav } from '../../data/navigation';
-import { products } from '../../data/products';
+import { contactChannels, footerNav, socialLinks } from '../../data/navigation';
+import { site } from '../../data/site';
 
-const socialLinks = [
-  { label: 'Instagram', href: 'https://instagram.com/kingbelt', icon: 'instagram' as const },
-  { label: 'WhatsApp', href: 'https://wa.me/1234567890', icon: 'paper-plane' as const },
-];
-
-const finalCtas = [
-  { label: 'Ver colección', href: '/#coleccion', external: false },
-  { label: 'Comprar en Amazon', href: 'https://amazon.com/kingbelt', external: true },
-  { label: 'Consultar por WhatsApp', href: 'https://wa.me/1234567890', external: true },
-] as const;
+const finalCtas = [{ label: 'La marca', href: '/#marca', external: false }, ...contactChannels] as const;
 
 const workshopSpecs = [
   { num: '01', label: 'Cuero seleccionado' },
@@ -34,26 +25,23 @@ const workshopSpecs = [
     <div class="cta-vignette pointer-events-none absolute inset-0"></div>
     <div class="cta-noise pointer-events-none absolute inset-0"></div>
 
-    {/* Single elegant frame */}
-    <div class="absolute inset-8 pointer-events-none md:inset-16 lg:inset-24">
-      <div class="cta-frame absolute inset-0 border border-white/[0.04]"></div>
-      <div class="cta-frame-inner absolute inset-[3px] border border-white/[0.02]"></div>
-    </div>
+    {/* Subtle top steel line */}
+    <div class="absolute inset-x-8 top-8 h-px bg-gradient-to-r from-transparent via-white/[0.04] to-transparent pointer-events-none md:inset-x-16 lg:inset-x-24"></div>
 
     {/* Main content */}
     <div class="kb-shell-wide relative z-10 py-28 text-center md:py-36 lg:py-44">
 
       <SectionHeader
         eyebrow="Hecho en España"
-        number="04" numberTotal="04"
-        body={`${products.length} modelos, cuatro colores y una estética pensada para el día a día.`}
+        number="03" numberTotal="03"
+        body="Una base de marca sólida, lista para conectar catálogo y compra directa cuando entre Shopify."
         align="center"
         tone="dark"
         class="cta-section-header mx-auto mb-10 max-w-4xl md:mb-14"
       >
         <Fragment slot="title">
-          <span class="cta-title-line-1 block">Elige el cinturón</span>
-          <span class="cta-title-line-2 block italic">que vas a usar <span class="not-italic text-king-accent">de verdad</span>.</span>
+          <span class="cta-title-line-1 block">Construido para la ruta.</span>
+          <span class="cta-title-line-2 block italic">Hecho <span class="not-italic text-king-accent">para quedarse</span>.</span>
         </Fragment>
       </SectionHeader>
 
@@ -64,31 +52,24 @@ const workshopSpecs = [
             href={cta.href}
             target={cta.external ? '_blank' : undefined}
             rel={cta.external ? 'noopener noreferrer' : undefined}
-            variant={cta.label === 'Ver colección' ? 'secondary' : 'surfaceOutline'}
+            variant={cta.label === 'La marca' ? 'secondary' : 'surfaceOutline'}
             size="md"
-            class={`rounded-full ${
-              cta.label === 'Ver colección'
-                ? 'shadow-[0_16px_40px_rgba(138,106,61,0.24)]'
-                : 'border-white/10 text-white/55 hover:border-white/30 hover:bg-white/[0.03] hover:text-white/80'
-            }`}
           >
             {cta.label}
-            {cta.label === 'Ver colección' && (
-              <svg class="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M5 12h14M12 5l7 7-7 7" />
-              </svg>
+            {cta.label === 'La marca' && (
+              <Icon name="arrow-right" class="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1" />
             )}
           </Button>
         ))}
       </div>
 
       {/* Specs strip */}
-      <div class="cta-bottom-strip relative mx-auto mt-16 max-w-xl overflow-hidden border border-white/[0.04] bg-white/[0.02] px-8 py-5 backdrop-blur-xl md:mt-20 md:px-12 md:py-6">
+      <div class="cta-bottom-strip kb-texture-asphalt relative mx-auto mt-16 max-w-xl overflow-hidden border border-white/[0.06] bg-white/[0.03] px-8 py-5 backdrop-blur-sm md:mt-20 md:px-12 md:py-6">
         <div class="relative flex flex-wrap items-center justify-center gap-x-8 gap-y-3 md:gap-x-12">
           {workshopSpecs.map((spec) => (
             <div class="cta-spec-item flex items-center gap-2.5">
-              <span class="font-mono text-[11px] tabular-nums text-king-accent/40">{spec.num}</span>
-              <span class="text-[10px] font-medium uppercase tracking-[0.18em] text-white/20">{spec.label}</span>
+              <span class="font-mono text-[11px] tabular-nums text-king-accent/50">{spec.num}</span>
+              <span class="text-[10px] font-medium uppercase tracking-[0.18em] text-white/25">{spec.label}</span>
             </div>
           ))}
         </div>
@@ -96,30 +77,9 @@ const workshopSpecs = [
     </div>
   </section>
 
-  {/* ====================== LEATHER BELT DIVIDER ====================== */}
-  <div class="belt-divider relative h-14 overflow-hidden bg-[#1a1612] md:h-16">
-    {/* Stitch lines */}
-    <div class="belt-stitch-top"></div>
-    <div class="belt-stitch-bottom"></div>
-    
-    {/* Center buckle area */}
-    <div class="absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2">
-      <div class="buckle relative h-10 w-20 md:h-12 md:w-24">
-        <div class="buckle-frame absolute inset-0 rounded-sm border border-king-accent/25 bg-[#0a0908]/80" style="box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 4px 12px rgba(0,0,0,0.3);"></div>
-        <div class="buckle-bar absolute left-1/2 top-1/2 h-6 w-1 -translate-x-1/2 -translate-y-1/2 rounded-full bg-king-accent/30 md:h-7"></div>
-      </div>
-    </div>
-    
-    {/* Belt holes */}
-    <div class="absolute left-[30%] top-1/2 z-[1] h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-[#0a0908]/60 md:left-[35%]" style="box-shadow: inset 0 1px 2px rgba(0,0,0,0.5);"></div>
-    <div class="absolute left-[34%] top-1/2 z-[1] h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-[#0a0908]/60 md:left-[38%]" style="box-shadow: inset 0 1px 2px rgba(0,0,0,0.5);"></div>
-    <div class="absolute left-[38%] top-1/2 z-[1] h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-[#0a0908]/60 md:left-[41%]" style="box-shadow: inset 0 1px 2px rgba(0,0,0,0.5);"></div>
-    <div class="absolute right-[38%] top-1/2 z-[1] h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-[#0a0908]/60 md:right-[41%]" style="box-shadow: inset 0 1px 2px rgba(0,0,0,0.5);"></div>
-    <div class="absolute right-[34%] top-1/2 z-[1] h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-[#0a0908]/60 md:right-[38%]" style="box-shadow: inset 0 1px 2px rgba(0,0,0,0.5);"></div>
-    <div class="absolute right-[30%] top-1/2 z-[1] h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-[#0a0908]/60 md:right-[35%]" style="box-shadow: inset 0 1px 2px rgba(0,0,0,0.5);"></div>
-    
-    {/* Leather texture overlay */}
-    <div class="belt-texture pointer-events-none absolute inset-0"></div>
+  {/* ====================== ASPHALT DIVIDER ====================== */}
+  <div class="relative h-10 overflow-hidden bg-[#14120f] md:h-12">
+    <div class="absolute inset-x-8 top-1/2 h-px -translate-y-1/2 bg-gradient-to-r from-transparent via-king-accent/20 to-transparent md:inset-x-16"></div>
   </div>
 
   {/* ====================== FOOTER BOTTOM ====================== */}
@@ -153,7 +113,7 @@ const workshopSpecs = [
             <span class="hidden md:block h-px w-10 bg-king-accent/20 transition-all duration-500 group-hover:w-16 group-hover:bg-king-accent/40"></span>
           </a>
           <p class="mb-8 max-w-sm text-[14px] font-light leading-[1.85] text-king-muted/50">
-            Cinturones masculinos de cuero, hechos en España. Estética motera depurada para el uso diario.
+            Accesorios de cuero para el día a día, hechos en España. Para los que se mueven diferente.
           </p>
 
           {/* Social icons */}
@@ -198,16 +158,7 @@ const workshopSpecs = [
           </h4>
           <div class="flex flex-col gap-3">
             <a
-              href="https://amazon.com/kingbelt"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="footer-link group relative inline-flex items-center gap-3 text-[14px] font-light text-king-muted/50 transition-colors duration-500 hover:text-king-accent"
-            >
-              <span class="h-px w-0 bg-king-accent/50 transition-all duration-500 group-hover:w-4"></span>
-              Amazon
-            </a>
-            <a
-              href="https://wa.me/1234567890"
+              href={site.urls.whatsapp}
               target="_blank"
               rel="noopener noreferrer"
               class="footer-link group relative inline-flex items-center gap-3 text-[14px] font-light text-king-muted/50 transition-colors duration-500 hover:text-king-accent"
@@ -216,13 +167,22 @@ const workshopSpecs = [
               WhatsApp
             </a>
             <a
-              href="https://instagram.com/kingbelt"
+              href={site.urls.instagram}
               target="_blank"
               rel="noopener noreferrer"
               class="footer-link group relative inline-flex items-center gap-3 text-[14px] font-light text-king-muted/50 transition-colors duration-500 hover:text-king-accent"
             >
               <span class="h-px w-0 bg-king-accent/50 transition-all duration-500 group-hover:w-4"></span>
               Instagram
+            </a>
+            <a
+              href={`mailto:hola@kingbelt.com`}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="footer-link group relative inline-flex items-center gap-3 text-[14px] font-light text-king-muted/50 transition-colors duration-500 hover:text-king-accent"
+            >
+              <span class="h-px w-0 bg-king-accent/50 transition-all duration-500 group-hover:w-4"></span>
+              Email
             </a>
           </div>
         </div>
@@ -245,12 +205,13 @@ const workshopSpecs = [
 
         <div class="flex items-center gap-7">
           <p class="text-[11px] font-light tracking-[0.06em] text-king-muted/30">
-            Diseñado para hombres que se mueven diferente.
+            Asfalto, cuero y carácter desde España.
           </p>
           <button
             id="scroll-to-top"
-            class="group flex items-center gap-2 text-[11px] font-light tracking-[0.06em] text-king-muted/30 transition-colors duration-300 hover:text-king-accent"
+            class="group flex items-center gap-2 text-[11px] font-light tracking-[0.06em] text-king-muted/30 transition-all duration-300 hover:text-king-accent"
             aria-label="Volver arriba"
+            style="opacity: 0; pointer-events: none;"
           >
             <span>Volver arriba</span>
             <span class="flex h-7 w-7 items-center justify-center rounded-full border border-king-border/30 transition-all duration-300 group-hover:border-king-accent/40 group-hover:-translate-y-0.5">
@@ -268,14 +229,14 @@ const workshopSpecs = [
     >
       <span
         class="footer-giant font-display pointer-events-none inline-block select-none uppercase leading-[0.6] tracking-[0.06em] text-king-text"
-        style="font-size: 20vw; opacity: 0.04; transform: translateY(1.5rem);"
+        style="font-size: 20vw; opacity: 0.04; transform: translateY(1.5rem); font-weight: 300;"
       >
         KINGBELT
       </span>
       {/* Subtle ghosted wordmark layer for depth */}
       <span
         class="footer-giant-ghost font-display pointer-events-none absolute inset-0 flex select-none items-center justify-center overflow-hidden uppercase leading-[0.6] tracking-[0.06em] text-king-accent/[0.06]"
-        style="font-size: 20vw;"
+        style="font-size: 20vw; font-weight: 300;"
         aria-hidden="true"
       >
         <span class="footer-giant-drift inline-block">KINGBELT</span>
@@ -292,86 +253,26 @@ const workshopSpecs = [
 
   .cta-bg {
     background:
-      radial-gradient(circle at 30% 40%, rgba(156, 114, 56, 0.05), transparent 40%),
-      radial-gradient(circle at 70% 60%, rgba(156, 114, 56, 0.02), transparent 35%);
+      radial-gradient(circle at 30% 40%, rgba(138, 90, 43, 0.06), transparent 42%),
+      radial-gradient(circle at 70% 60%, rgba(138, 90, 43, 0.03), transparent 38%),
+      radial-gradient(ellipse 100% 60% at 50% 100%, rgba(138, 90, 43, 0.04), transparent 50%);
   }
 
   .cta-vignette {
-    background: radial-gradient(ellipse 75% 65% at 50% 50%, transparent 0%, rgba(8, 7, 6, 0.6) 100%);
+    background: radial-gradient(ellipse 75% 65% at 50% 50%, transparent 0%, rgba(8, 7, 6, 0.55) 100%);
   }
 
   .cta-noise {
-    opacity: 0.02;
+    opacity: 0.025;
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='5' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
     background-size: 200px 200px;
     mix-blend-mode: overlay;
   }
 
-  .cta-frame {
-    border: 1px solid rgba(255, 255, 255, 0.04);
-  }
-
-  .cta-frame-inner {
-    border: 1px solid rgba(255, 255, 255, 0.02);
-  }
-
   .cta-bottom-strip {
-    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.2);
-  }
-
-  /* ===== BELT DIVIDER ===== */
-  .belt-divider {
-    isolation: isolate;
-    position: relative;
-    background: #1a1612;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.03), 0 4px 20px rgba(0,0,0,0.15);
-  }
-
-  .belt-stitch-top {
-    position: absolute;
-    top: 3px;
-    left: 1rem;
-    right: 1rem;
-    height: 1px;
-    background-image: repeating-linear-gradient(
-      90deg,
-      transparent,
-      transparent 5px,
-      rgba(156, 114, 56, 0.2) 5px,
-      rgba(156, 114, 56, 0.2) 9px
-    );
-    background-size: 9px 1px;
-  }
-
-  .belt-stitch-bottom {
-    position: absolute;
-    bottom: 3px;
-    left: 1rem;
-    right: 1rem;
-    height: 1px;
-    background-image: repeating-linear-gradient(
-      90deg,
-      transparent,
-      transparent 5px,
-      rgba(156, 114, 56, 0.2) 5px,
-      rgba(156, 114, 56, 0.2) 9px
-    );
-    background-size: 9px 1px;
-  }
-
-  .buckle {
-    position: relative;
-  }
-
-  .buckle-frame {
-    border-radius: 2px;
-  }
-
-  .belt-texture {
-    opacity: 0.15;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-    background-size: 180px 180px;
-    mix-blend-mode: overlay;
+    box-shadow:
+      0 12px 30px rgba(0, 0, 0, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.04);
   }
 
   /* ===== FOOTER BOTTOM ===== */
@@ -382,7 +283,7 @@ const workshopSpecs = [
   .footer-bg {
     opacity: 0.3;
     background-image:
-      linear-gradient(90deg, rgba(156, 114, 56, 0.04) 0, rgba(156, 114, 56, 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(138, 90, 43, 0.04) 0, rgba(138, 90, 43, 0.04) 1px, transparent 1px),
       linear-gradient(rgba(26, 26, 26, 0.01) 1px, transparent 1px);
     background-size: 10rem 100%, 100% 4rem;
     mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.5), transparent 98%);
@@ -400,7 +301,7 @@ const workshopSpecs = [
 
   .footer-social:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(156, 114, 56, 0.08);
+    box-shadow: 0 8px 24px rgba(138, 90, 43, 0.08);
   }
 
   /* Navigation links */
@@ -470,7 +371,7 @@ const workshopSpecs = [
 
   .footer-bottom-bar:hover .footer-dot-marker {
     transform: rotate(45deg) scale(1.1);
-    background-color: rgba(156, 114, 56, 0.35);
+    background-color: rgba(138, 90, 43, 0.35);
   }
 
   .footer-bar-separator span:nth-child(2) {
@@ -506,30 +407,12 @@ const workshopSpecs = [
       ctaTl
         .from(ctaSection.querySelector('.cta-bg'), { opacity: 0, duration: 1.4 })
         .from(ctaSection.querySelector('.cta-glow'), { opacity: 0, scale: 0.8, duration: 1.2 }, 0.1)
-        .from(ctaSection.querySelector('.cta-frame'), { opacity: 0, duration: 1.0 }, 0.2)
-        .from(ctaSection.querySelector('.cta-frame-inner'), { opacity: 0, duration: 1.0 }, 0.25)
         .from(ctaSection.querySelector('.cta-section-header'), { y: 20, opacity: 0, duration: 0.8 }, 0.35)
         .from(ctaSection.querySelector('.cta-title-line-1'), { y: 40, opacity: 0, duration: 1.0 }, 0.45)
         .from(ctaSection.querySelector('.cta-title-line-2'), { y: 40, opacity: 0, duration: 1.0 }, 0.55)
         .from(ctaSection.querySelector('.cta-btn-wrap'), { y: 14, opacity: 0, duration: 0.8 }, 0.85)
         .from(ctaSection.querySelector('.cta-bottom-strip'), { y: 24, opacity: 0, duration: 0.9 }, 0.95)
         .from(ctaSection.querySelectorAll('.cta-spec-item'), { y: 10, opacity: 0, duration: 0.5, stagger: 0.08 }, 1.05);
-    }
-
-    /* ── Belt Divider ── */
-    const beltDivider = footerScope.querySelector('.belt-divider');
-    if (beltDivider) {
-      gsap.from(beltDivider, {
-        y: 30,
-        opacity: 0,
-        duration: 0.8,
-        ease: 'power2.out',
-        scrollTrigger: {
-          trigger: beltDivider,
-          start: 'top 95%',
-          once: true,
-        },
-      });
     }
 
     /* ── Footer Bottom Timeline ── */
@@ -558,6 +441,19 @@ const workshopSpecs = [
   /* ── Scroll to top ── */
   const scrollToTopBtn = document.getElementById('scroll-to-top');
   if (scrollToTopBtn) {
+    const toggleVisibility = () => {
+      if (window.scrollY > 400) {
+        scrollToTopBtn.style.opacity = '1';
+        scrollToTopBtn.style.pointerEvents = 'auto';
+      } else {
+        scrollToTopBtn.style.opacity = '0';
+        scrollToTopBtn.style.pointerEvents = 'none';
+      }
+    };
+
+    window.addEventListener('scroll', toggleVisibility, { passive: true });
+    toggleVisibility();
+
     scrollToTopBtn.addEventListener('click', () => {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     });

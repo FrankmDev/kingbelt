@@ -1,0 +1,16 @@
+---
+interface Props {
+  size?: 'sm' | 'md';
+  class?: string;
+}
+
+const { size = 'md', class: className } = Astro.props;
+---
+
+<span
+  class:list={[
+    'kb-pulse-dot inline-flex rounded-full bg-king-accent',
+    size === 'sm' ? 'w-1.5 h-1.5' : 'w-2.5 h-2.5',
+    className,
+  ]}
+/>

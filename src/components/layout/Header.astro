@@ -1,4 +1,7 @@
 ---
+import { mainNav } from '../../data/navigation';
+import { site } from '../../data/site';
+
 interface Props {
   initialTheme?: 'dark' | 'light';
   scrolledTheme?: 'dark' | 'light';
@@ -11,11 +14,7 @@ const {
   compactThreshold = 72,
 } = Astro.props;
 
-const links = [
-  { label: 'Colección', href: '/#coleccion' },
-  { label: 'La marca', href: '/#marca' },
-  { label: 'Cómo comprar', href: '/#como-comprar' },
-];
+const links = mainNav;
 ---
 
 <header
@@ -48,9 +47,9 @@ const links = [
           </>
         ))}
         <span class="header-divider mx-2.5 h-3.5 w-px lg:mx-3.5"></span>
-        <a href="https://amazon.com/kingbelt" id="header-cta" target="_blank" rel="noopener noreferrer" class="group hidden items-center gap-2.5 uppercase lg:inline-flex">
+        <a href={site.urls.whatsapp} id="header-cta" target="_blank" rel="noopener noreferrer" class="group hidden items-center gap-2.5 uppercase lg:inline-flex">
           <span class="h-1.5 w-1.5 rounded-full bg-king-accent/65 transition-all duration-300 group-hover:scale-110 group-hover:bg-king-accent"></span>
-          Comprar en Amazon
+          WhatsApp
         </a>
       </div>
 
@@ -58,6 +57,7 @@ const links = [
         id="menu-toggle"
         class="relative flex h-8 w-8 flex-col items-end justify-center gap-[6px] lg:hidden"
         aria-label="Toggle menu"
+        aria-expanded="false"
         type="button"
       >
         <span class="menu-line menu-line-1 block h-[1.5px]" style="width: 1.5rem;"></span>
@@ -103,7 +103,7 @@ const links = [
           class="mobile-nav-link group relative flex items-center gap-5 text-white/70 transition-all duration-500 hover:text-king-accent"
         >
           <span class="font-mono text-[9px] tabular-nums text-white/15 transition-colors duration-300 group-hover:text-king-accent/40">0{i + 1}</span>
-          <span class="font-serif text-4xl tracking-wide transition-all duration-500 group-hover:translate-x-1 sm:text-5xl md:text-6xl">{l.label}</span>
+          <span class="font-serif text-3xl tracking-wide transition-all duration-500 group-hover:translate-x-1 sm:text-4xl md:text-5xl">{l.label}</span>
         </a>
       ))}
     </div>
@@ -113,13 +113,13 @@ const links = [
 
     {/* CTA */}
     <a
-      href="https://amazon.com/kingbelt"
+      href={site.urls.whatsapp}
       target="_blank"
       rel="noopener noreferrer"
       class="mobile-nav-cta group inline-flex items-center gap-3 border border-white/15 px-6 py-3 text-[10px] font-medium uppercase tracking-[0.15em] text-white/60 transition-all duration-500 hover:border-king-accent hover:bg-king-accent/10 hover:text-white"
     >
       <span class="h-1.5 w-1.5 rounded-full bg-king-accent/40 transition-colors duration-300 group-hover:bg-king-accent"></span>
-      Comprar en Amazon
+      WhatsApp
     </a>
   </div>
 </div>
@@ -209,7 +209,7 @@ const links = [
   #header-cta {
     padding: calc(0.55rem - (var(--scroll-progress) * 0.14rem)) calc(1rem - (var(--scroll-progress) * 0.12rem));
     border: 1px solid;
-    border-radius: var(--kb-radius-pill);
+    border-radius: var(--kb-radius-xs);
     font-size: calc(0.54rem - (var(--scroll-progress) * 0.02rem));
     font-weight: 600;
     letter-spacing: calc(0.22em - (var(--scroll-progress) * 0.04em));
@@ -230,15 +230,7 @@ const links = [
   }
 
   .header-stitch {
-    background-image: repeating-linear-gradient(
-      90deg,
-      transparent,
-      transparent 6px,
-      rgba(138, 106, 61, calc(0.14 + (var(--scroll-progress) * 0.12))) 6px,
-      rgba(138, 106, 61, calc(0.14 + (var(--scroll-progress) * 0.12))) 10px
-    );
-    background-repeat: repeat-x;
-    background-size: 10px 1px;
+    background: rgba(138, 90, 43, calc(0.08 + (var(--scroll-progress) * 0.06)));
     opacity: calc(1 - (var(--scroll-progress) * 0.75));
     transition: opacity 400ms ease;
   }
@@ -264,7 +256,7 @@ const links = [
       var(--color-king-accent-light) 72%,
       transparent 100%
     );
-    box-shadow: 0 0 8px rgba(156, 114, 56, 0.35);
+    box-shadow: 0 0 8px rgba(138, 90, 43, 0.35);
     transition: width 120ms linear;
   }
 
@@ -422,11 +414,14 @@ const links = [
       menuToggle.querySelector('.menu-line-1')?.classList.add('rotate-45', 'translate-y-[3.75px]');
       menuToggle.querySelector('.menu-line-2')?.classList.add('-rotate-45', '-translate-y-[2.25px]', 'w-6');
       document.body.style.overflow = 'hidden';
+      const firstLink = mobileMenu?.querySelector<HTMLElement>('.mobile-nav-link');
+      setTimeout(() => firstLink?.focus(), 400);
     } else {
       mobileMenu?.classList.remove('is-open');
       menuToggle.querySelector('.menu-line-1')?.classList.remove('rotate-45', 'translate-y-[3.75px]');
       menuToggle.querySelector('.menu-line-2')?.classList.remove('-rotate-45', '-translate-y-[2.25px]', 'w-6');
       document.body.style.overflow = '';
+      menuToggle?.focus();
     }
   });
 
@@ -434,5 +429,11 @@ const links = [
     link.addEventListener('click', () => {
       if (isMenuOpen) menuToggle?.click();
     });
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && isMenuOpen) {
+      menuToggle?.click();
+    }
   });
 </script>

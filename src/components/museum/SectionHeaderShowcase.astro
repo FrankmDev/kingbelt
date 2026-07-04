@@ -1,0 +1,75 @@
+---
+import SectionHeader from '../common/SectionHeader.astro';
+---
+
+<div class="space-y-4">
+  <div class="bg-king-surface rounded-lg border border-king-border/30 shadow-sm overflow-hidden">
+    <div class="px-6 py-3 border-b border-king-border/10">
+      <span class="text-[8px] font-mono uppercase tracking-[0.15em] text-king-accent/50">SectionHeader.astro</span>
+    </div>
+    <div class="p-6 space-y-6">
+      <div>
+        <span class="text-[8px] font-mono uppercase tracking-[0.2em] text-king-accent/50 block mb-2">Variant: left</span>
+        <SectionHeader
+          eyebrow="Eyebrow label"
+          number="01" numberTotal="04"
+          body="Body text description lorem ipsum dolor sit amet."
+          meta="Meta"
+        >
+          <Fragment slot="title">
+            T&iacute;tulo <span class="italic text-king-accent">con acento.</span>
+          </Fragment>
+        </SectionHeader>
+      </div>
+
+      <div>
+        <span class="text-[8px] font-mono uppercase tracking-[0.2em] text-king-accent/50 block mb-2">Variant: center</span>
+        <SectionHeader
+          eyebrow="Centered"
+          number="02" numberTotal="04"
+          body="Versi&oacute;n centrada."
+          meta="Center"
+          align="center"
+        >
+          <Fragment slot="title">
+            Centered <span class="italic text-king-accent">variant.</span>
+          </Fragment>
+        </SectionHeader>
+      </div>
+
+      <div class="kb-panel-dark p-6 rounded-xl">
+        <span class="text-[8px] font-mono uppercase tracking-[0.2em] text-white/40 block mb-2">Variant: dark</span>
+        <SectionHeader
+          eyebrow="Dark tone"
+          number="03" numberTotal="04"
+          body="Dark tone example."
+          tone="dark"
+          align="center"
+        >
+          <Fragment slot="title">
+            Dark <span class="italic">tone</span> example.
+          </Fragment>
+        </SectionHeader>
+      </div>
+
+      <div class="bg-king-bg/50 rounded-md p-3 border border-king-border/10">
+        <span class="text-[8px] font-mono uppercase tracking-[0.15em] text-king-accent/50 block mb-1">Props</span>
+        <span class="text-[9px] font-mono text-king-text/60">eyebrow, title (slot), body, meta, number, numberTotal, align (left|center), tone (light|dark)</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-king-surface rounded-lg border border-king-border/30 shadow-sm p-5">
+    <span class="text-[8px] font-mono uppercase tracking-[0.15em] text-king-accent/50 block mb-3">ScrollReveal.astro</span>
+    <p class="text-[11px] text-king-muted/70 leading-relaxed mb-4 font-light">
+      IntersectionObserver que revela <span class="font-mono text-[10px] text-king-accent">.animate-on-scroll</span> con <span class="font-mono text-[10px] text-king-accent">.is-visible</span>.
+    </p>
+    <div class="flex flex-wrap gap-2">
+      {['.animate-on-scroll', 'delay-1', 'delay-2', 'delay-3'].map((d) => (
+        <div class="animate-on-scroll is-visible bg-king-accent/8 rounded-md px-3 py-1.5 border border-king-accent/10">
+          <span class="text-[9px] font-medium text-king-accent/70">{d}</span>
+        </div>
+      ))}
+    </div>
+  </div>
+</div>

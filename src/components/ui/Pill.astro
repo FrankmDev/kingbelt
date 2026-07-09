@@ -1,18 +1,23 @@
 ---
 interface Props {
-  accent?: boolean;
+  variant?: 'default' | 'accent' | 'filled' | 'dark';
   class?: string;
 }
 
-const { accent = false, class: className } = Astro.props;
+const { variant = 'default', class: className } = Astro.props;
 ---
 
 <span
   class:list={[
-    'kb-pill border px-4 py-1.5 text-[9px] font-medium uppercase tracking-[0.15em]',
-    accent
-      ? 'border-king-accent/30 text-king-accent/70'
-      : 'border-king-border/40 text-king-muted/60',
+    'kb-pill kb-action-label inline-flex items-center border px-3.5 py-1.5 duration-[var(--kb-dur-fast)] ease-[var(--kb-ease-out)]',
+    'transition-[background-color,border-color,color,box-shadow,transform]',
+    variant === 'filled'
+      ? 'border-king-accent bg-king-accent text-king-surface shadow-[var(--kb-shadow-accent-soft)] hover:bg-king-accent-deep hover:border-king-accent-deep hover:shadow-[var(--kb-shadow-accent-med)]'
+      : variant === 'accent'
+        ? 'border-king-accent/35 text-king-accent bg-king-accent/[0.05] hover:border-king-accent/55 hover:bg-king-accent/[0.1] hover:shadow-[var(--kb-shadow-accent-soft)]'
+        : variant === 'dark'
+          ? 'border-king-text/25 text-king-text bg-king-text/[0.04] hover:border-king-text/40 hover:bg-king-text/[0.08]'
+          : 'border-king-border/55 text-king-muted/90 bg-king-surface/60 hover:border-king-accent/35 hover:text-king-accent hover:bg-king-accent/[0.04]',
     className,
   ]}
 >

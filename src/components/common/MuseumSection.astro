@@ -1,4 +1,6 @@
 ---
+import SectionHeader from './SectionHeader.astro';
+
 interface Props {
   id: string;
   title: string;
@@ -12,17 +14,22 @@ const { id, title, subtitle, tone = 'light' } = Astro.props;
 <section
   id={id}
   class:list={[
-    'py-12 md:py-16',
-    tone === 'alt' ? 'bg-[#E6E2DA]' : 'bg-king-bg',
+    'relative py-14 md:py-18 lg:py-22',
+    tone === 'alt' ? 'section-garage' : 'bg-king-bg',
   ]}
 >
   <div class="kb-shell-wide">
-    <h2 class="font-display text-[clamp(1.6rem,3vw,2.4rem)] font-light text-king-text tracking-[-0.02em] mb-6">
-      {title}
-    </h2>
-    {subtitle && (
-      <p class="text-[11px] text-king-muted/60 mb-6 font-light">{subtitle}</p>
-    )}
+    <SectionHeader
+      eyebrow={subtitle}
+      align="left"
+      tone="light"
+      class="mb-8 md:mb-10"
+    >
+      <Fragment slot="title">
+        {title}
+      </Fragment>
+    </SectionHeader>
+
     <slot />
   </div>
 </section>

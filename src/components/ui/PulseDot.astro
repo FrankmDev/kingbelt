@@ -1,16 +1,39 @@
 ---
 interface Props {
-  size?: 'sm' | 'md';
+  size?: 'sm' | 'md' | 'lg';
+  color?: 'accent' | 'success' | 'warning';
+  ring?: boolean;
   class?: string;
 }
 
-const { size = 'md', class: className } = Astro.props;
+const { size = 'md', color = 'accent', ring = false, class: className } = Astro.props;
+
+const sizeClass = {
+  sm: 'w-1.5 h-1.5',
+  md: 'w-2.5 h-2.5',
+  lg: 'w-3.5 h-3.5',
+}[size];
+
+const colorClass = {
+  accent: 'bg-king-accent',
+  success: 'bg-green-500',
+  warning: 'bg-amber-500',
+}[color];
+
+const glowClass = {
+  accent: 'shadow-[0_0_10px_rgba(138,90,43,0.6)]',
+  success: 'shadow-[0_0_10px_rgba(34,197,94,0.6)]',
+  warning: 'shadow-[0_0_10px_rgba(245,158,11,0.6)]',
+}[color];
 ---
 
 <span
   class:list={[
-    'kb-pulse-dot inline-flex rounded-full bg-king-accent',
-    size === 'sm' ? 'w-1.5 h-1.5' : 'w-2.5 h-2.5',
+    'kb-pulse-dot inline-flex rounded-full',
+    sizeClass,
+    colorClass,
+    glowClass,
+    ring && 'ring-[2.5px] ring-white/40',
     className,
   ]}
 />

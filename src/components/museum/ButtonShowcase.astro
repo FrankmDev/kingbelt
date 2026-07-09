@@ -1,46 +1,49 @@
 ---
 import Button from '../ui/Button.astro';
 import Icon from '../ui/Icon.astro';
+import Panel from '../ui/Panel.astro';
 ---
 
-<div class="bg-king-surface rounded-lg border border-king-border/30 shadow-sm overflow-hidden mb-4">
-  <div class="overflow-x-auto">
-    <table class="w-full text-left">
-      <thead>
-        <tr class="border-b border-king-border/10">
-          <th class="px-5 py-3 text-[8px] font-mono uppercase tracking-[0.15em] text-king-muted/40">Variant</th>
-          <th class="px-3 py-3 text-[8px] font-mono uppercase tracking-[0.15em] text-king-muted/40">sm</th>
-          <th class="px-3 py-3 text-[8px] font-mono uppercase tracking-[0.15em] text-king-muted/40">md</th>
-          <th class="px-3 py-3 text-[8px] font-mono uppercase tracking-[0.15em] text-king-muted/40">lg</th>
-        </tr>
-      </thead>
-      <tbody class="divide-y divide-king-border/5">
-        {(['primary', 'secondary', 'outline', 'ghost', 'surface', 'surfaceOutline'] as const).map((v) => (
-          <tr class="hover:bg-king-bg/20 transition-colors">
-            <td class="px-5 py-3">
-              <span class="text-[9px] font-mono font-medium text-king-text">{v}</span>
-            </td>
-            <td class="px-3 py-3"><Button variant={v} size="sm">{v}</Button></td>
-            <td class="px-3 py-3"><Button variant={v}>{v}</Button></td>
-            <td class="px-3 py-3"><Button variant={v} size="lg">{v}</Button></td>
+<div class="space-y-5">
+  <Panel padding="md">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left">
+        <thead>
+          <tr class="border-b border-king-border/15">
+            <th class="kb-code-label px-4 py-3 text-king-muted/45">Variant</th>
+            <th class="kb-code-label px-3 py-3 text-king-muted/45">sm</th>
+            <th class="kb-code-label px-3 py-3 text-king-muted/45">md</th>
+            <th class="kb-code-label px-3 py-3 text-king-muted/45">lg</th>
           </tr>
-        ))}
-      </tbody>
-    </table>
-  </div>
-</div>
+        </thead>
+        <tbody class="divide-y divide-king-border/5">
+          {(['primary', 'secondary', 'outline', 'ghost', 'surface', 'surfaceOutline'] as const).map((v) => (
+            <tr class="hover:bg-king-bg/25 transition-colors">
+              <td class="px-4 py-3">
+                <span class="font-mono text-[var(--kb-text-eyebrow)] font-medium text-king-text/85">{v}</span>
+              </td>
+              <td class="px-3 py-3"><Button variant={v} size="sm">{v}</Button></td>
+              <td class="px-3 py-3"><Button variant={v}>{v}</Button></td>
+              <td class="px-3 py-3"><Button variant={v} size="lg">{v}</Button></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </Panel>
 
-<div class="bg-king-surface rounded-lg border border-king-border/30 shadow-sm p-5">
-  <span class="text-[8px] font-mono uppercase tracking-[0.15em] text-king-accent/60 block mb-4">Con iconos</span>
-  <div class="flex flex-wrap gap-3">
-    <Button variant="primary">WhatsApp<Icon name="arrow-right" class="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1" /></Button>
-    <Button variant="secondary">Conocer<Icon name="arrow-left" class="h-3.5 w-3.5 transition-transform duration-300 group-hover:-translate-x-1" /></Button>
-    <Button variant="outline"><Icon name="shield-check" class="h-3.5 w-3.5" />Garant&iacute;a</Button>
-    <Button variant="ghost"><Icon name="clock" class="h-3.5 w-3.5" />Historia</Button>
-    <Button variant="surface"><Icon name="motorcycle" class="h-3.5 w-3.5" />Estilo</Button>
-    <Button variant="surfaceOutline"><Icon name="paper-plane" class="h-3.5 w-3.5" />Contacto</Button>
-  </div>
-  <div class="mt-5 border-t border-king-border/10 pt-4">
-    <span class="text-[8px] font-mono text-king-muted/40">Props: href, variant, size (sm|md|lg), target, rel, type, class</span>
-  </div>
+  <Panel padding="md">
+    <span class="kb-code-label block mb-5 text-king-accent/60">Con iconos</span>
+    <div class="flex flex-wrap gap-3">
+      <Button variant="primary">WhatsApp<Icon name="arrow-right" /></Button>
+      <Button variant="secondary">Conocer<Icon name="arrow-left" /></Button>
+      <Button variant="outline"><Icon name="shield-check" />Garantía</Button>
+      <Button variant="ghost"><Icon name="clock" />Historia</Button>
+      <Button variant="surface"><Icon name="motorcycle" />Estilo</Button>
+      <Button variant="surfaceOutline"><Icon name="paper-plane" />Contacto</Button>
+    </div>
+    <div class="mt-6 pt-4 border-t border-king-border/15">
+      <span class="font-mono text-[var(--kb-text-eyebrow)] text-king-muted/70">Props: href, variant, size (sm|md|lg), target, rel, type, disabled, class</span>
+    </div>
+  </Panel>
 </div>

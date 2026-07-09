@@ -1,0 +1,31 @@
+---
+interface Props {
+  date?: string;
+  readingTime?: string;
+  category?: string;
+  author?: string;
+  class?: string;
+}
+
+const { date, readingTime, category, author, class: className } = Astro.props;
+
+const parts: string[] = [];
+if (category) parts.push(category);
+if (date) parts.push(date);
+if (readingTime) parts.push(readingTime);
+if (author) parts.push(author);
+---
+
+<div class:list={['flex items-center flex-wrap gap-x-3 gap-y-1.5', className]}>
+  {parts.map((part, i) => (
+    <>
+      {i > 0 && (
+          <span class="kb-divider-dot" aria-hidden="true"></span>
+        )}
+      <span class="kb-meta-label text-king-muted">
+        {part}
+      </span>
+    </>
+  ))}
+  <slot />
+</div>

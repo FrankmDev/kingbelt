@@ -42,13 +42,13 @@ const links = mainNav;
             {i > 0 && <span class="header-divider mx-2.5 h-3.5 w-px lg:mx-3.5"></span>}
             <a href={l.href} class="header-link group relative flex items-center gap-2 py-1">
               <span>{l.label}</span>
-              <span class="header-link-line absolute bottom-0 left-0 h-px w-full origin-left scale-x-0 bg-king-accent transition-transform duration-500 group-hover:scale-x-100"></span>
+              <span class="header-link-line absolute bottom-0 left-0 h-px w-full origin-left scale-x-0 bg-king-accent transition-transform duration-[var(--kb-dur-med)] group-hover:scale-x-100"></span>
             </a>
           </>
         ))}
         <span class="header-divider mx-2.5 h-3.5 w-px lg:mx-3.5"></span>
         <a href={site.urls.whatsapp} id="header-cta" target="_blank" rel="noopener noreferrer" class="group hidden items-center gap-2.5 uppercase lg:inline-flex">
-          <span class="h-1.5 w-1.5 rounded-full bg-king-accent/65 transition-all duration-300 group-hover:scale-110 group-hover:bg-king-accent"></span>
+          <span class="h-1.5 w-1.5 rounded-full bg-king-accent/65 transition-[background-color,transform] duration-[var(--kb-dur-fast)] group-hover:scale-110 group-hover:bg-king-accent"></span>
           WhatsApp
         </a>
       </div>
@@ -56,7 +56,8 @@ const links = mainNav;
       <button
         id="menu-toggle"
         class="relative flex h-8 w-8 flex-col items-end justify-center gap-[6px] lg:hidden"
-        aria-label="Toggle menu"
+        aria-label="Abrir menú"
+        aria-controls="mobile-menu"
         aria-expanded="false"
         type="button"
       >
@@ -75,7 +76,8 @@ const links = mainNav;
 <div
   id="mobile-menu"
   class="fixed inset-0 z-40 flex flex-col justify-center lg:hidden"
-  style="background: #0e0d0c; transform: translateY(-100%); transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);"
+  aria-hidden="true"
+  style="background: var(--color-king-oil); transform: translateY(-100%); transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);"
 >
   {/* Ambient glow */}
   <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(138,106,61,0.08),transparent_50%)]"></div>
@@ -91,7 +93,7 @@ const links = mainNav;
     {/* Eyebrow label */}
     <div class="mobile-nav-eyebrow absolute top-24 left-1/2 flex -translate-x-1/2 items-center gap-3">
       <span class="h-px w-8 bg-white/[0.06]"></span>
-      <span class="text-[8px] font-medium uppercase tracking-[0.4em] text-white/10">Navegación</span>
+      <span class="text-[var(--kb-text-eyebrow)] font-medium uppercase tracking-[0.28em] text-white/[0.12]">Navegación</span>
       <span class="h-px w-8 bg-white/[0.06]"></span>
     </div>
 
@@ -100,10 +102,10 @@ const links = mainNav;
       {links.map((l, i) => (
         <a
           href={l.href}
-          class="mobile-nav-link group relative flex items-center gap-5 text-white/70 transition-all duration-500 hover:text-king-accent"
+          class="mobile-nav-link group relative flex items-center gap-5 text-white/70 transition-[color,opacity,transform] duration-[var(--kb-dur-med)] hover:text-king-accent"
         >
-          <span class="font-mono text-[9px] tabular-nums text-white/15 transition-colors duration-300 group-hover:text-king-accent/40">0{i + 1}</span>
-          <span class="font-serif text-3xl tracking-wide transition-all duration-500 group-hover:translate-x-1 sm:text-4xl md:text-5xl">{l.label}</span>
+          <span class="font-mono text-[var(--kb-text-eyebrow)] tabular-nums text-white/15 transition-colors duration-[var(--kb-dur-fast)] group-hover:text-king-accent/40">0{i + 1}</span>
+          <span class="font-serif text-[clamp(1.75rem,8vw,2.75rem)] tracking-[0.02em] transition-transform duration-[var(--kb-dur-med)] group-hover:translate-x-1">{l.label}</span>
         </a>
       ))}
     </div>
@@ -116,9 +118,9 @@ const links = mainNav;
       href={site.urls.whatsapp}
       target="_blank"
       rel="noopener noreferrer"
-      class="mobile-nav-cta group inline-flex items-center gap-3 border border-white/15 px-6 py-3 text-[10px] font-medium uppercase tracking-[0.15em] text-white/60 transition-all duration-500 hover:border-king-accent hover:bg-king-accent/10 hover:text-white"
+      class="mobile-nav-cta kb-action-label group inline-flex items-center gap-3 border border-white/15 px-5 py-3 text-white/60 transition-[background-color,border-color,color,opacity,transform] duration-[var(--kb-dur-med)] hover:border-king-accent hover:bg-king-accent/10 hover:text-white"
     >
-      <span class="h-1.5 w-1.5 rounded-full bg-king-accent/40 transition-colors duration-300 group-hover:bg-king-accent"></span>
+      <span class="h-1.5 w-1.5 rounded-full bg-king-accent/40 transition-colors duration-[var(--kb-dur-fast)] group-hover:bg-king-accent"></span>
       WhatsApp
     </a>
   </div>
@@ -281,7 +283,7 @@ const links = mainNav;
   }
 
   #site-header[data-theme='dark'] .header-link {
-    color: rgba(255, 255, 255, 0.62);
+    color: rgba(255, 255, 255, 0.72);
   }
 
   #site-header[data-theme='dark'] .header-link:hover,
@@ -301,7 +303,7 @@ const links = mainNav;
   }
 
   #site-header[data-theme='light'] {
-    color: #181512;
+    color: var(--color-king-text);
   }
 
   #site-header[data-theme='light'] .header-shell {
@@ -313,23 +315,23 @@ const links = mainNav;
   }
 
   #site-header[data-theme='light'] .header-link {
-    color: rgba(24, 21, 18, 0.58);
+    color: rgba(24, 21, 18, 0.72);
   }
 
   #site-header[data-theme='light'] .header-link:hover,
   #site-header[data-theme='light'] #header-logo:hover {
-    color: #181512;
+    color: var(--color-king-text);
   }
 
   #site-header[data-theme='light'] #header-cta {
-    border-color: rgba(24, 21, 18, 0.14);
-    color: rgba(24, 21, 18, 0.76);
+    border-color: rgba(24, 21, 18, 0.18);
+    color: rgba(24, 21, 18, 0.85);
   }
 
   #site-header[data-theme='light'] #header-cta:hover {
     background-color: rgba(24, 21, 18, 0.05);
     border-color: rgba(24, 21, 18, 0.28);
-    color: #181512;
+    color: var(--color-king-text);
   }
 
   #site-header[data-scrolled='true'] .header-shell {
@@ -408,6 +410,8 @@ const links = mainNav;
   menuToggle?.addEventListener('click', () => {
     isMenuOpen = !isMenuOpen;
     menuToggle.setAttribute('aria-expanded', String(isMenuOpen));
+    menuToggle.setAttribute('aria-label', isMenuOpen ? 'Cerrar menú' : 'Abrir menú');
+    mobileMenu?.setAttribute('aria-hidden', String(!isMenuOpen));
 
     if (isMenuOpen) {
       mobileMenu?.classList.add('is-open');

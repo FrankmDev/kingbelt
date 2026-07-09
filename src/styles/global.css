@@ -5,30 +5,64 @@
    Motorcycle Retail · Leather Gear · Asphalt Editorial
    Display serif: Bitter (slab, variable weight 100–900)
    Sans/body: Satoshi
-   ============================================================ */
+
+   ------------------------------------------------------------
+   CHANGELOG — revisión de auditoría (ver AGENTS.md §Auditoría)
+   ------------------------------------------------------------
+   1. NUEVO: familia "steel/graphite" de superficies (kb-card-steel,
+      kb-panel-steel, kb-badge-steel, kb-tag-steel) para poder
+      alternar piezas industriales dentro de secciones claras,
+      no solo en fondos oscuros completos. Antes --color-king-steel
+      y --color-king-oil no se usaban en ningún componente.
+   2. CAMBIO: la textura/sombra "leather" (grano de cuero +
+      inset-leather) deja de ser el default de kb-card / kb-panel /
+      kb-card-static / kb-card-dry. Ahora es opt-in vía la clase
+      modificadora .kb-leather, reservada para producto de cuero
+      real (ficha de producto, swatches, packaging). El resto de
+      superficies usa un inset neutro (--kb-shadow-inset-soft).
+   3. FIX: typo de variable --kbd-badge-radius → --kb-badge-radius.
+   4. LIMPIEZA: eliminadas --kb-title-weight / --kb-title-light-weight
+      (duplicaban --kb-w-heading / --kb-w-heading-light sin uso real).
+   5. CAMBIO: --color-king-bone diverge ligeramente de
+      --color-king-bg para que "bone" sea un tono de marca/material
+      y no un alias 1:1 del fondo funcional.
+   6. CAMBIO: --color-king-accent-light desaturado/oscurecido un
+      punto (era muy cercano a "cognac", expresamente vetado en el
+      brief). Sigue sirviendo como acento cálido pero se usa con
+      moderación (nunca en superficies grandes).
+   7. CAMBIO: pesos de heading — h1/h2 suben a semibold/bold para
+      leer "retail masculino" en vez de "editorial delicado". h3
+      baja escalón, h4/h5 se mantienen ligeros para metadatos.
+    8. DOC: comentario explícito sobre --kb-z-noise (9999) — es una
+       textura global por encima de todo, no indica jerarquía.
+    9. NUEVO: tokens tipográficos intermedios --kb-text-sm,
+       --kb-text-xs y --kb-text-2xs para evitar valores hardcodeados
+       en componentes pequeños (caption, meta, help, footer) y para
+       mantener la escala tipográfica completa bajo un mismo sistema.
+    ============================================================ */
 
 @theme {
   /* --- Color: bone garage + asphalt + bronze tobacco + steel --- */
-  --color-king-bg: #EDEAE4;
-  --color-king-surface: #F8F6F1;
-  --color-king-text: #11100E;
-  --color-king-muted: #67645D;
-  --color-king-accent: #8A5A2B;
-  --color-king-accent-light: #B78A4F;
-  --color-king-accent-deep: #3E2A1D;
-  --color-king-secondary: #DEDBD3;
-  --color-king-border: #D6D3CB;
+  --color-king-bg: #edeae4;
+  --color-king-surface: #f8f6f1;
+  --color-king-text: #11100e;
+  --color-king-muted: #67645d;
+  --color-king-accent: #8a5a2b;
+  --color-king-accent-light: #a67c4e;
+  --color-king-accent-deep: #3e2a1d;
+  --color-king-secondary: #dedbd3;
+  --color-king-border: #d6d3cb;
   --color-king-asphalt: #171715;
-  --color-king-graphite: #2A2A27;
-  --color-king-steel: #7B7D78;
-  --color-king-oil: #0D0D0C;
-  --color-king-rubber: #20201E;
-  --color-king-brass: #8E7838;
-  --color-king-bone: #EDEAE4;
+  --color-king-graphite: #2a2a27;
+  --color-king-steel: #7b7d78;
+  --color-king-oil: #0d0d0c;
+  --color-king-rubber: #20201e;
+  --color-king-brass: #8e7838;
+  --color-king-bone: #f1eee7;
 
-  --font-sans: 'Satoshi', sans-serif;
-  --font-display: 'Bitter', Georgia, 'Times New Roman', serif;
-  --font-serif: 'Bitter', Georgia, 'Times New Roman', serif;
+  --font-sans: "Satoshi", sans-serif;
+  --font-display: "Bitter", Georgia, "Times New Roman", serif;
+  --font-serif: "Bitter", Georgia, "Times New Roman", serif;
 }
 
 :root {
@@ -61,37 +95,45 @@
   --kb-stroke-dark: rgba(17, 16, 14, 0.08);
   --kb-stroke-accent: rgba(138, 90, 43, 0.2);
   --kb-stroke-hairline: rgba(17, 16, 14, 0.045);
+  --kb-stroke-steel: rgba(123, 125, 120, 0.28);
 
   /* --- Surfaces --- */
   --kb-surface-light: rgba(248, 246, 241, 0.85);
   --kb-surface-light-strong: rgba(248, 246, 241, 0.94);
   --kb-surface-dark: rgba(11, 10, 8, 0.24);
   --kb-surface-dark-strong: rgba(11, 10, 8, 0.44);
+  --kb-surface-steel: #2a2a27;
+  --kb-surface-steel-strong: #232320;
 
   /* --- Shadows --- warm, layered, leather-depth --- */
   --kb-shadow-xs: 0 1px 3px rgba(11, 10, 8, 0.06);
   --kb-shadow-sm:
-    0 1px 2px rgba(11, 10, 8, 0.04),
-    0 4px 12px rgba(11, 10, 8, 0.06);
+    0 1px 2px rgba(11, 10, 8, 0.04), 0 4px 12px rgba(11, 10, 8, 0.06);
   --kb-shadow-md:
-    0 1px 2px rgba(11, 10, 8, 0.04),
-    0 4px 14px rgba(11, 10, 8, 0.07),
+    0 1px 2px rgba(11, 10, 8, 0.04), 0 4px 14px rgba(11, 10, 8, 0.07),
     0 10px 28px rgba(11, 10, 8, 0.05);
   --kb-shadow-float:
-    0 2px 4px rgba(11, 10, 8, 0.04),
-    0 8px 22px rgba(11, 10, 8, 0.08),
+    0 2px 4px rgba(11, 10, 8, 0.04), 0 8px 22px rgba(11, 10, 8, 0.08),
     0 18px 44px rgba(11, 10, 8, 0.06);
   --kb-shadow-float-dark:
-    0 2px 4px rgba(0, 0, 0, 0.15),
-    0 12px 32px rgba(0, 0, 0, 0.25),
+    0 2px 4px rgba(0, 0, 0, 0.15), 0 12px 32px rgba(0, 0, 0, 0.25),
     0 20px 48px rgba(0, 0, 0, 0.2);
   --kb-shadow-ring:
-    0 0 0 1px rgba(138, 90, 43, 0.12),
-    0 8px 22px rgba(11, 10, 8, 0.07);
+    0 0 0 1px rgba(138, 90, 43, 0.12), 0 8px 22px rgba(11, 10, 8, 0.07);
+
+  /* Default, neutral inset used by most surfaces (cards/panels) */
+  --kb-shadow-inset-soft: inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  /* Inset glow used inside buttons */
   --kb-shadow-inset-glow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  --kb-shadow-inset-leather: inset 0 1px 0 rgba(255, 255, 255, 0.45), inset 0 -1px 0 rgba(0, 0, 0, 0.03);
+  /* Leather inset — opt-in only, see .kb-leather */
+  --kb-shadow-inset-leather:
+    inset 0 1px 0 rgba(255, 255, 255, 0.45), inset 0 -1px 0 rgba(0, 0, 0, 0.03);
+  /* Steel inset — for dark graphite surfaces on light sections */
+  --kb-shadow-inset-steel: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+
   --kb-shadow-accent-soft: 0 4px 14px rgba(138, 90, 43, 0.16);
   --kb-shadow-accent-med: 0 6px 20px rgba(138, 90, 43, 0.22);
+  --kb-shadow-steel-soft: 0 6px 20px rgba(11, 10, 8, 0.28);
 
   /* --- Easing --- */
   --kb-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
@@ -100,30 +142,35 @@
   --kb-ease-soft: cubic-bezier(0.16, 1, 0.3, 1);
 
   /* --- Labels --- */
-  --kb-label-size: 0.6875rem;
-  --kb-label-tracking: 0.28em;
+  --kb-label-size: 0.625rem;
+  --kb-label-tracking: 0.22em;
   --kb-label-weight: 500;
   --kb-micro-size: 0.5625rem;
-  --kb-micro-tracking: 0.42em;
-  --kb-title-tracking: -0.01em;
-  --kb-title-weight: 400;
-  --kb-title-light-weight: 300;
+  --kb-micro-tracking: 0.26em;
+  --kb-action-size: 0.625rem;
+  --kb-action-tracking: 0.14em;
+  --kb-title-tracking: 0;
 
   /* --- Typography scale --- */
-  --kb-text-eyebrow: 0.625rem;          /* 10px */
-  --kb-text-meta: 0.75rem;             /* 12px */
-  --kb-text-body: 0.9375rem;           /* 15px */
-  --kb-text-body-lg: 1.0625rem;        /* 17px */
-  --kb-text-body-xl: 1.125rem;         /* 18px */
-  --kb-text-h5: clamp(1rem, 1.5vw, 1.1875rem);
-  --kb-text-h4: clamp(1.1875rem, 2vw, 1.5rem);
-  --kb-text-h3: clamp(1.5rem, 2.8vw, 2.125rem);
-  --kb-text-h2: clamp(2rem, 4.5vw, 3.25rem);
-  --kb-text-h1: clamp(2.75rem, 6vw, 5rem);
+  --kb-text-eyebrow: 0.625rem; /* 10px */
+  --kb-text-meta: 0.75rem; /* 12px */
+  --kb-text-2xs: 0.6875rem; /* 11px */
+  --kb-text-xs: 0.8125rem; /* 13px */
+  --kb-text-sm: 0.875rem; /* 14px */
+  --kb-text-body: 0.9375rem; /* 15px */
+  --kb-text-body-lg: 1.0625rem; /* 17px */
+  --kb-text-body-xl: 1.125rem; /* 18px */
+  --kb-text-h5: clamp(1rem, 1.35vw, 1.125rem);
+  --kb-text-h4: clamp(1.125rem, 1.8vw, 1.375rem);
+  --kb-text-h3: clamp(1.375rem, 2.45vw, 1.9375rem);
+  --kb-text-h2: clamp(1.875rem, 4vw, 2.875rem);
+  --kb-text-h1: clamp(2.5rem, 5.4vw, 4.5rem);
 
   /* --- Font weights --- */
-  --kb-w-heading: 400;
-  --kb-w-heading-light: 300;
+  --kb-w-heading: 400; /* used by h3 and .font-display default */
+  --kb-w-heading-light: 300; /* small/light display moments (h5, kickers) */
+  --kb-w-heading-strong: 600; /* h2 — section titles */
+  --kb-w-heading-hero: 700; /* h1 — hero / brand statements */
   --kb-w-body: 400;
   --kb-w-medium: 500;
   --kb-w-semibold: 600;
@@ -154,9 +201,13 @@
   --kb-input-radius: var(--kb-radius-sm);
   --kb-card-radius: var(--kb-radius-md);
   --kb-panel-radius: var(--kb-radius-md);
-  --kbd-badge-radius: var(--kb-radius-pill);
+  --kb-badge-radius: var(--kb-radius-pill);
 
-  /* --- z-index scale --- */
+  /* --- z-index scale ---
+     Nota: --kb-z-noise es intencionalmente el valor más alto.
+     No representa jerarquía de importancia, es una textura de
+     grano global (pointer-events: none) que debe pintarse por
+     encima de absolutamente todo, incluidos modales/toasts. */
   --kb-z-base: 0;
   --kb-z-content: 10;
   --kb-z-sticky: 20;
@@ -176,17 +227,21 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  -webkit-tap-highlight-color: rgba(138, 90, 43, 0.14);
 }
 
 body {
   background-color: var(--color-king-bg);
   color: var(--color-king-text);
-  font-family: 'Satoshi', sans-serif;
-  font-feature-settings: 'ss01' on, 'cv11' on, 'calt' on;
+  font-family: "Satoshi", sans-serif;
+  font-feature-settings:
+    "ss01" on,
+    "cv11" on,
+    "calt" on;
   font-size: 16px;
   font-weight: var(--kb-w-body);
   line-height: 1.7;
-  letter-spacing: 0.005em;
+  letter-spacing: 0;
   overflow-x: hidden;
   position: relative;
 }
@@ -199,26 +254,43 @@ section {
   position: relative;
 }
 
-/* Headings — Bitter slab serif presence */
+/* Headings — Bitter slab serif presence.
+   h1/h2 carry more weight on purpose: a slab serif in pure
+   regular reads "editorial magazine"; in semibold/bold it reads
+   "retail / product / built for use". h4/h5 stay light for
+   metadata-adjacent titles (card headers, small labels). */
 h1,
 h2,
 h3,
 h4,
 h5,
 h6 {
-  font-family: 'Bitter', Georgia, 'Times New Roman', serif;
+  font-family: "Bitter", Georgia, "Times New Roman", serif;
   font-weight: var(--kb-w-heading);
-  line-height: 1.0;
+  line-height: 1;
   letter-spacing: var(--kb-title-tracking);
   text-wrap: balance;
   color: inherit;
 }
 
-h1 { font-size: var(--kb-text-h1); }
-h2 { font-size: var(--kb-text-h2); }
-h3 { font-size: var(--kb-text-h3); }
-h4 { font-size: var(--kb-text-h4); }
-h5 { font-size: var(--kb-text-h5); }
+h1 {
+  font-size: var(--kb-text-h1);
+  font-weight: var(--kb-w-heading-hero);
+}
+h2 {
+  font-size: var(--kb-text-h2);
+  font-weight: var(--kb-w-heading-strong);
+}
+h3 {
+  font-size: var(--kb-text-h3);
+  font-weight: var(--kb-w-medium);
+}
+h4 {
+  font-size: var(--kb-text-h4);
+}
+h5 {
+  font-size: var(--kb-text-h5);
+}
 
 h1 em,
 h2 em,
@@ -243,6 +315,15 @@ textarea {
   font: inherit;
 }
 
+a,
+button {
+  touch-action: manipulation;
+}
+
+[id] {
+  scroll-margin-top: 7rem;
+}
+
 strong,
 b {
   font-weight: 600;
@@ -259,7 +340,7 @@ ol {
    ============================================================ */
 
 body::before {
-  content: '';
+  content: "";
   position: fixed;
   inset: 0;
   z-index: var(--kb-z-noise);
@@ -277,13 +358,13 @@ body::before {
 }
 
 ::-webkit-scrollbar-track {
-  background: #E2DFD7;
+  background: #e2dfd7;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #B5B0A6;
+  background: #b5b0a6;
   border-radius: var(--kb-radius-pill);
-  border: 2px solid #E2DFD7;
+  border: 2px solid #e2dfd7;
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -291,7 +372,7 @@ body::before {
 }
 
 ::-moz-scrollbar-thumb {
-  background: #B5B0A6;
+  background: #b5b0a6;
   border-radius: var(--kb-radius-pill);
 }
 
@@ -311,10 +392,18 @@ body::before {
    ============================================================ */
 
 .font-display {
-  font-family: 'Bitter', Georgia, 'Times New Roman', serif;
+  font-family: "Bitter", Georgia, "Times New Roman", serif;
   font-weight: var(--kb-w-heading);
   letter-spacing: var(--kb-title-tracking);
-  line-height: 1.0;
+  line-height: 1;
+}
+
+.font-display-strong {
+  font-weight: var(--kb-w-heading-strong);
+}
+
+.font-display-hero {
+  font-weight: var(--kb-w-heading-hero);
 }
 
 .font-display-light {
@@ -322,11 +411,11 @@ body::before {
 }
 
 .font-serif {
-  font-family: 'Bitter', Georgia, 'Times New Roman', serif;
+  font-family: "Bitter", Georgia, "Times New Roman", serif;
 }
 
 .font-serif-italic {
-  font-family: 'Bitter', Georgia, 'Times New Roman', serif;
+  font-family: "Bitter", Georgia, "Times New Roman", serif;
   font-style: italic;
   font-weight: 400;
 }
@@ -343,7 +432,7 @@ body::before {
   font-size: var(--kb-text-meta);
   font-weight: var(--kb-label-weight);
   line-height: 1.4;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
 }
 
@@ -373,6 +462,10 @@ body::before {
 
 .text-king-muted {
   color: var(--color-king-muted);
+}
+
+.text-king-steel {
+  color: var(--color-king-steel);
 }
 
 /* Prose rhythm for rich text blocks */
@@ -443,13 +536,38 @@ body::before {
 .section-garage {
   background-color: var(--color-king-bg);
   background-image:
-    linear-gradient(90deg, rgba(138, 90, 43, 0.04) 0, rgba(138, 90, 43, 0.04) 1px, transparent 1px),
+    linear-gradient(
+      90deg,
+      rgba(138, 90, 43, 0.04) 0,
+      rgba(138, 90, 43, 0.04) 1px,
+      transparent 1px
+    ),
     linear-gradient(rgba(26, 26, 26, 0.015) 1px, transparent 1px);
-  background-size: 10rem 100%, 100% 5rem;
+  background-size:
+    10rem 100%,
+    100% 5rem;
 }
 
 /* ============================================================
     SURFACES / PANELS / CARDS
+
+    Guía de uso rápida (ver AGENTS.md para la versión completa):
+    - kb-card / kb-panel        → superficie por defecto, neutra.
+                                   Úsalas para el 80% del contenido
+                                   (blog, features, forms, stats).
+    - + .kb-leather             → añade grano de cuero + inset
+                                   cálido. SOLO para producto de
+                                   cuero real (ficha de producto,
+                                   swatches de color, packaging).
+    - kb-card-steel/panel-steel → superficie oscura graphite para
+                                   romper el ritmo dentro de
+                                   secciones claras (1 de cada 4-5
+                                   piezas en una grid, o para
+                                   destacar un item). No requiere
+                                   estar dentro de section-asphalt.
+    - kb-card-dark              → variante translúcida pensada
+                                   para usarse YA dentro de
+                                   section-asphalt / section-steel.
     ============================================================ */
 
 .kb-panel {
@@ -461,30 +579,70 @@ body::before {
 }
 
 .kb-panel::after {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  box-shadow: var(--kb-shadow-inset-leather);
+  box-shadow: var(--kb-shadow-inset-soft);
   pointer-events: none;
+  z-index: 2;
 }
 
 .kb-panel-dark {
+  position: relative;
   border: 1px solid var(--kb-stroke-soft);
   border-radius: var(--kb-panel-radius);
   background: var(--kb-surface-dark-strong);
   box-shadow: var(--kb-shadow-md);
 }
 
+.kb-panel-dark::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  pointer-events: none;
+}
+
+/* Steel panel — graphite surface usable inside light sections */
+.kb-panel-steel {
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--kb-panel-radius);
+  background: var(--kb-surface-steel);
+  color: rgba(255, 255, 255, 0.92);
+  box-shadow: var(--kb-shadow-steel-soft);
+}
+
+.kb-panel-steel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: var(--kb-shadow-inset-steel);
+  pointer-events: none;
+}
+
 .kb-pill {
   border-radius: var(--kb-radius-pill);
 }
 
-.kb-rounded-sm { border-radius: var(--kb-radius-sm); }
-.kb-rounded-md { border-radius: var(--kb-radius-md); }
-.kb-rounded-lg { border-radius: var(--kb-radius-lg); }
-.kb-rounded-xl { border-radius: var(--kb-radius-xl); }
-.kb-rounded-2xl { border-radius: var(--kb-radius-2xl); }
+.kb-rounded-sm {
+  border-radius: var(--kb-radius-sm);
+}
+.kb-rounded-md {
+  border-radius: var(--kb-radius-md);
+}
+.kb-rounded-lg {
+  border-radius: var(--kb-radius-lg);
+}
+.kb-rounded-xl {
+  border-radius: var(--kb-radius-xl);
+}
+.kb-rounded-2xl {
+  border-radius: var(--kb-radius-2xl);
+}
 
 /* Card — gear-product, leather-edge lift, accent ring reveal */
 .kb-card {
@@ -503,27 +661,31 @@ body::before {
 }
 
 .kb-card::after {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  box-shadow: var(--kb-shadow-inset-leather);
+  box-shadow: var(--kb-shadow-inset-soft);
   pointer-events: none;
   transition: box-shadow var(--kb-dur-med) var(--kb-ease-out);
 }
 
-.kb-card:hover {
-  transform: translateY(-4px);
-  border-color: var(--kb-stroke-accent);
-  box-shadow:
-    0 2px 4px rgba(11, 10, 8, 0.05),
-    0 8px 20px rgba(11, 10, 8, 0.08),
-    0 16px 40px rgba(11, 10, 8, 0.06),
-    0 0 0 1px rgba(138, 90, 43, 0.08);
-}
+@media (hover: hover) and (pointer: fine) {
+  .kb-card:hover {
+    transform: translateY(-5px);
+    border-color: rgba(138, 90, 43, 0.22);
+    box-shadow:
+      0 3px 6px rgba(11, 10, 8, 0.05),
+      0 10px 24px rgba(11, 10, 8, 0.08),
+      0 22px 48px rgba(11, 10, 8, 0.07),
+      0 0 0 1px rgba(138, 90, 43, 0.08);
+  }
 
-.kb-card:hover::after {
-  box-shadow: var(--kb-shadow-inset-leather), inset 0 0 0 1px rgba(138, 90, 43, 0.06);
+  .kb-card:hover::after {
+    box-shadow:
+      var(--kb-shadow-inset-soft),
+      inset 0 0 0 1px rgba(138, 90, 43, 0.06);
+  }
 }
 
 /* Bare card (no hover effect) */
@@ -536,11 +698,11 @@ body::before {
 }
 
 .kb-card-static::after {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  box-shadow: var(--kb-shadow-inset-leather);
+  box-shadow: var(--kb-shadow-inset-soft);
   pointer-events: none;
 }
 
@@ -558,18 +720,20 @@ body::before {
 }
 
 .kb-card-dry::after {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  box-shadow: var(--kb-shadow-inset-leather);
+  box-shadow: var(--kb-shadow-inset-soft);
   pointer-events: none;
 }
 
-.kb-card-dry:hover {
-  transform: translateY(-2px);
-  border-color: var(--kb-stroke-accent);
-  box-shadow: var(--kb-shadow-md);
+@media (hover: hover) and (pointer: fine) {
+  .kb-card-dry:hover {
+    transform: translateY(-2px);
+    border-color: var(--kb-stroke-accent);
+    box-shadow: var(--kb-shadow-md);
+  }
 }
 
 /* Surface tint card — for dark sections */
@@ -583,9 +747,74 @@ body::before {
     background-color var(--kb-dur-med) var(--kb-ease-out);
 }
 
-.kb-card-dark:hover {
-  border-color: rgba(183, 138, 79, 0.32);
-  background: rgba(255, 255, 255, 0.07);
+@media (hover: hover) and (pointer: fine) {
+  .kb-card-dark:hover {
+    border-color: rgba(183, 138, 79, 0.32);
+    background: rgba(255, 255, 255, 0.07);
+  }
+}
+
+/* Steel card — graphite surface for use INSIDE light sections,
+   to alternate rhythm within a grid without needing a full
+   dark section wrapper. Self-contained dark surface. */
+.kb-card-steel {
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--kb-card-radius);
+  background: var(--kb-surface-steel);
+  color: rgba(255, 255, 255, 0.92);
+  box-shadow: var(--kb-shadow-steel-soft);
+  transition:
+    transform var(--kb-dur-med) var(--kb-ease-out),
+    border-color var(--kb-dur-med) var(--kb-ease-out),
+    box-shadow var(--kb-dur-med) var(--kb-ease-out);
+}
+
+.kb-card-steel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: var(--kb-shadow-inset-steel);
+  pointer-events: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .kb-card-steel:hover {
+    transform: translateY(-5px);
+    border-color: rgba(183, 138, 79, 0.35);
+    box-shadow:
+      var(--kb-shadow-steel-soft),
+      0 0 0 1px rgba(183, 138, 79, 0.14);
+    background: var(--kb-surface-steel-strong);
+  }
+}
+
+/* Leather modifier — opt-in only. Stack on top of kb-card /
+   kb-card-static / kb-card-dry / kb-panel. Reserve for real
+   leather product context (PDP, color swatches, packaging). */
+.kb-leather {
+  position: relative;
+}
+
+.kb-leather::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='leather'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='5' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23leather)'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+  border-radius: inherit;
+  mix-blend-mode: multiply;
+  z-index: 1;
+}
+
+.kb-leather.kb-card::after,
+.kb-leather.kb-card-static::after,
+.kb-leather.kb-card-dry::after,
+.kb-leather.kb-panel::after {
+  box-shadow: var(--kb-shadow-inset-leather);
 }
 
 /* ============================================================
@@ -605,6 +834,31 @@ body::before {
   font-weight: var(--kb-label-weight);
   line-height: 1.2;
   letter-spacing: var(--kb-micro-tracking);
+  text-transform: uppercase;
+}
+
+.kb-action-label {
+  font-size: var(--kb-action-size);
+  font-weight: var(--kb-label-weight);
+  line-height: 1.1;
+  letter-spacing: var(--kb-action-tracking);
+  text-transform: uppercase;
+}
+
+.kb-meta-label {
+  font-size: var(--kb-text-meta);
+  font-weight: var(--kb-label-weight);
+  line-height: 1.35;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.kb-code-label {
+  font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+  font-size: 0.5625rem;
+  font-weight: 500;
+  line-height: 1.35;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 
@@ -636,7 +890,8 @@ body::before {
   width: 100%;
 }
 
-/* Decorative stitch line (leather motif) — reduced prominence */
+/* Decorative stitch line (leather motif) — reduced prominence.
+   Reserve for product/leather contexts alongside .kb-leather. */
 .kb-stitch-line {
   background-image: repeating-linear-gradient(
     90deg,
@@ -675,7 +930,7 @@ body::before {
 
 .kb-corner-frame::before,
 .kb-corner-frame::after {
-  content: '';
+  content: "";
 }
 
 .kb-corner-frame::before {
@@ -698,7 +953,7 @@ body::before {
 
 /* Film grain overlay for hero sections */
 .grain-overlay::after {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
   pointer-events: none;
@@ -709,13 +964,15 @@ body::before {
   mix-blend-mode: overlay;
 }
 
-/* Leather grain texture — warm, organic surface */
+/* Leather grain texture — warm, organic surface (opt-in via
+   .kb-leather above for cards/panels; use this class directly
+   for full media blocks, e.g. a hero panel showing a belt). */
 .kb-texture-leather {
   position: relative;
 }
 
 .kb-texture-leather::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
   pointer-events: none;
@@ -733,7 +990,7 @@ body::before {
 }
 
 .kb-texture-asphalt::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
   pointer-events: none;
@@ -751,7 +1008,7 @@ body::before {
 }
 
 .kb-texture-metal::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
   pointer-events: none;
@@ -761,6 +1018,137 @@ body::before {
   border-radius: inherit;
   z-index: 1;
   mix-blend-mode: overlay;
+}
+
+/* ============================================================
+   DECORATIVE ELEMENTS
+   ============================================================ */
+
+/* Glow accent rule — warm copper line with soft bloom */
+.kb-rule-glow {
+  position: relative;
+  height: 1px;
+  width: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--kb-stroke-accent) 20%,
+    var(--kb-stroke-accent) 80%,
+    transparent 100%
+  );
+}
+
+.kb-rule-glow::after {
+  content: "";
+  position: absolute;
+  inset: -2px 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(138, 90, 43, 0.28) 25%,
+    rgba(183, 138, 79, 0.35) 50%,
+    rgba(138, 90, 43, 0.28) 75%,
+    transparent 100%
+  );
+  filter: blur(4px);
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* Industrial corner bracket frame */
+.kb-corner-bracket {
+  position: absolute;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-color: rgba(138, 90, 43, 0.22);
+  transition: border-color 400ms ease;
+}
+
+.kb-corner-bracket-tl {
+  top: 0;
+  left: 0;
+  border-top-width: 1.5px;
+  border-left-width: 1.5px;
+  border-top-left-radius: 2px;
+}
+.kb-corner-bracket-tr {
+  top: 0;
+  right: 0;
+  border-top-width: 1.5px;
+  border-right-width: 1.5px;
+  border-top-right-radius: 2px;
+}
+.kb-corner-bracket-bl {
+  bottom: 0;
+  left: 0;
+  border-bottom-width: 1.5px;
+  border-left-width: 1.5px;
+  border-bottom-left-radius: 2px;
+}
+.kb-corner-bracket-br {
+  bottom: 0;
+  right: 0;
+  border-bottom-width: 1.5px;
+  border-right-width: 1.5px;
+  border-bottom-right-radius: 2px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .kb-card:hover .kb-corner-bracket,
+  .kb-panel:hover .kb-corner-bracket {
+    border-color: rgba(138, 90, 43, 0.42);
+  }
+}
+
+/* Decorative dot with ring */
+.kb-dot {
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: var(--kb-radius-pill);
+  background: var(--color-king-accent);
+  box-shadow: 0 0 0 3px rgba(138, 90, 43, 0.12);
+}
+
+/* Decorative slash separator */
+.kb-slash {
+  width: 1px;
+  height: 0.875rem;
+  background: var(--kb-stroke-dark);
+  transform: rotate(22deg);
+}
+
+/* Reusable noise overlay */
+.kb-noise-overlay {
+  position: relative;
+}
+
+.kb-noise-overlay::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px 256px;
+  border-radius: inherit;
+  mix-blend-mode: multiply;
+}
+
+/* Dashed rule — road marking */
+.kb-dashed-rule {
+  height: 1px;
+  width: 100%;
+  background-image: repeating-linear-gradient(
+    90deg,
+    var(--kb-stroke-accent),
+    var(--kb-stroke-accent) 6px,
+    transparent 6px,
+    transparent 14px
+  );
+  background-size: 14px 1px;
+  background-repeat: repeat-x;
+  opacity: 0.5;
 }
 
 /* ============================================================
@@ -776,7 +1164,7 @@ body::before {
 
 .kb-hairline::before,
 .kb-hairline::after {
-  content: '';
+  content: "";
   flex: 1;
   height: 1px;
   background: currentColor;
@@ -855,14 +1243,16 @@ a:focus-visible {
 
 /* Section number marker */
 .kb-section-num {
-  font-family: 'Satoshi', sans-serif;
-  font-size: 0.6875rem;
+  font-family: "Satoshi", sans-serif;
+  font-size: var(--kb-label-size);
   font-weight: var(--kb-w-semibold);
-  letter-spacing: 0.32em;
+  letter-spacing: 0.24em;
   text-transform: uppercase;
   color: rgba(17, 16, 14, 0.4);
   font-variant-numeric: tabular-nums;
-  font-feature-settings: 'tnum' on, 'lnum' on;
+  font-feature-settings:
+    "tnum" on,
+    "lnum" on;
 }
 
 /* Inline eyebrow with leading line */
@@ -873,11 +1263,40 @@ a:focus-visible {
 }
 
 .kb-eyebrow-lined::before {
-  content: '';
-  width: 1.75rem;
-  height: 1px;
-  background: var(--kb-stroke-accent);
+  content: "";
+  width: 2rem;
+  height: 1.5px;
+  background: linear-gradient(
+    90deg,
+    var(--color-king-accent),
+    rgba(138, 90, 43, 0.25)
+  );
   flex: 0 0 auto;
+  border-radius: 1px;
+}
+
+.kb-eyebrow-lined.kb-eyebrow-center::after {
+  content: "";
+  width: 2rem;
+  height: 1.5px;
+  background: linear-gradient(
+    90deg,
+    rgba(138, 90, 43, 0.25),
+    var(--color-king-accent)
+  );
+  flex: 0 0 auto;
+  border-radius: 1px;
+}
+
+/* Label size variants */
+.kb-label-sm {
+  font-size: 0.5625rem;
+  letter-spacing: 0.18em;
+}
+
+.kb-label-lg {
+  font-size: 0.6875rem;
+  letter-spacing: 0.18em;
 }
 
 /* ============================================================
@@ -891,8 +1310,10 @@ a:focus-visible {
     box-shadow 400ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.kb-rise:hover {
-  transform: translateY(-3px);
+@media (hover: hover) and (pointer: fine) {
+  .kb-rise:hover {
+    transform: translateY(-3px);
+  }
 }
 
 .kb-rise-sm {
@@ -901,8 +1322,10 @@ a:focus-visible {
     box-shadow 280ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.kb-rise-sm:hover {
-  transform: translateY(-2px);
+@media (hover: hover) and (pointer: fine) {
+  .kb-rise-sm:hover {
+    transform: translateY(-2px);
+  }
 }
 
 /* Soft press scale */
@@ -926,8 +1349,10 @@ a:focus-visible {
   transition: transform 600ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.kb-zoom:hover {
-  transform: scale(1.03);
+@media (hover: hover) and (pointer: fine) {
+  .kb-zoom:hover {
+    transform: scale(1.03);
+  }
 }
 
 /* ============================================================
@@ -955,7 +1380,7 @@ img[data-zoom] {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.4375rem 0.75rem;
+  padding: 0.4rem 0.75rem;
   border-radius: var(--kb-radius-xs);
   font-size: var(--kb-micro-size);
   font-weight: var(--kb-label-weight);
@@ -965,17 +1390,19 @@ img[data-zoom] {
   background: var(--kb-surface-light);
   box-shadow: var(--kb-shadow-xs);
   line-height: 1;
-  min-height: 2rem;
+  min-height: 1.875rem;
   transition:
     border-color var(--kb-dur-fast) var(--kb-ease-out),
     box-shadow var(--kb-dur-fast) var(--kb-ease-out),
     transform var(--kb-dur-fast) var(--kb-ease-out);
 }
 
-.kb-badge:hover {
-  border-color: var(--kb-stroke-accent);
-  box-shadow: var(--kb-shadow-sm);
-  transform: translateY(-1px);
+@media (hover: hover) and (pointer: fine) {
+  .kb-badge:hover {
+    border-color: var(--kb-stroke-accent);
+    box-shadow: var(--kb-shadow-sm);
+    transform: translateY(-1px);
+  }
 }
 
 .kb-badge-accent {
@@ -990,12 +1417,20 @@ img[data-zoom] {
   color: rgba(255, 255, 255, 0.85);
 }
 
+/* Steel badge — dark graphite chip for use on light backgrounds
+   (e.g. "NEW", "LIMITED", stock/status markers on product cards) */
+.kb-badge-steel {
+  border-color: rgba(255, 255, 255, 0.1);
+  background: var(--color-king-graphite);
+  color: rgba(255, 255, 255, 0.9);
+}
+
 /* Squared technical tag — dry, gear/retail feel */
 .kb-tag {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.4375rem 0.75rem;
+  padding: 0.4rem 0.75rem;
   border-radius: var(--kb-radius-xs);
   font-size: var(--kb-micro-size);
   font-weight: var(--kb-label-weight);
@@ -1004,23 +1439,27 @@ img[data-zoom] {
   border: 1px solid var(--kb-stroke-dark);
   background: transparent;
   line-height: 1;
-  min-height: 2rem;
-  font-family: 'Satoshi', sans-serif;
-  font-feature-settings: 'tnum' on;
+  min-height: 1.875rem;
+  font-family: "Satoshi", sans-serif;
+  font-feature-settings: "tnum" on;
   transition:
     border-color var(--kb-dur-fast) var(--kb-ease-out),
     background-color var(--kb-dur-fast) var(--kb-ease-out),
     transform var(--kb-dur-fast) var(--kb-ease-out);
 }
 
-.kb-tag:hover {
-  border-color: var(--kb-stroke-accent);
-  transform: translateY(-1px);
+@media (hover: hover) and (pointer: fine) {
+  .kb-tag:hover {
+    border-color: var(--kb-stroke-accent);
+    transform: translateY(-1px);
+    box-shadow: var(--kb-shadow-xs);
+  }
 }
 
 .kb-tag-accent {
   border-color: var(--kb-stroke-accent);
   color: var(--color-king-accent);
+  background: rgba(138, 90, 43, 0.04);
 }
 
 .kb-tag-filled {
@@ -1032,15 +1471,564 @@ img[data-zoom] {
 .kb-tag-brass {
   border-color: rgba(142, 120, 56, 0.4);
   color: var(--color-king-brass);
+  background: rgba(142, 120, 56, 0.04);
 }
+
+/* Steel tag — cool graphite outline, for spec/technical labels
+   (material, hardware finish) rather than brand/promo labels */
+.kb-tag-steel {
+  border-color: var(--kb-stroke-steel);
+  color: var(--color-king-steel);
+  background: rgba(123, 125, 120, 0.06);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .kb-tag-accent:hover {
+    background: rgba(138, 90, 43, 0.08);
+    box-shadow: var(--kb-shadow-accent-soft);
+  }
+
+  .kb-tag-filled:hover {
+    background: var(--color-king-accent);
+    border-color: var(--color-king-accent);
+    color: var(--color-king-surface);
+    box-shadow: var(--kb-shadow-accent-soft);
+  }
+
+  .kb-tag-brass:hover {
+    background: rgba(142, 120, 56, 0.08);
+  }
+
+  .kb-tag-steel:hover {
+    border-color: var(--color-king-steel);
+    background: rgba(123, 125, 120, 0.12);
+  }
+}
+
+/* ============================================================
+    BUTTON — double-border rivet, leather depth
+    ============================================================ */
+
+.kb-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+  text-transform: uppercase;
+  border-radius: var(--kb-btn-radius);
+  position: relative;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  line-height: 1.1;
+  transition:
+    background-color var(--kb-dur-med) var(--kb-ease-out),
+    border-color var(--kb-dur-med) var(--kb-ease-out),
+    color var(--kb-dur-med) var(--kb-ease-out),
+    box-shadow var(--kb-dur-med) var(--kb-ease-out),
+    transform 320ms var(--kb-ease-spring);
+  will-change: transform;
+}
+
+/* Inner border — creates double-border leather effect */
+.kb-btn::after {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border-radius: calc(var(--kb-btn-radius) - 2px);
+  border: 1px solid transparent;
+  pointer-events: none;
+  transition:
+    border-color var(--kb-dur-med) var(--kb-ease-out),
+    inset var(--kb-dur-med) var(--kb-ease-out);
+  z-index: 1;
+}
+
+.kb-btn:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px var(--color-king-bg),
+    0 0 0 4px rgba(138, 90, 43, 0.45);
+}
+
+.kb-btn:active {
+  transform: scale(0.965) translateY(1px);
+  transition-duration: 90ms;
+}
+
+.kb-btn-primary:active,
+.kb-btn-secondary:active,
+.kb-btn-surface:active {
+  box-shadow:
+    inset 0 2px 6px rgba(0, 0, 0, 0.22),
+    var(--kb-shadow-inset-glow);
+}
+
+/* --- Sizes --- */
+
+.kb-btn-sm {
+  padding: 0.5625rem 1.375rem 0.5625rem 1.125rem;
+  font-size: 0.6875rem;
+  letter-spacing: 0.13em;
+  gap: 0.4375rem;
+}
+
+.kb-btn-md {
+  padding: 0.75rem 1.875rem 0.75rem 1.625rem;
+  font-size: 0.8125rem;
+  letter-spacing: 0.12em;
+  gap: 0.625rem;
+}
+
+.kb-btn-lg {
+  padding: 0.9375rem 2.25rem 0.9375rem 2rem;
+  font-size: 0.9375rem;
+  letter-spacing: 0.11em;
+  gap: 0.75rem;
+}
+
+/* Ghost/outline no rivet — symmetric padding */
+.kb-btn-ghost,
+.kb-btn-outline,
+.kb-btn-surface-outline {
+  &.kb-btn-sm {
+    padding: 0.5625rem 1.125rem;
+  }
+  &.kb-btn-md {
+    padding: 0.75rem 1.625rem;
+  }
+  &.kb-btn-lg {
+    padding: 0.9375rem 2rem;
+  }
+}
+
+/* --- Shine sweep — dramatic chrome gleam --- */
+
+.kb-btn::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 70%;
+  height: 100%;
+  background: linear-gradient(
+    105deg,
+    transparent 15%,
+    rgba(255, 255, 255, 0.04) 30%,
+    rgba(255, 255, 255, 0.18) 45%,
+    rgba(255, 255, 255, 0.25) 50%,
+    rgba(255, 255, 255, 0.18) 55%,
+    rgba(255, 255, 255, 0.04) 70%,
+    transparent 85%
+  );
+  transform: skewX(-15deg);
+  transition: left 0.7s var(--kb-ease-out);
+  pointer-events: none;
+  z-index: 2;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .kb-btn:hover::before {
+    left: 140%;
+  }
+}
+
+.kb-btn-ghost::before,
+.kb-btn-outline::before {
+  content: none;
+}
+
+/* --- Text container --- */
+
+.kb-btn-text {
+  position: relative;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: inherit;
+  transition: transform 350ms var(--kb-ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .kb-btn:hover .kb-btn-text {
+    transform: translateX(2px);
+  }
+}
+
+.kb-btn:active .kb-btn-text {
+  transform: translateX(0);
+  transition-duration: 100ms;
+}
+
+/* --- Ghost variant — line draws from edges --- */
+
+.kb-btn-ghost::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--color-king-accent),
+    transparent
+  );
+  transition:
+    width 450ms var(--kb-ease-out),
+    left 450ms var(--kb-ease-out);
+  pointer-events: none;
+  z-index: 1;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .kb-btn-ghost:hover::after {
+    width: 100%;
+    left: 0;
+  }
+}
+
+/* --- Rivet — decorative metal stud --- */
+
+.kb-btn-rivet {
+  position: absolute;
+  right: 0.625rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 30% 30%,
+    rgba(255, 255, 255, 0.5),
+    rgba(183, 138, 79, 0.45)
+  );
+  box-shadow:
+    0 0 0 1px rgba(183, 138, 79, 0.28),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+  z-index: 3;
+  opacity: 0.45;
+  transition:
+    opacity 350ms var(--kb-ease-out),
+    transform 350ms var(--kb-ease-spring),
+    box-shadow 350ms var(--kb-ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .kb-btn:hover .kb-btn-rivet {
+    opacity: 1;
+    transform: translateY(-50%) scale(1.4);
+    box-shadow:
+      0 0 0 1px rgba(183, 138, 79, 0.5),
+      0 0 8px rgba(183, 138, 79, 0.55),
+      inset 0 -1px 1px rgba(0, 0, 0, 0.35);
+  }
+}
+
+.kb-btn-ghost .kb-btn-rivet,
+.kb-btn-outline .kb-btn-rivet,
+.kb-btn-surface-outline .kb-btn-rivet {
+  display: none;
+}
+
+/* --- Variants --- */
+
+.kb-btn-primary {
+  background-color: var(--color-king-rubber);
+  background-image:
+    repeating-linear-gradient(
+      90deg,
+      rgba(183, 138, 79, 0.22) 0px,
+      rgba(183, 138, 79, 0.22) 2px,
+      transparent 2px,
+      transparent 7px
+    ),
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='a'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='4'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23a)' opacity='0.3'/%3E%3C/svg%3E");
+  background-size:
+    calc(100% - 1.25rem) 1px,
+    80px 80px;
+  background-position:
+    0.625rem bottom 0.35rem,
+    0 0;
+  background-repeat: no-repeat, repeat;
+  background-blend-mode: normal, overlay;
+  color: var(--color-king-bone);
+  border: 1px solid rgba(32, 32, 30, 0.6);
+  box-shadow:
+    var(--kb-shadow-xs),
+    var(--kb-shadow-inset-glow),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.15);
+}
+
+.kb-btn-primary::after {
+  border-color: rgba(183, 138, 79, 0.12);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .kb-btn-primary:hover {
+    background-color: var(--color-king-asphalt);
+    border-color: rgba(32, 32, 30, 0.8);
+    box-shadow:
+      var(--kb-shadow-md),
+      var(--kb-shadow-inset-glow),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+    transform: translateY(-2px);
+  }
+
+  .kb-btn-primary:hover::after {
+    border-color: rgba(183, 138, 79, 0.25);
+    inset: 4px;
+  }
+}
+
+.kb-btn-secondary {
+  background-color: var(--color-king-accent);
+  background-image:
+    repeating-linear-gradient(
+      90deg,
+      rgba(183, 138, 79, 0.25) 0px,
+      rgba(183, 138, 79, 0.25) 2px,
+      transparent 2px,
+      transparent 7px
+    ),
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='a'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='4'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23a)' opacity='0.2'/%3E%3C/svg%3E");
+  background-size:
+    calc(100% - 1.25rem) 1px,
+    80px 80px;
+  background-position:
+    0.625rem bottom 0.35rem,
+    0 0;
+  background-repeat: no-repeat, repeat;
+  background-blend-mode: normal, overlay;
+  color: var(--color-king-surface);
+  border: 1px solid rgba(62, 42, 29, 0.4);
+  box-shadow:
+    0 1px 3px rgba(138, 90, 43, 0.15),
+    var(--kb-shadow-inset-glow),
+    inset 0 -1px 0 rgba(62, 42, 29, 0.2);
+}
+
+.kb-btn-secondary::after {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .kb-btn-secondary:hover {
+    background-color: var(--color-king-accent-deep);
+    border-color: rgba(62, 42, 29, 0.6);
+    box-shadow:
+      var(--kb-shadow-accent-soft),
+      var(--kb-shadow-inset-glow),
+      inset 0 -1px 0 rgba(62, 42, 29, 0.25);
+    transform: translateY(-2px);
+  }
+
+  .kb-btn-secondary:hover::after {
+    border-color: rgba(255, 255, 255, 0.2);
+    inset: 4px;
+  }
+}
+
+.kb-btn-outline {
+  background-color: transparent;
+  color: var(--color-king-text);
+  border: 1px solid rgba(17, 16, 14, 0.25);
+}
+
+.kb-btn-outline::after {
+  border-color: rgba(17, 16, 14, 0.06);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .kb-btn-outline:hover {
+    background-color: var(--color-king-text);
+    color: var(--color-king-surface);
+    border-color: var(--color-king-text);
+    box-shadow: var(--kb-shadow-md);
+    transform: translateY(-2px);
+  }
+
+  .kb-btn-outline:hover::after {
+    border-color: rgba(255, 255, 255, 0.1);
+    inset: 4px;
+  }
+}
+
+.kb-btn-ghost {
+  background-color: transparent;
+  color: var(--color-king-text);
+  border: 1px solid transparent;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .kb-btn-ghost:hover {
+    color: var(--color-king-accent);
+    background-color: rgba(138, 90, 43, 0.04);
+  }
+}
+
+.kb-btn-ghost:active {
+  background-color: rgba(138, 90, 43, 0.08);
+}
+
+.kb-btn-surface {
+  background-color: var(--color-king-surface);
+  background-image: repeating-linear-gradient(
+    90deg,
+    rgba(17, 16, 14, 0.08) 0px,
+    rgba(17, 16, 14, 0.08) 2px,
+    transparent 2px,
+    transparent 7px
+  );
+  background-size: calc(100% - 1.25rem) 1px;
+  background-position: 0.625rem bottom 0.35rem;
+  background-repeat: no-repeat;
+  color: var(--color-king-text);
+  border: 1px solid var(--kb-stroke-dark);
+  box-shadow: var(--kb-shadow-xs), var(--kb-shadow-inset-soft);
+}
+
+.kb-btn-surface::after {
+  border-color: rgba(17, 16, 14, 0.04);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .kb-btn-surface:hover {
+    background-color: var(--color-king-accent);
+    background-image: repeating-linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.15) 0px,
+      rgba(255, 255, 255, 0.15) 2px,
+      transparent 2px,
+      transparent 7px
+    );
+    color: var(--color-king-surface);
+    border-color: var(--color-king-accent);
+    box-shadow: var(--kb-shadow-accent-soft), var(--kb-shadow-inset-glow);
+    transform: translateY(-2px);
+  }
+
+  .kb-btn-surface:hover::after {
+    border-color: rgba(255, 255, 255, 0.15);
+    inset: 4px;
+  }
+}
+
+.kb-btn-surface-outline {
+  background-color: transparent;
+  color: var(--color-king-surface);
+  border: 1px solid rgba(248, 246, 241, 0.3);
+}
+
+.kb-btn-surface-outline::after {
+  border-color: rgba(248, 246, 241, 0.08);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .kb-btn-surface-outline:hover {
+    background-color: var(--color-king-surface);
+    color: var(--color-king-text);
+    border-color: rgba(248, 246, 241, 0.5);
+    box-shadow: var(--kb-shadow-md);
+    transform: translateY(-2px);
+  }
+
+  .kb-btn-surface-outline:hover::after {
+    border-color: rgba(17, 16, 14, 0.06);
+    inset: 4px;
+  }
+}
+
+/* --- Icon inside button --- */
+
+.kb-btn-text svg {
+  flex-shrink: 0;
+  transition: transform 350ms var(--kb-ease-spring);
+}
+
+.kb-btn-sm .kb-btn-text svg {
+  width: 0.8125rem;
+  height: 0.8125rem;
+}
+
+.kb-btn-md .kb-btn-text svg {
+  width: 0.9375rem;
+  height: 0.9375rem;
+}
+
+.kb-btn-lg .kb-btn-text svg {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .kb-btn:hover .kb-btn-text svg {
+    transform: translateX(3px);
+  }
+}
+
+.kb-btn:active .kb-btn-text svg {
+  transform: translateX(0);
+  transition-duration: 100ms;
+}
+
+/* --- Disabled --- */
 
 .kb-btn-disabled,
 .kb-btn-disabled:hover,
 .kb-btn-disabled:active {
-  opacity: 0.45;
+  opacity: 0.4;
   cursor: not-allowed;
   pointer-events: none;
-  box-shadow: none;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.kb-btn-disabled::before,
+.kb-btn-disabled::after {
+  display: none;
+}
+
+.kb-btn-disabled .kb-btn-rivet {
+  display: none;
+}
+
+/* --- Loading state --- */
+
+.kb-btn-loading {
+  pointer-events: none;
+}
+
+.kb-btn-loading .kb-btn-text {
+  opacity: 0;
+}
+
+.kb-btn-loading .kb-btn-rivet {
+  display: none;
+}
+
+.kb-btn-spinner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0.875rem;
+  height: 0.875rem;
+  margin-top: -0.4375rem;
+  margin-left: -0.4375rem;
+  border: 1.5px solid transparent;
+  border-top-color: currentColor;
+  border-right-color: currentColor;
+  border-radius: 50%;
+  animation: kb-btn-spin 600ms linear infinite;
+  z-index: 3;
+}
+
+@keyframes kb-btn-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* ============================================================
@@ -1049,7 +2037,7 @@ img[data-zoom] {
 
 .kb-input {
   width: 100%;
-  padding: 0.75rem 1rem;
+  padding: 0.875rem 1.125rem;
   border-radius: var(--kb-input-radius);
   border: 1px solid var(--kb-stroke-dark);
   background: var(--kb-surface-light);
@@ -1059,7 +2047,8 @@ img[data-zoom] {
   transition:
     border-color var(--kb-dur-med) var(--kb-ease-out),
     box-shadow var(--kb-dur-med) var(--kb-ease-out),
-    background-color var(--kb-dur-med) var(--kb-ease-out);
+    background-color var(--kb-dur-med) var(--kb-ease-out),
+    transform var(--kb-dur-med) var(--kb-ease-out);
 }
 
 .kb-input::placeholder {
@@ -1069,8 +2058,19 @@ img[data-zoom] {
 .kb-input:focus {
   outline: none;
   border-color: var(--kb-stroke-accent);
-  box-shadow: 0 0 0 3px rgba(138, 90, 43, 0.1);
+  box-shadow:
+    0 0 0 3px rgba(138, 90, 43, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
   background: var(--kb-surface-light-strong);
+}
+
+.kb-input[aria-invalid="true"] {
+  border-color: rgba(220, 38, 38, 0.55);
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.08);
+}
+
+.kb-input:hover:not(:focus):not(:disabled) {
+  border-color: rgba(138, 90, 43, 0.18);
 }
 
 .kb-input:disabled {
@@ -1080,7 +2080,9 @@ img[data-zoom] {
 }
 
 .kb-label {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   font-size: var(--kb-label-size);
   font-weight: var(--kb-label-weight);
   letter-spacing: var(--kb-label-tracking);
@@ -1095,13 +2097,21 @@ img[data-zoom] {
 
 /* Marquee — smooth linear drift */
 @keyframes marquee-left {
-  from { transform: translateX(0); }
-  to   { transform: translateX(-50%); }
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
 }
 
 @keyframes marquee-right {
-  from { transform: translateX(-50%); }
-  to   { transform: translateX(0); }
+  from {
+    transform: translateX(-50%);
+  }
+  to {
+    transform: translateX(0);
+  }
 }
 
 .animate-marquee-left {
@@ -1140,17 +2150,36 @@ img[data-zoom] {
   transform: translateY(0) scale(1);
 }
 
-.animate-delay-1 { transition-delay: 0.1s; }
-.animate-delay-2 { transition-delay: 0.2s; }
-.animate-delay-3 { transition-delay: 0.3s; }
-.animate-delay-4 { transition-delay: 0.4s; }
-.animate-delay-5 { transition-delay: 0.5s; }
-.animate-delay-6 { transition-delay: 0.6s; }
+.animate-delay-1 {
+  transition-delay: 0.1s;
+}
+.animate-delay-2 {
+  transition-delay: 0.2s;
+}
+.animate-delay-3 {
+  transition-delay: 0.3s;
+}
+.animate-delay-4 {
+  transition-delay: 0.4s;
+}
+.animate-delay-5 {
+  transition-delay: 0.5s;
+}
+.animate-delay-6 {
+  transition-delay: 0.6s;
+}
 
 /* Pulsing status dot — softer breathe */
 @keyframes kb-pulse-dot {
-  0%, 100% { opacity: 0.5; transform: scale(1); }
-  50%      { opacity: 1;   transform: scale(1.15); }
+  0%,
+  100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
 }
 
 .kb-pulse-dot {
@@ -1159,7 +2188,9 @@ img[data-zoom] {
 
 /* Slow rotate fallback */
 @keyframes kb-spin-slow {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .kb-spin-slow {
@@ -1189,4 +2220,173 @@ img[data-zoom] {
     opacity: 1;
     transform: none;
   }
+}
+
+/* ============================================================
+   LAYER 2 — EDITORIAL COMPOSITION UTILITIES
+   ------------------------------------------------------------
+   Añadido en la segunda pasada de auditoría. La capa 1 corrigió
+   color/textura (cards, badges, tags, pesos de heading). Esta
+   capa da hooks estructurales a componentes de tipo "módulo"
+   (PageHeader, Prose, MediaFrame, ContentSplit, StatBlock,
+   CTABox) para que ganen jerarquía y escala editorial en vez de
+   ser una caja crema con texto centrado dentro.
+   ============================================================ */
+
+/* Folio/index number — tratamiento tipográfico grande, no una
+   etiqueta pequeña. Úsalo para "01/02" en ContentSplit, número de
+   sección, etc. */
+.kb-folio {
+  font-family: "Bitter", Georgia, serif;
+  font-weight: 300;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings:
+    "tnum" on,
+    "lnum" on;
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  line-height: 1;
+  color: var(--kb-stroke-accent);
+  letter-spacing: -0.01em;
+}
+
+/* Pull quote — para Prose.astro. Reemplaza el blockquote plano:
+   serif itálica grande, sin caja, regla lateral fina en acento. */
+.kb-pull-quote {
+  font-family: "Bitter", Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(1.375rem, 2.4vw, 1.875rem);
+  line-height: 1.45;
+  color: var(--color-king-text);
+  border-left: 2px solid var(--color-king-accent);
+  padding-left: clamp(1.25rem, 2.5vw, 2rem);
+  margin-block: clamp(2rem, 4vw, 3rem);
+  max-width: 42ch;
+}
+
+/* Drop cap — primera letra de un lede editorial (Prose.astro) */
+.kb-drop-cap::first-letter {
+  font-family: "Bitter", Georgia, serif;
+  font-weight: 600;
+  font-size: 3.4em;
+  line-height: 0.85;
+  float: left;
+  padding-right: 0.1em;
+  padding-top: 0.02em;
+  color: var(--color-king-accent);
+}
+
+/* Stat value/label/divider — StatBlock.astro. Contraste de escala
+   fuerte entre número y etiqueta; divisores steel en vez de solo
+   espacio en blanco. */
+.kb-stat-value {
+  font-family: "Bitter", Georgia, serif;
+  font-weight: 700;
+  font-size: clamp(3rem, 6.5vw, 5.5rem);
+  line-height: 0.9;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings:
+    "tnum" on,
+    "lnum" on;
+  color: var(--color-king-text);
+}
+
+.kb-stat-label {
+  font-family: var(--font-sans);
+  font-size: var(--kb-micro-size);
+  font-weight: var(--kb-label-weight);
+  line-height: 1.3;
+  letter-spacing: var(--kb-micro-tracking);
+  text-transform: uppercase;
+  color: var(--color-king-muted);
+  margin-top: 0.5rem;
+}
+
+.kb-stat-divider {
+  width: 1px;
+  align-self: stretch;
+  background: var(--kb-stroke-steel);
+}
+
+/* Stat block on dark/steel — para el momento de credibilidad
+   (+200 modelos, hecho en España) con más peso visual que una
+   card crema */
+.kb-stat-block-steel {
+  background: var(--color-king-graphite);
+  color: rgba(255, 255, 255, 0.94);
+  border-radius: var(--kb-panel-radius);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.kb-stat-block-steel .kb-stat-value {
+  color: rgba(255, 255, 255, 0.96);
+}
+
+.kb-stat-block-steel .kb-stat-label {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.kb-stat-block-steel .kb-stat-divider {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+/* MediaFrame — dominante/soporte. Rompe el patrón de dos
+   rectángulos gemelos: una imagen grande + una de apoyo. */
+.kb-media-dominant {
+  aspect-ratio: 4 / 5;
+}
+
+.kb-media-support {
+  aspect-ratio: 1 / 1;
+}
+
+@media (min-width: 768px) {
+  .kb-media-dominant {
+    aspect-ratio: 16 / 10;
+  }
+  .kb-media-support {
+    aspect-ratio: 3 / 4;
+  }
+}
+
+/* Caption como chip flotante sobre la imagen, no en franja aparte */
+.kb-media-caption-overlay {
+  position: absolute;
+  left: var(--kb-space-4);
+  bottom: var(--kb-space-4);
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.875rem;
+  border-radius: var(--kb-radius-xs);
+  background: rgba(13, 13, 12, 0.55);
+  backdrop-filter: blur(6px);
+  color: rgba(255, 255, 255, 0.92);
+  font-size: var(--kb-text-meta);
+}
+
+/* Bleed — la imagen ignora el gutter del shell en el lado dado */
+.kb-bleed-right {
+  margin-right: calc(var(--kb-gutter) * -1);
+}
+
+.kb-bleed-left {
+  margin-left: calc(var(--kb-gutter) * -1);
+}
+
+/* CTABox oscuro — momento de cierre con peso real, textura
+   industrial en vez de gradiente crema suave */
+.kb-cta-dark {
+  position: relative;
+  background: var(--color-king-asphalt);
+  color: rgba(255, 255, 255, 0.94);
+  border-radius: var(--kb-panel-radius);
+  overflow: hidden;
+}
+
+.kb-cta-dark .kb-eyebrow,
+.kb-cta-dark .eyebrow-text {
+  color: var(--color-king-accent-light);
 }

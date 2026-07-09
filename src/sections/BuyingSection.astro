@@ -51,7 +51,7 @@ const channels = contactChannels;
       {steps.map((step, i) => (
         <article
           class:list={[
-            'buying-step group relative rounded-[var(--kb-radius-md)] p-6 transition-all duration-500 hover:bg-king-surface/60 md:rounded-none md:bg-transparent md:p-0',
+            'buying-step group relative rounded-[var(--kb-radius-md)] p-6 transition-all duration-[var(--kb-dur-med)] hover:bg-king-surface/60 md:rounded-none md:bg-transparent md:p-0',
             i < 2 && 'md:border-r md:border-king-border/60',
             i === 0 && 'md:pr-10 lg:pr-14',
             i === 1 && 'md:px-10 lg:px-14',
@@ -60,13 +60,13 @@ const channels = contactChannels;
           data-buying-step
         >
           <div class="relative">
-            <span class="buying-step-num mb-6 inline-flex items-center justify-center rounded-[var(--kb-radius-xs)] border border-king-accent/30 bg-king-surface px-3 py-1.5 font-mono text-[11px] font-semibold text-king-accent shadow-[0_2px_6px_-2px_rgba(138,90,43,0.2),inset_0_1px_0_rgba(255,255,255,0.5)] transition-all duration-300 group-hover:border-king-accent/50 group-hover:shadow-[0_4px_12px_-3px_rgba(138,90,43,0.3),inset_0_1px_0_rgba(255,255,255,0.6)]">
+            <span class="buying-step-num mb-6 inline-flex items-center justify-center kb-rounded-sm border border-king-accent/30 bg-king-surface px-3 py-1.5 font-mono eyebrow-text text-king-accent shadow-[var(--kb-shadow-accent-soft),var(--kb-shadow-inset-soft)] transition-all duration-[var(--kb-dur-fast)] group-hover:border-king-accent/50">
               {step.num}
             </span>
-            <h3 class="mb-3 text-[1.4rem] font-normal leading-[1.05] tracking-[var(--kb-title-tracking)] text-king-text md:text-[1.65rem]">
+            <h3 class="mb-3 text-[1.4rem] leading-[1.05] tracking-[var(--kb-title-tracking)] text-king-text md:text-[1.65rem]">
               {step.title}
             </h3>
-            <p class="text-[14px] leading-[1.75] text-king-muted md:text-[15px]">
+            <p class="text-[var(--kb-text-xs)] leading-[1.75] text-king-muted md:text-[15px]">
               {step.desc}
             </p>
           </div>
@@ -84,7 +84,7 @@ const channels = contactChannels;
           size="md"
         >
           {ch.label}
-          <Icon name="arrow-right" class="h-3 w-3 transition-transform duration-300 group-hover:translate-x-0.5" />
+          <Icon name="arrow-right" class="h-3 w-3 transition-transform duration-[var(--kb-dur-fast)] group-hover:translate-x-0.5" />
         </Button>
       ))}
     </div>

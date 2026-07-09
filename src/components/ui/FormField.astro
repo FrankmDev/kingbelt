@@ -1,0 +1,51 @@
+---
+import Icon from './Icon.astro';
+
+interface Props {
+  label: string;
+  for?: string;
+  help?: string;
+  error?: string;
+  required?: boolean;
+  icon?: string;
+  class?: string;
+}
+
+const { label, for: forId, help, error, required = false, icon, class: className } = Astro.props;
+---
+
+<div class:list={['form-field group space-y-2 rounded-[var(--kb-radius-sm)]', className]}>
+  <label class="kb-label" for={forId}>
+    {icon && <Icon name={icon} class="w-3 h-3 text-king-accent" />}
+    <span>{label}</span>
+    {required && <span class="text-king-accent text-[var(--kb-text-eyebrow)] font-medium" aria-hidden="true">*</span>}
+  </label>
+
+  <div class="relative">
+    <slot />
+  </div>
+
+  {help && !error && (
+    <p id={forId ? `${forId}-help` : undefined} class="text-[var(--kb-text-meta)] text-king-muted font-normal mt-1.5 leading-relaxed flex items-center gap-1.5">
+      <span class="w-1 h-1 rounded-full bg-king-accent/50" aria-hidden="true"></span>
+      {help}
+    </p>
+  )}
+
+  {error && (
+    <p id={forId ? `${forId}-error` : undefined} class="text-[var(--kb-text-meta)] text-red-700 font-medium mt-1.5 flex items-center gap-1.5" role="alert" aria-live="polite">
+      <Icon name="x" class="w-3 h-3 shrink-0" />
+      {error}
+    </p>
+  )}
+</div>
+
+<style>
+  .form-field {
+    transition: background-color var(--kb-dur-fast) var(--kb-ease-out);
+  }
+
+  .form-field:focus-within .kb-label {
+    color: var(--color-king-accent);
+  }
+</style>

@@ -1,0 +1,97 @@
+---
+import BlogCard from '../ui/BlogCard.astro';
+import ArticleMeta from '../ui/ArticleMeta.astro';
+import Panel from '../ui/Panel.astro';
+---
+
+<div class="space-y-6">
+  <Panel padding="md">
+    <span class="kb-code-label block text-king-accent/50 mb-3">ArticleMeta.astro</span>
+    <ArticleMeta category="Cuidado" date="12 Jun 2026" readingTime="4 min" />
+    <ArticleMeta category="Materiales" date="5 Jun 2026" readingTime="3 min" author="KingBelt" class="mt-2" />
+  </Panel>
+
+  <Panel padding="md">
+    <span class="kb-code-label block text-king-accent/50 mb-3">BlogCard — una sola variante, imagen horizontal 16/9</span>
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <BlogCard
+        title="El arte del cuero vegetal: tradición que perdura"
+        excerpt="Un proceso lento, sin cromo, que respeta la fibra del cuero y le da carácter único con el tiempo."
+        href="/style-museum/#blogcard"
+        image="/image.jpg"
+        imageAlt="Detalle de cuero vegetal envejecido"
+        category="Materiales"
+        date="15 Jun 2026"
+        readingTime="6 min"
+      />
+      <BlogCard
+        title="Cómo cuidar tu cinturón de cuero para que dure años"
+        excerpt="Guía básica de mantenimiento para piezas de cuero que se usan a diario sobre la moto."
+        href="/style-museum/#blogcard"
+        image="/image.jpg"
+        imageAlt="Detalle de cuero marrón para artículo de mantenimiento"
+        category="Cuidado"
+        date="12 Jun 2026"
+        readingTime="4 min"
+      />
+      <BlogCard
+        title="El peso de una buena hebilla: por qué importa"
+        excerpt="No todas las hebillas son iguales. Te explicamos qué buscar en un cierre de calidad."
+        href="/style-museum/#blogcard"
+        image="/image.jpg"
+        imageAlt="Motocicleta como referencia visual para hebillas de ruta"
+        category="Materiales"
+        date="5 Jun 2026"
+        readingTime="3 min"
+      />
+      <BlogCard
+        title="Tres formas de llevar un cinturón de cuero"
+        href="/style-museum/#blogcard"
+        image="/image.jpg"
+        imageAlt="Estilo con cinturón de cuero"
+        category="Estilo"
+        date="28 May 2026"
+        readingTime="5 min"
+      />
+      <BlogCard
+        title="Cómo elegir el ancho de cinturón adecuado"
+        href="/style-museum/#blogcard"
+        image="/image.jpg"
+        imageAlt="Textura de cuero para guía de tallas"
+        category="Guía"
+        date="20 May 2026"
+        readingTime="2 min"
+      />
+      <BlogCard
+        title="Historia del cinturón en la cultura motera"
+        href="/style-museum/#blogcard"
+        image="/image.jpg"
+        imageAlt="Motocicleta vintage"
+        category="Historia"
+        date="10 May 2026"
+        readingTime="7 min"
+      />
+    </div>
+  </Panel>
+
+  <Panel padding="md">
+    <span class="kb-code-label block text-king-accent/50 mb-3">Sin imagen — categoría en metadatos</span>
+    <div class="max-w-md">
+      <BlogCard
+        title="Bitácora de cuero y ruta"
+        excerpt="Reflexiones sobre materiales, mantenimiento y oficio alrededor del cuero para la ruta."
+        href="/style-museum/#blogcard"
+        category="Blog"
+        date="1 Jul 2026"
+        readingTime="8 min"
+      />
+    </div>
+  </Panel>
+
+  <Panel padding="sm">
+    <span class="kb-code-label text-king-accent/50 block mb-1">BlogCard props</span>
+    <span class="text-[var(--kb-text-eyebrow)] font-mono text-king-text/80">title, excerpt?, href, image?, imageAlt?, imageWidth?, imageHeight?, category?, date?, readingTime?</span>
+    <span class="kb-code-label text-king-accent/50 block mt-2 mb-1">ArticleMeta props</span>
+    <span class="text-[var(--kb-text-eyebrow)] font-mono text-king-text/80">category?, date?, readingTime?, author?</span>
+  </Panel>
+</div>

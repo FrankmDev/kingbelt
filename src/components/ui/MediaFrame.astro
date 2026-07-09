@@ -1,0 +1,363 @@
+---
+interface Props {
+  src?: string;
+  alt?: string;
+  ratio?: '16/9' | '21/9' | '4/3' | '3/2' | '1/1';
+  caption?: string;
+  label?: string;
+  width?: number;
+  height?: number;
+  loading?: 'lazy' | 'eager';
+  fetchpriority?: 'high' | 'low' | 'auto';
+  variant?: 'hero' | 'gallery';
+  captionNumber?: string;
+  images?: Array<{ src: string; alt: string }>;
+  class?: string;
+}
+
+const {
+  src,
+  alt,
+  ratio = '16/9',
+  caption,
+  label,
+  width = 1600,
+  height = 900,
+  loading = 'lazy',
+  fetchpriority,
+  variant = 'hero',
+  captionNumber,
+  images,
+  class: className,
+} = Astro.props;
+
+const isHero = variant === 'hero';
+const isGallery = variant === 'gallery';
+
+const galleryImages = isGallery
+  ? images && images.length > 0
+    ? images
+    : [{ src: src || '', alt: alt || '' }]
+  : [];
+
+const showJunction = isGallery && galleryImages.length === 2;
+
+const aspectClass = {
+  '16/9': 'media-frame--ratio-16-9',
+  '21/9': 'media-frame--ratio-21-9',
+  '4/3': 'media-frame--ratio-4-3',
+  '3/2': 'media-frame--ratio-3-2',
+  '1/1': 'media-frame--ratio-1-1',
+}[ratio];
+---
+
+<figure
+  class:list={[
+    'media-frame',
+    isHero && 'media-frame--hero',
+    isGallery && 'media-frame--gallery',
+    isHero && aspectClass,
+    className,
+  ]}
+>
+  {isGallery ? (
+    <div class="media-frame__grid">
+      {galleryImages.map((img) => (
+        <div class="media-frame__cell">
+          <img
+            src={img.src}
+            alt={img.alt}
+            width={width}
+            height={height}
+            loading="lazy"
+            decoding="async"
+            class="media-frame__image"
+          />
+          <span class="media-frame__cell-shim" aria-hidden="true"></span>
+        </div>
+      ))}
+      {showJunction && <span class="media-frame__junction" aria-hidden="true"></span>}
+    </div>
+  ) : (
+    <div class="media-frame__stage">
+      <img
+        src={src || ''}
+        alt={alt || ''}
+        width={width}
+        height={height}
+        loading={loading}
+        fetchpriority={fetchpriority}
+        decoding="async"
+        class="media-frame__image"
+      />
+      <span class="media-frame__vignette" aria-hidden="true"></span>
+      <span class="media-frame__gate" aria-hidden="true"></span>
+
+      {label && (
+        <div class="media-frame__label">
+          <span class="media-frame__label-tag">
+            <span class="media-frame__label-dot" aria-hidden="true"></span>
+            {label}
+          </span>
+        </div>
+      )}
+
+      {caption && (
+        <figcaption class="media-frame__caption">
+          {captionNumber && (
+            <span class="media-frame__caption-num">{captionNumber}</span>
+          )}
+          <span>{caption}</span>
+        </figcaption>
+      )}
+    </div>
+  )}
+</figure>
+
+<style>
+  .media-frame {
+    position: relative;
+    margin: 0;
+    border-radius: var(--kb-radius-xl);
+    overflow: hidden;
+    background: var(--color-king-surface);
+    border: 1px solid var(--kb-stroke-dark);
+    box-shadow: var(--kb-shadow-sm);
+    transition:
+      transform var(--kb-dur-med) var(--kb-ease-out),
+      border-color var(--kb-dur-med) var(--kb-ease-out),
+      box-shadow var(--kb-dur-med) var(--kb-ease-out);
+    content-visibility: auto;
+  }
+
+  .media-frame--hero {
+    aspect-ratio: 16 / 9;
+  }
+
+  .media-frame--ratio-21-9 {
+    aspect-ratio: 21 / 9;
+  }
+
+  .media-frame--ratio-4-3 {
+    aspect-ratio: 4 / 3;
+  }
+
+  .media-frame--ratio-3-2 {
+    aspect-ratio: 3 / 2;
+  }
+
+  .media-frame--ratio-1-1 {
+    aspect-ratio: 1 / 1;
+  }
+
+  .media-frame--gallery {
+    aspect-ratio: auto;
+  }
+
+  .media-frame__stage,
+  .media-frame__cell {
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+  }
+
+  .media-frame__stage {
+    border-radius: inherit;
+  }
+
+  .media-frame__grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--kb-space-3);
+    height: 100%;
+  }
+
+  .media-frame__cell {
+    aspect-ratio: 16 / 9;
+    border-radius: var(--kb-radius-md);
+    background: var(--color-king-secondary);
+  }
+
+  /* Last odd image spans full width */
+  .media-frame__cell:nth-child(odd):last-child {
+    grid-column: 1 / -1;
+  }
+
+  .media-frame__image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scale(1.001);
+    transition:
+      transform 720ms var(--kb-ease-soft),
+      filter 720ms var(--kb-ease-soft);
+    will-change: transform, filter;
+  }
+
+  .media-frame__cell-shim {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+    z-index: 2;
+  }
+
+  .media-frame__vignette {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(
+      to top,
+      rgba(11, 10, 8, 0.52) 0%,
+      rgba(11, 10, 8, 0.18) 45%,
+      transparent 70%
+    );
+    opacity: 0.7;
+    transition: opacity var(--kb-dur-med) var(--kb-ease-out);
+    z-index: 1;
+  }
+
+  .media-frame__gate {
+    position: absolute;
+    inset: var(--kb-space-3);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: calc(var(--kb-radius-lg) - var(--kb-space-1));
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity var(--kb-dur-med) var(--kb-ease-out);
+    z-index: 3;
+  }
+
+  .media-frame__label {
+    position: absolute;
+    top: var(--kb-space-4);
+    left: var(--kb-space-4);
+    z-index: 4;
+  }
+
+  .media-frame__label-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--kb-space-2);
+    padding: 0.4375rem 0.75rem;
+    border-radius: var(--kb-radius-xs);
+    font-family: var(--font-sans);
+    font-size: var(--kb-micro-size);
+    font-weight: var(--kb-label-weight);
+    letter-spacing: var(--kb-micro-tracking);
+    text-transform: uppercase;
+    line-height: 1;
+    color: rgba(255, 255, 255, 0.92);
+    background: rgba(11, 10, 8, 0.55);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--kb-stroke-soft);
+    box-shadow: var(--kb-shadow-xs);
+  }
+
+  .media-frame__label-dot {
+    width: 0.3125rem;
+    height: 0.3125rem;
+    border-radius: var(--kb-radius-pill);
+    background: var(--color-king-accent);
+    box-shadow: 0 0 0 2px rgba(138, 90, 43, 0.22);
+    flex: 0 0 auto;
+  }
+
+  .media-frame__caption {
+    position: absolute;
+    left: var(--kb-space-5);
+    bottom: var(--kb-space-5);
+    z-index: 4;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--kb-space-3);
+    max-width: calc(100% - var(--kb-space-10));
+    padding: 0.75rem 1rem;
+    border-radius: var(--kb-radius-sm);
+    font-family: var(--font-sans);
+    font-size: var(--kb-text-sm);
+    font-weight: var(--kb-w-medium);
+    line-height: 1.35;
+    color: rgba(255, 255, 255, 0.9);
+    background: rgba(11, 10, 8, 0.5);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--kb-stroke-soft);
+  }
+
+  .media-frame__caption-num {
+    font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+    font-size: var(--kb-text-meta);
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    color: var(--color-king-accent);
+    flex: 0 0 auto;
+    line-height: 1;
+  }
+
+  /* Junction detail for 2-image gallery */
+  .media-frame__junction {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: var(--kb-radius-pill);
+    background: var(--color-king-brass);
+    border: 2px solid var(--color-king-surface);
+    box-shadow:
+      0 0 0 1px rgba(11, 10, 8, 0.12),
+      0 2px 6px rgba(11, 10, 8, 0.18);
+    z-index: 5;
+    pointer-events: none;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .media-frame:hover {
+      transform: translateY(-4px);
+      border-color: rgba(138, 90, 43, 0.22);
+      box-shadow: var(--kb-shadow-float);
+    }
+
+    .media-frame:hover .media-frame__image {
+      transform: scale(1.045);
+      filter: brightness(1.04) saturate(1.06);
+    }
+
+    .media-frame:hover .media-frame__vignette {
+      opacity: 0.85;
+    }
+
+    .media-frame:hover .media-frame__gate {
+      opacity: 1;
+    }
+
+    .media-frame:hover .media-frame__label-tag {
+      border-color: rgba(183, 138, 79, 0.35);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .media-frame,
+    .media-frame__image,
+    .media-frame__vignette,
+    .media-frame__gate,
+    .media-frame__label-tag {
+      transition: none;
+    }
+
+    .media-frame:hover {
+      transform: none;
+    }
+  }
+
+  .media-frame:focus-visible {
+    outline: 2px solid rgba(138, 90, 43, 0.5);
+    outline-offset: 3px;
+  }
+</style>

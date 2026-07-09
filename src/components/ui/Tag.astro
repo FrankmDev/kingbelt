@@ -1,19 +1,29 @@
 ---
+import PulseDot from './PulseDot.astro';
+
 interface Props {
-  variant?: 'default' | 'accent' | 'brass';
+  variant?: 'default' | 'accent' | 'brass' | 'filled' | 'steel';
+  size?: 'sm' | 'md';
+  dot?: boolean;
   class?: string;
 }
 
-const { variant = 'default', class: className } = Astro.props;
+const { variant = 'default', size = 'md', dot = false, class: className } = Astro.props;
+
+const sizeClass = size === 'sm' ? 'text-[0.5rem] leading-none tracking-[0.18em] px-2 py-0.5' : '';
 ---
 
 <span
   class:list={[
     'kb-tag',
-    variant === 'accent' ? 'kb-tag-accent' : '',
-    variant === 'brass' ? 'kb-tag-brass' : '',
+    variant === 'accent' && 'kb-tag-accent',
+    variant === 'brass' && 'kb-tag-brass',
+    variant === 'filled' && 'kb-tag-filled',
+    variant === 'steel' && 'kb-tag-steel',
+    sizeClass,
     className,
   ]}
 >
+  {dot && <PulseDot size="sm" class="mr-1.5" />}
   <slot />
 </span>

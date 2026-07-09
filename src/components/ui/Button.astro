@@ -4,10 +4,12 @@ interface Props {
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'surface' | 'surfaceOutline';
   size?: 'sm' | 'md' | 'lg';
   class?: string;
+  id?: string;
   target?: string;
   rel?: string;
   type?: 'button' | 'submit' | 'reset';
   disabled?: boolean;
+  loading?: boolean;
   'aria-label'?: string;
 }
 
@@ -20,61 +22,55 @@ const {
   rel,
   type = 'button',
   disabled = false,
+  loading = false,
   'aria-label': ariaLabel,
 } = Astro.props;
 
-const baseStyles =
-  'kb-btn group relative inline-flex items-center justify-center font-medium uppercase rounded-[var(--kb-btn-radius)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] focus:outline-none focus-visible:ring-2 focus-visible:ring-king-accent/60 focus-visible:ring-offset-2 focus-visible:ring-offset-king-bg active:scale-[0.97]';
-
-const sizes = {
-  sm: 'px-3.5 py-1.5 text-[9px] tracking-[0.12em]',
-  md: 'px-5 py-2 text-[10px] tracking-[0.14em]',
-  lg: 'px-6 py-2.5 text-[11px] tracking-[0.14em]',
+const btnVariants: Record<NonNullable<Props['variant']>, string> = {
+  primary: 'kb-btn-primary',
+  secondary: 'kb-btn-secondary',
+  outline: 'kb-btn-outline',
+  ghost: 'kb-btn-ghost',
+  surface: 'kb-btn-surface',
+  surfaceOutline: 'kb-btn-surface-outline',
 };
 
-const variants = {
-  primary:
-    'bg-king-rubber text-king-bone border border-king-rubber/30 shadow-[0_2px_8px_-2px_rgba(32,32,30,0.4),inset_0_1px_0_rgba(255,255,255,0.08)] hover:bg-king-asphalt hover:border-king-asphalt hover:shadow-[0_4px_16px_-3px_rgba(32,32,30,0.5),inset_0_1px_0_rgba(255,255,255,0.1)] active:shadow-[0_1px_3px_rgba(32,32,30,0.3),inset_0_1px_0_rgba(255,255,255,0.06)]',
-  secondary:
-    'bg-king-accent text-king-surface border border-king-accent-deep/30 shadow-[0_2px_8px_-2px_rgba(138,90,43,0.4),inset_0_1px_0_rgba(255,255,255,0.12)] hover:bg-king-accent-deep hover:shadow-[0_4px_16px_-3px_rgba(138,90,43,0.5),inset_0_1px_0_rgba(255,255,255,0.15)] active:shadow-[0_1px_3px_rgba(138,90,43,0.3),inset_0_1px_0_rgba(255,255,255,0.08)]',
-  outline:
-    'bg-transparent text-king-text border border-king-text/20 hover:bg-king-text hover:text-king-surface hover:border-king-text hover:shadow-[0_4px_14px_-4px_rgba(17,16,14,0.3)] active:shadow-none',
-  ghost:
-    'bg-transparent text-king-text border border-transparent hover:text-king-accent hover:bg-king-accent/[0.04] active:bg-king-accent/[0.08]',
-  surface:
-    'bg-king-surface text-king-text border border-king-border shadow-[0_2px_8px_-3px_rgba(17,16,14,0.2),inset_0_1px_0_rgba(255,255,255,0.6)] hover:bg-king-accent hover:text-king-surface hover:border-king-accent hover:shadow-[0_4px_16px_-4px_rgba(138,90,43,0.4)] active:shadow-[0_1px_3px_rgba(17,16,14,0.15),inset_0_1px_0_rgba(255,255,255,0.3)]',
-  surfaceOutline:
-    'bg-transparent text-king-surface border border-king-surface/30 hover:bg-king-surface hover:text-king-text hover:border-king-surface/50 hover:shadow-[0_4px_14px_-4px_rgba(0,0,0,0.3)] active:shadow-none',
+const btnSizes: Record<NonNullable<Props['size']>, string> = {
+  sm: 'kb-btn-sm',
+  md: 'kb-btn-md',
+  lg: 'kb-btn-lg',
 };
 
-const disabledClass = disabled ? 'kb-btn-disabled' : '';
-const classes = `${baseStyles} ${sizes[size]} ${variants[variant]} ${disabledClass} ${className}`;
+const classes = [
+  'kb-btn',
+  btnSizes[size],
+  btnVariants[variant],
+  disabled && 'kb-btn-disabled',
+  loading && 'kb-btn-loading',
+  className,
+]
+  .filter(Boolean)
+  .join(' ');
+
 const Element = href ? 'a' : 'button';
+const isInactive = disabled || loading;
+const safeRel = target === '_blank' && !rel ? 'noopener noreferrer' : rel;
+
 const elementProps = href
-  ? { href: disabled ? undefined : href, target, rel, 'aria-disabled': disabled || undefined }
-  : { type, disabled };
+  ? {
+      href: isInactive ? undefined : href,
+      target,
+      rel: safeRel,
+      'aria-disabled': isInactive || undefined,
+    }
+  : {
+      type,
+      disabled: isInactive,
+    };
 ---
 
 <Element class={classes} {...elementProps} aria-label={ariaLabel}>
-  <span class="kb-btn-text relative z-10 flex items-center gap-2">
-    <slot />
-  </span>
+  <span class="kb-btn-text"><slot /></span>
+  {loading && <span class="kb-btn-spinner" aria-hidden="true"></span>}
+  <span class="kb-btn-rivet" aria-hidden="true"></span>
 </Element>
-
-<style>
-  .kb-btn {
-    will-change: transform, box-shadow;
-  }
-
-  .kb-btn-text {
-    transition: transform 300ms cubic-bezier(0.22, 1, 0.36, 1);
-  }
-
-  .kb-btn:hover .kb-btn-text {
-    transform: translateX(0.5px);
-  }
-
-  .kb-btn:active .kb-btn-text {
-    transform: translateX(0);
-  }
-</style>

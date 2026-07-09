@@ -1,0 +1,199 @@
+---
+import Button from './Button.astro';
+import Eyebrow from './Eyebrow.astro';
+
+interface Props {
+  title: string;
+  description?: string;
+  buttonLabel: string;
+  buttonHref: string;
+  buttonVariant?: 'primary' | 'secondary' | 'outline' | 'surfaceOutline';
+  eyebrow?: string;
+  backgroundImage: string;
+  backgroundAlt?: string;
+  backgroundWidth?: number;
+  backgroundHeight?: number;
+  backgroundPosition?: string;
+  titleTag?: 'h2' | 'h3';
+  class?: string;
+}
+
+const {
+  title,
+  description,
+  buttonLabel,
+  buttonHref,
+  buttonVariant = 'secondary',
+  eyebrow,
+  backgroundImage,
+  backgroundAlt = '',
+  backgroundWidth = 1600,
+  backgroundHeight = 900,
+  backgroundPosition = 'center',
+  titleTag: TitleTag = 'h2',
+  class: className,
+} = Astro.props;
+---
+
+<div class:list={['cta-box kb-cta-dark', className]}>
+  <img
+    src={backgroundImage}
+    alt={backgroundAlt}
+    width={backgroundWidth}
+    height={backgroundHeight}
+    class="cta-box__bg-image"
+    style={`object-position: ${backgroundPosition}`}
+    loading="lazy"
+    decoding="async"
+    aria-hidden="true"
+  />
+
+  <div class="cta-box__overlay" aria-hidden="true"></div>
+  <div class="cta-box__texture kb-texture-asphalt" aria-hidden="true"></div>
+
+  <div class="cta-box__inner">
+    <div class="cta-box__copy">
+      {eyebrow && (
+        <Eyebrow class="cta-box__eyebrow">
+          {eyebrow}
+        </Eyebrow>
+      )}
+
+      <TitleTag class="cta-box__title">
+        {title}
+      </TitleTag>
+
+      {description && (
+        <p class="cta-box__desc">
+          {description}
+        </p>
+      )}
+    </div>
+
+    <div class="cta-box__action">
+      <Button href={buttonHref} variant={buttonVariant} size="md">
+        {buttonLabel}
+      </Button>
+    </div>
+  </div>
+</div>
+
+<style>
+  .cta-box {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    min-height: clamp(22rem, 52vw, 36rem);
+    padding: clamp(1.75rem, 4vw, 3rem);
+    border-radius: var(--kb-panel-radius);
+    overflow: hidden;
+    box-shadow: var(--kb-shadow-float-dark);
+    transform: translateZ(0);
+  }
+
+  .cta-box__bg-image {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 0;
+    transform: scale(1);
+    transition: transform var(--kb-dur-slow) var(--kb-ease-out);
+  }
+
+  .cta-box__overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background:
+      linear-gradient(
+        180deg,
+        rgba(13, 13, 12, 0.22) 0%,
+        rgba(13, 13, 12, 0.42) 35%,
+        rgba(13, 13, 12, 0.72) 70%,
+        rgba(13, 13, 12, 0.84) 100%
+      );
+    mix-blend-mode: multiply;
+  }
+
+  .cta-box__texture {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    opacity: 0.55;
+  }
+
+  .cta-box__texture::before {
+    opacity: 0.06;
+  }
+
+  .cta-box__inner {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    flex-direction: column;
+    gap: var(--kb-space-6);
+  }
+
+  .cta-box__copy {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .cta-box__eyebrow {
+    margin-bottom: var(--kb-space-5);
+    color: var(--color-king-bone);
+  }
+
+  .cta-box__title {
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 4.5vw, 3.25rem);
+    font-weight: var(--kb-w-heading-hero);
+    line-height: 1.02;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+    margin: 0 0 var(--kb-space-4);
+    color: rgba(255, 255, 255, 0.97);
+    max-width: 20ch;
+  }
+
+  .cta-box__desc {
+    font-size: var(--kb-text-body-lg);
+    line-height: 1.65;
+    color: rgba(255, 255, 255, 0.82);
+    max-width: 46ch;
+    margin: 0;
+    text-wrap: pretty;
+  }
+
+  .cta-box__action {
+    display: flex;
+    flex-shrink: 0;
+  }
+
+  @media (min-width: 768px) {
+    .cta-box {
+      padding: clamp(2.5rem, 5vw, 4rem);
+    }
+
+    .cta-box__inner {
+      flex-direction: row;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: var(--kb-space-8);
+    }
+
+    .cta-box__action {
+      justify-content: flex-end;
+    }
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .cta-box:hover .cta-box__bg-image {
+      transform: scale(1.04);
+    }
+  }
+</style>

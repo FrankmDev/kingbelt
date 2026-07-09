@@ -1,0 +1,32 @@
+---
+import FeatureCard from '../ui/FeatureCard.astro';
+import FeatureGrid from '../ui/FeatureGrid.astro';
+import Panel from '../ui/Panel.astro';
+---
+
+<div class="space-y-6">
+  <Panel padding="md">
+    <span class="kb-code-label block text-king-accent/50 mb-3">Con numeral folio — reemplaza iconos genéricos SaaS</span>
+    <FeatureGrid columns={3}>
+      <FeatureCard number="01" eyebrow="Material" title="Cuero seleccionado" description="Grosor y cuerpo que se notan al tacto. Diseñado para la ruta." />
+      <FeatureCard number="02" eyebrow="Hardware" title="Hebilla maciza" description="Metal sólido, sin plástico. El peso justo para cerrar con confianza." variant="steel" />
+      <FeatureCard number="03" eyebrow="Origen" title="Hecho en España" description="Producción próxima y controlada. Pieza a pieza, sin stock ciego." />
+    </FeatureGrid>
+  </Panel>
+
+  <Panel padding="md">
+    <span class="kb-code-label block text-king-accent/50 mb-3">Fallback con icono — si se necesita iconografía custom</span>
+    <FeatureGrid columns={3}>
+      <FeatureCard icon="shield-check" eyebrow="Protección" title="Garantía de por vida" description="Cubrimos defectos de fabricación sin límite de tiempo." />
+      <FeatureCard icon="hammer" eyebrow="Proceso" title="Curtido vegetal" description="Sin cromo, sin atajos. Proceso lento que respeta la fibra." variant="steel" />
+      <FeatureCard icon="ruler" eyebrow="Medida" title="Talla exacta" description="Cinturón cortado a medida. Sin agujeros genéricos." />
+    </FeatureGrid>
+  </Panel>
+
+  <Panel padding="sm">
+    <span class="kb-code-label text-king-accent/50 block mb-1">FeatureCard props</span>
+    <span class="text-[var(--kb-text-eyebrow)] font-mono text-king-text/80">eyebrow, title, description, icon, number, href, variant (default|steel)</span>
+    <span class="kb-code-label text-king-accent/50 block mt-2 mb-1">FeatureGrid props</span>
+    <span class="text-[var(--kb-text-eyebrow)] font-mono text-king-text/80">columns (2|3|4), gap (sm|md|lg)</span>
+  </Panel>
+</div>

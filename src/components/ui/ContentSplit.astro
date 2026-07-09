@@ -1,0 +1,392 @@
+---
+interface Props {
+  title?: string;
+  marker?: string;
+  folio?: string;
+  reverse?: boolean;
+  ratio?: '50-50' | '40-60' | '60-40' | '70-30';
+  gap?: 'sm' | 'md' | 'lg' | 'xl';
+  align?: 'start' | 'center' | 'end';
+  mediaAlign?: 'start' | 'center' | 'end';
+  class?: string;
+}
+
+const {
+  title,
+  marker,
+  folio,
+  reverse = false,
+  ratio = '60-40',
+  gap = 'lg',
+  align = 'start',
+  mediaAlign = 'center',
+  class: className,
+} = Astro.props;
+
+const hasTitle = Boolean(title || Astro.slots.has('title'));
+const hasCaption = Astro.slots.has('caption');
+const hasActions = Astro.slots.has('actions');
+
+const ratioMap = {
+  '50-50': ['1fr', '1fr'],
+  '40-60': ['2fr', '3fr'],
+  '60-40': ['3fr', '2fr'],
+  '70-30': ['7fr', '3fr'],
+} as const;
+
+const [textFr, mediaFr] = ratioMap[ratio];
+const gridStyle = `--cs-text-fr:${textFr}; --cs-media-fr:${mediaFr};`;
+
+const gapClass = `content-split--gap-${gap}`;
+const alignClass = `content-split--align-${align}`;
+const mediaAlignClass = `content-split__media--${mediaAlign}`;
+---
+
+<div
+  class:list={[
+    'content-split',
+    gapClass,
+    alignClass,
+    reverse && 'content-split--reverse',
+    !hasTitle && 'content-split--no-title',
+    className,
+  ]}
+  style={gridStyle}
+  data-content-split
+>
+  {hasTitle && (
+    <div class="content-split__title-block">
+      {marker && (
+        <div class="content-split__marker">
+          <span class="content-split__marker-dot" aria-hidden="true"></span>
+          <span class="content-split__marker-label kb-eyebrow">{marker}</span>
+          <span class="content-split__marker-rule" aria-hidden="true"></span>
+        </div>
+      )}
+      <div class="content-split__title-row">
+        <h2 class="content-split__title">
+          {Astro.slots.has('title') ? <slot name="title" /> : title}
+        </h2>
+        {folio && (
+          <span class="content-split__folio kb-folio" aria-hidden="true">{folio}</span>
+        )}
+      </div>
+    </div>
+  )}
+
+  <div class="content-split__body-block">
+    <slot name="text" />
+    {hasActions && (
+      <div class="content-split__actions">
+        <slot name="actions" />
+      </div>
+    )}
+  </div>
+
+  <div class="content-split__divider" aria-hidden="true">
+    <span class="content-split__rivet"></span>
+  </div>
+
+  <div class:list={['content-split__media', mediaAlignClass]}>
+    <slot name="media" />
+    {hasCaption && (
+      <div class="content-split__caption">
+        <slot name="caption" />
+      </div>
+    )}
+  </div>
+</div>
+
+<script>
+  const splits = document.querySelectorAll('[data-content-split]');
+
+  if (splits.length && 'IntersectionObserver' in window) {
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-visible');
+            io.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.12, rootMargin: '0px 0px -40px 0px' }
+    );
+
+    splits.forEach((el) => io.observe(el));
+  } else {
+    splits.forEach((el) => el.classList.add('is-visible'));
+  }
+</script>
+
+<style>
+  .content-split {
+    --cs-reveal-ease: cubic-bezier(0.16, 1, 0.3, 1);
+    --cs-reveal-duration: 780ms;
+
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+    grid-template-areas:
+      "title"
+      "media"
+      "body";
+    gap: var(--kb-space-gap) 0;
+  }
+
+  .content-split--no-title {
+    grid-template-rows: auto auto;
+    grid-template-areas:
+      "media"
+      "body";
+  }
+
+  .content-split--gap-sm { gap: var(--kb-space-gap) 0; }
+  .content-split--gap-md { gap: clamp(1.5rem, 2.5vw, 2.5rem) 0; }
+  .content-split--gap-lg { gap: var(--kb-space-gap-lg) 0; }
+  .content-split--gap-xl { gap: clamp(2.5rem, 4vw, 4rem) 0; }
+
+  .content-split--align-start { align-items: start; }
+  .content-split--align-center { align-items: center; }
+  .content-split--align-end { align-items: end; }
+
+  /* Title pane --------------------------------------------------------- */
+  .content-split__title-block {
+    grid-area: title;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(0.65rem, 1.1vw, 0.9rem);
+  }
+
+  .content-split__marker {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .content-split__marker-dot {
+    width: 0.35rem;
+    height: 0.35rem;
+    border-radius: var(--kb-radius-pill);
+    background: var(--color-king-brass);
+    box-shadow: 0 0 0 2px rgba(142, 120, 56, 0.18);
+    flex: 0 0 auto;
+  }
+
+  .content-split__marker-label {
+    color: var(--color-king-muted);
+    flex: 0 0 auto;
+  }
+
+  .content-split__marker-rule {
+    flex: 1 1 auto;
+    height: 1px;
+    min-width: 2.5rem;
+    background-image: repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 6px,
+      var(--kb-stroke-steel) 6px,
+      var(--kb-stroke-steel) 12px
+    );
+    background-size: 12px 1px;
+    background-repeat: repeat-x;
+  }
+
+  .content-split__title-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--kb-space-4);
+  }
+
+  .content-split__title {
+    margin: 0;
+    max-width: 22ch;
+    font-family: var(--font-display);
+    font-size: clamp(1.85rem, 3.8vw, 2.9rem);
+    font-weight: 600;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    color: var(--color-king-text);
+    text-wrap: balance;
+  }
+
+  .content-split__title :global(em) {
+    color: var(--color-king-accent);
+    font-style: italic;
+  }
+
+  .content-split__folio {
+    line-height: 0.85;
+    color: var(--kb-stroke-accent);
+    opacity: 0.55;
+  }
+
+  /* Body pane ---------------------------------------------------------- */
+  .content-split__body-block {
+    grid-area: body;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(1.25rem, 2.2vw, 1.75rem);
+  }
+
+  .content-split__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--kb-space-3);
+  }
+
+  /* Divider ------------------------------------------------------------ */
+  .content-split__divider {
+    display: none;
+  }
+
+  /* Media pane --------------------------------------------------------- */
+  .content-split__media {
+    grid-area: media;
+    display: flex;
+    flex-direction: column;
+    gap: var(--kb-space-3);
+    min-width: 0;
+  }
+
+  .content-split__media > :global(img) {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    border-radius: var(--kb-radius-xl);
+  }
+
+  .content-split__caption {
+    font-family: var(--font-sans);
+    font-size: var(--kb-text-body);
+    line-height: 1.5;
+    color: var(--color-king-muted);
+  }
+
+  .content-split__media--start { align-self: start; }
+  .content-split__media--center { align-self: center; }
+  .content-split__media--end { align-self: end; }
+
+  /* Desktop layout ----------------------------------------------------- */
+  @media (min-width: 1024px) {
+    .content-split {
+      grid-template-columns: var(--cs-text-fr) 1px var(--cs-media-fr);
+      grid-template-rows: auto 1fr;
+      grid-template-areas:
+        "title divider media"
+        "body  divider media";
+      column-gap: var(--kb-space-gap-lg);
+      row-gap: var(--kb-space-4);
+      align-items: start;
+    }
+
+    .content-split--no-title {
+      grid-template-rows: 1fr;
+      grid-template-areas:
+        "body divider media";
+    }
+
+    .content-split--reverse {
+      grid-template-columns: var(--cs-media-fr) 1px var(--cs-text-fr);
+      grid-template-areas:
+        "media divider title"
+        "media divider body";
+    }
+
+    .content-split--reverse.content-split--no-title {
+      grid-template-areas:
+        "media divider body";
+    }
+
+    .content-split__divider {
+      display: flex;
+      grid-area: divider;
+      width: 1px;
+      background: var(--kb-stroke-steel);
+      align-self: stretch;
+      justify-self: center;
+      position: relative;
+    }
+
+    .content-split__rivet {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0.5rem;
+      height: 0.5rem;
+      border-radius: var(--kb-radius-pill);
+      background: var(--color-king-brass);
+      border: 2px solid var(--color-king-surface);
+      box-shadow: 0 0 0 1px var(--kb-stroke-steel);
+      transform: translate(-50%, -50%);
+    }
+  }
+
+  /* Reveal animations -------------------------------------------------- */
+  @media (prefers-reduced-motion: no-preference) {
+    .content-split__title-block,
+    .content-split__body-block,
+    .content-split__media {
+      opacity: 0;
+      transition:
+        opacity var(--cs-reveal-duration) var(--cs-reveal-ease),
+        transform var(--cs-reveal-duration) var(--cs-reveal-ease);
+    }
+
+    .content-split__title-block {
+      transform: translateX(-1.25rem);
+      transition-delay: 0ms;
+    }
+
+    .content-split__body-block {
+      transform: translateY(1rem);
+      transition-delay: 100ms;
+    }
+
+    .content-split__media {
+      transform: scale(1.035) translateX(1rem);
+      transition-delay: 180ms;
+    }
+
+    .content-split--reverse .content-split__title-block {
+      transform: translateX(1.25rem);
+    }
+
+    .content-split--reverse .content-split__media {
+      transform: scale(1.035) translateX(-1rem);
+    }
+
+    .content-split__divider {
+      transform: scaleY(0);
+      transform-origin: center top;
+      transition: transform 900ms var(--cs-reveal-ease) 80ms;
+    }
+
+    .content-split__rivet {
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0.6);
+      transition:
+        opacity 420ms ease 520ms,
+        transform 420ms var(--cs-reveal-ease) 520ms;
+    }
+
+    .content-split.is-visible .content-split__title-block,
+    .content-split.is-visible .content-split__body-block,
+    .content-split.is-visible .content-split__media {
+      opacity: 1;
+      transform: none;
+    }
+
+    .content-split.is-visible .content-split__divider {
+      transform: scaleY(1);
+    }
+
+    .content-split.is-visible .content-split__rivet {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+  }
+</style>

@@ -1,0 +1,151 @@
+---
+import type { FAQItem } from '../../data/contact';
+
+interface Props {
+  items: FAQItem[];
+  tone?: 'dark' | 'light';
+  class?: string;
+}
+
+const { items, tone = 'dark', class: className } = Astro.props;
+---
+
+<div
+  class:list={['faq-group relative', className]}
+  data-faq-tone={tone}
+>
+  {items.map((item, i) => {
+    const idx = String(i + 1).padStart(2, '0');
+    return (
+      <details
+        class="faq-item group border-t border-faq-border"
+        name="faq"
+      >
+        <summary
+          class="faq-summary flex w-full cursor-pointer items-start gap-4 py-5 text-left md:py-6 transition-colors duration-[var(--kb-dur-med)] ease-[var(--kb-ease-out)] hover:text-king-accent focus-visible:outline-none focus-visible:text-king-accent"
+        >
+          <span
+            class="faq-num shrink-0 font-mono text-[var(--kb-label-size)] font-semibold tracking-[0.12em] pt-[0.15em] text-king-accent"
+            aria-hidden="true"
+          >
+            {idx}
+          </span>
+
+          <span class="faq-q flex-1 font-display text-[var(--kb-text-h5)] font-medium leading-snug md:text-[var(--kb-text-h4)]">
+            {item.question}
+          </span>
+
+          <span class="faq-icon-wrap relative mt-1 shrink-0" aria-hidden="true">
+            <span class="faq-icon-line faq-icon-h block h-0.5 w-[0.72rem] rounded-full bg-current transition-transform duration-[var(--kb-dur-med)] ease-[var(--kb-ease-out)]"></span>
+            <span class="faq-icon-line faq-icon-v absolute left-1/2 top-1/2 block h-0.5 w-[0.72rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-current transition-transform duration-[var(--kb-dur-med)] ease-[var(--kb-ease-out)]"></span>
+          </span>
+        </summary>
+
+        <div class="faq-answer-wrap overflow-hidden transition-[max-height,opacity] duration-[var(--kb-dur-slow)] ease-[var(--kb-ease-out)]">
+          <div class="faq-answer pb-6 md:pb-7">
+            <div class="faq-answer-inner max-w-[56rem] pl-[clamp(2rem,3vw,2.75rem)]">
+              <div class="faq-answer-rule mb-4 h-px w-12 bg-king-accent/20" aria-hidden="true"></div>
+              <p class="faq-answer-text text-[var(--kb-text-body)] leading-[1.8]">
+                {item.answer}
+              </p>
+            </div>
+          </div>
+        </div>
+      </details>
+    );
+  })}
+  {items.length > 0 && <div class="border-b border-faq-border" />}
+</div>
+
+<style>
+  .faq-group[data-faq-tone="dark"] {
+    --faq-text: rgba(255, 255, 255, 0.94);
+    --faq-muted: rgba(255, 255, 255, 0.58);
+    --faq-border: rgba(255, 255, 255, 0.06);
+  }
+
+  .faq-group[data-faq-tone="light"] {
+    --faq-text: var(--color-king-text);
+    --faq-muted: var(--color-king-muted);
+    --faq-border: var(--kb-stroke-dark);
+  }
+
+  .faq-summary {
+    color: var(--faq-text);
+  }
+
+  .faq-answer-text {
+    color: var(--faq-muted);
+    max-width: none;
+  }
+
+  .faq-item {
+    transition: border-color var(--kb-dur-med) var(--kb-ease-out);
+  }
+
+  .faq-item[open] {
+    border-color: var(--color-king-accent);
+  }
+
+  .faq-item[open] + .faq-item {
+    border-color: rgba(138, 90, 43, 0.12);
+  }
+
+  .faq-answer-wrap {
+    max-height: 0;
+    opacity: 0;
+  }
+
+  .faq-item[open] .faq-answer-wrap {
+    max-height: 40rem;
+    opacity: 1;
+  }
+
+  .faq-icon-v {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+
+  .faq-item[open] .faq-icon-v {
+    transform: translate(-50%, -50%) rotate(90deg);
+  }
+
+  .faq-item[open] .faq-icon-h {
+    transform: rotate(180deg);
+  }
+
+  .faq-summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .faq-summary::marker {
+    display: none;
+    content: '';
+  }
+
+  .faq-summary:focus-visible {
+    outline: 2px solid rgba(138, 90, 43, 0.5);
+    outline-offset: 4px;
+    border-radius: var(--kb-radius-xs);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .faq-answer-wrap,
+    .faq-icon-line,
+    .faq-item {
+      transition: none !important;
+    }
+
+    .faq-answer-wrap {
+      max-height: none !important;
+      opacity: 1 !important;
+    }
+
+    .faq-icon-v {
+      transform: translate(-50%, -50%) rotate(90deg) !important;
+    }
+
+    .faq-icon-h {
+      transform: rotate(180deg) !important;
+    }
+  }
+</style>

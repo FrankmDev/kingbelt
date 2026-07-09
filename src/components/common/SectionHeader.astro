@@ -81,9 +81,9 @@ const hasCopy = Boolean(body);
 <style>
   .section-header {
     /* Ink palette */
-    --sh-ink: #1A1A1A;
-    --sh-muted: rgba(26, 26, 26, 0.62);
-    --sh-line: rgba(26, 26, 26, 0.1);
+    --sh-ink: var(--color-king-text);
+    --sh-muted: var(--color-king-muted);
+    --sh-line: var(--kb-stroke-dark);
     --sh-accent: var(--color-king-accent);
 
     /* Editorial rhythm */
@@ -100,7 +100,7 @@ const hasCopy = Boolean(body);
     --sh-ink: rgba(255, 250, 241, 0.96);
     --sh-muted: rgba(255, 250, 241, 0.64);
     --sh-line: rgba(255, 255, 255, 0.12);
-    --sh-accent: #d6b16e;
+    --sh-accent: var(--color-king-accent-light);
   }
 
   .section-header[data-align='center'] {
@@ -124,9 +124,10 @@ const hasCopy = Boolean(body);
   .sh-number-rule {
     display: block;
     width: 2.25rem;
-    height: 1px;
+    height: 1.5px;
     background: linear-gradient(90deg, var(--sh-accent), transparent);
-    opacity: 0.6;
+    border-radius: 1px;
+    opacity: 0.7;
   }
 
   .sh-number-text {
@@ -134,9 +135,9 @@ const hasCopy = Boolean(body);
     align-items: baseline;
     gap: 0.45rem;
     font-family: var(--font-sans, 'Satoshi', sans-serif);
-    font-size: 0.6875rem;
+    font-size: var(--kb-label-size);
     font-weight: 600;
-    letter-spacing: 0.3em;
+    letter-spacing: 0.22em;
     text-transform: uppercase;
     color: var(--sh-accent);
     font-variant-numeric: tabular-nums lining-nums;
@@ -175,8 +176,8 @@ const hasCopy = Boolean(body);
     );
     border-radius: 1px;
     box-shadow:
-      0 0 12px color-mix(in srgb, var(--sh-accent) 20%, transparent),
-      0 0 4px color-mix(in srgb, var(--sh-accent) 30%, transparent);
+      0 0 12px color-mix(in srgb, var(--sh-accent) 25%, transparent),
+      0 0 4px color-mix(in srgb, var(--sh-accent) 35%, transparent);
   }
 
   .section-header[data-align='center'] .sh-rule-accent {
@@ -205,9 +206,9 @@ const hasCopy = Boolean(body);
     display: inline-flex;
     align-items: center;
     font-family: var(--font-sans, 'Satoshi', sans-serif);
-    font-size: 0.6875rem;
+    font-size: var(--kb-label-size);
     font-weight: 600;
-    letter-spacing: 0.2em;
+    letter-spacing: 0.18em;
     line-height: 1.2;
     text-transform: uppercase;
   }
@@ -219,17 +220,18 @@ const hasCopy = Boolean(body);
 
   .sh-eyebrow-mark {
     display: inline-block;
-    width: 1.25rem;
-    height: 1px;
-    background: currentColor;
-    opacity: 0.55;
+    width: 1.5rem;
+    height: 1.5px;
+    background: linear-gradient(90deg, var(--sh-accent), rgba(138, 90, 43, 0.25));
+    border-radius: 1px;
+    opacity: 0.7;
     flex-shrink: 0;
   }
 
   .sh-meta {
-    color: color-mix(in srgb, var(--sh-ink) 36%, transparent);
+    color: var(--sh-muted);
     font-weight: 500;
-    letter-spacing: 0.22em;
+    letter-spacing: 0.16em;
     white-space: nowrap;
   }
 
@@ -253,9 +255,9 @@ const hasCopy = Boolean(body);
     max-width: 18ch;
     color: var(--sh-ink);
     font-family: var(--font-display, 'Bitter', Georgia, serif);
-    font-size: clamp(1.875rem, 4vw, 2.75rem);
-    font-weight: 400;
-    letter-spacing: -0.015em;
+    font-size: clamp(1.875rem, 3.6vw, 2.65rem);
+    font-weight: var(--kb-w-heading-strong);
+    letter-spacing: 0;
     line-height: 1.05;
     text-wrap: balance;
   }
@@ -277,7 +279,7 @@ const hasCopy = Boolean(body);
     max-width: 32rem;
     padding-top: 1rem;
     color: var(--sh-muted);
-    font-size: clamp(0.95rem, 0.9rem + 0.2vw, 1.0625rem);
+    font-size: clamp(0.9375rem, 0.9rem + 0.16vw, 1rem);
     font-weight: 400;
     letter-spacing: 0.005em;
     line-height: 1.75;
@@ -288,10 +290,11 @@ const hasCopy = Boolean(body);
     position: absolute;
     top: 0;
     left: 0;
-    width: 2.5rem;
-    height: 1px;
+    width: 2.75rem;
+    height: 1.5px;
     background: linear-gradient(90deg, var(--sh-accent), transparent);
-    opacity: 0.6;
+    border-radius: 1px;
+    opacity: 0.7;
   }
 
   .sh-copy p {
@@ -339,8 +342,8 @@ const hasCopy = Boolean(body);
     }
 
     .sh-number-text {
-      font-size: 0.625rem;
-      letter-spacing: 0.28em;
+      font-size: 0.5625rem;
+      letter-spacing: 0.2em;
     }
 
     .sh-rule-accent {
@@ -360,13 +363,13 @@ const hasCopy = Boolean(body);
 
     .sh-eyebrow,
     .sh-meta {
-      font-size: 0.625rem;
-      letter-spacing: 0.24em;
+      font-size: 0.5625rem;
+      letter-spacing: 0.18em;
     }
 
     .sh-title {
       max-width: 14ch;
-      font-size: clamp(1.75rem, 8vw, 2.25rem);
+      font-size: clamp(1.625rem, 7.2vw, 2.05rem);
       line-height: 1.05;
     }
 

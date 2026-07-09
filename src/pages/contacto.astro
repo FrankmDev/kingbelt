@@ -1,0 +1,333 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/layout/Header.astro';
+import FooterSection from '../components/layout/FooterSection.astro';
+import PageHeader from '../components/ui/PageHeader.astro';
+import ContactMethod from '../components/ui/ContactMethod.astro';
+import FormField from '../components/ui/FormField.astro';
+import Button from '../components/ui/Button.astro';
+import Panel from '../components/ui/Panel.astro';
+import Icon from '../components/ui/Icon.astro';
+import SectionHeader from '../components/common/SectionHeader.astro';
+import FAQ from '../components/ui/FAQ.astro';
+import { contactData } from '../data/contact';
+import { site } from '../data/site';
+---
+
+<BaseLayout
+  title="Contacto — KingBelt"
+  description="Ponte en contacto con KingBelt. Estamos en Madrid, España. Email, WhatsApp, Instagram y formulario de contacto. Te respondemos en menos de 24 horas."
+>
+  <Header slot="header" initialTheme="dark" scrolledTheme="light" />
+
+  <!-- ================================================================
+       HERO
+       ================================================================ -->
+  <PageHeader
+    eyebrow={contactData.hero.eyebrow}
+    description={contactData.hero.description}
+    image={contactData.hero.image}
+    imageAlt={contactData.hero.imageAlt}
+    imagePosition="center 25%"
+    meta={contactData.hero.meta}
+  >
+    <Fragment slot="title">
+      Háblanos. <em>Estamos aquí</em>.
+    </Fragment>
+  </PageHeader>
+
+  <!-- ================================================================
+       CONTACT INFO + FORM — editorial split
+       ================================================================ -->
+  <section class="section-spacing" data-gsap-contact>
+    <div class="kb-shell">
+
+      <!-- Section label -->
+      <div class="flex items-center gap-4 mb-10 md:mb-14">
+        <span class="kb-section-num shrink-0">01/02</span>
+        <span class="h-px flex-1 bg-king-border/30" aria-hidden="true"></span>
+      </div>
+
+      <div
+        class="grid grid-cols-1 items-start gap-[var(--kb-space-gap-lg)] lg:grid-cols-12 lg:gap-[var(--kb-space-gap-xl)]"
+      >
+
+        <!-- ========== LEFT: Contact channels ========== -->
+        <div class="lg:col-span-5 space-y-8" data-contact-left>
+
+          <div class="space-y-4 max-w-lg">
+            <h2 class="font-display text-[var(--kb-text-h2)] font-semibold text-king-text leading-[0.95]">
+              Contacto directo
+            </h2>
+            <p class="text-[var(--kb-text-lede)] text-king-muted/80 leading-relaxed">
+              Estamos en Madrid, pero respondemos desde cualquier sitio. Elige el canal que prefieras y hablemos.
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 gap-[var(--kb-space-gap)] sm:grid-cols-2" data-contact-cards>
+            {contactData.methods.map((method, idx) => {
+              const isSteel = idx === 0 || idx === 3;
+              return (
+                <ContactMethod
+                  label={method.label}
+                  value={method.value}
+                  description={method.description}
+                  href={method.href}
+                  icon={method.icon}
+                  variant={isSteel ? 'steel' : 'default'}
+                />
+              );
+            })}
+          </div>
+        </div>
+
+        <!-- ========== RIGHT: Form ========== -->
+        <div class="lg:col-span-6 lg:col-start-7" data-contact-form>
+          <Panel variant="light" padding="lg">
+            <div class="space-y-7">
+
+              <div class="space-y-3">
+                <span class="text-[var(--kb-text-eyebrow)] font-semibold tracking-[0.2em] uppercase text-king-accent">
+                  Envíanos un mensaje
+                </span>
+                <h3 class="font-display text-[var(--kb-text-h4)] font-medium text-king-text leading-snug">
+                  Cuéntanos qué necesitas
+                </h3>
+              </div>
+
+              <form id="contact-form" class="space-y-5" novalidate>
+                <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                  <FormField label="Nombre completo" for="contact-name" required>
+                    <input
+                      id="contact-name"
+                      name="name"
+                      type="text"
+                      required
+                      placeholder="Tu nombre"
+                      class="kb-input"
+                      autocomplete="name"
+                    />
+                  </FormField>
+
+                  <FormField label="Correo electrónico" for="contact-email" required>
+                    <input
+                      id="contact-email"
+                      name="email"
+                      type="email"
+                      required
+                      placeholder="tu@email.com"
+                      class="kb-input"
+                      autocomplete="email"
+                    />
+                  </FormField>
+                </div>
+
+                <FormField label="Asunto" for="contact-subject">
+                  <div class="relative">
+                    <select
+                      id="contact-subject"
+                      name="subject"
+                      class="kb-input appearance-none pr-10"
+                    >
+                      <option value="">Selecciona un asunto</option>
+                      <option value="general">Consulta general</option>
+                      <option value="pedidos">Pedidos</option>
+                      <option value="devoluciones">Devoluciones</option>
+                      <option value="colaboraciones">Colaboraciones</option>
+                      <option value="otro">Otro</option>
+                    </select>
+                    <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-king-muted/50">
+                      <Icon name="caret-down" class="h-3.5 w-3.5" />
+                    </span>
+                  </div>
+                </FormField>
+
+                <FormField label="Mensaje" for="contact-message" required>
+                  <textarea
+                    id="contact-message"
+                    name="message"
+                    required
+                    placeholder="Escribe tu mensaje aquí..."
+                    class="kb-input min-h-[9rem] resize-y"
+                    rows="5"
+                  ></textarea>
+                </FormField>
+
+                <div class="flex flex-col gap-4 pt-2 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+                  <Button type="submit" variant="primary" size="md" id="contact-submit">
+                    Enviar mensaje
+                    <Icon name="paper-plane" class="h-3.5 w-3.5" />
+                  </Button>
+                  <span class="text-[var(--kb-text-2xs)] text-king-muted/50 leading-relaxed">
+                    Te responderemos en menos de 24&nbsp;horas laborables.
+                  </span>
+                </div>
+              </form>
+
+              <!-- Success state -->
+              <div
+                id="contact-success"
+                class="hidden flex-col items-center gap-5 py-12 text-center"
+              >
+                <span class="flex h-14 w-14 items-center justify-center rounded-full bg-king-accent/10 border border-king-accent/20">
+                  <Icon name="check" class="h-6 w-6 text-king-accent" strokeWidth={2.5} />
+                </span>
+                <div class="space-y-2">
+                  <h4 class="font-display text-[var(--kb-text-h4)] font-medium text-king-text">
+                    Mensaje enviado
+                  </h4>
+                  <p class="text-[var(--kb-text-xs)] text-king-muted/70 max-w-xs mx-auto">
+                    Gracias por escribirnos. Te responderemos a la mayor brevedad, en menos de 24 horas laborables.
+                  </p>
+                </div>
+              </div>
+
+            </div>
+          </Panel>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       STEEL DIVIDER — subtle transition between sections
+       ================================================================ -->
+  <div class="relative h-px max-w-[calc(100%-3rem)] mx-auto bg-gradient-to-r from-transparent via-king-steel/20 to-transparent md:max-w-[calc(100%-6rem)]" aria-hidden="true" />
+
+  <!-- ================================================================
+       FAQS — graphite section, lighter than full asphalt
+       ================================================================ -->
+  <section class="section-steel section-spacing-lg" data-gsap-faq>
+    <div class="kb-shell-wide">
+
+      <SectionHeader
+        eyebrow="Soporte"
+        body="Respuestas rápidas a las dudas más comunes. Si no encuentras lo que buscas, escríbenos sin compromiso."
+        align="left"
+        tone="dark"
+        class="mb-12 md:mb-16"
+      >
+        <Fragment slot="title">
+          Preguntas <em>frecuentes</em>
+        </Fragment>
+      </SectionHeader>
+
+      <div data-faq-scope>
+        <FAQ items={contactData.faqs} tone="dark" />
+      </div>
+
+      <!-- Bottom CTA -->
+      <div class="mt-14 flex flex-col items-center gap-5 text-center md:mt-16">
+        <div class="h-px w-16 bg-king-accent/20" aria-hidden="true"></div>
+        <p class="text-[var(--kb-text-xs)] text-white/50 max-w-lg leading-relaxed">
+          ¿No encuentras tu respuesta? Escríbenos directamente por
+          {' '}<a href={site.urls.whatsapp} target="_blank" rel="noopener noreferrer" class="kb-link text-king-accent hover:text-king-accent-light transition-colors duration-[var(--kb-dur-quick)]">
+            WhatsApp
+          </a>{' '}
+          o envíanos un{' '}
+          <a href="mailto:hola@kingbelt.com" class="kb-link text-king-accent hover:text-king-accent-light transition-colors duration-[var(--kb-dur-quick)]">
+            email
+          </a>.
+        </p>
+      </div>
+
+    </div>
+  </section>
+
+  <FooterSection slot="footer" />
+</BaseLayout>
+
+<script>
+  import gsap from 'gsap';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+  gsap.registerPlugin(ScrollTrigger);
+
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ── Contact Section Reveal ── */
+  const contactSection = document.querySelector('[data-gsap-contact]');
+  if (contactSection && !reduceMotion) {
+    const sectionNumber = contactSection.querySelector('.kb-section-num');
+    const heading = contactSection.querySelector('h2');
+    const cards = contactSection.querySelectorAll('[data-contact-cards] > *');
+
+    const tl = gsap.timeline({
+      defaults: { ease: 'power3.out' },
+      scrollTrigger: {
+        trigger: contactSection,
+        start: 'top 85%',
+        once: true,
+      },
+    });
+
+    if (sectionNumber) tl.from(sectionNumber, { y: 8, opacity: 0, duration: 0.5 }, 0);
+    tl.from(heading, { y: 20, opacity: 0, duration: 0.7 }, 0.1);
+    if (cards.length) tl.from(cards, { y: 16, opacity: 0, duration: 0.5, stagger: 0.07 }, 0.25);
+    tl.from('[data-contact-form]', { y: 24, opacity: 0, duration: 0.8 }, 0.2);
+  }
+
+  /* ── FAQ Section Reveal ── */
+  const faqSection = document.querySelector('[data-gsap-faq]');
+  if (faqSection && !reduceMotion) {
+    const tl = gsap.timeline({
+      defaults: { ease: 'power3.out' },
+      scrollTrigger: {
+        trigger: faqSection,
+        start: 'top 85%',
+        once: true,
+      },
+    });
+
+    tl
+      .from(faqSection.querySelector('.section-header'), { y: 20, opacity: 0, duration: 0.8 }, 0)
+      .from(faqSection.querySelector('[data-faq-scope]'), { y: 24, opacity: 0, duration: 0.9 }, 0.2);
+  }
+
+  /* ── Contact Form Logic ── */
+  const form = document.getElementById('contact-form');
+  const submitBtn = document.getElementById('contact-submit');
+  const successEl = document.getElementById('contact-success');
+
+  if (form && submitBtn && successEl) {
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const name = document.getElementById('contact-name') as HTMLInputElement;
+      const email = document.getElementById('contact-email') as HTMLInputElement;
+      const message = document.getElementById('contact-message') as HTMLTextAreaElement;
+
+      let valid = true;
+
+      [name, email, message].forEach((el) => {
+        if (!el.value.trim() || (el.type === 'email' && !el.validity.valid)) {
+          el.setAttribute('aria-invalid', 'true');
+          valid = false;
+        } else {
+          el.removeAttribute('aria-invalid');
+        }
+      });
+
+      if (!valid) return;
+
+      submitBtn.setAttribute('disabled', '');
+      submitBtn.classList.add('kb-btn-loading');
+
+      setTimeout(() => {
+        form.classList.add('hidden');
+        successEl.classList.remove('hidden');
+        successEl.classList.add('flex');
+      }, 1200);
+    });
+
+    form.querySelectorAll('input, textarea, select').forEach((el) => {
+      el.addEventListener('input', () => {
+        (el as HTMLElement).removeAttribute('aria-invalid');
+      });
+      el.addEventListener('change', () => {
+        (el as HTMLElement).removeAttribute('aria-invalid');
+      });
+    });
+  }
+</script>

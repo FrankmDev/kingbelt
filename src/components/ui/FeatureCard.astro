@@ -1,0 +1,109 @@
+---
+import Icon from './Icon.astro';
+import Eyebrow from './Eyebrow.astro';
+
+interface Props {
+  eyebrow?: string;
+  title: string;
+  description?: string;
+  icon?: string;
+  number?: string;
+  href?: string;
+  variant?: 'default' | 'steel';
+  class?: string;
+}
+
+const { eyebrow, title, description, icon, number, href, variant = 'default', class: className } = Astro.props;
+
+const Element = href ? 'a' : 'article';
+const linkProps = href ? { href } : {};
+
+const cardClass = variant === 'steel' ? 'kb-card-steel' : 'kb-card';
+const isSteel = variant === 'steel';
+
+const titleClass = isSteel ? 'text-white/[0.94]' : 'text-king-text';
+const descClass = isSteel ? 'text-white/60' : 'text-king-muted';
+const eyebrowClass = isSteel ? 'text-king-accent-light' : 'text-king-accent';
+const ctaClass = isSteel ? 'text-king-accent-light' : 'text-king-accent';
+const iconWrapClass = isSteel
+  ? 'border-white/10 bg-white/[0.06] text-king-accent-light'
+  : 'border-king-accent/15 bg-king-accent/[0.07] text-king-accent';
+---
+
+<Element
+  class:list={[
+    cardClass,
+    'group flex h-full min-w-0 flex-col p-6 md:p-7',
+    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-king-accent/45 focus-visible:ring-offset-2 focus-visible:ring-offset-king-bg',
+    href && 'cursor-pointer',
+    className,
+  ]}
+  {...linkProps}
+>
+  <div class="relative z-10 flex h-full min-w-0 flex-col">
+    {number && (
+      <span class="feature-card-num" aria-hidden="true">{number}</span>
+    )}
+
+    {!number && icon && (
+      <div class:list={['mb-6 inline-flex h-11 w-11 items-center justify-center rounded-[var(--kb-radius-sm)] border shadow-[var(--kb-shadow-xs)]', iconWrapClass]}>
+        <Icon name={icon} class="w-5 h-5" />
+      </div>
+    )}
+
+    {eyebrow && (
+      <Eyebrow class:list={['mb-3', eyebrowClass]}>
+        {eyebrow}
+      </Eyebrow>
+    )}
+
+    <h3 class:list={['text-balance font-display text-[var(--kb-text-h4)] leading-[1.12] tracking-[0] mb-3', titleClass]}>
+      {title}
+    </h3>
+
+    {description && (
+      <p class:list={['text-pretty text-[var(--kb-text-sm)] leading-[1.65]', descClass]}>
+        {description}
+      </p>
+    )}
+
+    <slot />
+
+    {href && (
+      <span class:list={['kb-action-label mt-6 inline-flex items-center gap-2', ctaClass]}>
+        Ver detalle
+        <Icon name="arrow-right" class="feature-card-arrow h-3 w-3" strokeWidth={2} />
+      </span>
+    )}
+  </div>
+</Element>
+
+<style>
+  .feature-card-num {
+    display: block;
+    font-family: "Bitter", Georgia, serif;
+    font-weight: 300;
+    font-size: clamp(2rem, 3.5vw, 2.75rem);
+    line-height: 1;
+    color: var(--kb-stroke-accent);
+    letter-spacing: -0.01em;
+    font-variant-numeric: tabular-nums;
+    margin-bottom: var(--kb-space-4);
+    opacity: 0.5;
+  }
+
+  :global(.kb-card-steel) .feature-card-num {
+    color: rgba(255, 255, 255, 0.18);
+  }
+
+  .feature-card-arrow {
+    transition: transform var(--kb-dur-fast) var(--kb-ease-out);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .kb-card:hover .feature-card-arrow,
+    .kb-card-steel:hover .feature-card-arrow {
+      transform: translateX(0.18rem);
+    }
+  }
+</style>

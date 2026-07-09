@@ -1,4 +1,7 @@
 ---
+import Card from '../ui/Card.astro';
+import Panel from '../ui/Panel.astro';
+
 type CompInfo = {
   file: string;
   desc: string;
@@ -12,14 +15,14 @@ interface Props {
 const { type } = Astro.props;
 
 const layoutComps: CompInfo[] = [
-  { file: 'Header.astro', desc: 'Header responsivo con scroll. Temas, barra progreso, men&uacute; m&oacute;vil, costura decorativa.', props: 'initialTheme, scrolledTheme, compactThreshold' },
-  { file: 'FooterSection.astro', desc: 'Footer con CTA banner, belt divider, grid marca/nav, tipograf&iacute;a gigante, GSAP.', props: 'Datos de navigation.ts y site.ts' },
+  { file: 'Header.astro', desc: 'Header responsivo con scroll. Temas, barra progreso, menú móvil.', props: 'initialTheme, scrolledTheme, compactThreshold' },
+  { file: 'FooterSection.astro', desc: 'Footer con CTA banner, belt divider, grid marca/nav, tipografía gigante.', props: 'Datos de navigation.ts y site.ts' },
 ];
 
 const sectionComps: CompInfo[] = [
   { file: 'HeroSection.astro', desc: 'Hero fullscreen con video bg, corner frames, scroll indicator, GSAP.', props: '' },
-  { file: 'BrandSection.astro', desc: 'Dual-card editorial, imagen cinem&aacute;tica, seal SVG, values cards, GSAP ScrollTrigger.', props: '' },
-  { file: 'BuyingSection.astro', desc: '3-step connector, l&iacute;nea dashed animada, CTA channels, GSAP trail.', props: '' },
+  { file: 'BrandSection.astro', desc: 'Dual-card editorial, imagen cinemática, seal SVG, values cards, GSAP ScrollTrigger.', props: '' },
+  { file: 'BuyingSection.astro', desc: '3-step connector, línea dashed animada, CTA channels, GSAP trail.', props: '' },
   { file: 'MarqueeSection.astro', desc: 'Marquee keyframe, fade edges, border-y wrap.', props: '' },
 ];
 
@@ -28,19 +31,22 @@ const pathLabel = type === 'layout' ? 'src/components/layout/' : 'src/sections/'
 ---
 
 <div class="grid md:grid-cols-2 gap-4">
-  {comps.map((comp) => (
-    <div class="bg-king-surface rounded-lg border border-king-border/30 shadow-sm p-5">
+  {comps.map((comp, idx) => {
+    const isSteel = idx === 0;
+    return (
+    <Card variant={isSteel ? 'steel' : 'static'} padding="md">
       <div class="flex items-center gap-2 mb-2">
-        <span class="text-[8px] font-mono uppercase tracking-[0.15em] text-king-accent/50">{pathLabel}</span>
+        <span class:list={['kb-code-label', isSteel ? 'text-white/55' : 'text-king-accent/70']}>{pathLabel}</span>
       </div>
-      <h3 class="font-display text-lg text-king-text mb-2 font-light">{comp.file}</h3>
-      <p class="text-[11px] text-king-muted/70 leading-relaxed mb-3 font-light" set:html={comp.desc}></p>
+      <h3 class:list={['font-display text-[1rem] leading-tight mb-2 font-light', isSteel ? 'text-white/90' : 'text-king-text']}>{comp.file}</h3>
+      <p class:list={['text-[var(--kb-text-2xs)] leading-relaxed mb-3 font-light', isSteel ? 'text-white/70' : 'text-king-muted']}>{comp.desc}</p>
       {comp.props && (
-        <div class="bg-king-bg/50 rounded-md p-3 border border-king-border/10">
-          <span class="text-[8px] font-mono uppercase tracking-[0.15em] text-king-accent/50 block mb-1">Props</span>
-          <span class="text-[9px] font-mono text-king-text/60">{comp.props}</span>
-        </div>
+        <Panel variant={isSteel ? 'dark' : 'light'} padding="sm">
+          <span class="kb-code-label text-king-accent/50 block mb-1">Props</span>
+          <span class:list={['text-[var(--kb-text-eyebrow)] font-mono', isSteel ? 'text-white/75' : 'text-king-text/80']}>{comp.props}</span>
+        </Panel>
       )}
-    </div>
-  ))}
+    </Card>
+    );
+  })}
 </div>

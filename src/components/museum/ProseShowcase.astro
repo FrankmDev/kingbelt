@@ -1,0 +1,39 @@
+---
+import Prose from '../ui/Prose.astro';
+import Panel from '../ui/Panel.astro';
+---
+
+<div class="space-y-6">
+  <div class="kb-shell-copy">
+    <span class="kb-code-label block text-king-accent/50 mb-4">Default — sin contenedor card, texto directo sobre fondo</span>
+    <Prose>
+      <p>Contenedor de texto editorial. Controla párrafos, listas, <a href="/style-museum/#prose">enlaces</a>, <strong>negritas</strong>, encabezados, blockquote e imágenes. Espaciado vertical consistente y ancho de lectura controlado por <code>--kb-shell-copy</code>.</p>
+      <h2>Título de sección (h2)</h2>
+      <p>Párrafo tras h2 con drop-cap automático. El ritmo editorial se mantiene sin clases adicionales, solo funciona por la jerarquía natural del HTML. La primera letra del párrafo que sigue a un h2 recibe tratamiento de capital editorial.</p>
+      <h3>Subsección (h3)</h3>
+      <p>Un párrafo de ejemplo para mostrar la transición desde h3. El espaciado se ajusta automáticamente.</p>
+      <ul>
+        <li>Elemento de lista uno — texto de relleno para mostrar el diseño</li>
+        <li>Elemento de lista dos — con suficiente longitud para visualizar el margen</li>
+        <li>Elemento de lista tres — último ítem de la lista</li>
+      </ul>
+      <blockquote>
+        <p>El cuero bueno no se reconoce al tacto. La hebilla que pesa lo justo. La costura que no cede.</p>
+      </blockquote>
+      <p>Blockquote con tratamiento pull-quote: serif itálica grande, sin caja, regla lateral fina en acento. <a href="/style-museum/#prose">Los enlaces</a> tienen subrayado por gradiente que se retrae al hover.</p>
+    </Prose>
+  </div>
+
+  <Panel padding="md">
+    <span class="kb-code-label block text-king-accent/50 mb-2">Variante boxed — con prop boxed=true</span>
+    <Prose boxed>
+      <h2>Uso opcional en panel</h2>
+      <p>Cuando el texto necesita ir dentro de un contenedor con borde y superficie (por ejemplo, dentro de un sidebar o una sección con mucho contenido adyacente), se activa la prop <code>boxed</code>. Esto añade el tratamiento kb-panel alrededor del prose.</p>
+    </Prose>
+  </Panel>
+
+  <Panel padding="sm">
+    <span class="kb-code-label text-king-accent/50 block mb-1">Props</span>
+    <span class="text-[var(--kb-text-eyebrow)] font-mono text-king-text/80">class, boxed (boolean) — sin contenedor card por defecto, drop-cap en p tras h2, blockquote como pull-quote</span>
+  </Panel>
+</div>

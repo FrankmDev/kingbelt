@@ -1,0 +1,65 @@
+---
+import StatBlock from '../ui/StatBlock.astro';
+
+const defaultStats = [
+  {
+    value: '+200',
+    unit: 'uds',
+    label: 'Modelos en catálogo',
+    description: 'Diseños exclusivos desarrollados in-house',
+  },
+  {
+    value: '12',
+    unit: 'tonos',
+    label: 'Paleta de colores',
+    description: 'Desde negro asfalto hasta tabaco',
+  },
+  {
+    value: 'ES',
+    label: 'Fabricación local',
+    description: 'Hecho a mano en España',
+  },
+];
+
+const steelStats = [
+  { value: '+200', unit: 'modelos', label: 'Catálogo activo' },
+  { value: '100%', label: 'Hecho en España' },
+  { value: '3.8', unit: 'mm', label: 'Grosor mínimo' },
+];
+
+const compactStats = [
+  { value: '01', label: 'Leather grade' },
+  { value: '02', label: 'Steel buckle' },
+  { value: '03', label: 'Road tested' },
+];
+---
+
+<div class="space-y-8">
+  <div>
+    <span class="kb-code-label block text-king-accent/50 mb-4">
+      Default — panel claro, índice y divisores steel
+    </span>
+    <StatBlock items={defaultStats} />
+  </div>
+
+  <div>
+    <span class="kb-code-label block text-king-accent/50 mb-4">
+      Steel — panel graphite con textura metal y acento brass
+    </span>
+    <StatBlock variant="steel" items={steelStats} />
+  </div>
+
+  <div>
+    <span class="kb-code-label block text-king-accent/50 mb-4">
+      Compact steel — instrumentación técnica
+    </span>
+    <StatBlock variant="steel" items={compactStats} />
+  </div>
+
+  <div class="kb-panel p-4 md:p-5">
+    <span class="kb-code-label text-king-accent/50 block mb-1">Props</span>
+    <span class="text-[var(--kb-text-eyebrow)] font-mono text-king-text/80">
+      items: StatItem[], value, label, description, unit, variant (default|steel)
+    </span>
+  </div>
+</div>

@@ -52,7 +52,7 @@ const brandImage =
     <div class="brand-layout relative grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-10 xl:gap-12">
       {/* Left card: cinematic image panel */}
       <div class="brand-image-col">
-        <div class="brand-image-card group relative overflow-hidden rounded-[var(--kb-radius-lg)] border border-king-text/[0.08] bg-[#14110d] shadow-[0_20px_60px_-12px_rgba(18,15,12,0.25),0_8px_20px_-8px_rgba(18,15,12,0.15)]">
+        <div class="brand-image-card group relative overflow-hidden rounded-[var(--kb-radius-lg)] border border-king-text/[0.08] bg-king-oil shadow-[var(--kb-shadow-float-dark)]">
           <img
             src={brandImage}
             alt="Cuero y hebilla KingBelt — accesorio de ruta"
@@ -68,7 +68,7 @@ const brandImage =
           <div class="absolute left-6 top-6 z-10">
             <span class="inline-flex items-center gap-2.5 rounded-[var(--kb-radius-xs)] border border-white/12 bg-black/30 px-3.5 py-1.5 backdrop-blur-sm">
               <span class="h-1.5 w-1.5 rounded-full bg-king-accent shadow-[0_0_6px_rgba(138,90,43,0.6)]"></span>
-              <span class="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/95">Hecho a mano</span>
+              <span class="eyebrow-text text-white/95">Hecho a mano</span>
             </span>
           </div>
 
@@ -84,25 +84,25 @@ const brandImage =
 
       {/* Right card: editorial content panel */}
       <div class="brand-content-col">
-        <div class="brand-content-card kb-texture-leather relative flex h-full flex-col justify-center rounded-[var(--kb-radius-lg)] border border-king-border/60 bg-king-surface p-8 shadow-[0_8px_24px_-6px_rgba(17,16,14,0.12),inset_0_1px_0_rgba(255,255,255,0.5)] md:p-10 lg:p-10 lg:py-9">
+        <div class="brand-content-card relative flex h-full flex-col justify-center kb-rounded-lg border border-king-border/60 bg-king-surface p-8 shadow-[var(--kb-shadow-md),var(--kb-shadow-inset-soft)] md:p-10 lg:p-10 lg:py-9">
           {/* Eyebrow */}
           <div class="mb-6 flex items-center gap-3">
             <span class="inline-block h-px w-5 bg-king-accent/60"></span>
-            <span class="text-[11px] font-semibold uppercase tracking-[0.26em] text-king-accent">MADE TO RIDE</span>
+            <span class="eyebrow-text text-king-accent">MADE TO RIDE</span>
           </div>
 
           {/* Headline */}
-          <h3 class="brand-content-headline mb-5 font-display text-[1.875rem] font-light leading-[1.08] tracking-[var(--kb-title-tracking)] text-king-text md:text-[2.25rem] lg:text-[2.5rem]">
+          <h3 class="brand-content-headline mb-5 font-display text-[1.875rem] leading-[1.08] tracking-[var(--kb-title-tracking)] text-king-text md:text-[2.25rem] lg:text-[2.5rem]">
             Cuero que se nota al cogerlo.
             <span class="brand-content-accent block mt-1 text-king-accent italic">Hebilla que no se anda con rodeos.</span>
           </h3>
 
           {/* Body */}
           <div class="space-y-3">
-            <p class="text-[14px] leading-[1.7] text-king-muted md:text-[15px]">
+            <p class="text-[var(--kb-text-xs)] leading-[1.7] text-king-muted md:text-[15px]">
               Cada pieza está pensada para el movimiento real: cuero que gana carácter con el uso, hebilla con el peso justo, costuras que no ceden cuando aprietas.
             </p>
-            <p class="text-[14px] leading-[1.7] text-king-muted md:text-[15px]">
+            <p class="text-[var(--kb-text-xs)] leading-[1.7] text-king-muted md:text-[15px]">
               Hecho en España, revisado pieza a pieza. Sin producción en masa.
             </p>
           </div>
@@ -115,11 +115,11 @@ const brandImage =
               { label: 'Costura reforzada', mark: '03' },
             ].map((item) => (
               <div class="brand-craft-item group flex items-center gap-2">
-                <span class="text-[10px] font-semibold uppercase tracking-[0.12em] text-king-accent/70 font-mono tabular-nums">
+                <span class="eyebrow-text text-king-accent/70 font-mono tabular-nums">
                   {item.mark}
                 </span>
                 <span class="h-px w-3 bg-king-border/60"></span>
-                <span class="text-[11px] font-medium uppercase tracking-[0.12em] text-king-muted transition-colors duration-300 group-hover:text-king-text">
+                <span class="meta-text text-king-muted transition-colors duration-[var(--kb-dur-fast)] group-hover:text-king-text">
                   {item.label}
                 </span>
               </div>
@@ -134,10 +134,10 @@ const brandImage =
                   {i > 0 && (
                     <span class="pointer-events-none absolute left-0 top-1/2 hidden h-8 w-px -translate-y-1/2 bg-king-border/40 lg:block"></span>
                   )}
-                  <span class="block font-display text-[2rem] font-normal leading-none text-king-text md:text-[2.5rem]">
+                  <span class="block font-display text-[2rem] leading-none text-king-text md:text-[2.5rem]">
                     {spec.value}
                   </span>
-                  <span class="block mt-3 text-[10px] font-medium uppercase tracking-[0.2em] text-king-muted/55">
+                  <span class="block mt-3 text-[var(--kb-text-eyebrow)] font-medium uppercase tracking-[0.2em] text-king-muted/55">
                     {spec.label}
                   </span>
                 </div>
@@ -150,23 +150,27 @@ const brandImage =
 
     {/* Values: gear blocks */}
     <div class="brand-values mt-12 grid gap-5 md:mt-16 md:grid-cols-3">
-      {values.map((value) => (
+      {values.map((value, i) => (
         <article
-          class="brand-value group relative overflow-hidden rounded-[var(--kb-radius-lg)] border border-king-border/60 bg-king-surface p-8 shadow-[0_4px_14px_-4px_rgba(17,16,14,0.1),inset_0_1px_0_rgba(255,255,255,0.4)] transition-all duration-500 hover:border-king-accent/30 hover:shadow-[0_8px_24px_-6px_rgba(138,90,43,0.15),inset_0_1px_0_rgba(255,255,255,0.5)] md:p-10"
+          class:list={[
+            'brand-value group relative overflow-hidden kb-rounded-lg p-8 transition-all duration-[var(--kb-dur-med)] md:p-10',
+            i === 1
+              ? 'border border-white/10 bg-king-graphite shadow-[var(--kb-shadow-steel-soft)] text-white/92'
+              : 'border border-king-border/60 bg-king-surface shadow-[var(--kb-shadow-sm),var(--kb-shadow-inset-soft)] text-king-text hover:border-king-accent/30',
+          ]}
         >
-          {/* Top accent line — gradient fade */}
-          <div class="absolute left-0 right-0 top-0 h-px bg-[linear-gradient(90deg,transparent_0%,var(--color-king-accent)_50%,transparent_100%)] opacity-0 transition-opacity duration-500 group-hover:opacity-50"></div>
-
-          <div class="mb-8 flex items-center justify-between gap-5">
-            <span class="brand-value-marker inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.18em] text-king-accent/70">
-              <span>{value.num}</span>
+          <div class="mb-8 flex items-center gap-4">
+            <span class="brand-value-marker eyebrow-text"
+              class:list={[i === 1 ? 'text-white/60' : 'text-king-accent/70']}>
+              {value.num}
             </span>
-            <span class="h-px w-10 bg-gradient-to-r from-king-accent/30 to-transparent transition-all duration-500 group-hover:w-16"></span>
           </div>
-          <h3 class="mb-4 text-[1.5rem] font-normal leading-[0.95] tracking-[var(--kb-title-tracking)] text-king-text md:text-[1.75rem]">
+          <h3 class="mb-4 text-[1.5rem] leading-[0.95] tracking-[var(--kb-title-tracking)] md:text-[1.75rem]"
+            class:list={[i === 1 ? 'text-white/90' : 'text-king-text']}>
             {value.title}
           </h3>
-          <p class="max-w-[25rem] text-[13px] leading-[1.7] text-king-muted">
+          <p class="max-w-[25rem] text-[var(--kb-text-sm)] leading-[1.7]"
+            class:list={[i === 1 ? 'text-white/60' : 'text-king-muted']}>
             {value.text}
           </p>
         </article>
@@ -205,14 +209,6 @@ const brandImage =
   .brand-image-card:hover .brand-main-image {
     filter: saturate(0.9) contrast(1.1) brightness(1);
     transform: scale(1.04);
-  }
-
-  .brand-value {
-    transition: background-color 500ms var(--kb-ease-out);
-  }
-
-  .brand-value:hover {
-    background-color: rgba(255, 255, 255, 0.24);
   }
 
   @media (max-width: 767px) {

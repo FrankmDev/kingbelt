@@ -1,0 +1,116 @@
+---
+import Icon from './Icon.astro';
+import Eyebrow from './Eyebrow.astro';
+
+interface Props {
+  label: string;
+  value: string;
+  description?: string;
+  href?: string;
+  icon?: string;
+  variant?: 'default' | 'steel';
+  class?: string;
+}
+
+const { label, value, description, href, icon, variant = 'default', class: className } = Astro.props;
+
+const Element = href ? 'a' : 'div';
+const isExternal = Boolean(href && /^https?:/.test(href));
+const linkProps = href
+  ? { href, target: isExternal ? '_blank' : undefined, rel: isExternal ? 'noopener noreferrer' : undefined }
+  : {};
+
+const cardClass = variant === 'steel' ? 'kb-card-steel' : 'kb-card';
+---
+
+<Element
+  class:list={[
+    cardClass,
+    'group flex min-w-0 items-start gap-4 p-5 md:p-6',
+    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-king-accent/45 focus-visible:ring-offset-2 focus-visible:ring-offset-king-bg',
+    href && 'cursor-pointer',
+    className,
+  ]}
+  {...linkProps}
+>
+  {icon && (
+    <div class="contact-method-icon relative shrink-0 w-11 h-11 rounded-[var(--kb-radius-sm)] bg-king-accent/[0.07] border border-king-accent/20 flex items-center justify-center shadow-[var(--kb-shadow-xs)]">
+      <Icon name={icon} class="w-5 h-5 text-king-accent" />
+    </div>
+  )}
+
+  <div class="relative min-w-0 flex-1">
+    <Eyebrow muted class="mb-1.5">
+      {label}
+    </Eyebrow>
+    <span class="contact-method-value block break-words text-[var(--kb-text-body)] font-medium text-king-text leading-snug">
+      {value}
+    </span>
+    {description && (
+      <span class="contact-method-description block mt-2 text-[var(--kb-text-meta)] text-king-muted leading-relaxed">
+        {description}
+      </span>
+    )}
+  </div>
+
+  {href && (
+    <div class="contact-method-arrow relative shrink-0 opacity-0 -translate-x-1">
+      <Icon name={isExternal ? 'external-link' : 'arrow-right'} class="w-4 h-4 text-king-accent" />
+    </div>
+  )}
+
+  <slot />
+</Element>
+
+<style>
+  .contact-method-icon,
+  .contact-method-value,
+  .contact-method-arrow {
+    transition:
+      opacity var(--kb-dur-med) var(--kb-ease-out),
+      transform var(--kb-dur-med) var(--kb-ease-out),
+      background-color var(--kb-dur-med) var(--kb-ease-out),
+      border-color var(--kb-dur-med) var(--kb-ease-out),
+      color var(--kb-dur-med) var(--kb-ease-out);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .kb-card:hover .contact-method-arrow,
+    .kb-card-steel:hover .contact-method-arrow {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    .kb-card:hover .contact-method-icon,
+    .kb-card-steel:hover .contact-method-icon {
+      transform: scale(1.04);
+      border-color: rgba(138, 90, 43, 0.32);
+      background-color: rgba(138, 90, 43, 0.11);
+    }
+
+    .kb-card:hover .contact-method-value,
+    .kb-card-steel:hover .contact-method-value {
+      color: var(--color-king-accent);
+    }
+  }
+
+  /* Steel variant — override text colors for dark background.
+     kb-card-steel sets color: rgba(255,255,255,0.92) on the card,
+     but child elements have explicit Tailwind text classes that
+     would render dark-on-dark without these overrides. */
+  .kb-card-steel .kb-eyebrow {
+    color: rgba(255, 255, 255, 0.55) !important;
+  }
+
+  .kb-card-steel .contact-method-value {
+    color: rgba(255, 255, 255, 0.92);
+  }
+
+  .kb-card-steel .text-king-muted {
+    color: rgba(255, 255, 255, 0.42) !important;
+  }
+
+  .kb-card-steel .contact-method-description {
+    color: rgba(255, 255, 255, 0.42) !important;
+  }
+</style>

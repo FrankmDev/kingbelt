@@ -1,0 +1,21 @@
+---
+import Tag from './Tag.astro';
+
+interface Props {
+  items: string[];
+  variant?: 'default' | 'accent' | 'brass' | 'filled' | 'steel';
+  size?: 'sm' | 'md';
+  dot?: boolean;
+  class?: string;
+}
+
+const { items, variant = 'default', size = 'md', dot = false, class: className } = Astro.props;
+---
+
+<div class:list={['flex flex-wrap gap-2.5', className]}>
+  {items.map((item) => (
+    <Tag variant={variant} size={size} dot={dot}>
+      {item}
+    </Tag>
+  ))}
+</div>

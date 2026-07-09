@@ -4,106 +4,126 @@ import PulseDot from '../ui/PulseDot.astro';
 import Pill from '../ui/Pill.astro';
 import Tag from '../ui/Tag.astro';
 import Card from '../ui/Card.astro';
+
+const labelClass = 'kb-code-label inline-block rounded-[var(--kb-radius-pill)] bg-king-accent/[0.05] px-2 py-0.5 text-king-accent/60 mb-4';
 ---
 
-<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
 
-  <div class="bg-king-surface rounded-lg p-4 border border-king-border/30 shadow-sm">
-    <span class="inline-block text-[8px] font-mono uppercase tracking-[0.12em] text-king-accent/60 bg-king-accent/5 px-2 py-0.5 rounded-full mb-3">Eyebrow</span>
-    <Eyebrow>eyebrow label</Eyebrow>
-  </div>
+  <Card variant="dry" padding="md">
+    <span class={labelClass}>Eyebrow</span>
+    <Eyebrow lined accent>eyebrow label</Eyebrow>
+  </Card>
 
-  <div class="bg-king-surface rounded-lg p-4 border border-king-border/30 shadow-sm">
-    <span class="inline-block text-[8px] font-mono uppercase tracking-[0.12em] text-king-accent/60 bg-king-accent/5 px-2 py-0.5 rounded-full mb-3">Micro Label</span>
+  <Card variant="dry" padding="md">
+    <span class={labelClass}>Micro Label</span>
     <p class="kb-micro-label text-king-muted">micro label</p>
-  </div>
+  </Card>
 
-  <div class="bg-king-surface rounded-lg p-4 border border-king-border/30 shadow-sm">
-    <span class="inline-block text-[8px] font-mono uppercase tracking-[0.12em] text-king-accent/60 bg-king-accent/5 px-2 py-0.5 rounded-full mb-3">Divider Dots</span>
+  <Card variant="dry" padding="md">
+    <span class={labelClass}>Divider Dots</span>
     <div class="flex items-center gap-2">
       <span class="kb-divider-dot"></span>
       <span class="kb-divider-dot"></span>
       <span class="kb-divider-dot"></span>
     </div>
-  </div>
+  </Card>
 
-  <div class="bg-king-surface rounded-lg p-4 border border-king-border/30 shadow-sm">
-    <span class="inline-block text-[8px] font-mono uppercase tracking-[0.12em] text-king-accent/60 bg-king-accent/5 px-2 py-0.5 rounded-full mb-3">Stitch Line</span>
+  <Card variant="dry" padding="md">
+    <span class={labelClass}>Stitch Line</span>
     <div class="kb-stitch-line h-px w-full"></div>
-  </div>
+  </Card>
 
-  <div class="bg-king-surface rounded-lg p-4 border border-king-border/30 shadow-sm">
-    <span class="inline-block text-[8px] font-mono uppercase tracking-[0.12em] text-king-accent/60 bg-king-accent/5 px-2 py-0.5 rounded-full mb-3">Hairline</span>
-    <div class="kb-hairline text-king-muted/30"><span></span><span></span><span></span></div>
-  </div>
+  <Card variant="dry" padding="md">
+    <span class={labelClass}>Hairline</span>
+    <div class="kb-hairline text-king-muted/60"><span></span><span></span><span></span></div>
+  </Card>
 
-  <div class="bg-king-surface rounded-lg p-4 border border-king-border/30 shadow-sm">
-    <span class="inline-block text-[8px] font-mono uppercase tracking-[0.12em] text-king-accent/60 bg-king-accent/5 px-2 py-0.5 rounded-full mb-3">Link</span>
-    <a href="#" class="kb-link text-[12px] text-king-text" onclick="return false">Hover link</a>
-  </div>
+  <Card variant="dry" padding="md">
+    <span class={labelClass}>Link</span>
+    <button type="button" class="kb-link text-[var(--kb-text-meta)] text-king-text">Hover link</button>
+  </Card>
 
-  <div class="bg-king-surface rounded-lg p-4 border border-king-border/30 shadow-sm">
-    <span class="inline-block text-[8px] font-mono uppercase tracking-[0.12em] text-king-accent/60 bg-king-accent/5 px-2 py-0.5 rounded-full mb-3">Section Num</span>
+  <Card variant="dry" padding="md">
+    <span class={labelClass}>Section Num</span>
     <span class="kb-section-num text-base">01 / 04</span>
-  </div>
+  </Card>
 
-  <div class="bg-king-surface rounded-lg p-4 border border-king-border/30 shadow-sm">
-    <span class="inline-block text-[8px] font-mono uppercase tracking-[0.12em] text-king-accent/60 bg-king-accent/5 px-2 py-0.5 rounded-full mb-3">Pulse Dot</span>
-    <PulseDot />
-  </div>
+  <Card variant="dry" padding="md">
+    <span class={labelClass}>Pulse Dot</span>
+    <div class="flex items-center gap-3">
+      <PulseDot size="sm" />
+      <PulseDot />
+      <PulseDot size="lg" ring />
+    </div>
+  </Card>
 
-  <div class="bg-king-surface rounded-lg p-4 border border-king-border/30 shadow-sm">
-    <span class="inline-block text-[8px] font-mono uppercase tracking-[0.12em] text-king-accent/60 bg-king-accent/5 px-2 py-0.5 rounded-full mb-3">Corner Frame</span>
+  <Card variant="dry" padding="md">
+    <span class={labelClass}>Corner Frame</span>
     <div class="relative h-10 w-10 mx-auto">
       <div class="kb-corner-frame"></div>
     </div>
-  </div>
+  </Card>
 
-  <div class="bg-king-surface rounded-lg p-4 border border-king-border/30 shadow-sm">
-    <span class="inline-block text-[8px] font-mono uppercase tracking-[0.12em] text-king-accent/60 bg-king-accent/5 px-2 py-0.5 rounded-full mb-3">Grain Overlay</span>
+  <Card variant="steel" padding="md">
+    <span class="kb-code-label inline-block rounded-[var(--kb-radius-pill)] bg-white/[0.07] px-2 py-0.5 text-white/50 mb-4">Corner Bracket</span>
+    <div class="relative h-10 w-10 mx-auto">
+      <div class="kb-corner-bracket kb-corner-bracket-tl !border-white/20"></div>
+      <div class="kb-corner-bracket kb-corner-bracket-br !border-white/20"></div>
+    </div>
+  </Card>
+
+  <Card variant="dry" padding="md">
+    <span class={labelClass}>Glow Rule</span>
+    <div class="kb-rule-glow"></div>
+  </Card>
+
+  <Card variant="dry" padding="md">
+    <span class={labelClass}>Grain Overlay</span>
     <div class="w-full h-8 rounded-md bg-king-asphalt relative overflow-hidden">
       <div class="grain-overlay absolute inset-0"></div>
     </div>
-  </div>
+  </Card>
 
-  <div class="bg-king-surface rounded-lg p-4 border border-king-border/30 shadow-sm">
-    <span class="inline-block text-[8px] font-mono uppercase tracking-[0.12em] text-king-accent/60 bg-king-accent/5 px-2 py-0.5 rounded-full mb-3">Pill</span>
+  <Card variant="dry" padding="md">
+    <span class={labelClass}>Pill</span>
     <div class="flex flex-wrap gap-2">
       <Pill>Label</Pill>
-      <Pill accent>Accent</Pill>
+      <Pill variant="accent">Accent</Pill>
+      <Pill variant="filled">Filled</Pill>
     </div>
-  </div>
+  </Card>
 
-  <div class="bg-king-surface rounded-lg p-4 border border-king-border/30 shadow-sm">
-    <span class="inline-block text-[8px] font-mono uppercase tracking-[0.12em] text-king-accent/60 bg-king-accent/5 px-2 py-0.5 rounded-full mb-3">Tag</span>
+  <Card variant="dry" padding="md">
+    <span class={labelClass}>Tag</span>
     <div class="flex flex-wrap gap-2">
       <Tag>Cuero</Tag>
-      <Tag variant="accent">Acero</Tag>
+      <Tag variant="accent" dot>Acero</Tag>
       <Tag variant="brass">Brass</Tag>
     </div>
-  </div>
+  </Card>
 
-  <div class="bg-king-surface rounded-lg p-4 border border-king-border/30 shadow-sm">
-    <span class="inline-block text-[8px] font-mono uppercase tracking-[0.12em] text-king-accent/60 bg-king-accent/5 px-2 py-0.5 rounded-full mb-3">Display Font</span>
-    <p class="font-display text-base text-king-text">Display <span class="font-serif">serif</span></p>
-  </div>
+  <Card variant="dry" padding="md">
+    <span class={labelClass}>Display Font</span>
+    <p class="font-display text-[0.9375rem] leading-tight text-king-text">Display <span class="font-serif">serif</span></p>
+  </Card>
 
-  <div class="bg-king-surface rounded-lg p-4 border border-king-border/30 shadow-sm">
-    <span class="inline-block text-[8px] font-mono uppercase tracking-[0.12em] text-king-accent/60 bg-king-accent/5 px-2 py-0.5 rounded-full mb-3">Eyebrow + Meta</span>
+  <Card variant="dry" padding="md">
+    <span class={labelClass}>Eyebrow + Meta</span>
     <p class="eyebrow-text text-king-accent">eyebrow</p>
-    <p class="meta-text text-king-muted mt-0.5">meta text</p>
-  </div>
+    <p class="meta-text text-king-muted mt-1">meta text</p>
+  </Card>
 
-  <div class="bg-king-surface rounded-lg p-4 border border-king-border/30 shadow-sm">
-    <span class="inline-block text-[8px] font-mono uppercase tracking-[0.12em] text-king-accent/60 bg-king-accent/5 px-2 py-0.5 rounded-full mb-3">Card Dry</span>
+  <Card variant="dry" padding="md">
+    <span class={labelClass}>Card Dry</span>
     <Card variant="dry" class="p-3">
-      <span class="text-[9px] font-medium text-king-text">Gear card</span>
+      <span class="text-[var(--kb-text-eyebrow)] font-medium text-king-text">Gear card</span>
     </Card>
-  </div>
+  </Card>
 
-  <div class="bg-king-surface rounded-lg p-4 border border-king-border/30 shadow-sm">
-    <span class="inline-block text-[8px] font-mono uppercase tracking-[0.12em] text-king-accent/60 bg-king-accent/5 px-2 py-0.5 rounded-full mb-3">Stitch Line (alt)</span>
-    <div class="stitch-line h-px w-full text-king-accent/30"></div>
-  </div>
+  <Card variant="dry" padding="md">
+    <span class={labelClass}>Dashed Rule</span>
+    <div class="kb-dashed-rule"></div>
+  </Card>
 
 </div>

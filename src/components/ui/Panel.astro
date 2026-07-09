@@ -1,15 +1,33 @@
 ---
 interface Props {
-  variant?: 'light' | 'dark';
+  variant?: 'light' | 'dark' | 'steel' | 'leather';
+  padding?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
   class?: string;
 }
 
-const { variant = 'light', class: className } = Astro.props;
+const { variant = 'light', padding = 'md', class: className } = Astro.props;
+
+const variantClass = (() => {
+  if (variant === 'steel') return 'kb-panel-steel';
+  if (variant === 'leather') return 'kb-panel kb-leather';
+  if (variant === 'dark') return 'kb-panel-dark';
+  return 'kb-panel';
+})();
+
+const paddingClass = {
+  none: '',
+  sm: 'p-4 md:p-5',
+  md: 'p-6 md:p-7',
+  lg: 'p-7 md:p-8 lg:p-9',
+  xl: 'p-8 md:p-10 lg:p-12',
+}[padding];
 ---
 
 <div
   class:list={[
-    variant === 'dark' ? 'kb-panel-dark' : 'kb-panel',
+    variantClass,
+    paddingClass,
+    'overflow-hidden',
     className,
   ]}
 >

@@ -1,11 +1,20 @@
 ---
 interface Props {
+  lined?: boolean;
+  centered?: boolean;
+  accent?: boolean;
+  muted?: boolean;
   class?: string;
 }
 
-const { class: className } = Astro.props;
+const { lined = false, centered = false, accent = false, muted = false, class: className } = Astro.props;
 ---
 
-<p class:list={['kb-eyebrow text-king-text', className]}>
+<p class:list={[
+  'kb-eyebrow',
+  lined && (centered ? 'kb-eyebrow-lined kb-eyebrow-center' : 'kb-eyebrow-lined'),
+  accent ? 'text-king-accent' : muted ? 'text-king-muted/70' : 'text-king-text',
+  className,
+]}>
   <slot />
 </p>

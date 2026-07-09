@@ -1,0 +1,29 @@
+---
+import TagList from '../ui/TagList.astro';
+import Panel from '../ui/Panel.astro';
+---
+
+<div class="space-y-4">
+  <Panel padding="md">
+    <span class="kb-code-label block text-king-accent/50 mb-3">Variant: default</span>
+    <TagList items={["Cuero", "Ruta", "Estilo", "Cuidado", "Garage"]} />
+  </Panel>
+
+  <Panel padding="md">
+    <span class="kb-code-label block text-king-accent/50 mb-3">Variant: accent</span>
+    <TagList items={["Cuero", "Ruta", "Estilo"]} variant="accent" dot />
+  </Panel>
+
+  <Panel padding="md">
+    <span class="kb-code-label block text-king-accent/50 mb-3">Variant: brass / filled</span>
+    <div class="flex flex-wrap gap-3">
+      <TagList items={["Serie limitada", "Edición especial"]} variant="brass" />
+      <TagList items={["Nuevo", "Stock"]} variant="filled" size="sm" />
+    </div>
+  </Panel>
+
+  <Panel padding="sm">
+    <span class="kb-code-label text-king-accent/50 block mb-1">Props</span>
+    <span class="text-[var(--kb-text-eyebrow)] font-mono text-king-text/80">items: string[], variant (default|accent|brass|filled), size (sm|md), dot</span>
+  </Panel>
+</div>

@@ -1,0 +1,327 @@
+---
+import ArticleMeta from './ArticleMeta.astro';
+import Tag from './Tag.astro';
+import Icon from './Icon.astro';
+
+interface Props {
+  title: string;
+  excerpt?: string;
+  href: string;
+  image?: string;
+  imageAlt?: string;
+  imageWidth?: number;
+  imageHeight?: number;
+  category?: string;
+  date?: string;
+  readingTime?: string;
+  class?: string;
+}
+
+const {
+  title,
+  excerpt,
+  href,
+  image,
+  imageAlt = '',
+  imageWidth = 960,
+  imageHeight = 540,
+  category,
+  date,
+  readingTime,
+  class: className,
+} = Astro.props;
+
+const hasImage = Boolean(image);
+const hasCategory = Boolean(category);
+const hasMeta = Boolean(date || readingTime);
+
+// Si hay imagen, la categoría se muestra como tag superpuesto.
+// Si no hay imagen, pasa a la línea de metadatos.
+const showCategoryOnImage = hasImage && hasCategory;
+const showMeta = hasMeta || (!showCategoryOnImage && hasCategory);
+---
+
+<article class:list={['kb-blog-card', className]}>
+  <a href={href} class="kb-blog-card__link" aria-label={`Leer artículo: ${title}`}>
+    {hasImage && (
+      <div class="kb-blog-card__media">
+        <img
+          src={image}
+          alt={imageAlt}
+          width={imageWidth}
+          height={imageHeight}
+          loading="lazy"
+          decoding="async"
+          class="kb-blog-card__image"
+        />
+        <span class="kb-blog-card__media-vignette" aria-hidden="true"></span>
+
+        {showCategoryOnImage && (
+          <div class="kb-blog-card__category">
+            <Tag variant="filled" size="sm">
+              {category}
+            </Tag>
+          </div>
+        )}
+      </div>
+    )}
+
+    <div class="kb-blog-card__body">
+      {showMeta && (
+        <div class="kb-blog-card__meta">
+          {!showCategoryOnImage && hasCategory ? (
+            <ArticleMeta category={category} date={date} readingTime={readingTime} />
+          ) : (
+            <ArticleMeta date={date} readingTime={readingTime} />
+          )}
+        </div>
+      )}
+
+      <h3 class="kb-blog-card__title">
+        {title}
+      </h3>
+
+      {excerpt && (
+        <p class="kb-blog-card__excerpt">
+          {excerpt}
+        </p>
+      )}
+
+      <span class="kb-blog-card__cta">
+        <span class="kb-blog-card__cta-label">Leer artículo</span>
+        <span class="kb-blog-card__cta-icon" aria-hidden="true">
+          <Icon name="arrow-up-right" class="kb-blog-card__arrow" strokeWidth={2} />
+        </span>
+      </span>
+    </div>
+  </a>
+</article>
+
+<style>
+  .kb-blog-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    border-radius: var(--kb-card-radius);
+    background: var(--kb-surface-light-strong);
+    border: 1px solid var(--kb-stroke-dark);
+    box-shadow: var(--kb-shadow-sm);
+    overflow: hidden;
+    transition:
+      transform var(--kb-dur-med) var(--kb-ease-out),
+      border-color var(--kb-dur-med) var(--kb-ease-out),
+      box-shadow var(--kb-dur-med) var(--kb-ease-out);
+  }
+
+  .kb-blog-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow: var(--kb-shadow-inset-soft);
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  /* Línea de acento lateral que crece al hover */
+  .kb-blog-card::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 2px;
+    height: 100%;
+    background: linear-gradient(
+      180deg,
+      var(--color-king-accent) 0%,
+      var(--color-king-brass) 100%
+    );
+    transform: scaleY(0);
+    transform-origin: top;
+    transition: transform var(--kb-dur-med) var(--kb-ease-out);
+    z-index: 3;
+    pointer-events: none;
+  }
+
+  .kb-blog-card__link {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-width: 0;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  /* --- Media --- */
+  .kb-blog-card__media {
+    position: relative;
+    overflow: hidden;
+    aspect-ratio: 16 / 9;
+    background: var(--color-king-secondary);
+    isolation: isolate;
+  }
+
+  .kb-blog-card__image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform var(--kb-dur-slow) var(--kb-ease-soft);
+    will-change: transform;
+  }
+
+  .kb-blog-card__media-vignette {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(
+      to top,
+      rgba(17, 16, 14, 0.22) 0%,
+      rgba(17, 16, 14, 0) 35%
+    );
+    opacity: 0.6;
+    transition: opacity var(--kb-dur-med) var(--kb-ease-out);
+    z-index: 1;
+  }
+
+  .kb-blog-card__category {
+    position: absolute;
+    top: var(--kb-space-4);
+    left: var(--kb-space-4);
+    z-index: 2;
+    max-width: calc(100% - var(--kb-space-8));
+  }
+
+  /* --- Body --- */
+  .kb-blog-card__body {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: var(--kb-space-3);
+    padding: var(--kb-space-5);
+    flex: 1;
+    z-index: 4;
+  }
+
+  .kb-blog-card__meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--kb-space-2);
+  }
+
+  .kb-blog-card__title {
+    font-family: var(--font-display);
+    font-size: var(--kb-text-h4);
+    font-weight: var(--kb-w-medium);
+    line-height: 1.18;
+    letter-spacing: var(--kb-title-tracking);
+    color: var(--color-king-text);
+    text-wrap: balance;
+    margin: 0;
+    transition: color var(--kb-dur-fast) var(--kb-ease-out);
+  }
+
+  .kb-blog-card__excerpt {
+    font-size: var(--kb-text-sm);
+    line-height: 1.65;
+    color: var(--color-king-muted);
+    margin: 0;
+    text-wrap: pretty;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* --- CTA con icono contenido en círculo --- */
+  .kb-blog-card__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--kb-space-2);
+    margin-top: auto;
+    padding-top: var(--kb-space-2);
+    font-size: var(--kb-action-size);
+    font-weight: var(--kb-label-weight);
+    line-height: 1;
+    letter-spacing: var(--kb-action-tracking);
+    text-transform: uppercase;
+    color: var(--color-king-muted);
+    transition: color var(--kb-dur-fast) var(--kb-ease-out);
+  }
+
+  .kb-blog-card__cta-icon {
+    display: inline-grid;
+    place-items: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: var(--kb-radius-pill);
+    border: 1px solid var(--kb-stroke-dark);
+    background: var(--kb-surface-light);
+    color: currentColor;
+    transition:
+      background-color var(--kb-dur-fast) var(--kb-ease-out),
+      border-color var(--kb-dur-fast) var(--kb-ease-out),
+      color var(--kb-dur-fast) var(--kb-ease-out),
+      transform var(--kb-dur-fast) var(--kb-ease-out);
+  }
+
+  .kb-blog-card__arrow {
+    width: 0.75rem;
+    height: 0.75rem;
+    flex-shrink: 0;
+    transition: transform var(--kb-dur-fast) var(--kb-ease-out);
+  }
+
+  /* --- Hover --- */
+  @media (hover: hover) and (pointer: fine) {
+    .kb-blog-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--kb-stroke-accent);
+      box-shadow: var(--kb-shadow-md);
+    }
+
+    .kb-blog-card:hover::after {
+      transform: scaleY(1);
+    }
+
+    .kb-blog-card__link:hover .kb-blog-card__image {
+      transform: scale(1.05);
+    }
+
+    .kb-blog-card__link:hover .kb-blog-card__media-vignette {
+      opacity: 0.85;
+    }
+
+    .kb-blog-card__link:hover .kb-blog-card__title {
+      color: var(--color-king-accent);
+    }
+
+    .kb-blog-card__link:hover .kb-blog-card__cta {
+      color: var(--color-king-accent);
+    }
+
+    .kb-blog-card__link:hover .kb-blog-card__cta-icon {
+      background: var(--color-king-accent);
+      border-color: var(--color-king-accent);
+      color: var(--color-king-surface);
+      transform: translateX(2px);
+    }
+
+    .kb-blog-card__link:hover .kb-blog-card__arrow {
+      transform: translate(1px, -1px);
+    }
+  }
+
+  /* Focus-visible */
+  .kb-blog-card__link:focus-visible {
+    outline: none;
+  }
+
+  .kb-blog-card:has(.kb-blog-card__link:focus-visible) {
+    outline: 2px solid rgba(138, 90, 43, 0.5);
+    outline-offset: 3px;
+  }
+</style>

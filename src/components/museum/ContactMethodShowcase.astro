@@ -1,0 +1,19 @@
+---
+import ContactMethod from '../ui/ContactMethod.astro';
+import Panel from '../ui/Panel.astro';
+---
+
+<div class="space-y-4">
+  <Panel padding="md">
+    <div class="grid md:grid-cols-3 gap-3">
+      <ContactMethod label="Email" value="hola@kingbelt.com" icon="mail" href="mailto:hola@kingbelt.com" description="Respuesta en 24h" />
+      <ContactMethod label="WhatsApp" value="+34 666 00 00 00" icon="motorcycle" href="tel:+34666000000" description="Respuesta inmediata" />
+      <ContactMethod label="Instagram" value="@kingbelt" icon="instagram" href="https://instagram.com/kingbelt" />
+    </div>
+  </Panel>
+
+  <Panel padding="sm">
+    <span class="kb-code-label text-king-accent/50 block mb-1">Props</span>
+    <span class="text-[var(--kb-text-eyebrow)] font-mono text-king-text/80">label, value, description?, href?, icon?</span>
+  </Panel>
+</div>

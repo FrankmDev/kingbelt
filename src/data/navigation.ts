@@ -12,13 +12,13 @@ export interface ChannelLink extends NavItem {
 export const mainNav: NavItem[] = [
   { label: 'La marca', href: '/#marca' },
   { label: 'Proceso', href: '/#proceso' },
-  { label: 'Contacto', href: '/#contacto' },
+  { label: 'Contacto', href: '/contacto' },
 ];
 
 export const footerNav: NavItem[] = [
   { label: 'La marca', href: '/#marca' },
   { label: 'Proceso', href: '/#proceso' },
-  { label: 'Contacto', href: '/#contacto' },
+  { label: 'Contacto', href: '/contacto' },
 ];
 
 export const contactChannels: ChannelLink[] = [

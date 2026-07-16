@@ -1,0 +1,113 @@
+---
+import type { GetStaticPaths } from 'astro';
+import ArticleReadingSection from '../../components/blog/ArticleReadingSection.astro';
+import ArticleRelatedSection from '../../components/blog/ArticleRelatedSection.astro';
+import FooterSection from '../../components/layout/FooterSection.astro';
+import Header from '../../components/layout/Header.astro';
+import CTABox from '../../components/ui/CTABox.astro';
+import PageHeader from '../../components/ui/PageHeader.astro';
+import { blogPage, blogPosts, type BlogPost } from '../../data/blog';
+import { site } from '../../data/site';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+export const getStaticPaths = (() =>
+  blogPosts.map((post) => ({
+    params: { slug: post.slug },
+    props: { post },
+  }))) satisfies GetStaticPaths;
+
+interface Props {
+  post: BlogPost;
+}
+
+const { post } = Astro.props;
+const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href;
+const origin = Astro.site ?? Astro.url.origin;
+const sameCategory = blogPosts.filter(
+  (candidate) => candidate.slug !== post.slug && candidate.category === post.category
+);
+const otherPosts = blogPosts.filter(
+  (candidate) => candidate.slug !== post.slug && candidate.category !== post.category
+);
+const relatedPosts = [...sameCategory, ...otherPosts].slice(0, 3);
+const articleSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BlogPosting',
+  headline: post.title,
+  description: post.excerpt,
+  image: new URL(post.image, origin).href,
+  datePublished: post.date,
+  dateModified: post.date,
+  mainEntityOfPage: canonicalURL,
+  articleSection: post.category,
+  publisher: {
+    '@type': 'Organization',
+    name: site.name,
+    url: origin,
+  },
+};
+---
+
+<BaseLayout
+  title={`${post.title} — Revista KingBelt`}
+  description={post.excerpt}
+  image={post.image}
+  canonicalURL={canonicalURL}
+  schema={articleSchema}
+  ogType="article"
+>
+  <Header slot="header" initialTheme="dark" scrolledTheme="light" compactThreshold={32} />
+
+  <PageHeader
+    variant="blog"
+    eyebrow="Revista KingBelt"
+    description={post.excerpt}
+    image={post.image}
+    imageAlt={post.imageAlt}
+    imagePosition={post.imagePosition}
+    meta={blogPage.hero.issue}
+    articleMeta={{
+      category: post.category,
+      date: post.dateLabel,
+      readTime: post.readingTime,
+      image: post.image,
+      imageAlt: post.imageAlt,
+      imagePosition: post.imagePosition,
+    }}
+    breadcrumbs={[{ label: 'Revista', href: '/blog' }, { label: post.category }]}
+  >
+    <Fragment slot="title">{post.title}</Fragment>
+  </PageHeader>
+
+  <ArticleReadingSection post={post} />
+
+  {relatedPosts.length > 0 && <ArticleRelatedSection posts={relatedPosts} />}
+
+  <section class="article-cta section-spacing-tight section-spacing-close" aria-label="Conocer KingBelt">
+    <div class="cta-section-inner kb-shell-wide">
+      <CTABox
+        eyebrow="Detrás de la revista"
+        title="De la lectura a <em>la marca</em>."
+        description="El criterio editorial nace de una forma de mirar el producto: proporción, función, material y uso real."
+        buttonLabel="Conocer KingBelt"
+        buttonHref="/sobre"
+        buttonVariant="secondary"
+        backgroundImage={post.image}
+        backgroundAlt=""
+        backgroundWidth={1168}
+        backgroundHeight={784}
+        backgroundPosition={post.imagePosition}
+        titleTag="h2"
+      />
+    </div>
+  </section>
+
+  <FooterSection slot="footer" connected />
+</BaseLayout>
+
+<style>
+  .article-cta {
+    background: var(--color-king-bg);
+    padding-top: clamp(1.75rem, 3vw, 2.5rem);
+  }
+</style>

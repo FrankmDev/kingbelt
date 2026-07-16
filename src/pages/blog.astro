@@ -1,0 +1,106 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/layout/Header.astro';
+import FooterSection from '../components/layout/FooterSection.astro';
+import PageHeader from '../components/ui/PageHeader.astro';
+import CTABox from '../components/ui/CTABox.astro';
+
+import BlogTopicNavigation from '../components/blog/BlogTopicNavigation.astro';
+import EditorialSelectionSection from '../components/blog/EditorialSelectionSection.astro';
+import FeaturedArticleSection from '../components/blog/FeaturedArticleSection.astro';
+import LatestPostsSection from '../components/blog/LatestPostsSection.astro';
+
+import { blogCategories, blogPage, blogPosts, getBlogPostPath } from '../data/blog';
+import { site } from '../data/site';
+
+const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href;
+const origin = Astro.site ?? Astro.url.origin;
+const featured = blogPosts.find((post) => post.status === 'featured') ?? blogPosts[0];
+const latestPosts = blogPosts.slice(1);
+const selection = [blogPosts[7], blogPosts[6], blogPosts[4]].filter(Boolean);
+const blogSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Blog',
+  name: blogPage.meta.title,
+  description: blogPage.meta.description,
+  url: canonicalURL,
+  publisher: {
+    '@type': 'Organization',
+    name: site.name,
+    url: origin,
+  },
+  blogPost: blogPosts.map((post) => ({
+    '@type': 'BlogPosting',
+    headline: post.title,
+    description: post.excerpt,
+    datePublished: post.date,
+    url: new URL(getBlogPostPath(post), origin).href,
+    image: new URL(post.image, origin).href,
+  })),
+};
+---
+
+<BaseLayout
+  title={blogPage.meta.title}
+  description={blogPage.meta.description}
+  image={blogPage.hero.image}
+  canonicalURL={canonicalURL}
+  schema={blogSchema}
+>
+  <Header slot="header" initialTheme="dark" scrolledTheme="light" compactThreshold={32} />
+
+  <PageHeader
+    class="blog-page-header"
+    eyebrow={blogPage.hero.eyebrow}
+    description={blogPage.hero.lede}
+    image={blogPage.hero.image}
+    imageAlt={blogPage.hero.imageAlt}
+    imagePosition={blogPage.hero.imagePosition}
+    meta={blogPage.hero.issue}
+    breadcrumbs={[{ label: 'Revista' }]}
+  >
+    <Fragment slot="title">
+      <span set:html={blogPage.hero.title} />
+    </Fragment>
+  </PageHeader>
+
+  <BlogTopicNavigation categories={blogCategories} />
+  <FeaturedArticleSection post={featured} />
+  <LatestPostsSection posts={latestPosts} />
+  <EditorialSelectionSection posts={selection} />
+  <section class="blog-cta section-spacing-tight section-spacing-close" aria-label="Conocer KingBelt">
+    <div class="cta-section-inner kb-shell-wide">
+      <CTABox
+        eyebrow="Detrás de la revista"
+        title="De la lectura a <em>la marca</em>."
+        description="El criterio editorial nace de una forma de mirar el producto: proporción, función, material y uso real."
+        buttonLabel="Conocer KingBelt"
+        buttonHref="/sobre"
+        buttonVariant="secondary"
+        backgroundImage={featured.image}
+        backgroundAlt=""
+        backgroundWidth={1168}
+        backgroundHeight={784}
+        backgroundPosition={featured.imagePosition}
+        titleTag="h2"
+      />
+    </div>
+  </section>
+
+  <FooterSection slot="footer" connected />
+</BaseLayout>
+
+<style>
+  .blog-page-header {
+    min-height: min(44rem, 78vh);
+  }
+
+  .blog-page-header :global(.page-header-inner) {
+    padding-top: clamp(5.5rem, 12vw, 7rem);
+    padding-bottom: clamp(4.5rem, 9vw, 6rem);
+  }
+
+  .blog-cta {
+    background: var(--color-king-bg);
+  }
+</style>

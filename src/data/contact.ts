@@ -1,89 +1,199 @@
+import { site } from './site';
+
+export interface ContactChannel {
+  label: string;
+  value: string;
+  description?: string;
+  href: string;
+  icon: string;
+  meta?: string;
+}
+
 export interface FAQItem {
   question: string;
   answer: string;
+  category: string;
+  icon: string;
 }
 
-export interface ContactMethod {
-  label: string;
-  value: string;
+export interface PurchaseInfoItem {
+  title: string;
   description: string;
-  href: string;
+  label: string;
+  meta?: string;
   icon: string;
+}
+
+interface ContactData {
+  hero: {
+    eyebrow: string;
+    description: string;
+    image: string;
+    imageAlt: string;
+    imagePosition: string;
+    meta: string;
+  };
+  channels: ContactChannel[];
+  inquiryTypes: { value: string; label: string }[];
+  faqs: FAQItem[];
+  faqSidebar: {
+    image: string;
+    imageAlt: string;
+    caption: string;
+    label: string;
+  };
+  purchaseInfo: {
+    eyebrow: string;
+    title: string;
+    description: string;
+    badge: { label: string };
+    cta: { label: string; href: string };
+    image: {
+      src: string;
+      alt: string;
+      label: string;
+      caption: string;
+    };
+    items: PurchaseInfoItem[];
+  };
+  emailBanner: {
+    eyebrow: string;
+    title: string;
+    description: string;
+    ctaLabel: string;
+  };
 }
 
 export const contactData = {
   hero: {
     eyebrow: 'Contacto',
-    title: 'Háblanos. <em>Estamos aquí</em>.',
     description:
-      'Si tienes dudas sobre nuestros productos, envíos o quieres saber más sobre el proceso artesanal, estaremos encantados de ayudarte.',
-    image:
-      'https://images.unsplash.com/photo-1560343776-97e52d3a5a2b?auto=format&fit=crop&w=1920&q=80',
-    imageAlt: 'Artesano trabajando el cuero en el taller',
-    meta: 'KingBelt · Madrid · Hecho en España',
+      'Producto, pedidos, colaboraciones o cualquier pregunta sobre KingBelt. Cuéntanos qué necesitas y continuamos desde ahí.',
+    image: '/image.jpg',
+    imageAlt: 'Persona sujetando varios cinturones de cuero en un taller',
+    imagePosition: 'center 52%',
+    meta: 'KingBelt · Contacto',
   },
 
-  methods: [
+  channels: [
     {
       label: 'Email',
-      value: 'hola@kingbelt.com',
-      description: 'Respuesta en menos de 24 horas laborables',
-      href: 'mailto:hola@kingbelt.com',
+      value: site.contact.email,
+      description: 'Para consultas de producto, pedidos y atención general.',
+      href: `mailto:${site.contact.email}`,
       icon: 'mail',
-    },
-    {
-      label: 'WhatsApp',
-      value: '+34 123 456 789',
-      description: 'Respuesta inmediata en horario laboral',
-      href: 'https://wa.me/1234567890',
-      icon: 'paper-plane',
+      meta: 'Respuesta en 24h',
     },
     {
       label: 'Instagram',
       value: '@kingbelt',
-      description: 'Novedades, procesos y vida de taller',
-      href: 'https://instagram.com/kingbelt',
+      description: 'La actualidad visual de la marca.',
+      href: site.urls.instagram,
       icon: 'instagram',
+      meta: 'Red social',
     },
-    {
-      label: 'Estudio',
-      value: 'Madrid, España',
-      description: 'Visitas con cita previa. Escríbenos y coordinamos.',
-      href: '#',
-      icon: 'ruler',
-    },
-  ] satisfies ContactMethod[],
+  ] satisfies ContactChannel[],
+
+  inquiryTypes: [
+    { value: 'producto', label: 'Producto y materiales' },
+    { value: 'pedido', label: 'Pedido' },
+    { value: 'colaboracion', label: 'Colaboración o prensa' },
+    { value: 'otro', label: 'Otra consulta' },
+  ],
 
   faqs: [
     {
-      question: '¿Cuánto tarda el envío?',
+      question: '¿Dónde fabricáis los cinturones?',
       answer:
-        'Todos nuestros pedidos se preparan en 24–48 horas laborables. Los envíos nacionales (España peninsular) se entregan en 2–3 días hábiles. Para Europa, el plazo estimado es de 5–7 días hábiles. Las islas y destinos internacionales pueden tardar algo más; te informaremos del plazo exacto al hacer el pedido.',
+        'Todas las piezas se diseñan y se terminan en España, trabajando con curtidurías y talleres locales. La piel es de origen europeo y la herrajería se funde en pequeñas series para mantener el control de calidad.',
+      category: 'Hecho en España',
+      icon: 'hammer',
     },
     {
-      question: '¿Puedo devolver un producto?',
+      question: '¿Cuánto tarda en llegar mi pedido?',
       answer:
-        'Por supuesto. Tienes 14 días naturales desde la recepción para devolver cualquier artículo en su estado original. Los gastos de devolución corren por cuenta del cliente, excepto si el producto llega defectuoso. Escríbenos un email y te guiaremos en el proceso paso a paso.',
+        'Para envíos peninsulares, el plazo estimado es de 24 a 72 horas laborables. Baleares, Canarias y envíos internacionales pueden ampliarse entre 3 y 7 días laborables. Siempre recibirás un enlace de seguimiento en cuanto el paquete salga de nuestro taller.',
+      category: 'Envío',
+      icon: 'truck',
     },
     {
-      question: '¿Cómo sé mi talla de cinturón?',
+      question: '¿Qué pasa si la talla no me conviene?',
       answer:
-        'Mide un cinturón que ya tengas y te quede bien, desde el extremo de la hebilla hasta el agujero que más uses. Esa es tu talla. Si no tienes uno a mano, mide tu cintura justo por encima de la cadera y suma 5–7 cm. Si tienes dudas, escríbenos por WhatsApp y te ayudamos encantados.',
+        'Puedes consultar nuestra guía de tallas antes de comprar. Si una vez recibido el cinturón necesitas un cambio, dispones de 14 días naturales desde la entrega. El producto debe estar sin usar y en su embalaje original.',
+      category: 'Cambios',
+      icon: 'ruler',
     },
     {
-      question: '¿De qué material están hechos?',
+      question: '¿Incluye caja de regalo?',
       answer:
-        'Trabajamos con cuero vacuno de plena flor, seleccionado por su durabilidad y la pátina natural que adquiere con el uso. Los herrajes son de latón macizo o acero inoxidable, según el modelo. Todo se fabrica en España, en nuestro taller de Madrid, con procesos tradicionales y acabado cuidado.',
+        'Sí. Cada cinturón viaja en una caja de cartón rígido forrada interiormente, pensada para proteger la pieza y para abrirse como si fuera un regalo. Además incluye una bolsa de algodón para guardarlo.',
+      category: 'Embalaje',
+      icon: 'gift',
     },
     {
-      question: '¿Hacéis envíos internacionales?',
+      question: '¿Cómo debo cuidar el cuero?',
       answer:
-        'Sí, enviamos a todo el mundo. Los gastos y plazos varían según el destino. Al hacer el pedido, el sistema calculará el coste exacto. Para pedidos fuera de la UE, pueden aplicarse aranceles e impuestos locales, que corren por cuenta del comprador. Escríbenos si quieres un presupuesto antes de pedir.',
-    },
-    {
-      question: '¿Los productos tienen garantía?',
-      answer:
-        'Todos nuestros cinturones tienen una garantía de 2 años contra defectos de fabricación. El cuero y los herrajes están diseñados para el uso diario, pero si algo falla por nuestro proceso, lo repararemos o reemplazaremos sin coste. La garantía cubre costuras, hebillas y ojetes; no cubre el desgaste natural del cuero.',
+        'Evita el contacto prolongado con el agua y los productos químicos. Para mantener el brillo, limpia con un paño seco y aplica una ligera capa de crema hidratante para cuero de vez en cuando. Con el uso, la piel ganará un tono único propio.',
+      category: 'Cuidado',
+      icon: 'shield-check',
     },
   ] satisfies FAQItem[],
-};
+
+  faqSidebar: {
+    image: '/image.jpg',
+    imageAlt: 'Detalle de un cinturón KingBelt sobre superficie de trabajo',
+    caption: 'Cada pieza se revisa a mano antes de salir del taller.',
+    label: 'Taller',
+  },
+
+  purchaseInfo: {
+    eyebrow: 'Tu compra',
+    title: 'Todo claro, desde el pedido.',
+    description:
+      'Embalaje, envío y cambios resueltos con el mismo criterio que aplicamos al producto: directo, sin letra pequeña.',
+    badge: {
+      label: 'Hecho en España',
+    },
+    cta: {
+      label: 'Ver la colección',
+      href: '/coleccion',
+    },
+    image: {
+      src: '/image.jpg',
+      alt: 'Caja de regalo KingBelt con cinturón de cuero en bolsa de algodón',
+      label: 'Embalaje',
+      caption: 'Cada pieza viaja protegida y lista para abrirse.',
+    },
+    items: [
+      {
+        title: 'Preparado para llegar bien',
+        description: 'Protegemos cada pieza y la enviamos en su caja con bolsa de algodón.',
+        label: 'Embalaje',
+        meta: 'Caja incluida',
+        icon: 'package',
+      },
+      {
+        title: 'Envío con seguimiento',
+        description: 'Recibirás un enlace para consultar el estado de tu pedido en tiempo real.',
+        label: 'Envío',
+        meta: '24–72h península',
+        icon: 'truck',
+      },
+      {
+        title: 'Cambios sencillos',
+        description: 'Dispones de 14 días naturales para solicitar un cambio de talla sin complicaciones.',
+        label: 'Cambios',
+        meta: '14 días',
+        icon: 'ruler',
+      },
+    ] satisfies PurchaseInfoItem[],
+  },
+
+  emailBanner: {
+    eyebrow: 'Escríbenos',
+    title: 'Una conversación clara desde el primer mensaje.',
+    description:
+      'Explica qué pieza, pedido o propuesta tienes en mente. Cuanto más concreto sea el contexto, más fácil será orientar la respuesta sin intercambios innecesarios.',
+    ctaLabel: 'Enviar email',
+  },
+} satisfies ContactData;

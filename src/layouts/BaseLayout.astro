@@ -9,14 +9,16 @@ interface Props {
   image?: string;
   canonicalURL?: string;
   schema?: object;
+  ogType?: 'website' | 'article';
 }
 
 const {
   title = `${site.name} — Accesorios de cuero hechos en España`,
   description = site.description,
   image = '/favicon.svg',
-  canonicalURL = Astro.url.href,
+  canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href,
   schema,
+  ogType = 'website',
 } = Astro.props;
 
 const schemaScript = schema ? JSON.stringify(schema) : null;
@@ -56,7 +58,7 @@ const ogImageUrl = new URL(image, Astro.site || Astro.url).href;
     <link rel="canonical" href={canonicalURL} />
 
     {/* Open Graph */}
-    <meta property="og:type" content="website" />
+    <meta property="og:type" content={ogType} />
     <meta property="og:url" content={canonicalURL} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
@@ -84,7 +86,10 @@ const ogImageUrl = new URL(image, Astro.site || Astro.url).href;
       Saltar al contenido
     </a>
     <slot name="header" />
-    <main id="main" class="flex-1 overflow-x-hidden w-full max-w-full">
+    <main
+      id="main"
+      class="relative z-[var(--kb-z-content)] flex-1 w-full max-w-full overflow-x-clip bg-king-bg"
+    >
       <slot />
     </main>
     <slot name="footer" />

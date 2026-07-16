@@ -1,6 +1,5 @@
 ---
 import { mainNav } from '../../data/navigation';
-import { site } from '../../data/site';
 
 interface Props {
   initialTheme?: 'dark' | 'light';
@@ -47,15 +46,15 @@ const links = mainNav;
           </>
         ))}
         <span class="header-divider mx-2.5 h-3.5 w-px lg:mx-3.5"></span>
-        <a href={site.urls.whatsapp} id="header-cta" target="_blank" rel="noopener noreferrer" class="group hidden items-center gap-2.5 uppercase lg:inline-flex">
+        <a href="/contacto" id="header-cta" class="group hidden items-center gap-2.5 uppercase lg:inline-flex">
           <span class="h-1.5 w-1.5 rounded-full bg-king-accent/65 transition-[background-color,transform] duration-[var(--kb-dur-fast)] group-hover:scale-110 group-hover:bg-king-accent"></span>
-          WhatsApp
+          Escribir
         </a>
       </div>
 
       <button
         id="menu-toggle"
-        class="relative flex h-8 w-8 flex-col items-end justify-center gap-[6px] lg:hidden"
+        class="relative -mr-2 flex h-11 w-11 flex-col items-end justify-center gap-[6px] p-2 lg:hidden"
         aria-label="Abrir menú"
         aria-controls="mobile-menu"
         aria-expanded="false"
@@ -73,17 +72,17 @@ const links = mainNav;
   </div>
 </header>
 
-<div
+<nav
   id="mobile-menu"
   class="fixed inset-0 z-40 flex flex-col justify-center lg:hidden"
+  aria-label="Navegación móvil"
   aria-hidden="true"
-  style="background: var(--color-king-oil); transform: translateY(-100%); transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);"
+  inert
 >
-  {/* Ambient glow */}
+  {/* Ambient surface details */}
   <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(138,106,61,0.08),transparent_50%)]"></div>
   <div class="pointer-events-none absolute inset-0 opacity-[0.025]" style="background-image: url('data:image/svg+xml,%3Csvg viewBox=\'0 0 512 512\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.8\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noise)\'/%3E%3C/svg%3E'); background-size: 200px 200px;"></div>
 
-  {/* Corner frames */}
   <div class="absolute left-6 top-6 h-6 w-6 border-l border-t border-white/[0.05]"></div>
   <div class="absolute right-6 top-6 h-6 w-6 border-r border-t border-white/[0.05]"></div>
   <div class="absolute bottom-6 left-6 h-6 w-6 border-b border-l border-white/[0.05]"></div>
@@ -115,16 +114,14 @@ const links = mainNav;
 
     {/* CTA */}
     <a
-      href={site.urls.whatsapp}
-      target="_blank"
-      rel="noopener noreferrer"
+      href="/contacto"
       class="mobile-nav-cta kb-action-label group inline-flex items-center gap-3 border border-white/15 px-5 py-3 text-white/60 transition-[background-color,border-color,color,opacity,transform] duration-[var(--kb-dur-med)] hover:border-king-accent hover:bg-king-accent/10 hover:text-white"
     >
       <span class="h-1.5 w-1.5 rounded-full bg-king-accent/40 transition-colors duration-[var(--kb-dur-fast)] group-hover:bg-king-accent"></span>
-      WhatsApp
+      Escribir
     </a>
   </div>
-</div>
+</nav>
 
 <style>
   #site-header {
@@ -133,6 +130,12 @@ const links = mainNav;
       transform 700ms cubic-bezier(0.22, 1, 0.36, 1),
       color 500ms ease,
       opacity 500ms ease;
+  }
+
+  #mobile-menu {
+    background: var(--color-king-oil);
+    transform: translateY(-100%);
+    transition: transform 800ms var(--kb-ease-out);
   }
 
   .header-shell {
@@ -388,6 +391,20 @@ const links = mainNav;
   const mobileLinks = document.querySelectorAll('.mobile-nav-link');
   let isMenuOpen = false;
 
+  function closeMenu({ restoreFocus = true } = {}) {
+    if (!isMenuOpen) return;
+    isMenuOpen = false;
+    menuToggle?.setAttribute('aria-expanded', 'false');
+    menuToggle?.setAttribute('aria-label', 'Abrir menú');
+    mobileMenu?.setAttribute('aria-hidden', 'true');
+    mobileMenu?.setAttribute('inert', '');
+    mobileMenu?.classList.remove('is-open');
+    menuToggle?.querySelector('.menu-line-1')?.classList.remove('rotate-45', 'translate-y-[3.75px]');
+    menuToggle?.querySelector('.menu-line-2')?.classList.remove('-rotate-45', '-translate-y-[2.25px]', 'w-6');
+    document.body.style.overflow = '';
+    if (restoreFocus) menuToggle?.focus();
+  }
+
   function updateHeader() {
     if (!header) return;
 
@@ -404,16 +421,19 @@ const links = mainNav;
   }
 
   window.addEventListener('scroll', updateHeader, { passive: true });
-  window.addEventListener('resize', updateHeader, { passive: true });
+  window.addEventListener('resize', () => {
+    updateHeader();
+    if (window.innerWidth >= 1024) closeMenu({ restoreFocus: false });
+  }, { passive: true });
   updateHeader();
 
   menuToggle?.addEventListener('click', () => {
-    isMenuOpen = !isMenuOpen;
-    menuToggle.setAttribute('aria-expanded', String(isMenuOpen));
-    menuToggle.setAttribute('aria-label', isMenuOpen ? 'Cerrar menú' : 'Abrir menú');
-    mobileMenu?.setAttribute('aria-hidden', String(!isMenuOpen));
-
-    if (isMenuOpen) {
+    if (!isMenuOpen) {
+      isMenuOpen = true;
+      menuToggle.setAttribute('aria-expanded', 'true');
+      menuToggle.setAttribute('aria-label', 'Cerrar menú');
+      mobileMenu?.setAttribute('aria-hidden', 'false');
+      mobileMenu?.removeAttribute('inert');
       mobileMenu?.classList.add('is-open');
       menuToggle.querySelector('.menu-line-1')?.classList.add('rotate-45', 'translate-y-[3.75px]');
       menuToggle.querySelector('.menu-line-2')?.classList.add('-rotate-45', '-translate-y-[2.25px]', 'w-6');
@@ -421,11 +441,7 @@ const links = mainNav;
       const firstLink = mobileMenu?.querySelector<HTMLElement>('.mobile-nav-link');
       setTimeout(() => firstLink?.focus(), 400);
     } else {
-      mobileMenu?.classList.remove('is-open');
-      menuToggle.querySelector('.menu-line-1')?.classList.remove('rotate-45', 'translate-y-[3.75px]');
-      menuToggle.querySelector('.menu-line-2')?.classList.remove('-rotate-45', '-translate-y-[2.25px]', 'w-6');
-      document.body.style.overflow = '';
-      menuToggle?.focus();
+      closeMenu();
     }
   });
 
@@ -437,7 +453,24 @@ const links = mainNav;
 
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && isMenuOpen) {
-      menuToggle?.click();
+      closeMenu();
+    }
+
+    if (e.key === 'Tab' && isMenuOpen && mobileMenu) {
+      const focusable = Array.from(
+        mobileMenu.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])')
+      );
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
     }
   });
 </script>

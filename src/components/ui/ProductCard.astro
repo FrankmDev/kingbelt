@@ -1,0 +1,123 @@
+---
+import Badge from './Badge.astro';
+import { formatPrice } from '../../data/catalog';
+
+interface Props {
+  name: string;
+  href: string;
+  image: string;
+  imageAlt: string;
+  category: string;
+  color: string;
+  price: number;
+  currency?: 'EUR';
+  imagePosition?: string;
+  badge?: string;
+  class?: string;
+}
+
+const {
+  name,
+  href,
+  image,
+  imageAlt,
+  category,
+  color,
+  price,
+  currency = 'EUR',
+  imagePosition = 'center',
+  badge,
+  class: className,
+} = Astro.props;
+
+const priceLabel = formatPrice(price, currency);
+---
+
+<article class:list={['product-card kb-card-dry', className]}>
+  <a href={href} class="product-card__link kb-blog-card__link" aria-label={`${name} — ${category}, ${color}, ${priceLabel}`}>
+    <div class="product-card__media kb-blog-card__media">
+      <img
+        src={image}
+        alt={imageAlt}
+        width="640"
+        height="800"
+        loading="lazy"
+        decoding="async"
+        class="kb-blog-card__image"
+        style={`object-position: ${imagePosition}`}
+      />
+      {badge && (
+        <Badge variant="dark" class="product-card__badge">
+          {badge}
+        </Badge>
+      )}
+    </div>
+
+    <div class="product-card__body kb-blog-card__body">
+      <div class="product-card__meta kb-blog-card__meta">
+        <span class="kb-meta-label">{category}</span>
+      </div>
+      <h3 class="product-card__name kb-blog-card__title">{name}</h3>
+      <div class="product-card__details">
+        <span class="product-card__color body-copy">{color}</span>
+        <span class="product-card__price">{priceLabel}</span>
+      </div>
+    </div>
+  </a>
+</article>
+
+<style>
+  .product-card {
+    min-width: 0;
+    height: 100%;
+  }
+
+  .product-card__link {
+    height: 100%;
+  }
+
+  .product-card__media {
+    aspect-ratio: 4 / 5;
+  }
+
+  .product-card__badge {
+    position: absolute;
+    top: var(--kb-space-4);
+    left: var(--kb-space-4);
+    z-index: 2;
+  }
+
+  .product-card__meta {
+    margin: 0;
+  }
+
+  .product-card__details {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--kb-space-3);
+    margin-top: auto;
+    padding-top: var(--kb-space-2);
+  }
+
+  .product-card__color {
+    min-width: 0;
+    font-size: var(--kb-text-sm);
+    line-height: 1.4;
+    color: var(--color-king-muted);
+  }
+
+  .product-card__price {
+    flex-shrink: 0;
+    font-family: var(--font-sans);
+    font-size: var(--kb-text-body);
+    font-weight: var(--kb-w-medium);
+    letter-spacing: 0.01em;
+    color: var(--color-king-text);
+  }
+
+  .product-card__link:focus-visible {
+    outline: 2px solid var(--color-king-accent);
+    outline-offset: 3px;
+  }
+</style>

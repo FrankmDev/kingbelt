@@ -5,47 +5,53 @@ import Panel from '../ui/Panel.astro';
 
 <div class="space-y-4">
   <Panel padding="md">
-    <div class="space-y-6">
+    <div class="space-y-10">
       <div>
-        <span class="kb-code-label text-king-accent/50 block mb-2">Variant: left</span>
+        <span class="kb-code-label text-king-accent/50 block mb-3">Default — center</span>
         <SectionHeader
-          eyebrow="Eyebrow label"
-          number="01" numberTotal="04"
-          body="Body text description lorem ipsum dolor sit amet."
-          meta="Meta"
+          eyebrow="La marca"
+          meta="España"
+          body="KingBelt nace para hacer accesorios de cuero pensados para la ruta: material con criterio, revisión pieza a pieza y atención directa."
         >
           <Fragment slot="title">
-            Título <span class="italic text-king-accent">con acento.</span>
+            Hecho para la ruta, <em>pensado para durar</em>.
           </Fragment>
         </SectionHeader>
       </div>
 
       <div>
-        <span class="kb-code-label text-king-accent/50 block mb-2">Variant: center</span>
+        <span class="kb-code-label text-king-accent/50 block mb-3">Variant: left — sidebar / FAQ</span>
         <SectionHeader
-          eyebrow="Centered"
-          number="02" numberTotal="04"
-          body="Versión centrada."
-          meta="Center"
-          align="center"
+          eyebrow="Preguntas frecuentes"
+          body="Filtra por tema o busca directamente. Si no encuentras lo que buscas, escríbenos y te respondemos en menos de 24 horas laborables."
+          align="left"
         >
           <Fragment slot="title">
-            Centered <span class="italic text-king-accent">variant.</span>
+            Resolvemos las dudas <em>antes de que surjan</em>.
           </Fragment>
+        </SectionHeader>
+      </div>
+
+      <div>
+        <span class="kb-code-label text-king-accent/50 block mb-3">Variant: compact — museo / índice</span>
+        <SectionHeader
+          eyebrow="Patrones"
+          density="compact"
+        >
+          <Fragment slot="title">Section header</Fragment>
         </SectionHeader>
       </div>
 
       <Panel variant="dark" padding="md">
-        <span class="kb-code-label text-white/40 block mb-2">Variant: dark</span>
+        <span class="kb-code-label text-white/40 block mb-3">Variant: dark tone</span>
         <SectionHeader
-          eyebrow="Dark tone"
-          number="03" numberTotal="04"
-          body="Dark tone example."
+          eyebrow="Proceso"
+          meta="3 pasos"
+          body="Cada pieza tiene un recorrido: desde la selección del material hasta que llega a tus manos."
           tone="dark"
-          align="center"
         >
           <Fragment slot="title">
-            Dark <span class="italic">tone</span> example.
+            Pensado para <em>moverse contigo</em>.
           </Fragment>
         </SectionHeader>
       </Panel>
@@ -54,7 +60,11 @@ import Panel from '../ui/Panel.astro';
 
   <Panel padding="sm">
     <span class="kb-code-label text-king-accent/50 block mb-1">Props</span>
-    <span class="text-[var(--kb-text-eyebrow)] font-mono text-king-text/80">eyebrow, title (slot), body, meta, number, numberTotal, align (left|center), tone (light|dark)</span>
+    <span class="text-[var(--kb-text-eyebrow)] font-mono text-king-text/80 leading-relaxed">
+      eyebrow, title (slot), body (slot), meta,
+      align (left|center, default center), tone (light|dark), density (default|compact).
+      Destaca palabras en el título con <span class="text-king-accent">&lt;em&gt;</span>.
+    </span>
   </Panel>
 
   <Panel padding="md">

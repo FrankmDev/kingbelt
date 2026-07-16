@@ -25,10 +25,24 @@ const paddingClass = {
   md: 'p-6 md:p-7',
   lg: 'p-7 md:p-8 lg:p-9',
 }[padding];
+
+const showFrame = variant === 'premium' || variant === 'steel';
 ---
 
 <div
-  class:list={[variantClass, paddingClass, 'overflow-hidden', className]}
+  class:list={['kb-card-root', variantClass, paddingClass, className]}
+  data-card-variant={variant}
 >
-  <slot />
+  {showFrame && (
+    <>
+      <span class="kb-card-corner kb-corner-bracket kb-corner-bracket-tl" aria-hidden="true"></span>
+      <span class="kb-card-corner kb-corner-bracket kb-corner-bracket-tr" aria-hidden="true"></span>
+      <span class="kb-card-corner kb-corner-bracket kb-corner-bracket-bl" aria-hidden="true"></span>
+      <span class="kb-card-corner kb-corner-bracket kb-corner-bracket-br" aria-hidden="true"></span>
+    </>
+  )}
+
+  <div class="kb-card-body">
+    <slot />
+  </div>
 </div>

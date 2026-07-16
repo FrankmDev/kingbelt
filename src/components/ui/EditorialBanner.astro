@@ -1,0 +1,102 @@
+---
+import Breadcrumbs from './Breadcrumbs.astro';
+import Eyebrow from './Eyebrow.astro';
+
+interface Props {
+  eyebrow: string;
+  title: string;
+  statement: string;
+  tags?: readonly string[];
+  image: string;
+  imageAlt?: string;
+  imagePosition?: string;
+  imageCaption?: string;
+  imageWidth?: number;
+  imageHeight?: number;
+  class?: string;
+  id?: string;
+}
+
+const {
+  eyebrow,
+  title,
+  statement,
+  tags = [],
+  image,
+  imageAlt = '',
+  imagePosition = 'center',
+  imageCaption,
+  imageWidth = 1800,
+  imageHeight = 1100,
+  class: className = '',
+  id,
+} = Astro.props;
+
+const labelId = id ? `${id}-label` : undefined;
+---
+
+<aside
+  class:list={['kb-editorial-banner', className]}
+  aria-labelledby={labelId}
+  {...id ? { id } : {}}
+>
+  <img
+    src={image}
+    alt={imageAlt}
+    width={imageWidth}
+    height={imageHeight}
+    class="kb-editorial-banner__media"
+    style={`object-position: ${imagePosition}`}
+    loading="lazy"
+    decoding="async"
+  />
+
+  <div class="kb-editorial-banner__overlay" aria-hidden="true"></div>
+  <div class="kb-editorial-banner__vignette" aria-hidden="true"></div>
+  <div class="kb-editorial-banner__texture kb-texture-asphalt" aria-hidden="true"></div>
+
+  <span class="kb-editorial-banner__corner kb-corner-bracket kb-corner-bracket-tl" aria-hidden="true"></span>
+  <span class="kb-editorial-banner__corner kb-corner-bracket kb-corner-bracket-tr" aria-hidden="true"></span>
+  <span class="kb-editorial-banner__corner kb-corner-bracket kb-corner-bracket-bl" aria-hidden="true"></span>
+  <span class="kb-editorial-banner__corner kb-corner-bracket kb-corner-bracket-br" aria-hidden="true"></span>
+
+  <div class="kb-editorial-banner__tracks" aria-hidden="true">
+    <span class="kb-editorial-banner__track"></span>
+    <span class="kb-editorial-banner__track"></span>
+    <span class="kb-editorial-banner__track"></span>
+  </div>
+
+  <div class="kb-editorial-banner__inner">
+    <div class="kb-editorial-banner__card">
+      <div class="kb-editorial-banner__card-head">
+        <Eyebrow lined class="kb-editorial-banner__eyebrow">
+          {eyebrow}
+        </Eyebrow>
+        <span class="kb-editorial-banner__stamp" aria-hidden="true">KB</span>
+      </div>
+
+      <p id={labelId} class="kb-editorial-banner__title">{title}</p>
+
+      {tags.length > 0 && (
+        <Breadcrumbs
+          items={tags.map((label, index) => ({
+            label,
+            current: index === tags.length - 1,
+          }))}
+          includeHome={false}
+          class="kb-editorial-banner__breadcrumbs"
+        />
+      )}
+    </div>
+
+    <figure class="kb-editorial-banner__quote-wrap">
+      <blockquote class="kb-editorial-banner__quote">
+        <p set:html={statement} />
+      </blockquote>
+    </figure>
+  </div>
+
+  {imageCaption && (
+    <p class="kb-editorial-banner__caption kb-meta-label">{imageCaption}</p>
+  )}
+</aside>

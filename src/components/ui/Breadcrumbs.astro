@@ -4,6 +4,7 @@ import Icon from './Icon.astro';
 interface Crumb {
   label: string;
   href?: string;
+  current?: boolean;
 }
 
 interface Props {
@@ -13,6 +14,9 @@ interface Props {
 }
 
 const { items, includeHome = true, class: className } = Astro.props;
+
+const isCurrent = (crumb: Crumb, index: number) =>
+  crumb.current ?? (index === items.length - 1 && !crumb.href);
 
 const linkClass = 'kb-meta-label text-king-muted/85 hover:text-king-accent transition-colors duration-[var(--kb-dur-fast)]';
 ---
@@ -35,8 +39,12 @@ const linkClass = 'kb-meta-label text-king-muted/85 hover:text-king-accent trans
         >
           {crumb.label}
         </a>
-      ) : (
+      ) : isCurrent(crumb, i) ? (
         <span class="kb-meta-label text-king-accent" aria-current="page">
+          {crumb.label}
+        </span>
+      ) : (
+        <span class="kb-meta-label text-king-muted/85">
           {crumb.label}
         </span>
       )}

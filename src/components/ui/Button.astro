@@ -5,12 +5,16 @@ interface Props {
   size?: 'sm' | 'md' | 'lg';
   class?: string;
   id?: string;
+  name?: string;
+  form?: string;
   target?: string;
   rel?: string;
   type?: 'button' | 'submit' | 'reset';
   disabled?: boolean;
   loading?: boolean;
+  title?: string;
   'aria-label'?: string;
+  'aria-describedby'?: string;
 }
 
 const {
@@ -24,6 +28,7 @@ const {
   disabled = false,
   loading = false,
   'aria-label': ariaLabel,
+  ...rest
 } = Astro.props;
 
 const btnVariants: Record<NonNullable<Props['variant']>, string> = {
@@ -43,6 +48,7 @@ const btnSizes: Record<NonNullable<Props['size']>, string> = {
 
 const classes = [
   'kb-btn',
+  'group',
   btnSizes[size],
   btnVariants[variant],
   disabled && 'kb-btn-disabled',
@@ -69,7 +75,13 @@ const elementProps = href
     };
 ---
 
-<Element class={classes} {...elementProps} aria-label={ariaLabel}>
+<Element
+  class={classes}
+  {...elementProps}
+  {...rest}
+  aria-label={ariaLabel}
+  aria-busy={loading || undefined}
+>
   <span class="kb-btn-text"><slot /></span>
   {loading && <span class="kb-btn-spinner" aria-hidden="true"></span>}
   <span class="kb-btn-rivet" aria-hidden="true"></span>

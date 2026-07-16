@@ -1,341 +1,383 @@
 ---
 import Button from '../ui/Button.astro';
 import Icon from '../ui/Icon.astro';
-import SectionHeader from '../common/SectionHeader.astro';
-import { contactChannels, footerNav, socialLinks } from '../../data/navigation';
+import {
+  footerContact,
+  footerHelpNav,
+  footerHighlights,
+  footerNav,
+  socialLinks,
+} from '../../data/navigation';
 import { site } from '../../data/site';
 
-const finalCtas = [{ label: 'La marca', href: '/#marca', external: false }, ...contactChannels] as const;
+interface Props {
+  class?: string;
+  connected?: boolean;
+}
 
-const workshopSpecs = [
-  { num: '01', label: 'Cuero seleccionado' },
-  { num: '02', label: 'Herrajes sólidos' },
-  { num: '03', label: 'Hecho en España' },
-  { num: '04', label: 'Uso diario' },
-];
+const { class: className = '', connected = false } = Astro.props;
+
+const contactIcons: Record<string, string> = {
+  Email: 'mail',
+  Instagram: 'instagram',
+};
 ---
 
-<footer id="contacto" class="overflow-x-hidden w-full max-w-full" data-gsap-footer>
-
-  {/* ====================== CTA BANNER ====================== */}
-  <section class="cta-shell relative overflow-hidden bg-king-oil" data-cta-section>
-    {/* Atmospheric background */}
-    <div class="cta-bg pointer-events-none absolute inset-0"></div>
-    <div class="cta-glow pointer-events-none absolute left-1/2 top-1/2 h-[45rem] w-[45rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-king-accent/[0.04] blur-[160px]"></div>
-    <div class="cta-vignette pointer-events-none absolute inset-0"></div>
-    <div class="cta-noise pointer-events-none absolute inset-0"></div>
-
-    {/* Subtle top steel line */}
-    <div class="absolute inset-x-8 top-8 h-px bg-gradient-to-r from-transparent via-white/[0.04] to-transparent pointer-events-none md:inset-x-16 lg:inset-x-24"></div>
-
-    {/* Main content */}
-    <div class="kb-shell-wide relative z-10 py-28 text-center md:py-36 lg:py-44">
-
-      <SectionHeader
-        eyebrow="Hecho en España"
-        number="03" numberTotal="03"
-        body="Una base de marca sólida, lista para conectar catálogo y compra directa cuando entre Shopify."
-        align="center"
-        tone="dark"
-        class="cta-section-header mx-auto mb-10 max-w-4xl md:mb-14"
-      >
-        <Fragment slot="title">
-          <span class="cta-title-line-1 block">Construido para la ruta.</span>
-          <span class="cta-title-line-2 block italic">Hecho <span class="not-italic text-king-accent">para quedarse</span>.</span>
-        </Fragment>
-      </SectionHeader>
-
-      {/* CTA Buttons */}
-      <div class="cta-btn-wrap flex flex-col items-center justify-center gap-3 sm:flex-row sm:flex-wrap">
-        {finalCtas.map((cta) => (
-          <Button
-            href={cta.href}
-            target={cta.external ? '_blank' : undefined}
-            rel={cta.external ? 'noopener noreferrer' : undefined}
-            variant={cta.label === 'La marca' ? 'secondary' : 'surfaceOutline'}
-            size="md"
-          >
-            {cta.label}
-            {cta.label === 'La marca' && (
-              <Icon name="arrow-right" class="h-3.5 w-3.5 transition-transform duration-[var(--kb-dur-fast)] group-hover:translate-x-1" />
-            )}
-          </Button>
-        ))}
-      </div>
-
-      {/* Specs strip */}
-      <div class="cta-bottom-strip kb-texture-asphalt relative mx-auto mt-16 max-w-xl overflow-hidden border border-white/[0.06] bg-white/[0.03] px-8 py-5 backdrop-blur-sm md:mt-20 md:px-12 md:py-6">
-        <div class="relative flex flex-wrap items-center justify-center gap-x-8 gap-y-3 md:gap-x-12">
-          {workshopSpecs.map((spec) => (
-            <div class="cta-spec-item flex items-center gap-2.5">
-              <span class="font-mono text-[var(--kb-text-2xs)] tabular-nums text-king-accent/50">{spec.num}</span>
-              <span class="kb-action-label text-white/55">{spec.label}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  </section>
-
-  {/* ====================== ASPHALT DIVIDER ====================== */}
-  <div class="relative h-10 overflow-hidden bg-king-oil md:h-12">
-    <div class="absolute inset-x-8 top-1/2 h-px -translate-y-1/2 bg-gradient-to-r from-transparent via-king-accent/20 to-transparent md:inset-x-16"></div>
-  </div>
-
-  {/* ====================== FOOTER BOTTOM ====================== */}
+<footer
+  id="site-footer"
+  class:list={[
+    'site-footer sticky bottom-0 z-[var(--kb-z-base)] w-full max-w-full overflow-x-hidden',
+    connected && 'site-footer--connected',
+    className,
+  ]}
+  data-gsap-footer
+>
   <div class="footer-shell relative overflow-hidden bg-king-bg" data-footer-bottom>
-    {/* Background */}
+    <div class="footer-accent-bar pointer-events-none absolute inset-x-0 top-0 z-20 h-px" aria-hidden="true"></div>
+
     <div class="footer-bg pointer-events-none absolute inset-0"></div>
     <div class="footer-vignette pointer-events-none absolute inset-0"></div>
+    <div class="footer-glow pointer-events-none absolute inset-0" aria-hidden="true"></div>
 
-    <div class="kb-shell-wide relative z-10 pb-12 pt-16 md:pb-16 md:pt-20">
+    <span class="footer-corner footer-corner--tl pointer-events-none absolute left-4 top-4 z-10 hidden h-5 w-5 border-l border-t border-king-accent/15 md:block" aria-hidden="true"></span>
+    <span class="footer-corner footer-corner--tr pointer-events-none absolute right-4 top-4 z-10 hidden h-5 w-5 border-r border-t border-king-accent/15 md:block" aria-hidden="true"></span>
 
-      {/* Top rule line */}
-      <div class="footer-top-rule mb-14 flex items-center md:mb-16">
-        <span class="h-px flex-1 bg-gradient-to-r from-transparent to-king-border/30"></span>
-        <span class="mx-6 flex items-center gap-3">
-          <span class="h-px w-6 bg-king-accent/20"></span>
-          <span class="h-2 w-2 rotate-45 bg-king-accent/20"></span>
-          <span class="h-px w-6 bg-king-accent/20"></span>
+    <div class="footer-inner kb-shell-wide relative z-10 pb-8 pt-10 md:pb-10 md:pt-12">
+
+      <div class="footer-top-rule mb-7 flex items-center md:mb-8">
+        <span class="h-px flex-1 bg-gradient-to-r from-transparent to-king-border/35"></span>
+        <span class="mx-4 flex items-center gap-2.5">
+          <span class="h-px w-5 bg-king-accent/30"></span>
+          <span class="footer-rule-diamond h-1.5 w-1.5 rotate-45 bg-king-accent/25"></span>
+          <span class="h-px w-5 bg-king-accent/30"></span>
         </span>
-        <span class="h-px flex-1 bg-gradient-to-l from-transparent to-king-border/30"></span>
+        <span class="h-px flex-1 bg-gradient-to-l from-transparent to-king-border/35"></span>
       </div>
 
-      {/* Main grid */}
-      <div class="footer-grid grid grid-cols-1 gap-14 md:grid-cols-12 md:gap-10 mb-14 md:mb-16">
+      <div class="footer-cta mb-8 overflow-hidden rounded-[var(--kb-radius-sm)] border border-king-border/20 bg-king-graphite shadow-[var(--kb-shadow-inset-steel)] md:mb-9">
+        <div class="footer-cta-texture pointer-events-none absolute inset-0 opacity-[0.35]" aria-hidden="true"></div>
+        <div class="footer-cta-inner relative flex flex-col gap-4 px-5 py-4 md:flex-row md:items-center md:justify-between md:gap-6 md:px-6 md:py-4">
+          <div class="footer-cta-copy min-w-0">
+            <p class="footer-cta-eyebrow kb-eyebrow mb-2 text-white/45">
+              <span class="footer-cta-eyebrow-mark" aria-hidden="true"></span>
+              <span>Colección</span>
+            </p>
+            <p class="font-display text-[clamp(1.15rem,2.4vw,1.45rem)] leading-[1.15] tracking-[0.01em] text-white/92">
+              Cuero, hebilla y carácter para la ruta.
+            </p>
+          </div>
+          <div class="footer-cta-actions flex shrink-0 flex-wrap items-center gap-3">
+            <Button href="/coleccion" variant="secondary" size="sm">
+              Ver colección
+            </Button>
+            <a
+              href="/contacto"
+              class="footer-cta-link kb-action-label group inline-flex items-center gap-2 text-white/55 transition-[color,transform] duration-[var(--kb-dur-med)] hover:text-king-accent-light"
+            >
+              <span class="h-1.5 w-1.5 rounded-full bg-king-accent/50 transition-[background-color,transform] duration-[var(--kb-dur-fast)] group-hover:scale-110 group-hover:bg-king-accent-light"></span>
+              Escribir
+            </a>
+          </div>
+        </div>
+      </div>
 
-        {/* Brand column */}
-        <div class="footer-brand-col md:col-span-5">
-          <a href="/" class="group inline-flex items-center gap-3 mb-6">
-            <span class="font-display text-[1.35rem] tracking-[0.2em] uppercase text-king-text md:text-2xl">
-              KingBelt
+      <div class="footer-grid mb-7 grid grid-cols-2 gap-x-6 gap-y-8 md:mb-8 md:grid-cols-12 md:gap-x-8 md:gap-y-0">
+
+        <div class="footer-brand-col col-span-2 md:col-span-4">
+          <a href="/" class="group mb-3 inline-flex items-center gap-2.5">
+            <span class="font-display text-[1.2rem] tracking-[0.18em] uppercase text-king-text md:text-[1.35rem]">
+              {site.name}
             </span>
-            <span class="hidden md:block h-px w-10 bg-king-accent/20 transition-[background-color,width] duration-[var(--kb-dur-med)] group-hover:w-16 group-hover:bg-king-accent/40"></span>
+            <span class="hidden h-px w-8 bg-king-accent/25 transition-[background-color,width] duration-[var(--kb-dur-med)] group-hover:w-12 group-hover:bg-king-accent/50 md:block"></span>
           </a>
-          <p class="mb-8 max-w-sm text-[var(--kb-text-xs)] font-light leading-[1.85] text-king-muted/80">
+          <p class="mb-4 max-w-xs text-[var(--kb-text-xs)] font-light leading-[1.7] text-king-muted/80">
             Accesorios de cuero para el día a día, hechos en España. Para los que se mueven diferente.
           </p>
 
-          {/* Social icons */}
-          <div class="flex items-center gap-4">
-            {socialLinks.map((s) => (
-              <a
-                href={s.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                class="footer-social group relative flex h-10 w-10 items-center justify-center rounded-full border border-king-border/40 text-king-muted/70 transition-[border-color,box-shadow,color,transform] duration-[var(--kb-dur-med)] hover:border-king-accent/50 hover:text-king-accent"
-                aria-label={s.label}
-              >
-                <span class="absolute inset-0 rounded-full bg-king-accent/[0.03] opacity-0 transition-opacity duration-[var(--kb-dur-med)] group-hover:opacity-100"></span>
-                <Icon name={s.icon} class="relative z-10 h-4 w-4" />
-              </a>
-            ))}
+          <div class="mb-4 flex flex-wrap items-center gap-3">
+            <span class="kb-badge-accent">Hecho en España</span>
+            <div class="flex items-center gap-2.5">
+              {socialLinks.map((s) => (
+                <a
+                  href={s.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="footer-social group relative flex h-9 w-9 items-center justify-center rounded-full border border-king-border/45 text-king-muted/75 transition-[border-color,box-shadow,color,transform] duration-[var(--kb-dur-med)] hover:border-king-accent/55 hover:text-king-accent"
+                  aria-label={s.label}
+                >
+                  <span class="absolute inset-0 rounded-full bg-king-accent/[0.06] opacity-0 transition-opacity duration-[var(--kb-dur-med)] group-hover:opacity-100"></span>
+                  <Icon name={s.icon} class="relative z-10 h-3.5 w-3.5" />
+                </a>
+              ))}
+            </div>
           </div>
         </div>
 
-        {/* Navigation column */}
-        <div class="footer-nav-col md:col-span-2 md:col-start-7">
-          <h4 class="footer-col-title kb-action-label mb-6 text-king-text">
-            Navegación
+        <div class="footer-nav-col md:col-span-2 md:col-start-6">
+          <h4 class="footer-col-title mb-3 flex items-center gap-2.5 text-king-text">
+            <span class="footer-col-mark h-px w-4 bg-king-accent/45" aria-hidden="true"></span>
+            <span class="kb-action-label">Navegación</span>
           </h4>
-          <nav class="flex flex-col gap-3">
-            {footerNav.map((item) => (
+          <nav class="flex flex-col gap-1.5" aria-label="Navegación del sitio">
+            {footerNav.map((item, index) => (
               <a
                 href={item.href}
-                class="footer-nav-link group relative inline-flex items-center gap-3 text-[var(--kb-text-xs)] font-light text-king-muted/80 transition-[color,transform] duration-[var(--kb-dur-med)] hover:text-king-text"
+                class="footer-link group relative inline-flex items-center gap-3 py-0.5 text-[var(--kb-text-xs)] font-light text-king-muted/80 transition-[color,transform] duration-[var(--kb-dur-med)] hover:text-king-text"
               >
-<span class="h-px w-0 bg-king-accent/50 transition-[width] duration-[var(--kb-dur-med)] group-hover:w-4"></span>
-                {item.label}
+                <span class="footer-link-index font-mono text-[0.62rem] tabular-nums tracking-[0.08em] text-king-accent/35 transition-colors duration-[var(--kb-dur-med)] group-hover:text-king-accent/70">
+                  {String(index + 1).padStart(2, '0')}
+                </span>
+                <span class="footer-link-label">{item.label}</span>
               </a>
             ))}
           </nav>
         </div>
 
-        {/* Contact column */}
-        <div class="footer-contact-col md:col-span-2">
-          <h4 class="footer-col-title kb-action-label mb-6 text-king-text">
-            Contacto
+        <div class="footer-help-col md:col-span-2">
+          <h4 class="footer-col-title mb-3 flex items-center gap-2.5 text-king-text">
+            <span class="footer-col-mark h-px w-4 bg-king-accent/45" aria-hidden="true"></span>
+            <span class="kb-action-label">Ayuda</span>
           </h4>
-          <div class="flex flex-col gap-3">
-            <a
-              href={site.urls.whatsapp}
-              target="_blank"
-              rel="noopener noreferrer"
-              class="footer-link group relative inline-flex items-center gap-3 text-[var(--kb-text-xs)] font-light text-king-muted/80 transition-colors duration-[var(--kb-dur-med)] hover:text-king-accent"
-            >
-              <span class="h-px w-0 bg-king-accent/50 transition-[width] duration-[var(--kb-dur-med)] group-hover:w-4"></span>
-              WhatsApp
-            </a>
-            <a
-              href={site.urls.instagram}
-              target="_blank"
-              rel="noopener noreferrer"
-              class="footer-link group relative inline-flex items-center gap-3 text-[var(--kb-text-xs)] font-light text-king-muted/80 transition-colors duration-[var(--kb-dur-med)] hover:text-king-accent"
-            >
-              <span class="h-px w-0 bg-king-accent/50 transition-[width] duration-[var(--kb-dur-med)] group-hover:w-4"></span>
-              Instagram
-            </a>
-            <a
-              href={`mailto:hola@kingbelt.com`}
-              class="footer-link group relative inline-flex items-center gap-3 text-[var(--kb-text-xs)] font-light text-king-muted/80 transition-colors duration-[var(--kb-dur-med)] hover:text-king-accent"
-            >
-              <span class="h-px w-0 bg-king-accent/50 transition-[width] duration-[var(--kb-dur-med)] group-hover:w-4"></span>
-              Email
-            </a>
+          <nav class="flex flex-col gap-1.5" aria-label="Ayuda y legal">
+            {footerHelpNav.map((item, index) => (
+              <a
+                href={item.href}
+                class="footer-link group relative inline-flex items-center gap-3 py-0.5 text-[var(--kb-text-xs)] font-light text-king-muted/80 transition-[color,transform] duration-[var(--kb-dur-med)] hover:text-king-text"
+              >
+                <span class="footer-link-index font-mono text-[0.62rem] tabular-nums tracking-[0.08em] text-king-accent/35 transition-colors duration-[var(--kb-dur-med)] group-hover:text-king-accent/70">
+                  {String(index + 1).padStart(2, '0')}
+                </span>
+                <span class="footer-link-label">{item.label}</span>
+              </a>
+            ))}
+          </nav>
+        </div>
+
+        <div class="footer-contact-col md:col-span-3">
+          <h4 class="footer-col-title mb-3 flex items-center gap-2.5 text-king-text">
+            <span class="footer-col-mark h-px w-4 bg-king-accent/45" aria-hidden="true"></span>
+            <span class="kb-action-label">Contacto</span>
+          </h4>
+          <div class="flex flex-col gap-2">
+            {footerContact.map((item) => (
+              <a
+                href={item.href}
+                target={item.external ? '_blank' : undefined}
+                rel={item.external ? 'noopener noreferrer' : undefined}
+                class="footer-contact-card group flex items-center gap-3 rounded-[var(--kb-radius-xs)] border border-king-border/30 bg-king-surface/60 px-3 py-2.5 transition-[border-color,box-shadow,transform,background-color] duration-[var(--kb-dur-med)] hover:border-king-accent/35 hover:bg-king-surface hover:shadow-[0_10px_28px_rgba(138,90,43,0.07)]"
+              >
+                <span class="footer-contact-icon flex h-8 w-8 shrink-0 items-center justify-center rounded-[var(--kb-radius-xs)] border border-king-border/35 bg-king-bg text-king-muted/70 transition-[border-color,color,transform] duration-[var(--kb-dur-med)] group-hover:border-king-accent/40 group-hover:text-king-accent">
+                  <Icon name={contactIcons[item.label] ?? 'mail'} class="h-3.5 w-3.5" />
+                </span>
+                <span class="min-w-0">
+                  <span class="mb-0.5 block text-[var(--kb-text-2xs)] font-medium uppercase tracking-[0.14em] text-king-muted/60 transition-colors duration-[var(--kb-dur-med)] group-hover:text-king-accent">
+                    {item.label}
+                  </span>
+                  <span class="block truncate text-[var(--kb-text-xs)] font-light text-king-text/85 transition-colors duration-[var(--kb-dur-med)] group-hover:text-king-text">
+                    {item.value}
+                  </span>
+                </span>
+              </a>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* Bottom bar */}
-      <div class="footer-bottom-bar relative flex flex-col items-center gap-5 border-t border-king-border/20 pt-8 md:flex-row md:justify-between">
+      <ul class="footer-meta-strip mb-7 flex flex-wrap gap-2 md:mb-8" aria-label="Información de compra">
+        {footerHighlights.map((item) => (
+          <li>
+            <span class="kb-tag-accent footer-meta-tag inline-flex items-center gap-2">
+              <span class="h-1 w-1 rotate-45 bg-king-accent/70" aria-hidden="true"></span>
+              {item}
+            </span>
+          </li>
+        ))}
+      </ul>
+
+      <div class="footer-bottom-bar relative flex flex-col items-center gap-4 border-t border-king-border/25 pt-5 md:flex-row md:justify-between">
+        <div class="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 md:justify-start">
+          <span class="footer-dot-marker h-1.5 w-1.5 rotate-45 bg-king-accent/20"></span>
+          <p class="text-[var(--kb-text-2xs)] font-light tracking-[0.06em] text-king-muted/70">
+            &copy; {new Date().getFullYear()} {site.name}. Todos los derechos reservados.
+          </p>
+          <span class="hidden h-3 w-px bg-king-border/30 md:block" aria-hidden="true"></span>
+          <a
+            href="/privacidad"
+            class="footer-legal-link text-[var(--kb-text-2xs)] font-light tracking-[0.06em] text-king-muted/70 transition-colors duration-[var(--kb-dur-fast)] hover:text-king-accent"
+          >
+            Privacidad
+          </a>
+        </div>
+
+        <div class="footer-bar-separator hidden items-center gap-2.5 md:flex">
+          <span class="h-px w-6 bg-gradient-to-r from-transparent to-king-border/35"></span>
+          <span class="h-2 w-2 rotate-45 border border-king-accent/30"></span>
+          <span class="h-px w-6 bg-gradient-to-l from-transparent to-king-border/35"></span>
+        </div>
+
         <div class="flex items-center gap-4">
-          <span class="footer-dot-marker h-2 w-2 rotate-45 bg-king-accent/15"></span>
-<p class="text-[var(--kb-text-2xs)] font-light tracking-[0.06em] text-king-muted/70">
-             &copy; {new Date().getFullYear()} KingBelt. Todos los derechos reservados.
-           </p>
-        </div>
-
-        <div class="footer-bar-separator hidden items-center gap-3 md:flex">
-          <span class="h-px w-8 bg-gradient-to-r from-transparent to-king-border/30"></span>
-          <span class="h-2.5 w-2.5 rotate-45 border border-king-accent/20"></span>
-          <span class="h-px w-8 bg-gradient-to-l from-transparent to-king-border/30"></span>
-        </div>
-
-        <div class="flex items-center gap-7">
-<p class="text-[var(--kb-text-2xs)] font-light tracking-[0.06em] text-king-muted/70">
-             Asfalto, cuero y carácter desde España.
-           </p>
+          <p class="hidden text-[var(--kb-text-2xs)] font-light tracking-[0.06em] text-king-muted/70 sm:block">
+            Asfalto, cuero y carácter desde España.
+          </p>
           <button
             id="scroll-to-top"
-            class="group flex items-center gap-2 text-[var(--kb-text-2xs)] font-light tracking-[0.06em] text-king-muted/70 transition-[color,opacity] duration-[var(--kb-dur-fast)] hover:text-king-accent"
+            type="button"
+            class="footer-scroll-top group inline-flex items-center gap-2 rounded-full border border-king-border/35 bg-king-surface/70 px-3 py-1.5 text-[var(--kb-text-2xs)] font-medium uppercase tracking-[0.14em] text-king-muted/80 transition-[border-color,box-shadow,color,transform,background-color] duration-[var(--kb-dur-med)] hover:border-king-accent/40 hover:bg-king-surface hover:text-king-accent"
             aria-label="Volver arriba"
-            style="opacity: 0; pointer-events: none;"
+            hidden
           >
-            <span>Volver arriba</span>
-            <span class="flex h-7 w-7 items-center justify-center rounded-full border border-king-border/30 transition-[border-color,transform] duration-[var(--kb-dur-fast)] group-hover:border-king-accent/40 group-hover:-translate-y-0.5">
-              <svg class="h-3.5 w-3.5 transition-transform duration-[var(--kb-dur-fast)] group-hover:-translate-y-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" /></svg>
+            <span class="hidden sm:inline">Arriba</span>
+            <span class="flex h-5 w-5 items-center justify-center rounded-full border border-king-border/35 transition-[border-color,transform] duration-[var(--kb-dur-fast)] group-hover:border-king-accent/45 group-hover:-translate-y-0.5">
+              <svg class="h-2.5 w-2.5 transition-transform duration-[var(--kb-dur-fast)] group-hover:-translate-y-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" /></svg>
             </span>
           </button>
         </div>
       </div>
     </div>
 
-    {/* GIANT TYPOGRAPHY */}
     <div
-      class="footer-giant-wrap relative mt-6 overflow-hidden text-center md:mt-8"
-      style="height: clamp(10rem, 20vw, 18rem); mask-image: linear-gradient(to bottom, black 0%, black 75%, transparent 100%); -webkit-mask-image: linear-gradient(to bottom, black 0%, black 75%, transparent 100%);"
+      class="footer-giant-wrap relative mt-3 overflow-hidden text-center md:mt-4"
+      style="height: clamp(7rem, 16vw, 14rem); mask-image: linear-gradient(to bottom, black 0%, black 72%, transparent 100%); -webkit-mask-image: linear-gradient(to bottom, black 0%, black 72%, transparent 100%);"
     >
       <span
-        class="footer-giant font-display pointer-events-none inline-block select-none uppercase leading-[0.6] tracking-[0.06em] text-king-text"
-        style="font-size: 20vw; opacity: 0.04; transform: translateY(1.5rem); font-weight: 300;"
-      >
-        KINGBELT
-      </span>
-      {/* Subtle ghosted wordmark layer for depth */}
-      <span
-        class="footer-giant-ghost font-display pointer-events-none absolute inset-0 flex select-none items-center justify-center overflow-hidden uppercase leading-[0.6] tracking-[0.06em] text-king-accent/[0.06]"
-        style="font-size: 20vw; font-weight: 300;"
+        class="footer-giant font-display pointer-events-none inline-block select-none uppercase leading-[0.6] tracking-[0.06em]"
         aria-hidden="true"
       >
-        <span class="footer-giant-drift inline-block">KINGBELT</span>
+        KINGBELT
       </span>
     </div>
   </div>
 </footer>
 
 <style>
-  /* ===== CTA SECTION ===== */
-  .cta-shell {
-    isolation: isolate;
-  }
-
-  .cta-bg {
-    background:
-      radial-gradient(circle at 30% 40%, rgba(138, 90, 43, 0.06), transparent 42%),
-      radial-gradient(circle at 70% 60%, rgba(138, 90, 43, 0.03), transparent 38%),
-      radial-gradient(ellipse 100% 60% at 50% 100%, rgba(138, 90, 43, 0.04), transparent 50%);
-  }
-
-  .cta-vignette {
-    background: radial-gradient(ellipse 75% 65% at 50% 50%, transparent 0%, rgba(8, 7, 6, 0.55) 100%);
-  }
-
-  .cta-noise {
-    opacity: 0.025;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='5' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-    background-size: 200px 200px;
-    mix-blend-mode: overlay;
-  }
-
-  .cta-bottom-strip {
-    box-shadow:
-      0 12px 30px rgba(0, 0, 0, 0.15),
-      inset 0 1px 0 rgba(255, 255, 255, 0.04);
-  }
-
-  /* ===== FOOTER BOTTOM ===== */
   .footer-shell {
     isolation: isolate;
   }
 
+  .site-footer {
+    transform: translateZ(0);
+  }
+
+  .site-footer--connected .footer-inner {
+    padding-top: clamp(2rem, 3.5vw, 2.75rem);
+  }
+
+  .site-footer--connected .footer-giant-wrap {
+    margin-top: 0.125rem;
+  }
+
+  @media (min-width: 48rem) {
+    .site-footer--connected .footer-inner {
+      padding-top: clamp(2.25rem, 3.5vw, 3rem);
+    }
+  }
+
+  .footer-accent-bar {
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(138, 90, 43, 0.15) 18%,
+      var(--color-king-accent) 50%,
+      rgba(138, 90, 43, 0.15) 82%,
+      transparent 100%
+    );
+    box-shadow: 0 0 18px rgba(138, 90, 43, 0.18);
+  }
+
   .footer-bg {
-    opacity: 0.3;
+    opacity: 0.34;
     background-image:
-      linear-gradient(90deg, rgba(138, 90, 43, 0.04) 0, rgba(138, 90, 43, 0.04) 1px, transparent 1px),
-      linear-gradient(rgba(26, 26, 26, 0.01) 1px, transparent 1px);
-    background-size: 10rem 100%, 100% 4rem;
-    mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.5), transparent 98%);
+      linear-gradient(90deg, rgba(138, 90, 43, 0.045) 0, rgba(138, 90, 43, 0.045) 1px, transparent 1px),
+      linear-gradient(rgba(26, 26, 26, 0.012) 1px, transparent 1px);
+    background-size: 10rem 100%, 100% 3.5rem;
+    mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.55), transparent 96%);
   }
 
   .footer-vignette {
-    background: radial-gradient(ellipse 80% 65% at 50% 40%, transparent 0%, rgba(247, 243, 238, 0.4) 100%);
+    background: radial-gradient(ellipse 85% 70% at 50% 35%, transparent 0%, rgba(247, 243, 238, 0.45) 100%);
   }
 
-  /* Social icons */
+  .footer-glow {
+    background:
+      radial-gradient(ellipse 55% 40% at 12% 18%, rgba(138, 90, 43, 0.07), transparent 70%),
+      radial-gradient(ellipse 45% 35% at 88% 22%, rgba(138, 90, 43, 0.05), transparent 72%);
+  }
+
+  .footer-corner {
+    transition: border-color var(--kb-dur-slow) var(--kb-ease-out);
+  }
+
+  .footer-shell:hover .footer-corner {
+    border-color: rgba(138, 90, 43, 0.28);
+  }
+
+  .footer-rule-diamond {
+    transition: transform 600ms var(--kb-ease-out), background-color 400ms ease;
+  }
+
+  .footer-top-rule:hover .footer-rule-diamond {
+    transform: rotate(45deg) scale(1.2);
+    background-color: rgba(138, 90, 43, 0.45);
+  }
+
+  .footer-cta {
+    position: relative;
+  }
+
+  .footer-cta-texture {
+    background-image:
+      linear-gradient(90deg, rgba(255, 255, 255, 0.03) 0, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    background-size: 4rem 100%, 100% 2.5rem;
+  }
+
+  .footer-cta-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+  }
+
+  .footer-cta-eyebrow-mark {
+    width: 0.35rem;
+    height: 0.35rem;
+    rotate: 45deg;
+    background: var(--color-king-accent-light);
+    box-shadow: 0 0 10px rgba(214, 177, 110, 0.35);
+  }
+
+  .footer-cta-link:hover {
+    transform: translateX(2px);
+  }
+
   .footer-social {
     position: relative;
-    transition: all 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+    transition:
+      border-color var(--kb-dur-med) var(--kb-ease-out),
+      box-shadow var(--kb-dur-med) var(--kb-ease-out),
+      color var(--kb-dur-med) var(--kb-ease-out),
+      transform var(--kb-dur-med) var(--kb-ease-out);
   }
 
   .footer-social:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(138, 90, 43, 0.08);
+    box-shadow: 0 8px 22px rgba(138, 90, 43, 0.12);
   }
 
-  /* Navigation links */
-  .footer-nav-link::after {
-    content: '';
-    position: absolute;
-    bottom: -3px;
-    left: 0;
-    width: 100%;
-    height: 1px;
-    background: var(--color-king-accent);
-    transform: scaleX(0);
-    transform-origin: left;
-    transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+  .footer-link {
+    position: relative;
   }
 
-  .footer-nav-link:hover::after {
-    transform: scaleX(1);
-  }
-
-  .footer-nav-link:hover {
-    transform: translateX(4px);
-  }
-
-  /* Contact links */
   .footer-link::after {
     content: '';
     position: absolute;
-    bottom: -3px;
-    left: 0;
-    width: 100%;
+    bottom: 0;
+    left: 1.45rem;
+    width: calc(100% - 1.45rem);
     height: 1px;
     background: var(--color-king-accent);
     transform: scaleX(0);
     transform-origin: left;
-    transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+    transition: transform 0.45s cubic-bezier(0.23, 1, 0.32, 1);
   }
 
   .footer-link:hover::after {
@@ -343,33 +385,49 @@ const workshopSpecs = [
   }
 
   .footer-link:hover {
-    transform: translateX(4px);
+    transform: translateX(3px);
   }
 
-  /* Giant ghosted drift */
-  .footer-giant-drift {
-    animation: footer-drift 22s linear infinite;
-    will-change: transform;
+  .footer-link:hover .footer-link-label {
+    color: var(--color-king-text);
   }
 
-  @keyframes footer-drift {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(-6%); }
+  .footer-contact-card:hover {
+    transform: translateY(-1px);
   }
 
-  .footer-giant-ghost {
-    mix-blend-mode: multiply;
+  .footer-contact-card:hover .footer-contact-icon {
+    transform: scale(1.04);
   }
 
-  /* Footer bar refinements */
+  .footer-meta-tag {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  }
+
+  .footer-giant {
+    font-size: 20vw;
+    font-weight: 300;
+    color: transparent;
+    background-image: linear-gradient(
+      180deg,
+      rgba(138, 90, 43, 0.14) 0%,
+      rgba(26, 26, 26, 0.055) 58%,
+      rgba(26, 26, 26, 0.02) 100%
+    );
+    background-clip: text;
+    -webkit-background-clip: text;
+    transform: translateY(1.25rem);
+    filter: drop-shadow(0 0 42px rgba(138, 90, 43, 0.08));
+  }
+
   .footer-dot-marker {
     transition: transform 600ms var(--kb-ease-out, cubic-bezier(0.22, 1, 0.36, 1)),
                 background-color 400ms ease;
   }
 
   .footer-bottom-bar:hover .footer-dot-marker {
-    transform: rotate(45deg) scale(1.1);
-    background-color: rgba(138, 90, 43, 0.35);
+    transform: rotate(45deg) scale(1.15);
+    background-color: rgba(138, 90, 43, 0.42);
   }
 
   .footer-bar-separator span:nth-child(2) {
@@ -380,6 +438,27 @@ const workshopSpecs = [
     transform: rotate(45deg) scale(1.15);
   }
 
+  .footer-scroll-top:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 24px rgba(138, 90, 43, 0.1);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .footer-link,
+    .footer-social,
+    .footer-contact-card,
+    .footer-scroll-top,
+    .footer-cta-link {
+      transition-duration: 0.01ms !important;
+    }
+
+    .footer-link:hover,
+    .footer-social:hover,
+    .footer-contact-card:hover,
+    .footer-scroll-top:hover {
+      transform: none;
+    }
+  }
 </style>
 
 <script>
@@ -390,31 +469,8 @@ const workshopSpecs = [
 
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const footerScope = document.querySelector('[data-gsap-footer]');
+
   if (footerScope && !reduceMotion) {
-    /* ── CTA Section Timeline ── */
-    const ctaSection = footerScope.querySelector('[data-cta-section]');
-    if (ctaSection) {
-      const ctaTl = gsap.timeline({
-        defaults: { ease: 'power3.out' },
-        scrollTrigger: {
-          trigger: ctaSection,
-          start: 'top 85%',
-          once: true,
-        },
-      });
-
-      ctaTl
-        .from(ctaSection.querySelector('.cta-bg'), { opacity: 0, duration: 1.4 })
-        .from(ctaSection.querySelector('.cta-glow'), { opacity: 0, scale: 0.8, duration: 1.2 }, 0.1)
-        .from(ctaSection.querySelector('.cta-section-header'), { y: 20, opacity: 0, duration: 0.8 }, 0.35)
-        .from(ctaSection.querySelector('.cta-title-line-1'), { y: 40, opacity: 0, duration: 1.0 }, 0.45)
-        .from(ctaSection.querySelector('.cta-title-line-2'), { y: 40, opacity: 0, duration: 1.0 }, 0.55)
-        .from(ctaSection.querySelector('.cta-btn-wrap'), { y: 14, opacity: 0, duration: 0.8 }, 0.85)
-        .from(ctaSection.querySelector('.cta-bottom-strip'), { y: 24, opacity: 0, duration: 0.9 }, 0.95)
-        .from(ctaSection.querySelectorAll('.cta-spec-item'), { y: 10, opacity: 0, duration: 0.5, stagger: 0.08 }, 1.05);
-    }
-
-    /* ── Footer Bottom Timeline ── */
     const footerBottom = footerScope.querySelector('[data-footer-bottom]');
     if (footerBottom) {
       const footerTl = gsap.timeline({
@@ -427,34 +483,45 @@ const workshopSpecs = [
       });
 
       footerTl
-        .from(footerBottom.querySelector('.footer-bg'), { opacity: 0, duration: 1.2 })
-        .from(footerBottom.querySelector('.footer-top-rule'), { scaleX: 0, opacity: 0, duration: 0.8, transformOrigin: 'center' }, 0.2)
-        .from(footerBottom.querySelector('.footer-brand-col'), { y: 24, opacity: 0, duration: 0.8 }, 0.3)
-        .from(footerBottom.querySelector('.footer-nav-col'), { y: 24, opacity: 0, duration: 0.8 }, 0.4)
-        .from(footerBottom.querySelector('.footer-contact-col'), { y: 24, opacity: 0, duration: 0.8 }, 0.5)
-        .from(footerBottom.querySelector('.footer-giant'), { y: 50, opacity: 0, duration: 1.4 }, 0.5)
-        .from(footerBottom.querySelector('.footer-bottom-bar'), { y: 12, opacity: 0, duration: 0.7 }, 0.8);
+        .from(footerBottom.querySelector('.footer-accent-bar'), { scaleX: 0, opacity: 0, duration: 0.9, transformOrigin: 'center' })
+        .from(footerBottom.querySelector('.footer-bg'), { opacity: 0, duration: 1.1 }, 0.05)
+        .from(footerBottom.querySelector('.footer-top-rule'), { scaleX: 0, opacity: 0, duration: 0.75, transformOrigin: 'center' }, 0.15)
+        .from(footerBottom.querySelector('.footer-cta'), { y: 18, opacity: 0, duration: 0.75 }, 0.22)
+        .from(footerBottom.querySelector('.footer-brand-col'), { y: 18, opacity: 0, duration: 0.65 }, 0.3)
+        .from(footerBottom.querySelector('.footer-nav-col'), { y: 18, opacity: 0, duration: 0.65 }, 0.38)
+        .from(footerBottom.querySelector('.footer-help-col'), { y: 18, opacity: 0, duration: 0.65 }, 0.44)
+        .from(footerBottom.querySelector('.footer-contact-col'), { y: 18, opacity: 0, duration: 0.65 }, 0.5)
+        .from(footerBottom.querySelectorAll('.footer-meta-tag'), { y: 10, opacity: 0, duration: 0.45, stagger: 0.06 }, 0.58)
+        .from(footerBottom.querySelector('.footer-giant'), { y: 36, opacity: 0, duration: 1.15 }, 0.52)
+        .from(footerBottom.querySelector('.footer-bottom-bar'), { y: 10, opacity: 0, duration: 0.55 }, 0.72);
+
+      const giant = footerBottom.querySelector('.footer-giant');
+      if (giant) {
+        gsap.to(giant, {
+          y: -8,
+          ease: 'none',
+          scrollTrigger: {
+            trigger: footerBottom,
+            start: 'top bottom',
+            end: 'bottom top',
+            scrub: 0.6,
+          },
+        });
+      }
     }
   }
 
-  /* ── Scroll to top ── */
   const scrollToTopBtn = document.getElementById('scroll-to-top');
   if (scrollToTopBtn) {
     const toggleVisibility = () => {
-      if (window.scrollY > 400) {
-        scrollToTopBtn.style.opacity = '1';
-        scrollToTopBtn.style.pointerEvents = 'auto';
-      } else {
-        scrollToTopBtn.style.opacity = '0';
-        scrollToTopBtn.style.pointerEvents = 'none';
-      }
+      scrollToTopBtn.hidden = window.scrollY <= 400;
     };
 
     window.addEventListener('scroll', toggleVisibility, { passive: true });
     toggleVisibility();
 
     scrollToTopBtn.addEventListener('click', () => {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
     });
   }
 </script>

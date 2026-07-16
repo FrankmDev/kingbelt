@@ -1,0 +1,252 @@
+---
+import SectionHeader from '../common/SectionHeader.astro';
+import BlogCard from '../ui/BlogCard.astro';
+import Button from '../ui/Button.astro';
+import Icon from '../ui/Icon.astro';
+import type { BlogPost } from '../../data/blog';
+
+interface Props {
+  posts: BlogPost[];
+}
+
+const { posts } = Astro.props;
+---
+
+<section
+  class="article-related section-spacing section-spacing-chapter"
+  aria-labelledby="article-related-title"
+>
+  <div class="kb-shell-wide article-related-inner">
+    <div class="article-related-head">
+      <SectionHeader
+        eyebrow="Continúa leyendo"
+        body="Más lecturas del cuaderno sobre estilo, materiales, proporción y uso real."
+        meta={`${posts.length} artículos relacionados`}
+        titleId="article-related-title"
+        align="left"
+        class="article-related-header"
+      >
+        <Fragment slot="title">
+          Otras piezas del <em>cuaderno</em>.
+        </Fragment>
+      </SectionHeader>
+
+      <Button href="/blog" variant="outline" size="md" class="article-related-all">
+        Ver toda la revista
+        <Icon name="arrow-up-right" />
+      </Button>
+    </div>
+
+    <div class="article-related-stage">
+      <div class="article-related-stage__texture" aria-hidden="true"></div>
+
+      <span
+        class="article-related-stage__corner kb-corner-bracket kb-corner-bracket-tl"
+        aria-hidden="true"
+      ></span>
+      <span
+        class="article-related-stage__corner kb-corner-bracket kb-corner-bracket-tr"
+        aria-hidden="true"
+      ></span>
+      <span
+        class="article-related-stage__corner kb-corner-bracket kb-corner-bracket-bl"
+        aria-hidden="true"
+      ></span>
+      <span
+        class="article-related-stage__corner kb-corner-bracket kb-corner-bracket-br"
+        aria-hidden="true"
+      ></span>
+
+      <ul class="article-related-grid" aria-label="Artículos relacionados">
+        {posts.map((relatedPost, index) => (
+          <li class="article-related-grid__item">
+            <BlogCard
+              variant="default"
+              folio={String(index + 1).padStart(2, '0')}
+              title={relatedPost.title}
+              excerpt={relatedPost.excerpt}
+              slug={relatedPost.slug}
+              image={relatedPost.image}
+              imageAlt={relatedPost.imageAlt}
+              imageWidth={640}
+              imageHeight={480}
+              imagePosition={relatedPost.imagePosition}
+              category={relatedPost.category}
+              date={relatedPost.dateLabel}
+              readingTime={relatedPost.readingTime}
+            />
+          </li>
+        ))}
+      </ul>
+    </div>
+  </div>
+</section>
+
+<style>
+  .article-related {
+    background: var(--color-king-surface);
+    padding-bottom: clamp(1.5rem, 2.5vw, 2.25rem);
+  }
+
+  .article-related-header:global(.section-header) {
+    --sh-max-copy: 40ch;
+    --sh-max-title: 16ch;
+  }
+
+  .article-related-inner {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(3rem, 5vw, 4.75rem);
+  }
+
+  .article-related-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--kb-space-6);
+  }
+
+  .article-related-stage {
+    position: relative;
+    width: min(100%, calc(100% - clamp(2rem, 6vw, 5.5rem)));
+    margin-inline: auto;
+    padding: clamp(1.35rem, 2.8vw, 2rem);
+    border: 1px solid var(--kb-stroke-dark);
+    border-radius: var(--kb-card-radius);
+    background: var(--kb-surface-light-strong);
+    box-shadow: var(--kb-shadow-sm);
+    overflow: hidden;
+  }
+
+  .article-related-stage::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.72) 48%,
+      transparent
+    );
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .article-related-stage::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow: var(--kb-shadow-inset-soft);
+    pointer-events: none;
+  }
+
+  .article-related-stage__texture {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.32;
+    background-image:
+      linear-gradient(90deg, rgba(138, 90, 43, 0.04) 0, rgba(138, 90, 43, 0.04) 1px, transparent 1px),
+      linear-gradient(rgba(26, 26, 26, 0.016) 1px, transparent 1px);
+    background-size: 8rem 100%, 100% 4rem;
+    mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.5), transparent 88%);
+  }
+
+  .article-related-stage__corner {
+    z-index: 2;
+  }
+
+  .article-related-stage__corner.kb-corner-bracket-tl {
+    top: 0.9rem;
+    left: 0.9rem;
+  }
+
+  .article-related-stage__corner.kb-corner-bracket-tr {
+    top: 0.9rem;
+    right: 0.9rem;
+  }
+
+  .article-related-stage__corner.kb-corner-bracket-bl {
+    bottom: 0.9rem;
+    left: 0.9rem;
+  }
+
+  .article-related-stage__corner.kb-corner-bracket-br {
+    right: 0.9rem;
+    bottom: 0.9rem;
+  }
+
+  .article-related-grid {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--kb-space-gap);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .article-related-grid__item {
+    min-width: 0;
+  }
+
+  .article-related-grid :global(.kb-blog-card) {
+    box-sizing: border-box;
+    max-width: 100%;
+    height: 100%;
+    border-radius: var(--kb-card-radius);
+  }
+
+  .article-related-grid :global(.kb-blog-card.kb-card-dry) {
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .article-related-grid :global(.kb-blog-card.kb-card-dry::before),
+  .article-related-grid :global(.kb-blog-card.kb-card-dry::after) {
+    content: none;
+  }
+
+  .article-related-grid :global(.kb-blog-card__media) {
+    aspect-ratio: 4 / 3;
+    border-radius: var(--kb-radius-sm);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .article-related-grid :global(.kb-blog-card.kb-card-dry:hover) {
+      transform: none;
+      border-color: transparent;
+      box-shadow: none;
+    }
+  }
+
+  @media (min-width: 48rem) {
+    .article-related-stage {
+      width: min(100%, calc(100% - clamp(3rem, 8vw, 7rem)));
+    }
+  }
+
+  @media (max-width: 63.99rem) {
+    .article-related-head {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+  }
+
+  @media (min-width: 40rem) {
+    .article-related-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .article-related-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      align-items: stretch;
+    }
+  }
+</style>

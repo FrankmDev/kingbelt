@@ -1,0 +1,38 @@
+---
+import CTABox from '../components/ui/CTABox.astro';
+import SectionHeader from '../components/common/SectionHeader.astro';
+import { closingCta } from '../data/home';
+---
+
+<section class="home-closing section-spacing-tight section-spacing-close" aria-label="Llamada a la acción">
+  <div class="cta-section-inner kb-shell-wide">
+    <CTABox
+      eyebrow={closingCta.eyebrow}
+      title={closingCta.title}
+      description={closingCta.description}
+      buttonLabel={closingCta.primary.label}
+      buttonHref={closingCta.primary.href}
+      buttonVariant="secondary"
+      secondaryButtonLabel={closingCta.secondary.label}
+      secondaryButtonHref={closingCta.secondary.href}
+      secondaryButtonVariant="surfaceOutline"
+      backgroundImage={closingCta.backgroundImage}
+      backgroundAlt={closingCta.backgroundAlt}
+      backgroundPosition={closingCta.backgroundPosition}
+      titleTag="h2"
+    >
+      <SectionHeader
+        slot="header"
+        eyebrow={closingCta.eyebrow}
+        body={closingCta.description}
+        align="left"
+        tone="dark"
+        density="compact"
+      >
+        <Fragment slot="title">
+          <span set:html={closingCta.title} />
+        </Fragment>
+      </SectionHeader>
+    </CTABox>
+  </div>
+</section>

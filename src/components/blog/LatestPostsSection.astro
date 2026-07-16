@@ -1,0 +1,265 @@
+---
+import SectionHeader from '../common/SectionHeader.astro';
+import BlogCard from '../ui/BlogCard.astro';
+import type { BlogPost } from '../../data/blog';
+
+interface Props {
+  posts: BlogPost[];
+}
+
+const { posts } = Astro.props;
+---
+
+<section class="blog-latest section-spacing section-spacing-chapter" aria-labelledby="blog-latest-title">
+  <div class="kb-shell-wide blog-latest-inner">
+    <SectionHeader
+      eyebrow="Edición actual"
+      body="Guías concretas y piezas de lectura sobre estilo, materiales, uso y cultura de carretera."
+      meta={`${posts.length} nuevas lecturas`}
+      titleId="blog-latest-title"
+      align="left"
+      class="blog-latest-header"
+    >
+      <Fragment slot="title">
+        Últimas <em>publicaciones</em>.
+      </Fragment>
+    </SectionHeader>
+
+    <div class="blog-latest-stage">
+      <div class="blog-latest-stage__texture" aria-hidden="true"></div>
+
+      <span
+        class="blog-latest-stage__corner kb-corner-bracket kb-corner-bracket-tl"
+        aria-hidden="true"
+      ></span>
+      <span
+        class="blog-latest-stage__corner kb-corner-bracket kb-corner-bracket-tr"
+        aria-hidden="true"
+      ></span>
+      <span
+        class="blog-latest-stage__corner kb-corner-bracket kb-corner-bracket-bl"
+        aria-hidden="true"
+      ></span>
+      <span
+        class="blog-latest-stage__corner kb-corner-bracket kb-corner-bracket-br"
+        aria-hidden="true"
+      ></span>
+
+      <ul class="blog-latest-grid" aria-label="Últimas publicaciones">
+        {posts.map((post, index) => (
+          <li class="blog-latest-grid__item">
+            <BlogCard
+              variant="default"
+              folio={String(index + 1).padStart(2, '0')}
+              title={post.title}
+              excerpt={post.excerpt}
+              slug={post.slug}
+              image={post.image}
+              imageAlt={post.imageAlt}
+              imageWidth={640}
+              imageHeight={480}
+              imagePosition={post.imagePosition}
+              category={post.category}
+              date={post.dateLabel}
+              readingTime={post.readingTime}
+            />
+          </li>
+        ))}
+      </ul>
+    </div>
+  </div>
+</section>
+
+<style>
+  .blog-latest {
+    background: var(--color-king-surface);
+  }
+
+  .blog-latest-header:global(.section-header) {
+    --sh-max-copy: 40ch;
+  }
+
+  .blog-latest-inner {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(3rem, 5vw, 4.75rem);
+  }
+
+  .blog-latest-stage {
+    position: relative;
+    width: min(100%, calc(100% - clamp(2rem, 6vw, 5.5rem)));
+    margin-inline: auto;
+    margin-top: 0;
+    padding: clamp(1.35rem, 2.8vw, 2rem);
+    border: 1px solid var(--kb-stroke-dark);
+    border-radius: var(--kb-card-radius);
+    background: var(--kb-surface-light-strong);
+    box-shadow: var(--kb-shadow-sm);
+    overflow: hidden;
+  }
+
+  .blog-latest-stage::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.72) 48%,
+      transparent
+    );
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .blog-latest-stage::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow: var(--kb-shadow-inset-soft);
+    pointer-events: none;
+  }
+
+  .blog-latest-stage__texture {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.32;
+    background-image:
+      linear-gradient(90deg, rgba(138, 90, 43, 0.04) 0, rgba(138, 90, 43, 0.04) 1px, transparent 1px),
+      linear-gradient(rgba(26, 26, 26, 0.016) 1px, transparent 1px);
+    background-size: 8rem 100%, 100% 4rem;
+    mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.5), transparent 88%);
+  }
+
+  .blog-latest-stage__corner {
+    z-index: 2;
+  }
+
+  .blog-latest-stage__corner.kb-corner-bracket-tl {
+    top: 0.9rem;
+    left: 0.9rem;
+  }
+
+  .blog-latest-stage__corner.kb-corner-bracket-tr {
+    top: 0.9rem;
+    right: 0.9rem;
+  }
+
+  .blog-latest-stage__corner.kb-corner-bracket-bl {
+    bottom: 0.9rem;
+    left: 0.9rem;
+  }
+
+  .blog-latest-stage__corner.kb-corner-bracket-br {
+    right: 0.9rem;
+    bottom: 0.9rem;
+  }
+
+  .blog-latest-grid {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--kb-space-gap);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .blog-latest-grid__item {
+    min-width: 0;
+  }
+
+  .blog-latest-grid :global(.kb-blog-card) {
+    box-sizing: border-box;
+    max-width: 100%;
+    height: 100%;
+    border-radius: 0;
+  }
+
+  /* Una sola superficie enmarcada: las entradas no repiten kb-card-dry */
+  .blog-latest-grid :global(.kb-blog-card.kb-card-dry) {
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .blog-latest-grid :global(.kb-blog-card.kb-card-dry::before),
+  .blog-latest-grid :global(.kb-blog-card.kb-card-dry::after) {
+    content: none;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .blog-latest-grid :global(.kb-blog-card.kb-card-dry:hover) {
+      transform: none;
+      border-color: transparent;
+      box-shadow: none;
+    }
+  }
+
+  .blog-latest-grid :global(.kb-blog-card:has(.kb-blog-card__link:focus-visible)) {
+    outline: none;
+    border-radius: var(--kb-radius-sm);
+  }
+
+  .blog-latest-grid :global(.kb-blog-card__link:focus-visible) {
+    outline: 2px solid var(--color-king-accent);
+    outline-offset: 3px;
+    border-radius: var(--kb-radius-sm);
+  }
+
+  .blog-latest-grid :global(.kb-blog-card__media) {
+    aspect-ratio: 4 / 3;
+    border-radius: var(--kb-radius-sm);
+  }
+
+  .blog-latest-grid :global(.kb-blog-card__meta .kb-meta-label) {
+    color: color-mix(in srgb, var(--color-king-text) 62%, transparent);
+    letter-spacing: 0.11em;
+  }
+
+  .blog-latest-grid :global(.kb-blog-card__meta .kb-divider-dot) {
+    opacity: 0.72;
+  }
+
+  .blog-latest-grid :global(.kb-blog-card__category) {
+    letter-spacing: 0.11em;
+    background: rgba(13, 13, 12, 0.52);
+  }
+
+  .blog-latest-grid :global(.kb-blog-card__title) {
+    display: -webkit-box;
+    overflow: hidden;
+    min-height: calc(3 * 1.18em);
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    text-wrap: pretty;
+  }
+
+  @media (min-width: 48rem) {
+    .blog-latest-stage {
+      width: min(100%, calc(100% - clamp(3rem, 8vw, 7rem)));
+    }
+  }
+
+  @media (min-width: 40rem) {
+    .blog-latest-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      row-gap: clamp(1.5rem, 2.8vw, 2.25rem);
+      column-gap: var(--kb-space-gap);
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .blog-latest-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      align-items: stretch;
+      row-gap: clamp(1.75rem, 2.8vw, 2.5rem);
+      column-gap: clamp(1rem, 1.45vw, 1.35rem);
+    }
+  }
+</style>

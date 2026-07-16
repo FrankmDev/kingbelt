@@ -1,0 +1,386 @@
+---
+import SectionHeader from '../components/common/SectionHeader.astro';
+import Badge from '../components/ui/Badge.astro';
+import Icon from '../components/ui/Icon.astro';
+import { productCategories } from '../data/catalog';
+import { categoriesSection } from '../data/home';
+
+const featured = productCategories.find((category) => category.featured) ?? productCategories[0];
+const secondary = productCategories.filter((category) => category.id !== featured.id);
+
+const cards = [
+  { category: featured, index: 1, placement: 'hero' as const },
+  ...secondary.map((category, index) => ({
+    category,
+    index: index + 2,
+    placement: index === 0 ? ('top' as const) : ('bottom' as const),
+  })),
+];
+---
+
+<section
+  id="coleccion"
+  class="home-categories section-spacing section-spacing-chapter"
+  aria-labelledby="home-categories-title"
+>
+  <div class="kb-shell-wide section-stack-lg">
+    <SectionHeader
+      eyebrow={categoriesSection.eyebrow}
+      body={categoriesSection.body}
+      meta={categoriesSection.meta}
+      titleId="home-categories-title"
+      align="left"
+      class="home-categories__header"
+    >
+      <Fragment slot="title">
+        <span set:html={categoriesSection.title} />
+      </Fragment>
+    </SectionHeader>
+
+    <div class="home-categories__grid">
+      {cards.map(({ category, index, placement }) => (
+        <a
+          href={category.href}
+          class:list={[
+            'home-categories__card',
+            placement === 'hero' && 'home-categories__card--hero',
+            placement === 'top' && 'home-categories__card--top',
+            placement === 'bottom' && 'home-categories__card--bottom',
+          ]}
+          aria-label={`Explorar categoría ${category.name}`}
+        >
+          <img
+            src={category.image}
+            alt={category.imageAlt}
+            width={placement === 'hero' ? 1200 : 960}
+            height={placement === 'hero' ? 1600 : 720}
+            loading="lazy"
+            decoding="async"
+            class="home-categories__media"
+            style={`object-position: ${category.imagePosition ?? 'center'}`}
+          />
+          <div
+            class:list={[
+              'home-categories__shade',
+              placement === 'hero' && 'home-categories__shade--hero',
+            ]}
+            aria-hidden="true"
+          ></div>
+
+          <div
+            class:list={[
+              'home-categories__foot',
+              placement === 'hero' && 'home-categories__foot--hero',
+            ]}
+          >
+            <div class="home-categories__copy">
+              <div class="home-categories__badges">
+                <Badge variant="dark" class="home-categories__badge">
+                  {String(index).padStart(2, '0')}
+                </Badge>
+                {category.badge && (
+                  <Badge variant="accent" class="home-categories__badge">
+                    {category.badge}
+                  </Badge>
+                )}
+              </div>
+
+              <h3
+                class:list={[
+                  'home-categories__title',
+                  placement !== 'hero' && 'home-categories__title--compact',
+                ]}
+              >
+                {category.name}
+              </h3>
+
+              {category.tagline && (
+                <p
+                  class:list={[
+                    'home-categories__tagline kb-meta-label',
+                    placement !== 'hero' && 'home-categories__tagline--compact',
+                  ]}
+                >
+                  {category.tagline}
+                </p>
+              )}
+            </div>
+
+            <span class="home-categories__go" aria-hidden="true">
+              <Icon name="arrow-right" class="home-categories__go-icon" />
+            </span>
+          </div>
+        </a>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .home-categories {
+    background: var(--color-king-surface);
+  }
+
+  .home-categories__header:global(.section-header) {
+    --sh-max-copy: 42ch;
+  }
+
+  .home-categories__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.1875rem;
+    min-width: 0;
+  }
+
+  .home-categories__card {
+    position: relative;
+    display: block;
+    min-width: 0;
+    min-height: clamp(18rem, 56vw, 24rem);
+    overflow: hidden;
+    color: var(--color-king-bone);
+    text-decoration: none;
+    background: var(--color-king-secondary);
+    isolation: isolate;
+  }
+
+  .home-categories__card--hero {
+    min-height: clamp(24rem, 76vw, 34rem);
+  }
+
+  .home-categories__media {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 0;
+    transform: scale(1);
+    transition:
+      transform var(--kb-dur-slow) var(--kb-ease-soft),
+      filter var(--kb-dur-slow) var(--kb-ease-soft);
+  }
+
+  .home-categories__shade {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background: linear-gradient(
+      to top,
+      rgba(11, 10, 8, 0.72) 0%,
+      rgba(11, 10, 8, 0.28) 38%,
+      transparent 68%
+    );
+    opacity: 0.9;
+    transition: opacity var(--kb-dur-med) var(--kb-ease-out);
+  }
+
+  .home-categories__shade--hero {
+    background: linear-gradient(
+      to top,
+      rgba(11, 10, 8, 0.78) 0%,
+      rgba(11, 10, 8, 0.34) 42%,
+      transparent 70%
+    );
+  }
+
+  .home-categories__foot {
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0;
+    z-index: 2;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--kb-space-4);
+    padding: var(--kb-space-4);
+    pointer-events: none;
+  }
+
+  .home-categories__foot--hero {
+    padding: var(--kb-space-5);
+  }
+
+  .home-categories__copy {
+    display: grid;
+    gap: var(--kb-space-2);
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  .home-categories__foot--hero .home-categories__copy {
+    gap: var(--kb-space-3);
+  }
+
+  .home-categories__badges {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--kb-space-2);
+  }
+
+  .home-categories__badge:global(.kb-badge) {
+    padding: 0.32rem 0.6rem;
+    font-size: var(--kb-text-meta);
+    letter-spacing: 0.12em;
+    backdrop-filter: blur(8px);
+  }
+
+  .home-categories__title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: clamp(1.75rem, 4.2vw, 2.75rem);
+    font-weight: var(--kb-w-heading-strong);
+    line-height: 0.96;
+    letter-spacing: -0.028em;
+    text-wrap: balance;
+    color: var(--color-king-bone);
+  }
+
+  .home-categories__title--compact {
+    font-size: clamp(1.25rem, 2.8vw, 1.625rem);
+    font-weight: var(--kb-w-heading);
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+
+  .home-categories__tagline {
+    margin: 0;
+    max-width: 28ch;
+    color: rgba(255, 250, 241, 0.68);
+    text-transform: none;
+    letter-spacing: 0.01em;
+    line-height: 1.45;
+  }
+
+  .home-categories__tagline--compact {
+    display: none;
+  }
+
+  .home-categories__go {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 2.5rem;
+    height: 2.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: var(--kb-radius-pill);
+    background: rgba(11, 10, 8, 0.42);
+    color: var(--color-king-bone);
+    backdrop-filter: blur(10px);
+    box-shadow: var(--kb-shadow-xs);
+    transition:
+      border-color var(--kb-dur-med) var(--kb-ease-out),
+      background-color var(--kb-dur-med) var(--kb-ease-out),
+      transform var(--kb-dur-med) var(--kb-ease-out);
+  }
+
+  .home-categories__foot--hero .home-categories__go {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+
+  .home-categories__go-icon {
+    width: 0.95rem;
+    height: 0.95rem;
+    transition: transform var(--kb-dur-med) var(--kb-ease-out);
+  }
+
+  .home-categories__card:focus-visible {
+    outline: 2px solid var(--color-king-accent);
+    outline-offset: 2px;
+  }
+
+  @media (min-width: 40rem) {
+    .home-categories__grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .home-categories__card--hero {
+      grid-column: 1 / -1;
+      min-height: clamp(22rem, 48vw, 30rem);
+    }
+
+    .home-categories__card:not(.home-categories__card--hero) {
+      min-height: clamp(15rem, 32vw, 19rem);
+    }
+
+    .home-categories__tagline--compact {
+      display: block;
+      max-width: 22ch;
+      font-size: var(--kb-text-2xs);
+      line-height: 1.35;
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .home-categories__grid {
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+      grid-template-rows: repeat(2, minmax(0, 1fr));
+      gap: 0.25rem;
+      min-height: clamp(34rem, 42vw, 40rem);
+    }
+
+    .home-categories__card--hero {
+      grid-column: 1;
+      grid-row: 1 / -1;
+      min-height: 0;
+    }
+
+    .home-categories__card--top {
+      grid-column: 2;
+      grid-row: 1;
+      min-height: 0;
+    }
+
+    .home-categories__card--bottom {
+      grid-column: 2;
+      grid-row: 2;
+      min-height: 0;
+    }
+
+    .home-categories__card:not(.home-categories__card--hero) {
+      min-height: 0;
+    }
+
+    .home-categories__title {
+      font-size: clamp(2.1rem, 2.5vw, 2.85rem);
+    }
+
+    .home-categories__title--compact {
+      font-size: clamp(1.2rem, 1.35vw, 1.45rem);
+    }
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .home-categories__card:hover .home-categories__media {
+      transform: scale(1.045);
+      filter: brightness(1.03) saturate(1.04);
+    }
+
+    .home-categories__card:hover .home-categories__shade {
+      opacity: 0.96;
+    }
+
+    .home-categories__card:hover .home-categories__go {
+      border-color: rgba(166, 124, 78, 0.45);
+      background: rgba(11, 10, 8, 0.56);
+      transform: translateX(2px);
+    }
+
+    .home-categories__card:hover .home-categories__go-icon {
+      transform: translateX(2px);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .home-categories__media,
+    .home-categories__shade,
+    .home-categories__go,
+    .home-categories__go-icon {
+      transition: none;
+    }
+  }
+</style>

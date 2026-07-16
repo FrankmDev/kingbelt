@@ -1,116 +1,293 @@
 ---
+import type { HTMLAttributes } from 'astro/types';
 import Icon from './Icon.astro';
-import Eyebrow from './Eyebrow.astro';
 
-interface Props {
+interface Props extends Omit<HTMLAttributes<'a'>, 'href'> {
   label: string;
   value: string;
   description?: string;
   href?: string;
   icon?: string;
+  index?: number | string;
+  meta?: string;
   variant?: 'default' | 'steel';
-  class?: string;
 }
 
-const { label, value, description, href, icon, variant = 'default', class: className } = Astro.props;
+const {
+  label,
+  value,
+  description,
+  href,
+  icon,
+  index,
+  meta,
+  variant = 'default',
+  class: className,
+  ...rest
+} = Astro.props;
 
-const Element = href ? 'a' : 'div';
+const Element = href ? 'a' : 'article';
 const isExternal = Boolean(href && /^https?:/.test(href));
 const linkProps = href
   ? { href, target: isExternal ? '_blank' : undefined, rel: isExternal ? 'noopener noreferrer' : undefined }
   : {};
 
+const formattedIndex =
+  index !== undefined
+    ? typeof index === 'number'
+      ? String(index).padStart(2, '0')
+      : index
+    : undefined;
+
 const cardClass = variant === 'steel' ? 'kb-card-steel' : 'kb-card';
+const showFoot = Boolean(meta || href);
+const footLabel = meta ?? (href ? (isExternal ? 'Abrir enlace' : 'Ir al canal') : undefined);
 ---
 
 <Element
   class:list={[
+    'contact-method',
     cardClass,
-    'group flex min-w-0 items-start gap-4 p-5 md:p-6',
+    variant === 'steel' && 'contact-method--steel',
+    href && 'contact-method--linked',
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-king-accent/45 focus-visible:ring-offset-2 focus-visible:ring-offset-king-bg',
-    href && 'cursor-pointer',
     className,
   ]}
+  aria-label={href ? `${label}: ${value}` : undefined}
   {...linkProps}
+  {...rest}
 >
-  {icon && (
-    <div class="contact-method-icon relative shrink-0 w-11 h-11 rounded-[var(--kb-radius-sm)] bg-king-accent/[0.07] border border-king-accent/20 flex items-center justify-center shadow-[var(--kb-shadow-xs)]">
-      <Icon name={icon} class="w-5 h-5 text-king-accent" />
-    </div>
-  )}
-
-  <div class="relative min-w-0 flex-1">
-    <Eyebrow muted class="mb-1.5">
-      {label}
-    </Eyebrow>
-    <span class="contact-method-value block break-words text-[var(--kb-text-body)] font-medium text-king-text leading-snug">
-      {value}
-    </span>
-    {description && (
-      <span class="contact-method-description block mt-2 text-[var(--kb-text-meta)] text-king-muted leading-relaxed">
-        {description}
-      </span>
+  <header class="contact-method-head">
+    {icon && (
+      <div class="contact-method-icon" aria-hidden="true">
+        <Icon name={icon} class="contact-method-icon-svg" strokeWidth={1.65} />
+      </div>
     )}
+
+    <div class="contact-method-kicker">
+      {formattedIndex && <span class="contact-method-index">{formattedIndex}</span>}
+      <p class="contact-method-label kb-eyebrow kb-eyebrow-lined">{label}</p>
+    </div>
+  </header>
+
+  <div class="contact-method-body">
+    <p class="contact-method-value">{value}</p>
+    {description && <p class="contact-method-description">{description}</p>}
   </div>
 
-  {href && (
-    <div class="contact-method-arrow relative shrink-0 opacity-0 -translate-x-1">
-      <Icon name={isExternal ? 'external-link' : 'arrow-right'} class="w-4 h-4 text-king-accent" />
-    </div>
+  {showFoot && (
+    <footer class="contact-method-foot">
+      {footLabel && (
+        <span class="contact-method-meta">
+          {footLabel}
+          {href && !meta && (
+            <Icon
+              name={isExternal ? 'external-link' : 'arrow-right'}
+              class="contact-method-meta-icon"
+              aria-hidden="true"
+            />
+          )}
+        </span>
+      )}
+    </footer>
   )}
 
   <slot />
 </Element>
 
 <style>
-  .contact-method-icon,
-  .contact-method-value,
-  .contact-method-arrow {
-    transition:
-      opacity var(--kb-dur-med) var(--kb-ease-out),
-      transform var(--kb-dur-med) var(--kb-ease-out),
-      background-color var(--kb-dur-med) var(--kb-ease-out),
-      border-color var(--kb-dur-med) var(--kb-ease-out),
-      color var(--kb-dur-med) var(--kb-ease-out);
+  .contact-method {
+    --cm-icon-bg: rgba(138, 90, 43, 0.07);
+    --cm-icon-border: rgba(138, 90, 43, 0.2);
+    --cm-icon-fg: var(--color-king-accent);
+    --cm-index-fg: var(--color-king-accent);
+    --cm-label-fg: var(--color-king-accent);
+    --cm-value-fg: var(--color-king-text);
+    --cm-body-fg: var(--color-king-muted);
+    --cm-divider: rgba(138, 90, 43, 0.12);
+    --cm-meta-fg: var(--color-king-accent);
+    --cm-meta-bg: rgba(138, 90, 43, 0.05);
+    --cm-meta-border: rgba(138, 90, 43, 0.16);
+    --cm-accent: var(--color-king-accent);
+
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: var(--kb-space-5);
+    min-width: 0;
+    min-height: 100%;
+    padding: clamp(1.5rem, 3vw, 2rem);
+    overflow: hidden;
+    text-decoration: none;
+  }
+
+  .contact-method--steel {
+    --cm-icon-bg: rgba(255, 255, 255, 0.08);
+    --cm-icon-border: rgba(255, 255, 255, 0.14);
+    --cm-icon-fg: rgba(255, 255, 255, 0.92);
+    --cm-index-fg: var(--color-king-accent-light);
+    --cm-label-fg: var(--color-king-accent-light);
+    --cm-value-fg: rgba(255, 255, 255, 0.94);
+    --cm-body-fg: rgba(255, 255, 255, 0.56);
+    --cm-divider: rgba(255, 255, 255, 0.1);
+    --cm-meta-fg: var(--color-king-accent-light);
+    --cm-meta-bg: rgba(183, 138, 79, 0.1);
+    --cm-meta-border: rgba(183, 138, 79, 0.24);
+    --cm-accent: var(--color-king-accent-light);
+  }
+
+  .contact-method::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 3px;
+    height: 100%;
+    background: var(--cm-accent);
+    opacity: 0.65;
+    transform: scaleY(0.36);
+    transform-origin: top;
+    transition: transform var(--kb-dur-med) var(--kb-ease-out);
+    z-index: 2;
+  }
+
+  .contact-method--linked {
+    cursor: pointer;
   }
 
   @media (hover: hover) and (pointer: fine) {
-    .kb-card:hover .contact-method-arrow,
-    .kb-card-steel:hover .contact-method-arrow {
-      opacity: 1;
-      transform: translateX(0);
+    .contact-method--linked:hover::before,
+    .contact-method--linked:focus-visible::before {
+      transform: scaleY(1);
     }
 
-    .kb-card:hover .contact-method-icon,
-    .kb-card-steel:hover .contact-method-icon {
+    .contact-method--linked:hover .contact-method-icon,
+    .contact-method--linked:focus-visible .contact-method-icon {
       transform: scale(1.04);
-      border-color: rgba(138, 90, 43, 0.32);
-      background-color: rgba(138, 90, 43, 0.11);
-    }
-
-    .kb-card:hover .contact-method-value,
-    .kb-card-steel:hover .contact-method-value {
-      color: var(--color-king-accent);
+      border-color: color-mix(in srgb, var(--cm-accent) 35%, transparent);
+      background-color: color-mix(in srgb, var(--cm-accent) 11%, transparent);
     }
   }
 
-  /* Steel variant — override text colors for dark background.
-     kb-card-steel sets color: rgba(255,255,255,0.92) on the card,
-     but child elements have explicit Tailwind text classes that
-     would render dark-on-dark without these overrides. */
-  .kb-card-steel .kb-eyebrow {
-    color: rgba(255, 255, 255, 0.55) !important;
+  .contact-method-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--kb-space-4);
+    min-width: 0;
   }
 
-  .kb-card-steel .contact-method-value {
-    color: rgba(255, 255, 255, 0.92);
+  .contact-method-icon {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    border: 1px solid var(--cm-icon-border);
+    border-radius: var(--kb-radius-sm);
+    background: var(--cm-icon-bg);
+    color: var(--cm-icon-fg);
+    box-shadow: var(--kb-shadow-xs);
+    transition:
+      transform var(--kb-dur-med) var(--kb-ease-out),
+      border-color var(--kb-dur-med) var(--kb-ease-out),
+      background-color var(--kb-dur-med) var(--kb-ease-out);
   }
 
-  .kb-card-steel .text-king-muted {
-    color: rgba(255, 255, 255, 0.42) !important;
+  .contact-method-icon :global(.contact-method-icon-svg) {
+    width: 1.25rem;
+    height: 1.25rem;
   }
 
-  .kb-card-steel .contact-method-description {
-    color: rgba(255, 255, 255, 0.42) !important;
+  .contact-method-kicker {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: var(--kb-space-2);
+    min-width: 0;
+    margin-left: auto;
+    text-align: right;
+  }
+
+  .contact-method-index {
+    font-family: var(--font-display);
+    font-size: clamp(1.5rem, 2.4vw, 1.875rem);
+    font-weight: var(--kb-w-heading-light);
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    letter-spacing: -0.01em;
+    color: var(--cm-index-fg);
+    opacity: 0.38;
+  }
+
+  .contact-method-label {
+    margin: 0;
+    color: var(--cm-label-fg);
+  }
+
+  .contact-method-body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--kb-space-3);
+    min-width: 0;
+  }
+
+  .contact-method-value {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--kb-text-h4);
+    font-weight: var(--kb-w-medium);
+    line-height: 1.16;
+    text-wrap: balance;
+    color: var(--cm-value-fg);
+    word-break: break-word;
+  }
+
+  .contact-method-description {
+    margin: 0;
+    font-size: var(--kb-text-sm);
+    line-height: 1.68;
+    text-wrap: pretty;
+    color: var(--cm-body-fg);
+  }
+
+  .contact-method-foot {
+    margin-top: auto;
+    padding-top: var(--kb-space-4);
+    border-top: 1px solid var(--cm-divider);
+  }
+
+  .contact-method-meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.3125rem 0.625rem;
+    border: 1px solid var(--cm-meta-border);
+    border-radius: var(--kb-radius-xs);
+    background: var(--cm-meta-bg);
+    color: var(--cm-meta-fg);
+    font-size: var(--kb-text-2xs);
+    font-weight: var(--kb-w-medium);
+    letter-spacing: 0.06em;
+    line-height: 1.2;
+    text-transform: uppercase;
+  }
+
+  .contact-method-meta :global(.contact-method-meta-icon) {
+    width: 0.75rem;
+    height: 0.75rem;
+    flex-shrink: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .contact-method::before,
+    .contact-method-icon {
+      transition: none;
+    }
+
+    .contact-method--linked::before {
+      transform: scaleY(1);
+    }
   }
 </style>

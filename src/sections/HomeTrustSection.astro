@@ -1,0 +1,82 @@
+---
+import SectionHeader from '../components/common/SectionHeader.astro';
+import FeatureCard from '../components/ui/FeatureCard.astro';
+import Button from '../components/ui/Button.astro';
+import { trustSection } from '../data/home';
+
+const cardVariants = ['default', 'steel', 'default'] as const;
+---
+
+<section
+  id="atencion"
+  class="home-trust section-spacing section-spacing-tight"
+  aria-labelledby="home-trust-title"
+>
+  <div class="kb-shell-wide section-stack-lg">
+    <SectionHeader
+      eyebrow={trustSection.eyebrow}
+      titleId="home-trust-title"
+      align="left"
+      class="home-trust__header"
+    >
+      <Fragment slot="title">
+        <span set:html={trustSection.title} />
+      </Fragment>
+    </SectionHeader>
+
+    <ul class="home-trust__grid">
+      {trustSection.items.map((item, index) => (
+        <li class="home-trust__item">
+          <FeatureCard
+            number={String(index + 1).padStart(2, '0')}
+            title={item.title}
+            description={item.text}
+            variant={cardVariants[index] ?? 'default'}
+          />
+        </li>
+      ))}
+    </ul>
+
+    <div class="home-trust__action">
+      <Button href="/contacto" variant="outline" size="md">
+        Ir a contacto
+      </Button>
+    </div>
+  </div>
+</section>
+
+<style>
+  .home-trust {
+    background: var(--color-king-surface);
+  }
+
+  .home-trust__header:global(.section-header) {
+    --sh-max-title: 20ch;
+  }
+
+  .home-trust__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--kb-space-gap);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .home-trust__item {
+    min-width: 0;
+  }
+
+  .home-trust__action {
+    display: flex;
+    justify-content: flex-start;
+  }
+
+  @media (min-width: 48rem) {
+    .home-trust__grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--kb-space-gap-lg);
+      align-items: stretch;
+    }
+  }
+</style>

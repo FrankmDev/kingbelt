@@ -8,6 +8,9 @@ interface Props {
   buttonLabel: string;
   buttonHref: string;
   buttonVariant?: 'primary' | 'secondary' | 'outline' | 'surfaceOutline';
+  secondaryButtonLabel?: string;
+  secondaryButtonHref?: string;
+  secondaryButtonVariant?: 'primary' | 'secondary' | 'outline' | 'surfaceOutline';
   eyebrow?: string;
   backgroundImage: string;
   backgroundAlt?: string;
@@ -24,6 +27,9 @@ const {
   buttonLabel,
   buttonHref,
   buttonVariant = 'secondary',
+  secondaryButtonLabel,
+  secondaryButtonHref,
+  secondaryButtonVariant = 'surfaceOutline',
   eyebrow,
   backgroundImage,
   backgroundAlt = '',
@@ -33,9 +39,12 @@ const {
   titleTag: TitleTag = 'h2',
   class: className,
 } = Astro.props;
+
+const hasHeader = Astro.slots.has('header');
+const hasSecondaryAction = Boolean(secondaryButtonLabel && secondaryButtonHref);
 ---
 
-<div class:list={['cta-box kb-cta-dark', className]}>
+<div class:list={['cta-box kb-cta-dark', hasSecondaryAction && 'cta-box--dual', className]}>
   <img
     src={backgroundImage}
     alt={backgroundAlt}
@@ -53,20 +62,24 @@ const {
 
   <div class="cta-box__inner">
     <div class="cta-box__copy">
-      {eyebrow && (
-        <Eyebrow class="cta-box__eyebrow">
-          {eyebrow}
-        </Eyebrow>
-      )}
+      {hasHeader ? (
+        <slot name="header" />
+      ) : (
+        <>
+          {eyebrow && (
+            <Eyebrow class="cta-box__eyebrow">
+              {eyebrow}
+            </Eyebrow>
+          )}
 
-      <TitleTag class="cta-box__title">
-        {title}
-      </TitleTag>
+          <TitleTag class="cta-box__title" set:html={title} />
 
-      {description && (
-        <p class="cta-box__desc">
-          {description}
-        </p>
+          {description && (
+            <p class="cta-box__desc">
+              {description}
+            </p>
+          )}
+        </>
       )}
     </div>
 
@@ -74,6 +87,11 @@ const {
       <Button href={buttonHref} variant={buttonVariant} size="md">
         {buttonLabel}
       </Button>
+      {hasSecondaryAction && (
+        <Button href={secondaryButtonHref!} variant={secondaryButtonVariant} size="md">
+          {secondaryButtonLabel}
+        </Button>
+      )}
     </div>
   </div>
 </div>
@@ -143,6 +161,11 @@ const {
     flex: 1;
   }
 
+  .cta-box__copy :global(.section-header) {
+    --sh-max-title: 20ch;
+    --sh-max-copy: 46ch;
+  }
+
   .cta-box__eyebrow {
     margin-bottom: var(--kb-space-5);
     color: var(--color-king-bone);
@@ -172,6 +195,12 @@ const {
   .cta-box__action {
     display: flex;
     flex-shrink: 0;
+    flex-wrap: wrap;
+    gap: var(--kb-space-3);
+  }
+
+  .cta-box--dual .cta-box__action {
+    align-items: center;
   }
 
   @media (min-width: 768px) {

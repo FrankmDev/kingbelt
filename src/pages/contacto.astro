@@ -2,332 +2,543 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Header from '../components/layout/Header.astro';
 import FooterSection from '../components/layout/FooterSection.astro';
-import PageHeader from '../components/ui/PageHeader.astro';
-import ContactMethod from '../components/ui/ContactMethod.astro';
-import FormField from '../components/ui/FormField.astro';
 import Button from '../components/ui/Button.astro';
-import Panel from '../components/ui/Panel.astro';
-import Icon from '../components/ui/Icon.astro';
-import SectionHeader from '../components/common/SectionHeader.astro';
+import ContactMethod from '../components/ui/ContactMethod.astro';
 import FAQ from '../components/ui/FAQ.astro';
+import FormField from '../components/ui/FormField.astro';
+import Icon from '../components/ui/Icon.astro';
+import PageHeader from '../components/ui/PageHeader.astro';
+import ContactEmailBanner from '../components/sections/ContactEmailBanner.astro';
+import PurchaseInfo from '../components/sections/PurchaseInfo.astro';
+import CTABox from '../components/ui/CTABox.astro';
+import MediaFrame from '../components/ui/MediaFrame.astro';
+import SectionHeader from '../components/common/SectionHeader.astro';
 import { contactData } from '../data/contact';
 import { site } from '../data/site';
+
+const contactTitle = 'Contacto — KingBelt';
+const contactDescription =
+  'Contacta con KingBelt para consultas sobre producto, pedidos, colaboraciones y atención general.';
+const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href;
+const contactBreadcrumbs = [{ label: 'Contacto' }];
+const contactChannels = contactData.channels;
+const inquiryTypes = contactData.inquiryTypes;
+const purchaseInfoItems = [...contactData.purchaseInfo.items];
+const purchaseInfoBadge = contactData.purchaseInfo.badge;
+const purchaseInfoCta = contactData.purchaseInfo.cta;
+const purchaseInfoImage = contactData.purchaseInfo.image;
+const faqItems = [...contactData.faqs];
+const emailChannel = contactChannels[0];
+
+const contactSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'ContactPage',
+  name: contactTitle,
+  description: contactDescription,
+  url: canonicalURL,
+  mainEntity: {
+    '@type': 'Organization',
+    name: site.name,
+    contactPoint: {
+      '@type': 'ContactPoint',
+      contactType: 'Atención al cliente',
+      email: site.contact.email,
+      url: site.urls.instagram,
+    },
+  },
+};
 ---
 
-<BaseLayout
-  title="Contacto — KingBelt"
-  description="Ponte en contacto con KingBelt. Estamos en Madrid, España. Email, WhatsApp, Instagram y formulario de contacto. Te respondemos en menos de 24 horas."
->
-  <Header slot="header" initialTheme="dark" scrolledTheme="light" />
+<BaseLayout title={contactTitle} description={contactDescription} canonicalURL={canonicalURL} schema={contactSchema}>
+  <Header slot="header" initialTheme="dark" scrolledTheme="light" compactThreshold={32} />
 
-  <!-- ================================================================
-       HERO
-       ================================================================ -->
   <PageHeader
     eyebrow={contactData.hero.eyebrow}
     description={contactData.hero.description}
     image={contactData.hero.image}
     imageAlt={contactData.hero.imageAlt}
-    imagePosition="center 25%"
+    imagePosition={contactData.hero.imagePosition}
     meta={contactData.hero.meta}
+    breadcrumbs={contactBreadcrumbs}
   >
-    <Fragment slot="title">
-      Háblanos. <em>Estamos aquí</em>.
-    </Fragment>
+    <Fragment slot="title">Hablemos de lo que <em>necesitas</em>.</Fragment>
   </PageHeader>
 
-  <!-- ================================================================
-       CONTACT INFO + FORM — editorial split
-       ================================================================ -->
-  <section class="section-spacing" data-gsap-contact>
-    <div class="kb-shell">
+  <section class="contact-main section-spacing" aria-labelledby="contact-form-title">
+    <div class="contact-layout kb-shell-wide">
+      <aside class="contact-aside" aria-labelledby="contact-channels-title">
+        <SectionHeader
+          eyebrow="Contacto directo"
+          title="Elige el canal."
+          titleId="contact-channels-title"
+          body="El formulario es la vía más completa. También puedes escribir directamente por email o Instagram."
+          align="left"
+          density="compact"
+          class="contact-aside-header"
+        />
 
-      <!-- Section label -->
-      <div class="flex items-center gap-4 mb-10 md:mb-14">
-        <span class="kb-section-num shrink-0">01/02</span>
-        <span class="h-px flex-1 bg-king-border/30" aria-hidden="true"></span>
-      </div>
+        <div class="contact-channels">
+          {contactChannels.map((channel, index) => (
+            <ContactMethod
+              label={channel.label}
+              value={channel.value}
+              description={channel.description}
+              href={channel.href}
+              icon={channel.icon}
+              index={index + 1}
+              meta={channel.meta}
+              variant={index === 0 ? 'steel' : 'default'}
+            />
+          ))}
+        </div>
 
-      <div
-        class="grid grid-cols-1 items-start gap-[var(--kb-space-gap-lg)] lg:grid-cols-12 lg:gap-[var(--kb-space-gap-xl)]"
-      >
+      </aside>
 
-        <!-- ========== LEFT: Contact channels ========== -->
-        <div class="lg:col-span-5 space-y-8" data-contact-left>
+      <div class="contact-form-column kb-panel">
+        <SectionHeader
+          eyebrow="Escríbenos"
+          title="Cuéntanos el contexto."
+          titleId="contact-form-title"
+          align="left"
+          density="compact"
+          class="contact-form-header"
+        >
+          <p slot="body">Los campos marcados con <span aria-hidden="true">*</span> son obligatorios.</p>
+        </SectionHeader>
 
-          <div class="space-y-4 max-w-lg">
-            <h2 class="font-display text-[var(--kb-text-h2)] font-semibold text-king-text leading-[0.95]">
-              Contacto directo
-            </h2>
-            <p class="text-[var(--kb-text-lede)] text-king-muted/80 leading-relaxed">
-              Estamos en Madrid, pero respondemos desde cualquier sitio. Elige el canal que prefieras y hablemos.
+        <!-- Integración pendiente: sustituir action por el endpoint real sin cambiar el markup del formulario. -->
+        <form
+          id="contact-form"
+          class="contact-form"
+          action="/api/contacto"
+          method="post"
+          aria-describedby="contact-form-note"
+        >
+          <div class="contact-form-row">
+            <FormField label="Nombre" for="contact-name" required>
+              <input
+                id="contact-name"
+                class="kb-input"
+                name="name"
+                type="text"
+                autocomplete="name"
+                required
+              />
+            </FormField>
+
+            <FormField label="Email" for="contact-email" required>
+              <input
+                id="contact-email"
+                class="kb-input"
+                name="email"
+                type="email"
+                autocomplete="email"
+                inputmode="email"
+                spellcheck="false"
+                required
+              />
+            </FormField>
+          </div>
+
+          <FormField label="Tipo de consulta" for="contact-subject" required>
+            <div class="kb-select-wrap">
+              <select id="contact-subject" class="kb-input" name="subject" required>
+                <option value="" disabled selected>Selecciona una opción</option>
+                {inquiryTypes.map((item) => (
+                  <option value={item.value}>{item.label}</option>
+                ))}
+              </select>
+              <span class="kb-select-icon" aria-hidden="true">
+                <Icon name="caret-down" />
+              </span>
+            </div>
+          </FormField>
+
+          <FormField
+            label="Mensaje"
+            for="contact-message"
+            required
+            help="Incluye referencia de pedido o producto si ayuda a entender la consulta."
+          >
+            <textarea
+              id="contact-message"
+              class="kb-input contact-textarea"
+              name="message"
+              rows={6}
+              autocomplete="off"
+              aria-describedby="contact-message-help"
+              required
+            ></textarea>
+          </FormField>
+
+          <div class="contact-privacy">
+            <label class="contact-privacy-label" for="contact-privacy">
+              <input
+                id="contact-privacy"
+                class="contact-privacy-input"
+                name="privacy"
+                type="checkbox"
+                required
+              />
+              <span class="contact-privacy-text">
+                He leído y acepto la
+                <a href="/privacidad" class="kb-link">política de privacidad</a>.
+                <span class="contact-privacy-required" aria-hidden="true">*</span>
+              </span>
+            </label>
+          </div>
+
+          <div class="contact-form-actions">
+            <Button type="submit" variant="primary" size="md">
+              Enviar consulta
+              <Icon name="arrow-right" />
+            </Button>
+            <p id="contact-form-note">
+              No incluyas contraseñas, datos de pago ni otra información sensible.
             </p>
           </div>
 
-          <div class="grid grid-cols-1 gap-[var(--kb-space-gap)] sm:grid-cols-2" data-contact-cards>
-            {contactData.methods.map((method, idx) => {
-              const isSteel = idx === 0 || idx === 3;
-              return (
-                <ContactMethod
-                  label={method.label}
-                  value={method.value}
-                  description={method.description}
-                  href={method.href}
-                  icon={method.icon}
-                  variant={isSteel ? 'steel' : 'default'}
-                />
-              );
-            })}
-          </div>
-        </div>
-
-        <!-- ========== RIGHT: Form ========== -->
-        <div class="lg:col-span-6 lg:col-start-7" data-contact-form>
-          <Panel variant="light" padding="lg">
-            <div class="space-y-7">
-
-              <div class="space-y-3">
-                <span class="text-[var(--kb-text-eyebrow)] font-semibold tracking-[0.2em] uppercase text-king-accent">
-                  Envíanos un mensaje
-                </span>
-                <h3 class="font-display text-[var(--kb-text-h4)] font-medium text-king-text leading-snug">
-                  Cuéntanos qué necesitas
-                </h3>
-              </div>
-
-              <form id="contact-form" class="space-y-5" novalidate>
-                <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
-                  <FormField label="Nombre completo" for="contact-name" required>
-                    <input
-                      id="contact-name"
-                      name="name"
-                      type="text"
-                      required
-                      placeholder="Tu nombre"
-                      class="kb-input"
-                      autocomplete="name"
-                    />
-                  </FormField>
-
-                  <FormField label="Correo electrónico" for="contact-email" required>
-                    <input
-                      id="contact-email"
-                      name="email"
-                      type="email"
-                      required
-                      placeholder="tu@email.com"
-                      class="kb-input"
-                      autocomplete="email"
-                    />
-                  </FormField>
-                </div>
-
-                <FormField label="Asunto" for="contact-subject">
-                  <div class="relative">
-                    <select
-                      id="contact-subject"
-                      name="subject"
-                      class="kb-input appearance-none pr-10"
-                    >
-                      <option value="">Selecciona un asunto</option>
-                      <option value="general">Consulta general</option>
-                      <option value="pedidos">Pedidos</option>
-                      <option value="devoluciones">Devoluciones</option>
-                      <option value="colaboraciones">Colaboraciones</option>
-                      <option value="otro">Otro</option>
-                    </select>
-                    <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-king-muted/50">
-                      <Icon name="caret-down" class="h-3.5 w-3.5" />
-                    </span>
-                  </div>
-                </FormField>
-
-                <FormField label="Mensaje" for="contact-message" required>
-                  <textarea
-                    id="contact-message"
-                    name="message"
-                    required
-                    placeholder="Escribe tu mensaje aquí..."
-                    class="kb-input min-h-[9rem] resize-y"
-                    rows="5"
-                  ></textarea>
-                </FormField>
-
-                <div class="flex flex-col gap-4 pt-2 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
-                  <Button type="submit" variant="primary" size="md" id="contact-submit">
-                    Enviar mensaje
-                    <Icon name="paper-plane" class="h-3.5 w-3.5" />
-                  </Button>
-                  <span class="text-[var(--kb-text-2xs)] text-king-muted/50 leading-relaxed">
-                    Te responderemos en menos de 24&nbsp;horas laborables.
-                  </span>
-                </div>
-              </form>
-
-              <!-- Success state -->
-              <div
-                id="contact-success"
-                class="hidden flex-col items-center gap-5 py-12 text-center"
-              >
-                <span class="flex h-14 w-14 items-center justify-center rounded-full bg-king-accent/10 border border-king-accent/20">
-                  <Icon name="check" class="h-6 w-6 text-king-accent" strokeWidth={2.5} />
-                </span>
-                <div class="space-y-2">
-                  <h4 class="font-display text-[var(--kb-text-h4)] font-medium text-king-text">
-                    Mensaje enviado
-                  </h4>
-                  <p class="text-[var(--kb-text-xs)] text-king-muted/70 max-w-xs mx-auto">
-                    Gracias por escribirnos. Te responderemos a la mayor brevedad, en menos de 24 horas laborables.
-                  </p>
-                </div>
-              </div>
-
-            </div>
-          </Panel>
-        </div>
-
+          <p id="contact-form-status" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></p>
+        </form>
       </div>
     </div>
   </section>
 
-  <!-- ================================================================
-       STEEL DIVIDER — subtle transition between sections
-       ================================================================ -->
-  <div class="relative h-px max-w-[calc(100%-3rem)] mx-auto bg-gradient-to-r from-transparent via-king-steel/20 to-transparent md:max-w-[calc(100%-6rem)]" aria-hidden="true" />
+  <PurchaseInfo
+    class="contact-process section-spacing-chapter"
+    eyebrow={contactData.purchaseInfo.eyebrow}
+    title={contactData.purchaseInfo.title}
+    description={contactData.purchaseInfo.description}
+    items={purchaseInfoItems}
+    badge={purchaseInfoBadge}
+    cta={purchaseInfoCta}
+    image={purchaseInfoImage}
+  />
 
-  <!-- ================================================================
-       FAQS — graphite section, lighter than full asphalt
-       ================================================================ -->
-  <section class="section-steel section-spacing-lg" data-gsap-faq>
-    <div class="kb-shell-wide">
-
-      <SectionHeader
-        eyebrow="Soporte"
-        body="Respuestas rápidas a las dudas más comunes. Si no encuentras lo que buscas, escríbenos sin compromiso."
-        align="left"
-        tone="dark"
-        class="mb-12 md:mb-16"
+  <section
+    class="contact-collection-cta section-spacing-tight"
+    aria-labelledby="contact-collection-title"
+  >
+    <div class="cta-section-inner kb-shell-wide">
+      <CTABox
+        eyebrow="Colección"
+        title="Piezas pensadas para durar."
+        description="Cuero vegetal, herrajes macizos y diseño español. Explora la colección antes de escribirnos."
+        buttonLabel="Ver colección"
+        buttonHref="/coleccion"
+        buttonVariant="secondary"
+        backgroundImage="/image.jpg"
+        backgroundAlt="Cinturón KingBelt de cuero"
+        backgroundPosition="center 40%"
       >
-        <Fragment slot="title">
-          Preguntas <em>frecuentes</em>
-        </Fragment>
-      </SectionHeader>
-
-      <div data-faq-scope>
-        <FAQ items={contactData.faqs} tone="dark" />
-      </div>
-
-      <!-- Bottom CTA -->
-      <div class="mt-14 flex flex-col items-center gap-5 text-center md:mt-16">
-        <div class="h-px w-16 bg-king-accent/20" aria-hidden="true"></div>
-        <p class="text-[var(--kb-text-xs)] text-white/50 max-w-lg leading-relaxed">
-          ¿No encuentras tu respuesta? Escríbenos directamente por
-          {' '}<a href={site.urls.whatsapp} target="_blank" rel="noopener noreferrer" class="kb-link text-king-accent hover:text-king-accent-light transition-colors duration-[var(--kb-dur-quick)]">
-            WhatsApp
-          </a>{' '}
-          o envíanos un{' '}
-          <a href="mailto:hola@kingbelt.com" class="kb-link text-king-accent hover:text-king-accent-light transition-colors duration-[var(--kb-dur-quick)]">
-            email
-          </a>.
-        </p>
-      </div>
-
+        <SectionHeader
+          slot="header"
+          eyebrow="Colección"
+          title="Piezas pensadas para durar."
+          titleId="contact-collection-title"
+          body="Cuero vegetal, herrajes macizos y diseño español. Explora la colección antes de escribirnos."
+          align="left"
+          tone="dark"
+        />
+      </CTABox>
     </div>
   </section>
 
-  <FooterSection slot="footer" />
+  <FAQ
+    class="contact-faq section-spacing-chapter"
+    items={faqItems}
+    tone="light"
+    stickySidebar={false}
+  >
+    <SectionHeader
+      slot="header"
+      eyebrow="Preguntas frecuentes"
+      body="Respuestas rápidas a las dudas más comunes. Si no encuentras lo que buscas, escríbenos y te respondemos en menos de 24 horas laborables."
+      align="center"
+      tone="light"
+      class="contact-faq-header mb-12 md:mb-16"
+    >
+      <Fragment slot="title">
+        Resolvemos las dudas <em>antes de que surjan</em>.
+      </Fragment>
+    </SectionHeader>
+    <Fragment slot="sidebar">
+      <div class="faq-media-sidebar">
+        <MediaFrame
+          src={contactData.faqSidebar.image}
+          alt={contactData.faqSidebar.imageAlt}
+          ratio="3/4"
+          label={contactData.faqSidebar.label}
+          caption={contactData.faqSidebar.caption}
+          width={800}
+          height={1067}
+          loading="lazy"
+          class="faq-media-frame"
+        />
+      </div>
+    </Fragment>
+  </FAQ>
+
+  <ContactEmailBanner
+    class="contact-email-close"
+    eyebrow={contactData.emailBanner.eyebrow}
+    title={contactData.emailBanner.title}
+    description={contactData.emailBanner.description}
+    email={emailChannel.value}
+    ctaLabel={contactData.emailBanner.ctaLabel}
+  />
+
+  <FooterSection slot="footer" connected />
 </BaseLayout>
 
-<script>
-  import gsap from 'gsap';
-  import { ScrollTrigger } from 'gsap/ScrollTrigger';
-
-  gsap.registerPlugin(ScrollTrigger);
-
-  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  /* ── Contact Section Reveal ── */
-  const contactSection = document.querySelector('[data-gsap-contact]');
-  if (contactSection && !reduceMotion) {
-    const sectionNumber = contactSection.querySelector('.kb-section-num');
-    const heading = contactSection.querySelector('h2');
-    const cards = contactSection.querySelectorAll('[data-contact-cards] > *');
-
-    const tl = gsap.timeline({
-      defaults: { ease: 'power3.out' },
-      scrollTrigger: {
-        trigger: contactSection,
-        start: 'top 85%',
-        once: true,
-      },
-    });
-
-    if (sectionNumber) tl.from(sectionNumber, { y: 8, opacity: 0, duration: 0.5 }, 0);
-    tl.from(heading, { y: 20, opacity: 0, duration: 0.7 }, 0.1);
-    if (cards.length) tl.from(cards, { y: 16, opacity: 0, duration: 0.5, stagger: 0.07 }, 0.25);
-    tl.from('[data-contact-form]', { y: 24, opacity: 0, duration: 0.8 }, 0.2);
+<style>
+  .contact-main {
+    padding-bottom: clamp(2rem, 3.5vw, 3.5rem);
   }
 
-  /* ── FAQ Section Reveal ── */
-  const faqSection = document.querySelector('[data-gsap-faq]');
-  if (faqSection && !reduceMotion) {
-    const tl = gsap.timeline({
-      defaults: { ease: 'power3.out' },
-      scrollTrigger: {
-        trigger: faqSection,
-        start: 'top 85%',
-        once: true,
-      },
-    });
-
-    tl
-      .from(faqSection.querySelector('.section-header'), { y: 20, opacity: 0, duration: 0.8 }, 0)
-      .from(faqSection.querySelector('[data-faq-scope]'), { y: 24, opacity: 0, duration: 0.9 }, 0.2);
+  .contact-process:global(.purchase-info) {
+    padding-bottom: clamp(2rem, 3.5vw, 3.5rem);
   }
 
-  /* ── Contact Form Logic ── */
-  const form = document.getElementById('contact-form');
-  const submitBtn = document.getElementById('contact-submit');
-  const successEl = document.getElementById('contact-success');
-
-  if (form && submitBtn && successEl) {
-    form.addEventListener('submit', (e) => {
-      e.preventDefault();
-
-      const name = document.getElementById('contact-name') as HTMLInputElement;
-      const email = document.getElementById('contact-email') as HTMLInputElement;
-      const message = document.getElementById('contact-message') as HTMLTextAreaElement;
-
-      let valid = true;
-
-      [name, email, message].forEach((el) => {
-        if (!el.value.trim() || (el.type === 'email' && !el.validity.valid)) {
-          el.setAttribute('aria-invalid', 'true');
-          valid = false;
-        } else {
-          el.removeAttribute('aria-invalid');
-        }
-      });
-
-      if (!valid) return;
-
-      submitBtn.setAttribute('disabled', '');
-      submitBtn.classList.add('kb-btn-loading');
-
-      setTimeout(() => {
-        form.classList.add('hidden');
-        successEl.classList.remove('hidden');
-        successEl.classList.add('flex');
-      }, 1200);
-    });
-
-    form.querySelectorAll('input, textarea, select').forEach((el) => {
-      el.addEventListener('input', () => {
-        (el as HTMLElement).removeAttribute('aria-invalid');
-      });
-      el.addEventListener('change', () => {
-        (el as HTMLElement).removeAttribute('aria-invalid');
-      });
-    });
+  .contact-faq:global(.faq-section) {
+    padding-top: var(--kb-space-section);
+    padding-bottom: clamp(2rem, 3.5vw, 3.5rem);
   }
-</script>
+
+  .contact-email-close:global(.contact-email-banner) {
+    padding-top: var(--kb-space-section);
+    padding-bottom: clamp(1.75rem, 3vw, 2.75rem);
+  }
+
+  .contact-index {
+    display: inline-block;
+    color: var(--color-king-steel);
+    font-family: var(--font-sans);
+    font-size: var(--kb-text-2xs);
+    font-weight: var(--kb-w-medium);
+    letter-spacing: var(--kb-action-tracking);
+    text-transform: uppercase;
+  }
+
+  .contact-layout {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr;
+    gap: clamp(2.75rem, 7vw, 8rem);
+    align-items: stretch;
+  }
+
+  .contact-aside,
+  .contact-channels,
+  .contact-form-column {
+    min-width: 0;
+  }
+
+  .contact-channels :global(.kb-card),
+  .contact-channels :global(.kb-card-steel) {
+    box-sizing: border-box;
+    max-width: 100%;
+  }
+
+  .contact-aside-header:global(.section-header) {
+    --sh-max-title: 22ch;
+    --sh-max-copy: 42ch;
+  }
+
+  .contact-channels {
+    display: grid;
+    gap: var(--kb-form-row-gap);
+    margin-top: var(--kb-space-8);
+  }
+
+  .contact-form-column {
+    padding: var(--kb-form-panel-padding);
+  }
+
+  .contact-form-header:global(.section-header) {
+    --sh-max-copy: 38rem;
+    max-width: 38rem;
+    margin-bottom: var(--kb-space-6);
+  }
+
+  .contact-form {
+    display: grid;
+    gap: var(--kb-space-3);
+    max-width: 38rem;
+  }
+
+  .contact-form-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--kb-form-row-gap);
+  }
+
+  .contact-textarea {
+    min-height: 8.75rem;
+    resize: vertical;
+  }
+
+  .contact-privacy {
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+  }
+
+  .contact-privacy-label {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--kb-space-3);
+    cursor: pointer;
+  }
+
+  .contact-privacy-input {
+    flex-shrink: 0;
+    width: 1.125rem;
+    height: 1.125rem;
+    margin-top: 0.15rem;
+    accent-color: var(--color-king-accent);
+    cursor: pointer;
+  }
+
+  .contact-privacy-text {
+    color: var(--color-king-muted);
+    font-size: var(--kb-text-xs);
+    line-height: 1.6;
+  }
+
+  .contact-privacy-text .kb-link {
+    color: var(--color-king-text);
+  }
+
+  .contact-privacy-text .kb-link:hover {
+    color: var(--color-king-accent);
+  }
+
+  .contact-privacy-required {
+    color: var(--color-king-accent);
+    font-weight: var(--kb-w-medium);
+    margin-left: 0.125rem;
+  }
+
+  .contact-form-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--kb-form-row-gap);
+    padding-top: var(--kb-space-2);
+  }
+
+  .contact-form-actions p {
+    max-width: 30ch;
+    color: var(--color-king-muted);
+    font-size: var(--kb-text-2xs);
+    line-height: 1.6;
+  }
+
+  @media (max-width: 63.99rem) {
+    .contact-layout {
+      grid-template-columns: 1fr;
+    }
+
+    .contact-aside {
+      display: grid;
+    grid-template-columns: minmax(14rem, 0.55fr) minmax(0, 1.45fr);
+      gap: var(--kb-space-gap-lg);
+    }
+
+    .contact-aside-header:global(.section-header) {
+      grid-column: 1 / -1;
+    }
+
+    .contact-channels {
+      grid-column: 1 / -1;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      margin-top: 0;
+    }
+
+  }
+
+  @media (max-width: 47.99rem) {
+    .contact-aside {
+      grid-template-columns: 1fr;
+    }
+
+    .contact-form-row {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 29.99rem) {
+    .contact-form-column {
+      padding: var(--kb-space-5);
+    }
+
+    .contact-form-actions {
+      align-items: stretch;
+      flex-direction: column;
+    }
+
+    .contact-form-actions :global(.kb-btn) {
+      width: 100%;
+      min-height: 2.75rem;
+    }
+
+    .contact-form-actions p {
+      max-width: none;
+    }
+  }
+
+  /* FAQ sidebar replaced by a vertical MediaFrame that matches the FAQ column height. */
+  .contact-faq :global(.faq-layout) {
+    align-items: stretch;
+  }
+
+  .contact-faq :global(.faq-sidebar--static) {
+    height: 100%;
+    min-height: 100%;
+  }
+
+  .faq-media-sidebar {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 100%;
+  }
+
+  .contact-faq :global(.faq-media-sidebar .media-frame.media-frame--ratio-3-4) {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    height: 100%;
+    aspect-ratio: auto;
+    border-radius: var(--kb-panel-radius);
+    content-visibility: visible;
+  }
+
+  .contact-faq :global(.faq-media-sidebar .media-frame__stage) {
+    height: 100%;
+  }
+
+  .contact-faq :global(.faq-media-sidebar .media-frame__image) {
+    object-position: center 35%;
+  }
+
+  @media (max-width: 63.99rem) {
+    .faq-media-sidebar {
+      min-height: clamp(24rem, 60vw, 34rem);
+    }
+
+    .contact-faq :global(.faq-media-sidebar .media-frame) {
+      aspect-ratio: 16 / 9;
+    }
+
+    .contact-faq :global(.faq-media-sidebar .media-frame__stage) {
+      height: auto;
+    }
+  }
+
+  .contact-faq-header {
+    --sh-max-copy: 36rem;
+    --sh-gap-head-copy: 0.85rem;
+  }
+</style>

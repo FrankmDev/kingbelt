@@ -1,20 +1,32 @@
 ---
+import type { HTMLAttributes } from 'astro/types';
 import Icon from './Icon.astro';
 
-interface Props {
+interface Props extends HTMLAttributes<'div'> {
   label: string;
-  for?: string;
+  for: string;
   help?: string;
   error?: string;
   required?: boolean;
   icon?: string;
-  class?: string;
 }
 
-const { label, for: forId, help, error, required = false, icon, class: className } = Astro.props;
+const {
+  label,
+  for: forId,
+  help,
+  error,
+  required = false,
+  icon,
+  class: className,
+  ...rest
+} = Astro.props;
+
+const descriptionId = help ? `${forId}-help` : undefined;
+const errorId = error ? `${forId}-error` : undefined;
 ---
 
-<div class:list={['form-field group space-y-2 rounded-[var(--kb-radius-sm)]', className]}>
+<div class:list={['form-field group kb-rounded-sm', className]} {...rest}>
   <label class="kb-label" for={forId}>
     {icon && <Icon name={icon} class="w-3 h-3 text-king-accent" />}
     <span>{label}</span>
@@ -26,14 +38,14 @@ const { label, for: forId, help, error, required = false, icon, class: className
   </div>
 
   {help && !error && (
-    <p id={forId ? `${forId}-help` : undefined} class="text-[var(--kb-text-meta)] text-king-muted font-normal mt-1.5 leading-relaxed flex items-center gap-1.5">
+    <p id={descriptionId} class="form-field-message text-king-muted">
       <span class="w-1 h-1 rounded-full bg-king-accent/50" aria-hidden="true"></span>
       {help}
     </p>
   )}
 
   {error && (
-    <p id={forId ? `${forId}-error` : undefined} class="text-[var(--kb-text-meta)] text-red-700 font-medium mt-1.5 flex items-center gap-1.5" role="alert" aria-live="polite">
+    <p id={errorId} class="form-field-message form-field-error" role="alert" aria-live="polite">
       <Icon name="x" class="w-3 h-3 shrink-0" />
       {error}
     </p>
@@ -47,5 +59,20 @@ const { label, for: forId, help, error, required = false, icon, class: className
 
   .form-field:focus-within .kb-label {
     color: var(--color-king-accent);
+  }
+
+  .form-field-message {
+    display: flex;
+    align-items: center;
+    gap: var(--kb-space-2);
+    margin-top: var(--kb-space-2);
+    font-size: var(--kb-text-meta);
+    font-weight: var(--kb-w-body);
+    line-height: 1.6;
+  }
+
+  .form-field-error {
+    color: var(--color-king-error);
+    font-weight: var(--kb-w-medium);
   }
 </style>

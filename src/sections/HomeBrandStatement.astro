@@ -1,0 +1,840 @@
+---
+import Button from '../components/ui/Button.astro';
+import Icon from '../components/ui/Icon.astro';
+import MediaFrame from '../components/ui/MediaFrame.astro';
+import TagList from '../components/ui/TagList.astro';
+import { brandStatement } from '../data/home';
+---
+
+<section
+  id="marca"
+  class="home-brand section-spacing section-spacing-chapter"
+  data-home-brand
+  aria-labelledby="home-brand-title"
+>
+  <div class="kb-shell-wide home-brand__shell">
+    <header class="home-brand__chapter" data-brand-cell>
+      <span class="home-brand__folio kb-folio">{brandStatement.index}</span>
+      <span class="kb-eyebrow text-king-accent">{brandStatement.eyebrow}</span>
+      <span class="home-brand__chapter-rule" aria-hidden="true"></span>
+      <span class="kb-meta-label home-brand__chapter-meta">{brandStatement.meta}</span>
+    </header>
+
+    <div class="home-brand__folio-panel">
+      <div class="home-brand__grid">
+        <div class="home-brand__split">
+          <div class="home-brand__editorial" data-brand-editorial>
+            <div class="home-brand__cell home-brand__cell--title" data-brand-cell>
+              <h2 id="home-brand-title" class="home-brand__title font-display font-display-strong">
+                {brandStatement.titleLines.map((line) => (
+                  <span class="home-brand__title-line">
+                    <span class="home-brand__title-inner">
+                      {line.variant === 'em' ? <em>{line.text}</em> : line.text}
+                    </span>
+                  </span>
+                ))}
+              </h2>
+            </div>
+
+            <div class="home-brand__cell home-brand__cell--lede" data-brand-cell>
+              <p class="home-brand__lede body-copy-lg text-king-muted">{brandStatement.lede}</p>
+            </div>
+
+            <div class="home-brand__cell home-brand__cell--quote" data-brand-cell>
+              <aside
+                class="home-brand__manifest kb-texture-metal"
+                aria-label="Origen y materiales KingBelt"
+              >
+                <div class="home-brand__manifest-gate" aria-hidden="true">
+                  <span class="home-brand__manifest-index">{brandStatement.index}</span>
+                  <span class="home-brand__manifest-spine"></span>
+                </div>
+
+                <div class="home-brand__manifest-body">
+                  <header class="home-brand__manifest-head">
+                    <div class="home-brand__manifest-head-bar">
+                      <p class="kb-eyebrow kb-eyebrow-lined home-brand__manifest-eyebrow">
+                        {brandStatement.quote.eyebrow}
+                      </p>
+                      <span class="home-brand__manifest-ref kb-meta-label">
+                        {brandStatement.quote.ref}
+                      </span>
+                    </div>
+                  </header>
+
+                  <blockquote class="home-brand__manifest-quote">
+                    {brandStatement.quote.lines.map((line) => (
+                      <p
+                        class:list={[
+                          'home-brand__manifest-line',
+                          line.variant === 'em' && 'home-brand__manifest-line--accent',
+                        ]}
+                      >
+                        {line.variant === 'em' ? <em>{line.text}</em> : line.text}
+                      </p>
+                    ))}
+                  </blockquote>
+
+                  <p class="home-brand__manifest-proofs">
+                    {brandStatement.quote.proofs.join(' · ')}
+                  </p>
+
+                  <footer class="home-brand__manifest-foot">
+                    <p class="home-brand__manifest-note">{brandStatement.quote.note}</p>
+                    <div class="home-brand__manifest-tracks" aria-hidden="true">
+                      <span class="home-brand__manifest-track"></span>
+                      <span class="home-brand__manifest-track home-brand__manifest-track--short"></span>
+                    </div>
+                  </footer>
+                </div>
+
+                <span
+                  class="home-brand__manifest-corner kb-corner-bracket kb-corner-bracket-br"
+                  aria-hidden="true"
+                ></span>
+              </aside>
+            </div>
+
+            <div class="home-brand__cell home-brand__cell--copy" data-brand-cell>
+              <div class="home-brand__copy-grid">
+                {brandStatement.paragraphs.map((paragraph) => (
+                  <p class="home-brand__paragraph body-copy-lg text-king-muted">{paragraph}</p>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div class="home-brand__cell home-brand__cell--visual" data-brand-cell>
+            <MediaFrame
+              src={brandStatement.image}
+              alt={brandStatement.imageAlt}
+              ratio="3/4"
+              label={brandStatement.imageLabel}
+              caption={brandStatement.imageCaption}
+              captionNumber={brandStatement.index}
+              imagePosition={brandStatement.imagePosition}
+              width={900}
+              height={1200}
+              loading="lazy"
+              class="home-brand__media"
+            />
+          </div>
+        </div>
+
+        <div class="home-brand__cell home-brand__cell--signals" data-brand-cell>
+          <ul class="home-brand__signals" aria-label="Tres señales de la marca">
+            {brandStatement.signals.map((signal, index) => (
+              <li class="home-brand__signal kb-card-dry" data-brand-signal={index}>
+                <span class="home-brand__signal-num" aria-hidden="true">{signal.number}</span>
+                <div class="home-brand__signal-body">
+                  <p class="home-brand__signal-label">{signal.label}</p>
+                  <p class="home-brand__signal-text">{signal.text}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <footer class="home-brand__cell home-brand__cell--foot" data-brand-cell>
+          <TagList
+            items={[...brandStatement.tags]}
+            variant="accent"
+            size="sm"
+            dot
+            class="home-brand__tags"
+          />
+
+          <Button href={brandStatement.cta.href} variant="outline" size="md" class="home-brand__cta">
+            {brandStatement.cta.label}
+            <Icon
+              name="arrow-right"
+              class="h-3.5 w-3.5 transition-transform duration-[var(--kb-dur-fast)] group-hover:translate-x-1"
+            />
+          </Button>
+        </footer>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .home-brand {
+    background: var(--color-king-bg);
+  }
+
+  .home-brand__shell {
+    display: flex;
+    flex-direction: column;
+    gap: var(--kb-space-gap);
+  }
+
+  .home-brand__chapter {
+    display: grid;
+    grid-template-columns: auto auto 1fr auto;
+    align-items: center;
+    gap: var(--kb-space-4);
+    padding-block: var(--kb-space-3);
+    border-block: 1px solid var(--kb-stroke-dark);
+  }
+
+  .home-brand__folio {
+    margin: 0;
+    color: var(--color-king-accent);
+  }
+
+  .home-brand__chapter .kb-eyebrow {
+    margin: 0;
+    white-space: nowrap;
+  }
+
+  .home-brand__chapter-rule {
+    display: block;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      var(--kb-stroke-accent),
+      color-mix(in srgb, var(--color-king-accent) 12%, transparent) 72%,
+      transparent
+    );
+  }
+
+  .home-brand__chapter-meta {
+    margin: 0;
+    color: var(--color-king-muted);
+    white-space: nowrap;
+  }
+
+  .home-brand__folio-panel {
+    position: relative;
+    padding: clamp(var(--kb-space-5), 2.5vw, var(--kb-space-6));
+    border: 1px solid var(--kb-stroke-dark);
+    border-radius: var(--kb-radius-xl);
+    background: var(--color-king-surface);
+    box-shadow: var(--kb-shadow-sm);
+    overflow: hidden;
+  }
+
+  .home-brand__folio-panel::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: clamp(var(--kb-space-5), 2.5vw, var(--kb-space-6));
+    right: clamp(var(--kb-space-5), 2.5vw, var(--kb-space-6));
+    height: 2px;
+    background: linear-gradient(
+      90deg,
+      var(--color-king-accent),
+      color-mix(in srgb, var(--color-king-brass) 55%, transparent) 48%,
+      transparent
+    );
+    opacity: 0.72;
+    pointer-events: none;
+  }
+
+  .home-brand__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--kb-space-gap);
+    min-width: 0;
+  }
+
+  .home-brand__editorial {
+    display: flex;
+    flex-direction: column;
+    gap: var(--kb-space-gap);
+    min-width: 0;
+  }
+
+  .home-brand__split {
+    display: flex;
+    flex-direction: column;
+    gap: var(--kb-space-gap);
+    min-width: 0;
+  }
+
+  .home-brand__cell {
+    min-width: 0;
+  }
+
+  .home-brand__title {
+    margin: 0;
+    font-size: var(--kb-text-h2);
+    line-height: 1.02;
+    letter-spacing: -0.032em;
+    color: var(--color-king-text);
+    text-wrap: pretty;
+    max-width: none;
+  }
+
+  .home-brand__title-line {
+    display: block;
+    overflow: hidden;
+  }
+
+  .home-brand__title-inner {
+    display: block;
+  }
+
+  .home-brand__title :global(em) {
+    display: inline;
+    color: var(--color-king-accent);
+    font-style: italic;
+    font-weight: var(--kb-w-heading);
+  }
+
+  .home-brand__lede {
+    margin: 0;
+    max-width: none;
+  }
+
+  .home-brand__cell--quote {
+    width: 100%;
+  }
+
+  .home-brand__manifest {
+    --manifest-ink: rgba(255, 255, 255, 0.94);
+    --manifest-muted: rgba(255, 255, 255, 0.54);
+    --manifest-line: rgba(255, 255, 255, 0.1);
+    --manifest-accent: var(--color-king-accent-light);
+    --manifest-pad: clamp(1rem, 2vw, 1.35rem);
+
+    position: relative;
+    z-index: 2;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: clamp(0.7rem, 1.5vw, 0.95rem);
+    min-width: 0;
+    padding: var(--manifest-pad);
+    padding-left: clamp(0.95rem, 2vw, 1.25rem);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: var(--kb-panel-radius);
+    background: var(--kb-surface-steel);
+    color: var(--manifest-ink);
+    box-shadow: var(--kb-shadow-steel-soft), var(--kb-shadow-ring);
+    overflow: hidden;
+  }
+
+  .home-brand__manifest::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow: var(--kb-shadow-inset-steel);
+    pointer-events: none;
+  }
+
+  .home-brand__manifest-gate {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--kb-space-3);
+    padding-block: var(--kb-space-1);
+  }
+
+  .home-brand__manifest-index {
+    font-family: var(--font-display);
+    font-size: clamp(1.35rem, 2vw, 1.65rem);
+    font-weight: var(--kb-w-heading-light);
+    line-height: 1;
+    letter-spacing: -0.01em;
+    font-variant-numeric: tabular-nums;
+    color: var(--manifest-accent);
+    opacity: 0.72;
+  }
+
+  .home-brand__manifest-spine {
+    flex: 1;
+    width: 1px;
+    min-height: 1.75rem;
+    background: linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--manifest-accent) 70%, transparent),
+      rgba(255, 255, 255, 0.06)
+    );
+  }
+
+  .home-brand__manifest-body {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: clamp(0.7rem, 1.35vw, 0.9rem);
+  }
+
+  .home-brand__manifest-head {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding-bottom: clamp(0.6rem, 1.2vw, 0.75rem);
+    border-bottom: 1px solid var(--manifest-line);
+  }
+
+  .home-brand__manifest-head-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--kb-space-4);
+  }
+
+  .home-brand__manifest-eyebrow {
+    margin: 0;
+    color: var(--color-king-brass);
+  }
+
+  .home-brand__manifest-eyebrow.kb-eyebrow-lined::before {
+    background: linear-gradient(
+      90deg,
+      var(--color-king-brass),
+      color-mix(in srgb, var(--color-king-brass) 18%, transparent)
+    );
+  }
+
+  .home-brand__manifest-ref {
+    margin: 0;
+    flex-shrink: 0;
+    color: rgba(255, 255, 255, 0.36);
+    letter-spacing: 0.14em;
+  }
+
+  .home-brand__manifest-quote {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(0.2rem, 0.6vw, 0.35rem);
+  }
+
+  .home-brand__manifest-line {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: clamp(1.35rem, 2.15vw, 1.65rem);
+    font-weight: var(--kb-w-heading);
+    line-height: 1.2;
+    letter-spacing: -0.016em;
+    text-wrap: pretty;
+    color: var(--color-king-bone);
+    max-width: none;
+  }
+
+  .home-brand__manifest-line--accent {
+    font-style: italic;
+    color: rgba(255, 255, 255, 0.98);
+  }
+
+  .home-brand__manifest-line--accent :global(em) {
+    font-style: italic;
+    color: var(--manifest-accent);
+  }
+
+  .home-brand__manifest-proofs {
+    margin: 0;
+    font-size: var(--kb-text-meta);
+    font-weight: var(--kb-w-medium);
+    line-height: 1.5;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  .home-brand__manifest-foot {
+    display: flex;
+    flex-direction: column;
+    gap: var(--kb-space-2);
+    padding-top: clamp(0.5rem, 1.1vw, 0.7rem);
+    border-top: 1px solid var(--manifest-line);
+  }
+
+  .home-brand__manifest-note {
+    margin: 0;
+    font-size: var(--kb-text-meta);
+    font-weight: var(--kb-w-medium);
+    line-height: 1.45;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.44);
+  }
+
+  .home-brand__manifest-tracks {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .home-brand__manifest-track {
+    display: block;
+    height: 1px;
+    background: repeating-linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.2) 0,
+      rgba(255, 255, 255, 0.2) 4px,
+      transparent 4px,
+      transparent 8px
+    );
+    opacity: 0.62;
+  }
+
+  .home-brand__manifest-track--short {
+    max-width: 58%;
+    opacity: 0.42;
+  }
+
+  .home-brand__manifest-corner {
+    position: absolute;
+    right: clamp(0.75rem, 1.5vw, 1rem);
+    bottom: clamp(0.75rem, 1.5vw, 1rem);
+    z-index: 2;
+    width: 1.1rem;
+    height: 1.1rem;
+    opacity: 0.45;
+    pointer-events: none;
+  }
+
+  .home-brand__copy-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--kb-space-4);
+  }
+
+  .home-brand__paragraph {
+    margin: 0;
+    line-height: 1.72;
+    text-wrap: pretty;
+  }
+
+  .home-brand__signals {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--kb-space-4);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .home-brand__signal {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: var(--kb-space-3);
+    min-height: 100%;
+    padding: var(--kb-space-5);
+    overflow: hidden;
+  }
+
+  .home-brand__signal::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 3px;
+    height: 100%;
+    background: var(--color-king-accent);
+    opacity: 0.55;
+    transform: scaleY(0.42);
+    transform-origin: top;
+    transition: transform var(--kb-dur-med) var(--kb-ease-out);
+    z-index: 1;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .home-brand__signal:hover::before {
+      transform: scaleY(1);
+    }
+  }
+
+  .home-brand__signal-num {
+    position: relative;
+    z-index: 2;
+    font-family: var(--font-display);
+    font-size: clamp(1.5rem, 2.2vw, 1.875rem);
+    font-weight: var(--kb-w-heading-light);
+    line-height: 1;
+    letter-spacing: -0.01em;
+    font-variant-numeric: tabular-nums;
+    font-feature-settings:
+      'tnum' on,
+      'lnum' on;
+    color: var(--color-king-accent);
+    opacity: 0.42;
+  }
+
+  .home-brand__signal-body {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    gap: var(--kb-space-2);
+    min-width: 0;
+  }
+
+  .home-brand__signal-label {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--kb-text-h5);
+    font-weight: var(--kb-w-medium);
+    line-height: 1.2;
+    letter-spacing: 0;
+    text-wrap: balance;
+    color: var(--color-king-text);
+  }
+
+  .home-brand__signal-text {
+    margin: 0;
+    font-size: var(--kb-text-body);
+    font-weight: var(--kb-w-body);
+    line-height: 1.62;
+    text-wrap: pretty;
+    color: var(--color-king-muted);
+  }
+
+  .home-brand__cell--foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--kb-space-4);
+    padding-top: var(--kb-space-4);
+    border-top: 1px solid var(--kb-stroke-dark);
+  }
+
+  .home-brand__tags {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .home-brand__cta:global(.kb-btn) {
+    flex-shrink: 0;
+  }
+
+  .home-brand__media:global(.media-frame) {
+    width: 100%;
+  }
+
+  @media (min-width: 48rem) {
+    .home-brand__copy-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--kb-space-5);
+    }
+
+    .home-brand__signals {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--kb-space-gap);
+    }
+
+    .home-brand__title {
+      font-size: clamp(2.25rem, 3.8vw, 3.25rem);
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .home-brand__split {
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+      gap: var(--kb-space-gap);
+      align-items: start;
+    }
+
+    .home-brand__editorial {
+      gap: var(--kb-space-gap);
+    }
+
+    .home-brand__cell--visual {
+      display: flex;
+      flex-direction: column;
+      align-self: start;
+      overflow: hidden;
+    }
+
+    .home-brand__media:global(.media-frame) {
+      position: relative;
+      flex: 1 1 auto;
+      width: 100%;
+      min-height: 0;
+      aspect-ratio: unset !important;
+    }
+
+    .home-brand__media:global(.media-frame.media-frame--hero),
+    .home-brand__media:global(.media-frame.media-frame--ratio-3-4) {
+      aspect-ratio: unset !important;
+    }
+
+    .home-brand__media :global(.media-frame__stage) {
+      position: absolute;
+      inset: 0;
+      height: auto;
+    }
+
+    .home-brand__media :global(.media-frame__image) {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .home-brand__manifest {
+      width: 100%;
+    }
+
+    .home-brand__manifest-line {
+      font-size: clamp(1.5rem, 2.1vw, 1.85rem);
+      line-height: 1.16;
+    }
+
+    .home-brand__title {
+      font-size: clamp(2.65rem, 3.85vw, 3.85rem);
+      line-height: 0.98;
+      letter-spacing: -0.034em;
+    }
+
+    .home-brand__lede {
+      font-size: clamp(1.0625rem, 1.05rem + 0.22vw, 1.2rem);
+      line-height: 1.68;
+      max-width: none;
+    }
+
+    .home-brand__paragraph {
+      max-width: none;
+    }
+  }
+
+  @media (max-width: 47.99rem) {
+    .home-brand__chapter {
+      grid-template-columns: auto 1fr auto;
+      grid-template-rows: auto auto;
+      row-gap: var(--kb-space-2);
+    }
+
+    .home-brand__chapter-rule {
+      grid-column: 1 / -1;
+    }
+
+    .home-brand__title {
+      max-width: none;
+    }
+
+    .home-brand__lede {
+      max-width: none;
+    }
+
+    .home-brand__manifest {
+      grid-template-columns: minmax(0, 1fr);
+      padding-left: var(--manifest-pad);
+    }
+
+    .home-brand__manifest-gate {
+      flex-direction: row;
+      justify-content: flex-start;
+      padding-bottom: var(--kb-space-2);
+      border-bottom: 1px solid var(--manifest-line);
+    }
+
+    .home-brand__manifest-spine {
+      flex: 1;
+      width: auto;
+      height: 1px;
+      min-height: 0;
+      margin-left: var(--kb-space-3);
+      background: linear-gradient(
+        90deg,
+        color-mix(in srgb, var(--manifest-accent) 70%, transparent),
+        rgba(255, 255, 255, 0.06)
+      );
+    }
+
+    .home-brand__cell--foot {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .home-brand__cta:global(.kb-btn) {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-home-brand] [data-brand-cell],
+    [data-home-brand] [data-brand-signal] {
+      opacity: 1 !important;
+      transform: none !important;
+    }
+
+    [data-home-brand] .home-brand__title-inner {
+      transform: none !important;
+    }
+
+    .home-brand__signal::before {
+      transform: scaleY(1);
+    }
+  }
+</style>
+
+<script>
+  import gsap from 'gsap';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+  gsap.registerPlugin(ScrollTrigger);
+
+  const scope = document.querySelector<HTMLElement>('[data-home-brand]');
+
+  if (scope) {
+    const editorial = scope.querySelector<HTMLElement>('[data-brand-editorial]');
+    const visual = scope.querySelector<HTMLElement>('.home-brand__cell--visual');
+    const media = scope.querySelector<HTMLElement>('.home-brand__media');
+    const splitQuery = window.matchMedia('(min-width: 64rem)');
+
+    const syncMediaHeight = () => {
+      if (!editorial || !visual || !media) return;
+
+      if (splitQuery.matches) {
+        const targetHeight = editorial.getBoundingClientRect().height;
+        visual.style.height = `${targetHeight}px`;
+        visual.style.maxHeight = `${targetHeight}px`;
+        media.style.height = `${targetHeight}px`;
+        media.style.maxHeight = `${targetHeight}px`;
+      } else {
+        visual.style.height = '';
+        visual.style.maxHeight = '';
+        media.style.height = '';
+        media.style.maxHeight = '';
+      }
+    };
+
+    syncMediaHeight();
+    window.addEventListener('resize', syncMediaHeight, { passive: true });
+    splitQuery.addEventListener('change', syncMediaHeight);
+
+    if (editorial && 'ResizeObserver' in window) {
+      const observer = new ResizeObserver(syncMediaHeight);
+      observer.observe(editorial);
+    }
+
+    const mediaImage = media?.querySelector<HTMLImageElement>('.media-frame__image');
+    mediaImage?.addEventListener('load', syncMediaHeight, { passive: true });
+
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      const cells = scope.querySelectorAll<HTMLElement>('[data-brand-cell]');
+      const titleLines = scope.querySelectorAll<HTMLElement>('.home-brand__title-inner');
+      const signals = scope.querySelectorAll<HTMLElement>('[data-brand-signal]');
+
+      gsap.set(cells, { opacity: 0, y: 16 });
+      gsap.set(titleLines, { yPercent: 108 });
+      gsap.set(signals, { opacity: 0, y: 12 });
+
+      gsap.timeline({
+        scrollTrigger: {
+          trigger: scope,
+          start: 'top 80%',
+          once: true,
+        },
+        defaults: { ease: 'power3.out' },
+        onComplete: syncMediaHeight,
+      })
+        .to(cells, { opacity: 1, y: 0, duration: 0.65, stagger: 0.07 }, 0)
+        .to(titleLines, { yPercent: 0, duration: 0.8, stagger: 0.06 }, 0.06)
+        .to(signals, { opacity: 1, y: 0, duration: 0.55, stagger: 0.07 }, 0.38);
+    }
+  }
+</script>

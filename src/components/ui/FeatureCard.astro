@@ -1,6 +1,5 @@
 ---
 import Icon from './Icon.astro';
-import Eyebrow from './Eyebrow.astro';
 
 interface Props {
   eyebrow?: string;
@@ -8,102 +7,291 @@ interface Props {
   description?: string;
   icon?: string;
   number?: string;
+  meta?: string;
   href?: string;
-  variant?: 'default' | 'steel';
+  variant?: 'default' | 'steel' | 'dark';
   class?: string;
 }
 
-const { eyebrow, title, description, icon, number, href, variant = 'default', class: className } = Astro.props;
+const {
+  eyebrow,
+  title,
+  description,
+  icon,
+  number,
+  meta,
+  href,
+  variant = 'default',
+  class: className,
+} = Astro.props;
 
 const Element = href ? 'a' : 'article';
 const linkProps = href ? { href } : {};
 
-const cardClass = variant === 'steel' ? 'kb-card-steel' : 'kb-card';
-const isSteel = variant === 'steel';
-
-const titleClass = isSteel ? 'text-white/[0.94]' : 'text-king-text';
-const descClass = isSteel ? 'text-white/60' : 'text-king-muted';
-const eyebrowClass = isSteel ? 'text-king-accent-light' : 'text-king-accent';
-const ctaClass = isSteel ? 'text-king-accent-light' : 'text-king-accent';
-const iconWrapClass = isSteel
-  ? 'border-white/10 bg-white/[0.06] text-king-accent-light'
-  : 'border-king-accent/15 bg-king-accent/[0.07] text-king-accent';
+const cardClass =
+  variant === 'steel' ? 'kb-card-steel' : variant === 'dark' ? 'kb-card-dark' : 'kb-card';
+const ringOffsetClass =
+  variant === 'dark'
+    ? 'focus-visible:ring-offset-king-asphalt'
+    : 'focus-visible:ring-offset-king-bg';
 ---
 
 <Element
   class:list={[
+    'feature-card',
+    `feature-card--${variant}`,
     cardClass,
-    'group flex h-full min-w-0 flex-col p-6 md:p-7',
-    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-king-accent/45 focus-visible:ring-offset-2 focus-visible:ring-offset-king-bg',
-    href && 'cursor-pointer',
+    'flex h-full min-w-0 flex-col',
+    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-king-accent/45 focus-visible:ring-offset-2',
+    ringOffsetClass,
+    href && 'cursor-pointer group',
     className,
   ]}
   {...linkProps}
 >
-  <div class="relative z-10 flex h-full min-w-0 flex-col">
-    {number && (
-      <span class="feature-card-num" aria-hidden="true">{number}</span>
+  <div class="feature-card-inner">
+    {(number || eyebrow) && (
+      <header class="feature-card-head">
+        {number && (
+          <span class="feature-card-index" aria-hidden="true">{number}</span>
+        )}
+
+        {eyebrow && (
+          <p
+            class:list={[
+              'feature-card-eyebrow kb-eyebrow',
+              !icon && 'kb-eyebrow-lined',
+            ]}
+          >
+            {icon && (
+              <Icon name={icon} class="feature-card-mark" strokeWidth={1.65} />
+            )}
+            {eyebrow}
+          </p>
+        )}
+      </header>
     )}
 
-    {!number && icon && (
-      <div class:list={['mb-6 inline-flex h-11 w-11 items-center justify-center rounded-[var(--kb-radius-sm)] border shadow-[var(--kb-shadow-xs)]', iconWrapClass]}>
-        <Icon name={icon} class="w-5 h-5" />
-      </div>
-    )}
+    <div class="feature-card-main">
+      <h3 class="feature-card-title">{title}</h3>
 
-    {eyebrow && (
-      <Eyebrow class:list={['mb-3', eyebrowClass]}>
-        {eyebrow}
-      </Eyebrow>
-    )}
+      {description && (
+        <p class="feature-card-description">{description}</p>
+      )}
 
-    <h3 class:list={['text-balance font-display text-[var(--kb-text-h4)] leading-[1.12] tracking-[0] mb-3', titleClass]}>
-      {title}
-    </h3>
+      <slot />
+    </div>
 
-    {description && (
-      <p class:list={['text-pretty text-[var(--kb-text-sm)] leading-[1.65]', descClass]}>
-        {description}
-      </p>
-    )}
+    {(meta || href) && (
+      <footer class="feature-card-foot">
+        {meta && (
+          <span class="feature-card-meta">{meta}</span>
+        )}
 
-    <slot />
-
-    {href && (
-      <span class:list={['kb-action-label mt-6 inline-flex items-center gap-2', ctaClass]}>
-        Ver detalle
-        <Icon name="arrow-right" class="feature-card-arrow h-3 w-3" strokeWidth={2} />
-      </span>
+        {href && (
+          <span class="feature-card-cta kb-action-label">
+            Ver detalle
+            <Icon name="arrow-right" class="feature-card-arrow" strokeWidth={1.65} />
+          </span>
+        )}
+      </footer>
     )}
   </div>
 </Element>
 
 <style>
-  .feature-card-num {
-    display: block;
-    font-family: "Bitter", Georgia, serif;
-    font-weight: 300;
-    font-size: clamp(2rem, 3.5vw, 2.75rem);
-    line-height: 1;
-    color: var(--kb-stroke-accent);
-    letter-spacing: -0.01em;
-    font-variant-numeric: tabular-nums;
-    margin-bottom: var(--kb-space-4);
-    opacity: 0.5;
+  .feature-card {
+    --fc-eyebrow: var(--color-king-accent);
+    --fc-title: var(--color-king-text);
+    --fc-body: var(--color-king-muted);
+    --fc-index: var(--color-king-accent);
+    --fc-mark: var(--color-king-accent);
+    --fc-divider: rgba(138, 90, 43, 0.12);
+    --fc-meta-fg: var(--color-king-accent);
+    --fc-meta-bg: rgba(138, 90, 43, 0.05);
+    --fc-meta-border: rgba(138, 90, 43, 0.16);
+    --fc-accent: var(--color-king-accent);
+    --fc-cta: var(--color-king-accent);
+
+    position: relative;
+    overflow: hidden;
+    padding: var(--kb-space-5);
   }
 
-  :global(.kb-card-steel) .feature-card-num {
-    color: rgba(255, 255, 255, 0.18);
+  .feature-card--steel,
+  .feature-card--dark {
+    --fc-eyebrow: var(--color-king-accent-light);
+    --fc-title: rgba(255, 255, 255, 0.94);
+    --fc-body: rgba(255, 255, 255, 0.56);
+    --fc-index: var(--color-king-accent-light);
+    --fc-mark: var(--color-king-accent-light);
+    --fc-divider: rgba(255, 255, 255, 0.1);
+    --fc-meta-fg: var(--color-king-accent-light);
+    --fc-meta-bg: rgba(183, 138, 79, 0.1);
+    --fc-meta-border: rgba(183, 138, 79, 0.24);
+    --fc-accent: var(--color-king-accent-light);
+    --fc-cta: var(--color-king-accent-light);
   }
 
-  .feature-card-arrow {
-    transition: transform var(--kb-dur-fast) var(--kb-ease-out);
+  .feature-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 3px;
+    height: 100%;
+    background: var(--fc-accent);
+    opacity: 0.65;
+    transform: scaleY(0.36);
+    transform-origin: top;
+    transition: transform var(--kb-dur-med) var(--kb-ease-out);
+    z-index: 2;
   }
 
   @media (hover: hover) and (pointer: fine) {
-    .kb-card:hover .feature-card-arrow,
-    .kb-card-steel:hover .feature-card-arrow {
-      transform: translateX(0.18rem);
+    .feature-card:hover::before {
+      transform: scaleY(1);
+    }
+  }
+
+  .feature-card-inner {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--kb-space-4);
+    min-width: 0;
+    min-height: 100%;
+  }
+
+  .feature-card-head {
+    display: flex;
+    flex-direction: column;
+    gap: var(--kb-space-3);
+    min-width: 0;
+  }
+
+  .feature-card-index {
+    font-family: var(--font-display);
+    font-size: clamp(1.5rem, 2.4vw, 2rem);
+    font-weight: var(--kb-w-heading-light);
+    line-height: 1;
+    letter-spacing: -0.01em;
+    font-variant-numeric: tabular-nums;
+    color: var(--fc-index);
+    opacity: 0.38;
+  }
+
+  .feature-card-eyebrow {
+    margin: 0;
+    color: var(--fc-eyebrow);
+  }
+
+  .feature-card-eyebrow:not(.kb-eyebrow-lined) {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--kb-space-2);
+  }
+
+  .feature-card-mark {
+    width: 0.875rem;
+    height: 0.875rem;
+    flex-shrink: 0;
+    color: var(--fc-mark);
+    opacity: 0.82;
+  }
+
+  .feature-card-main {
+    display: flex;
+    flex-direction: column;
+    gap: var(--kb-space-3);
+    min-width: 0;
+  }
+
+  .feature-card-title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--kb-text-h4);
+    font-weight: var(--kb-w-medium);
+    line-height: 1.16;
+    letter-spacing: 0;
+    text-wrap: balance;
+    color: var(--fc-title);
+  }
+
+  .feature-card-description {
+    margin: 0;
+    color: var(--fc-body);
+    font-size: var(--kb-text-sm);
+    line-height: 1.68;
+    text-wrap: pretty;
+    max-width: none;
+  }
+
+  .feature-card-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--kb-space-3);
+    margin-top: var(--kb-space-1);
+    padding-top: var(--kb-space-4);
+    border-top: 1px solid var(--fc-divider);
+  }
+
+  .feature-card-meta {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.3125rem 0.625rem;
+    border-radius: var(--kb-radius-xs);
+    border: 1px solid var(--fc-meta-border);
+    background: var(--fc-meta-bg);
+    color: var(--fc-meta-fg);
+    font-size: var(--kb-text-2xs);
+    font-weight: var(--kb-w-medium);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    line-height: 1.2;
+  }
+
+  .feature-card-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    margin-left: auto;
+    color: var(--fc-cta);
+    font-size: var(--kb-text-xs);
+    opacity: 0;
+    transform: translateX(-0.15rem);
+    transition:
+      opacity var(--kb-dur-med) var(--kb-ease-out),
+      transform var(--kb-dur-med) var(--kb-ease-out);
+  }
+
+  .feature-card-arrow {
+    width: 0.875rem;
+    height: 0.875rem;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .feature-card:hover .feature-card-cta {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .feature-card::before,
+    .feature-card-cta {
+      transition: none;
+    }
+
+    .feature-card::before {
+      transform: scaleY(1);
+    }
+
+    .feature-card-cta {
+      opacity: 1;
+      transform: none;
     }
   }
 </style>

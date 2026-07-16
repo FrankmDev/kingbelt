@@ -1,0 +1,7 @@
+interface:
+  display_name: "KingBelt Visual Task"
+  short_description: "Diseño y frontend de producción para KingBelt."
+  default_prompt: "Usa $kingbelt-visual-task para crear, mejorar o auditar esta interfaz de KingBelt con el alcance y la validación adecuados."
+
+policy:
+  allow_implicit_invocation: true

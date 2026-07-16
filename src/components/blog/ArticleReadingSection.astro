@@ -1,0 +1,935 @@
+---
+import SectionHeader from '../common/SectionHeader.astro';
+import Button from '../ui/Button.astro';
+import Icon from '../ui/Icon.astro';
+import Panel from '../ui/Panel.astro';
+import type { BlogPost } from '../../data/blog';
+
+interface Props {
+  post: BlogPost;
+}
+
+const { post } = Astro.props;
+const sectionCount = post.sections.length;
+const sectionTotal = String(sectionCount).padStart(2, '0');
+const indexPanelId = 'article-index-panel';
+---
+
+<section
+  class="article-main section-spacing article-main--chapter-start"
+  aria-labelledby="article-main-title"
+  data-article-main
+>
+  <div class="kb-shell-wide section-stack-lg">
+    <SectionHeader
+      eyebrow="Desarrollo"
+      meta={`${post.dateLabel} · ${post.readingTime}`}
+      titleId="article-main-title"
+      align="left"
+      class="article-main-header"
+    >
+      <Fragment slot="title">
+        El artículo <em>desarrollado</em>.
+      </Fragment>
+      <p slot="body">{post.introduction}</p>
+    </SectionHeader>
+
+    <div class="article-reading-stage">
+      <div class="article-reading-stage__texture" aria-hidden="true"></div>
+
+      <span
+        class="article-reading-stage__corner kb-corner-bracket kb-corner-bracket-tl"
+        aria-hidden="true"
+      ></span>
+      <span
+        class="article-reading-stage__corner kb-corner-bracket kb-corner-bracket-tr"
+        aria-hidden="true"
+      ></span>
+      <span
+        class="article-reading-stage__corner kb-corner-bracket kb-corner-bracket-bl"
+        aria-hidden="true"
+      ></span>
+      <span
+        class="article-reading-stage__corner kb-corner-bracket kb-corner-bracket-br"
+        aria-hidden="true"
+      ></span>
+
+      <div class="article-spread" data-article-spread>
+        <Panel variant="light" padding="lg" class="article-body-panel">
+          <span class="article-body-panel__mark" aria-hidden="true"></span>
+
+          <div class="article-sections">
+            {post.sections.map((section, index) => {
+              const number = String(index + 1).padStart(2, '0');
+              const isLast = index === sectionCount - 1;
+
+              return (
+                <article
+                  id={section.id}
+                  class="article-section"
+                  data-article-section
+                  aria-labelledby={`${section.id}-title`}
+                >
+                  <div class="article-section__layout">
+                    <div class="article-section__rail" aria-hidden="true">
+                      <span class="article-section__num">{number}</span>
+                      {!isLast && <span class="article-section__rail-line"></span>}
+                    </div>
+
+                    <div class="article-section__content">
+                      <header class="article-section-head">
+                        <p class="kb-meta-label article-section-head__meta">
+                          Sección {number} <span aria-hidden="true">·</span> {sectionTotal}
+                        </p>
+                        <h2 id={`${section.id}-title`} class="article-section-title">
+                          {section.title}
+                        </h2>
+                      </header>
+
+                      <div class="article-section-body kb-prose article-prose">
+                        {section.paragraphs.map((paragraph) => <p>{paragraph}</p>)}
+                      </div>
+
+                      {section.points && (
+                        <aside class="article-section-keypoints" aria-label="Puntos clave">
+                          <p class="kb-eyebrow article-section-keypoints__label">Puntos clave</p>
+                          <ul class="article-section-keypoints__list">
+                            {section.points.map((point) => (
+                              <li>
+                                <span class="article-section-keypoints__marker" aria-hidden="true"></span>
+                                <span>{point}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </aside>
+                      )}
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+
+          <footer class="article-body-foot">
+            <div class="article-body-foot__copy">
+              <span class="article-body-foot__line" aria-hidden="true"></span>
+              <p class="kb-meta-label">KingBelt Journal · Cuaderno 01</p>
+            </div>
+            <Button href="/blog" variant="primary" size="md">
+              Explorar más artículos
+              <Icon name="arrow-right" />
+            </Button>
+          </footer>
+        </Panel>
+
+        <div class="article-index-column" data-article-index-column>
+          <details class="article-index-disclosure" data-article-index-disclosure>
+            <summary class="article-index-disclosure__summary">
+              <span class="article-index-disclosure__label">
+                <Icon name="menu" class="article-index-disclosure__icon" />
+                Índice del artículo
+              </span>
+              <span class="kb-meta-label">{sectionTotal} bloques</span>
+              <Icon name="caret-down" class="article-index-disclosure__chevron" />
+            </summary>
+
+            <div class="article-index-sticky" data-article-index-sticky>
+              <aside
+                id={indexPanelId}
+                class="kb-reading-panel article-index-panel"
+                aria-labelledby="article-index-title"
+              >
+                <header class="kb-reading-panel__head">
+                  <div class="kb-reading-panel__head-bar">
+                    <p class="kb-eyebrow kb-eyebrow-lined kb-reading-panel__eyebrow">Índice</p>
+                    <span class="kb-reading-panel__folio kb-meta-label" aria-hidden="true">
+                      {sectionTotal}
+                    </span>
+                  </div>
+
+                  <p id="article-index-title" class="kb-reading-panel__statement">
+                    Navega por cada bloque de lectura.
+                  </p>
+                </header>
+
+                <ol class="kb-reading-panel__layers article-index-layers">
+                  {post.sections.map((section, index) => (
+                    <li
+                      class="kb-reading-panel__layer"
+                      data-index-layer
+                      data-section-id={section.id}
+                    >
+                      <div class="kb-reading-panel__rail" aria-hidden="true">
+                        <span class="kb-reading-panel__num">{String(index + 1).padStart(2, '0')}</span>
+                        {index < sectionCount - 1 && (
+                          <span class="kb-reading-panel__rail-line"></span>
+                        )}
+                      </div>
+
+                      <div class="kb-reading-panel__body">
+                        <a
+                          href={`#${section.id}`}
+                          class="article-index-link"
+                          data-index-link
+                          data-section-target={section.id}
+                        >
+                          <div class="kb-reading-panel__layer-head">
+                            <h3 class="kb-reading-panel__label">{section.title}</h3>
+                            <span class="kb-reading-panel__tag">Ir</span>
+                          </div>
+                          <p class="kb-reading-panel__text article-index-text">
+                            Bloque {String(index + 1).padStart(2, '0')} del artículo.
+                          </p>
+                        </a>
+                      </div>
+                    </li>
+                  ))}
+                </ol>
+
+                <div class="kb-reading-panel__foot" aria-hidden="true">
+                  <span class="kb-reading-panel__track"></span>
+                  <span class="kb-reading-panel__track"></span>
+                </div>
+
+                <div class="article-index-actions">
+                  <Button href="/blog" variant="surfaceOutline" size="sm" class="article-index-back">
+                    <Icon name="arrow-left" />
+                    Volver a la revista
+                  </Button>
+                </div>
+              </aside>
+            </div>
+          </details>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  const DESKTOP_QUERY = '(min-width: 64rem)';
+
+  function getTopOffset() {
+    return parseFloat(getComputedStyle(document.documentElement).fontSize) * 7;
+  }
+
+  function initArticleIndexPin(root: HTMLElement) {
+    const spread = root.querySelector<HTMLElement>('[data-article-spread]');
+    const column = root.querySelector<HTMLElement>('[data-article-index-column]');
+    const sticky = root.querySelector<HTMLElement>('[data-article-index-sticky]');
+    const disclosure = root.querySelector<HTMLDetailsElement>('[data-article-index-disclosure]');
+    if (!spread || !column || !sticky) return () => {};
+
+    const media = window.matchMedia(DESKTOP_QUERY);
+    let raf = 0;
+
+    const syncDisclosure = () => {
+      if (!disclosure) return;
+      if (media.matches) {
+        disclosure.open = true;
+      }
+    };
+
+    const reset = () => {
+      sticky.classList.remove('is-pinned', 'is-ended');
+      sticky.style.width = '';
+      sticky.style.left = '';
+      column.style.minHeight = '';
+    };
+
+    const update = () => {
+      raf = 0;
+      syncDisclosure();
+
+      if (!media.matches) {
+        reset();
+        return;
+      }
+
+      const topOffset = getTopOffset();
+      const spreadRect = spread.getBoundingClientRect();
+      const stickyHeight = sticky.offsetHeight;
+      const columnWidth = column.offsetWidth;
+      const columnRect = column.getBoundingClientRect();
+
+      if (spreadRect.top > topOffset) {
+        reset();
+        return;
+      }
+
+      if (spreadRect.bottom - stickyHeight <= topOffset) {
+        sticky.classList.remove('is-pinned');
+        sticky.classList.add('is-ended');
+        sticky.style.width = '';
+        sticky.style.left = '';
+        column.style.minHeight = `${stickyHeight}px`;
+        return;
+      }
+
+      sticky.classList.remove('is-ended');
+      sticky.classList.add('is-pinned');
+      sticky.style.width = `${columnWidth}px`;
+      sticky.style.left = `${columnRect.left}px`;
+      column.style.minHeight = `${stickyHeight}px`;
+    };
+
+    const schedule = () => {
+      if (!raf) raf = requestAnimationFrame(update);
+    };
+
+    media.addEventListener('change', schedule);
+    window.addEventListener('scroll', schedule, { passive: true });
+    window.addEventListener('resize', schedule, { passive: true });
+    syncDisclosure();
+    update();
+
+    return () => {
+      media.removeEventListener('change', schedule);
+      window.removeEventListener('scroll', schedule);
+      window.removeEventListener('resize', schedule);
+      if (raf) cancelAnimationFrame(raf);
+      reset();
+    };
+  }
+
+  function initArticleIndexActive(root: HTMLElement) {
+    const sections = root.querySelectorAll<HTMLElement>('[data-article-section]');
+    const links = root.querySelectorAll<HTMLAnchorElement>('[data-index-link]');
+    const layers = root.querySelectorAll<HTMLElement>('[data-index-layer]');
+
+    if (!sections.length || !links.length) return () => {};
+
+    const setActive = (id: string | null) => {
+      const activeIndex = id
+        ? Array.from(sections).findIndex((section) => section.id === id)
+        : 0;
+
+      links.forEach((link) => {
+        const isActive = link.dataset.sectionTarget === id;
+        link.classList.toggle('is-active', isActive);
+        link.setAttribute('aria-current', isActive ? 'location' : 'false');
+      });
+
+      layers.forEach((layer) => {
+        layer.classList.toggle('is-active', layer.dataset.sectionId === id);
+      });
+
+      sections.forEach((section, index) => {
+        section.classList.toggle('is-active', index === activeIndex);
+      });
+    };
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+
+        if (visible[0]?.target.id) {
+          setActive(visible[0].target.id);
+        }
+      },
+      {
+        rootMargin: '-20% 0px -62% 0px',
+        threshold: [0, 0.15, 0.35, 0.55],
+      }
+    );
+
+    sections.forEach((section) => observer.observe(section));
+    setActive(sections[0]?.id ?? null);
+
+    return () => {
+      observer.disconnect();
+      setActive(null);
+    };
+  }
+
+  document.querySelectorAll<HTMLElement>('[data-article-main]').forEach((root) => {
+    const cleanupPin = initArticleIndexPin(root);
+    const cleanupActive = initArticleIndexActive(root);
+
+    document.addEventListener(
+      'astro:before-swap',
+      () => {
+        cleanupPin();
+        cleanupActive();
+      },
+      { once: true }
+    );
+  });
+</script>
+
+<style>
+  .article-main {
+    background: var(--color-king-surface);
+  }
+
+  .article-main--chapter-start {
+    padding-top: clamp(2rem, 3.5vw, 3rem);
+    padding-bottom: clamp(1.75rem, 3vw, 2.5rem);
+  }
+
+  .article-main-header:global(.section-header) {
+    --sh-max-copy: 50ch;
+    --sh-max-title: 18ch;
+  }
+
+  .article-main-header :global(.sh-title em) {
+    color: var(--color-king-accent);
+    font-style: italic;
+    font-weight: inherit;
+  }
+
+  .article-reading-stage {
+    position: relative;
+    width: min(100%, calc(100% - clamp(2rem, 6vw, 5.5rem)));
+    margin-inline: auto;
+    padding: clamp(1.35rem, 2.8vw, 2rem);
+    border: 1px solid var(--kb-stroke-dark);
+    border-radius: var(--kb-card-radius);
+    background: var(--kb-surface-light-strong);
+    box-shadow: var(--kb-shadow-sm);
+    overflow: hidden;
+  }
+
+  .article-reading-stage::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.72) 48%,
+      transparent
+    );
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .article-reading-stage::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow: var(--kb-shadow-inset-soft);
+    pointer-events: none;
+  }
+
+  .article-reading-stage__texture {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.32;
+    background-image:
+      linear-gradient(90deg, rgba(138, 90, 43, 0.04) 0, rgba(138, 90, 43, 0.04) 1px, transparent 1px),
+      linear-gradient(rgba(26, 26, 26, 0.016) 1px, transparent 1px);
+    background-size: 8rem 100%, 100% 4rem;
+    mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.5), transparent 88%);
+  }
+
+  .article-reading-stage__corner {
+    z-index: 2;
+  }
+
+  .article-reading-stage__corner.kb-corner-bracket-tl {
+    top: 0.9rem;
+    left: 0.9rem;
+  }
+
+  .article-reading-stage__corner.kb-corner-bracket-tr {
+    top: 0.9rem;
+    right: 0.9rem;
+  }
+
+  .article-reading-stage__corner.kb-corner-bracket-bl {
+    bottom: 0.9rem;
+    left: 0.9rem;
+  }
+
+  .article-reading-stage__corner.kb-corner-bracket-br {
+    right: 0.9rem;
+    bottom: 0.9rem;
+  }
+
+  .article-spread {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--kb-space-gap-lg);
+    align-items: start;
+  }
+
+  .article-body-panel {
+    position: relative;
+    min-width: 0;
+  }
+
+  .article-body-panel__mark {
+    position: absolute;
+    top: var(--kb-space-7);
+    left: var(--kb-space-7);
+    width: 5px;
+    height: 5px;
+    border-radius: var(--kb-radius-pill);
+    background: var(--color-king-accent);
+    box-shadow:
+      1rem 0 0 rgba(138, 90, 43, 0.62),
+      2rem 0 0 rgba(138, 90, 43, 0.3);
+    pointer-events: none;
+  }
+
+  .article-sections {
+    display: grid;
+    gap: 0;
+  }
+
+  .article-section {
+    scroll-margin-top: 7rem;
+    padding-block: clamp(2rem, 4vw, 2.75rem);
+    border-bottom: 1px solid var(--kb-stroke-hairline);
+  }
+
+  .article-section:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  .article-section__layout {
+    display: grid;
+    grid-template-columns: 2.75rem minmax(0, 1fr);
+    gap: clamp(1rem, 2.4vw, 1.5rem);
+    align-items: start;
+  }
+
+  .article-section__rail {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    min-height: 100%;
+  }
+
+  .article-section__num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border: 1px solid rgba(138, 90, 43, 0.28);
+    border-radius: var(--kb-radius-xs);
+    font-family: var(--font-display);
+    font-size: var(--kb-text-h5);
+    font-variant-numeric: tabular-nums;
+    font-weight: var(--kb-w-heading-light);
+    line-height: 1;
+    color: var(--color-king-accent);
+    background: color-mix(in srgb, var(--color-king-accent) 8%, transparent);
+  }
+
+  .article-section__rail-line {
+    flex: 1;
+    width: 1px;
+    min-height: 1.5rem;
+    margin-block: var(--kb-space-3);
+    background: linear-gradient(
+      180deg,
+      rgba(138, 90, 43, 0.42) 0%,
+      rgba(138, 90, 43, 0.1) 100%
+    );
+  }
+
+  .article-section__content {
+    min-width: 0;
+  }
+
+  .article-section-head {
+    display: flex;
+    flex-direction: column;
+    gap: var(--kb-space-4);
+  }
+
+  .article-section-head__meta {
+    margin: 0;
+    color: var(--color-king-muted);
+  }
+
+  .article-section-head__meta span[aria-hidden='true'] {
+    margin-inline: 0.2em;
+    color: var(--kb-stroke-accent);
+  }
+
+  .article-section-title {
+    max-width: 24ch;
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: clamp(1.65rem, 3vw, 2.35rem);
+    font-weight: var(--kb-w-heading-light);
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+    color: var(--color-king-text);
+  }
+
+  :global(.article-prose.kb-prose) {
+    max-width: 44rem;
+    margin-top: var(--kb-space-5);
+    font-size: clamp(0.9375rem, 0.92rem + 0.2vw, 1.0625rem);
+    line-height: 1.8;
+  }
+
+  :global(.article-prose p) {
+    margin: 0;
+    color: var(--color-king-muted);
+    text-wrap: pretty;
+  }
+
+  :global(.article-prose p + p) {
+    margin-top: 1.2em;
+  }
+
+  .article-section:first-of-type :global(.article-prose p:first-of-type::first-letter) {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 3.4em;
+    line-height: 0.85;
+    float: left;
+    padding-right: 0.1em;
+    padding-top: 0.02em;
+    color: var(--color-king-accent);
+  }
+
+  :global(.article-prose strong) {
+    color: var(--color-king-text);
+    font-weight: var(--kb-w-semibold);
+  }
+
+  .article-section.is-active .article-section__num {
+    border-color: rgba(138, 90, 43, 0.55);
+    color: var(--color-king-text);
+    background: color-mix(in srgb, var(--color-king-accent) 14%, transparent);
+  }
+
+  .article-section-keypoints {
+    margin-top: var(--kb-space-6);
+    padding: var(--kb-space-5) var(--kb-space-5) var(--kb-space-5) var(--kb-space-4);
+    border: 1px solid var(--kb-stroke-dark);
+    border-radius: var(--kb-radius-sm);
+    background: var(--kb-surface-light);
+  }
+
+  .article-section-keypoints__label {
+    margin: 0 0 var(--kb-space-4);
+    color: var(--color-king-accent);
+  }
+
+  .article-section-keypoints__list {
+    display: grid;
+    gap: var(--kb-space-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .article-section-keypoints__list li {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--kb-space-3);
+    align-items: start;
+    font-size: var(--kb-text-sm);
+    line-height: 1.6;
+    color: var(--color-king-text);
+  }
+
+  .article-section-keypoints__marker {
+    width: 0.4rem;
+    height: 0.4rem;
+    margin-top: 0.55em;
+    border-radius: var(--kb-radius-pill);
+    background: var(--color-king-accent);
+    opacity: 0.8;
+  }
+
+  .article-body-foot {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--kb-form-row-gap);
+    margin-top: clamp(3rem, 7vw, 5rem);
+    padding-top: var(--kb-space-6);
+    border-top: 1px solid var(--kb-stroke-dark);
+  }
+
+  .article-body-foot__copy {
+    display: flex;
+    flex-direction: column;
+    gap: var(--kb-space-4);
+  }
+
+  .article-body-foot__line {
+    width: 4rem;
+    height: 2px;
+    background: var(--color-king-accent);
+  }
+
+  .article-body-foot p {
+    margin: 0;
+    color: var(--color-king-muted);
+  }
+
+  .article-index-column {
+    min-width: 0;
+  }
+
+  .article-index-disclosure {
+    border: 1px solid var(--kb-stroke-dark);
+    border-radius: var(--kb-card-radius);
+    background: var(--color-king-bg);
+    overflow: hidden;
+  }
+
+  .article-index-disclosure__summary {
+    display: flex;
+    align-items: center;
+    gap: var(--kb-space-3);
+    padding: var(--kb-space-4) var(--kb-space-5);
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .article-index-disclosure__summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .article-index-disclosure__label {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--kb-space-2);
+    flex: 1;
+    font-size: var(--kb-text-sm);
+    font-weight: var(--kb-w-medium);
+    color: var(--color-king-text);
+  }
+
+  .article-index-disclosure__icon,
+  .article-index-disclosure__chevron {
+    width: 1rem;
+    height: 1rem;
+    flex-shrink: 0;
+    color: var(--color-king-muted);
+  }
+
+  .article-index-disclosure__chevron {
+    transition: transform var(--kb-dur-fast) var(--kb-ease-out);
+  }
+
+  .article-index-disclosure[open] .article-index-disclosure__chevron {
+    transform: rotate(180deg);
+  }
+
+  .article-index-disclosure__summary:focus-visible {
+    outline: 2px solid var(--color-king-accent);
+    outline-offset: -2px;
+    border-radius: calc(var(--kb-card-radius) - 1px);
+  }
+
+  .article-index-sticky {
+    min-width: 0;
+  }
+
+  .article-index-panel {
+    min-width: 0;
+  }
+
+  @media (max-width: 63.99rem) {
+    .article-index-panel {
+      border: 0;
+      border-radius: 0;
+      box-shadow: none;
+    }
+
+    .article-index-panel::after {
+      content: none;
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .article-index-panel {
+      border-radius: var(--kb-card-radius);
+      overflow: hidden;
+    }
+  }
+
+  .article-index-link {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+    border-radius: var(--kb-radius-xs);
+    transition:
+      color var(--kb-dur-fast) var(--kb-ease-out),
+      background-color var(--kb-dur-fast) var(--kb-ease-out);
+  }
+
+  .article-index-text {
+    margin: 0;
+  }
+
+  .article-index-actions {
+    position: relative;
+    z-index: 1;
+    margin-top: var(--kb-space-6);
+    padding-top: var(--kb-space-5);
+    border-top: 1px solid rgba(255, 255, 255, 0.09);
+  }
+
+  :global(.article-index-back.kb-btn) {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .kb-reading-panel__layer.is-active .kb-reading-panel__num {
+    border-color: rgba(166, 124, 78, 0.55);
+    background: rgba(166, 124, 78, 0.14);
+    color: var(--color-king-bone);
+  }
+
+  .article-index-link.is-active .kb-reading-panel__label {
+    color: var(--color-king-accent-light);
+  }
+
+  .article-index-link.is-active .kb-reading-panel__tag {
+    border-color: rgba(166, 124, 78, 0.55);
+    color: var(--color-king-accent-light);
+    background: rgba(166, 124, 78, 0.1);
+  }
+
+  @media (hover: hover) {
+    .article-index-link:hover .kb-reading-panel__label {
+      color: var(--color-king-accent-light);
+    }
+
+    .article-index-link:hover .kb-reading-panel__tag {
+      border-color: rgba(166, 124, 78, 0.55);
+      color: var(--color-king-accent-light);
+    }
+  }
+
+  .article-index-link:focus-visible {
+    outline: 2px solid var(--color-king-accent-light);
+    outline-offset: 2px;
+  }
+
+  @media (min-width: 48rem) {
+    .article-reading-stage {
+      width: min(100%, calc(100% - clamp(3rem, 8vw, 7rem)));
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .article-spread {
+      grid-template-columns: minmax(0, 1.12fr) minmax(22rem, 0.88fr);
+      align-items: stretch;
+    }
+
+    .article-index-column {
+      position: relative;
+      align-self: stretch;
+      order: 2;
+    }
+
+    .article-body-panel {
+      order: 1;
+      min-height: 100%;
+    }
+
+    .article-index-disclosure {
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+    }
+
+    .article-index-disclosure__summary {
+      display: none;
+    }
+
+    .article-index-sticky {
+      width: 100%;
+      max-height: calc(100dvh - 7rem - var(--kb-space-4));
+    }
+
+    .article-index-sticky.is-pinned {
+      position: fixed;
+      top: 7rem;
+      z-index: calc(var(--kb-z-sticky) - 1);
+    }
+
+    .article-index-sticky.is-ended {
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      left: 0;
+    }
+
+    .article-index-sticky.is-pinned .article-index-panel,
+    .article-index-sticky.is-ended .article-index-panel {
+      border-radius: var(--kb-card-radius);
+    }
+
+    .article-index-panel {
+      max-height: inherit;
+      overflow: auto;
+      overscroll-behavior: contain;
+    }
+  }
+
+  @media (max-width: 63.99rem) {
+    .article-index-column {
+      order: -1;
+    }
+
+    .article-index-disclosure[open] .article-index-sticky {
+      padding: 0 var(--kb-space-4) var(--kb-space-4);
+    }
+  }
+
+  @media (max-width: 47.99rem) {
+    .article-body-foot {
+      align-items: stretch;
+      flex-direction: column;
+    }
+
+    .article-body-foot :global(.kb-btn) {
+      width: 100%;
+    }
+
+    .article-section__layout {
+      grid-template-columns: 2.35rem minmax(0, 1fr);
+      gap: var(--kb-space-4);
+    }
+
+    .article-section__num {
+      width: 2.35rem;
+      height: 2.35rem;
+      font-size: var(--kb-text-sm);
+    }
+
+    :global(.article-prose.kb-prose) {
+      max-width: none;
+      font-size: 1rem;
+      line-height: 1.78;
+    }
+
+    .article-section-title {
+      max-width: none;
+      font-size: clamp(1.5rem, 6.5vw, 1.85rem);
+    }
+  }
+
+  @media (max-width: 29.99rem) {
+    .article-body-panel__mark {
+      top: var(--kb-space-5);
+      left: var(--kb-space-5);
+    }
+  }
+</style>

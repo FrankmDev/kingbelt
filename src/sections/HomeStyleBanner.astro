@@ -1,0 +1,31 @@
+---
+import EditorialBanner from '../components/ui/EditorialBanner.astro';
+import { styleBanner } from '../data/home';
+---
+
+<section class="home-style section-spacing-tight" aria-labelledby="home-style-title">
+  <div class="kb-shell-wide">
+    <EditorialBanner
+      id="home-style-title"
+      eyebrow={styleBanner.eyebrow}
+      title={styleBanner.title}
+      statement={styleBanner.body}
+      image={styleBanner.image}
+      imageAlt={styleBanner.imageAlt}
+      imagePosition={styleBanner.imagePosition}
+      imageWidth={1920}
+      imageHeight={1080}
+      class="home-style__banner"
+    />
+  </div>
+</section>
+
+<style>
+  .home-style {
+    background: var(--color-king-bg);
+  }
+
+  .home-style__banner:global(.kb-editorial-banner) {
+    min-height: clamp(22rem, 56vw, 36rem);
+  }
+</style>

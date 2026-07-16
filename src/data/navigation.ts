@@ -10,23 +10,51 @@ export interface ChannelLink extends NavItem {
 }
 
 export const mainNav: NavItem[] = [
-  { label: 'La marca', href: '/#marca' },
-  { label: 'Proceso', href: '/#proceso' },
+  { label: 'La marca', href: '/sobre' },
+  { label: 'Revista', href: '/blog' },
+  { label: 'Atención', href: '/#atencion' },
   { label: 'Contacto', href: '/contacto' },
 ];
 
 export const footerNav: NavItem[] = [
-  { label: 'La marca', href: '/#marca' },
-  { label: 'Proceso', href: '/#proceso' },
+  { label: 'La marca', href: '/sobre' },
+  { label: 'Revista', href: '/blog' },
+  { label: 'Atención', href: '/#atencion' },
+  { label: 'Colección', href: '/coleccion' },
   { label: 'Contacto', href: '/contacto' },
 ];
 
+export const footerHelpNav: NavItem[] = [
+  { label: 'Preguntas frecuentes', href: '/contacto' },
+  { label: 'Privacidad', href: '/privacidad' },
+];
+
+export const footerHighlights = [
+  'Hecho en España',
+  'Envío 24–72h península',
+  'Embalaje incluido',
+] as const;
+
+export const footerContact = [
+  {
+    label: 'Email',
+    value: site.contact.email,
+    href: `mailto:${site.contact.email}`,
+    external: false,
+  },
+  {
+    label: 'Instagram',
+    value: '@kingbelt',
+    href: site.urls.instagram,
+    external: true,
+  },
+] as const;
+
 export const contactChannels: ChannelLink[] = [
-  { label: 'Consultar por WhatsApp', href: site.urls.whatsapp, external: true },
+  { label: 'Escribir por email', href: `mailto:${site.contact.email}`, external: false },
   { label: 'Instagram', href: site.urls.instagram, external: true },
 ];
 
 export const socialLinks = [
   { label: 'Instagram', href: site.urls.instagram, icon: 'instagram' },
-  { label: 'WhatsApp', href: site.urls.whatsapp, icon: 'paper-plane' },
 ] as const;

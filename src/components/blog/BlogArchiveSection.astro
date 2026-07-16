@@ -1,0 +1,104 @@
+---
+import SectionHeader from '../common/SectionHeader.astro';
+import BlogCard from '../ui/BlogCard.astro';
+import type { BlogPost } from '../../data/blog';
+
+interface Props {
+  posts: BlogPost[];
+  total: number;
+}
+
+const { posts, total } = Astro.props;
+const midpoint = Math.ceil(posts.length / 2);
+const leftColumn = posts.slice(0, midpoint);
+const rightColumn = posts.slice(midpoint);
+---
+
+<section id="archivo" class="blog-archive section-spacing" aria-labelledby="blog-archive-title">
+  <div class="kb-shell-narrow section-stack-lg">
+    <SectionHeader
+      eyebrow="Archivo"
+      body="Una vista compacta preparada para crecer con nuevas ediciones sin perder claridad de lectura."
+      meta={`${total} artículos`}
+      align="left"
+    >
+      <Fragment slot="title">
+        <span id="blog-archive-title">Todas las <em>lecturas</em>.</span>
+      </Fragment>
+    </SectionHeader>
+
+    <div class="blog-archive-columns">
+      <ol class="blog-archive-col" aria-label="Archivo, columna uno">
+        {leftColumn.map((post, index) => (
+          <li>
+            <BlogCard
+              variant="compact"
+              title={post.title}
+              slug={post.slug}
+              category={post.category}
+              date={post.dateLabel}
+              readingTime={post.readingTime}
+              folio={String(index + 1).padStart(2, '0')}
+            />
+          </li>
+        ))}
+      </ol>
+
+      <ol class="blog-archive-col" aria-label="Archivo, columna dos">
+        {rightColumn.map((post, index) => (
+          <li>
+            <BlogCard
+              variant="compact"
+              title={post.title}
+              slug={post.slug}
+              category={post.category}
+              date={post.dateLabel}
+              readingTime={post.readingTime}
+              folio={String(index + 1 + midpoint).padStart(2, '0')}
+            />
+          </li>
+        ))}
+      </ol>
+    </div>
+
+    <p class="kb-meta-label blog-archive-note">
+      Archivo en curso · Nuevas lecturas se incorporan con cada edición.
+    </p>
+  </div>
+</section>
+
+<style>
+  .blog-archive-columns {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+    border-top: 1px solid var(--kb-stroke-dark);
+    border-bottom: 1px solid var(--kb-stroke-dark);
+  }
+
+  .blog-archive-col {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .blog-archive-col + .blog-archive-col {
+    border-top: 1px solid var(--kb-stroke-dark);
+  }
+
+  .blog-archive-note {
+    margin: var(--kb-space-6) 0 0;
+    color: var(--color-king-muted);
+  }
+
+  @media (min-width: 40rem) {
+    .blog-archive-columns {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .blog-archive-col + .blog-archive-col {
+      border-top: 0;
+      border-left: 1px solid var(--kb-stroke-dark);
+    }
+  }
+</style>

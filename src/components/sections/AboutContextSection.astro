@@ -1,0 +1,149 @@
+---
+import SectionHeader from '../common/SectionHeader.astro';
+import EditorialBanner from '../ui/EditorialBanner.astro';
+import type { AboutContextPoint } from '../../data/about';
+
+interface ContextBanner {
+  eyebrow: string;
+  title: string;
+  statement: string;
+  tags: readonly string[];
+  image: string;
+  imageAlt: string;
+  imagePosition: string;
+  imageCaption: string;
+}
+
+interface ContextData {
+  eyebrow: string;
+  title: string;
+  lede: string;
+  banner: ContextBanner;
+  points: readonly AboutContextPoint[];
+}
+
+interface Props {
+  data: ContextData;
+  class?: string;
+}
+
+const { data, class: className = '' } = Astro.props;
+const { banner } = data;
+---
+
+<section
+  class:list={['about-context section-spacing', className]}
+  aria-labelledby="about-context-title"
+>
+  <div class="kb-shell-wide section-stack-lg">
+    <SectionHeader
+      eyebrow={data.eyebrow}
+      body={data.lede}
+      meta="Vestuario / Integración"
+    >
+      <Fragment slot="title">
+        <span id="about-context-title" set:html={data.title} />
+      </Fragment>
+    </SectionHeader>
+
+    <EditorialBanner
+      id="about-context-banner"
+      eyebrow={banner.eyebrow}
+      title={banner.title}
+      statement={banner.statement}
+      tags={banner.tags}
+      image={banner.image}
+      imageAlt={banner.imageAlt}
+      imagePosition={banner.imagePosition}
+      imageCaption={banner.imageCaption}
+    />
+
+    <ol class="about-context-points">
+      {data.points.map((point) => (
+        <li class="about-context-point">
+          <div class="about-context-point-head">
+            <span class="about-context-point-num kb-section-num" aria-hidden="true">{point.number}</span>
+            <p class="kb-eyebrow text-king-accent">{point.label}</p>
+          </div>
+          <h3>{point.title}</h3>
+          <p class="body-copy text-king-muted">{point.text}</p>
+        </li>
+      ))}
+    </ol>
+  </div>
+</section>
+
+<style>
+  .about-context-points {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid var(--kb-stroke-dark);
+    border-bottom: 1px solid var(--kb-stroke-dark);
+  }
+
+  .about-context-point {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: var(--kb-space-4);
+    padding: var(--kb-space-6) 0;
+    border-bottom: 1px solid var(--kb-stroke-dark);
+  }
+
+  .about-context-point:last-child {
+    border-bottom: 0;
+  }
+
+  .about-context-point-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--kb-space-4);
+  }
+
+  .about-context-point-head p,
+  .about-context-point h3,
+  .about-context-point > p {
+    margin: 0;
+  }
+
+  .about-context-point-num {
+    color: var(--color-king-accent);
+  }
+
+  .about-context-point h3 {
+    max-width: 22ch;
+    font-size: var(--kb-text-h4);
+    font-weight: var(--kb-w-medium);
+    line-height: 1.2;
+    text-wrap: balance;
+  }
+
+  .about-context-point > p {
+    max-width: 40ch;
+  }
+
+  @media (min-width: 48rem) {
+    .about-context-points {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .about-context-point {
+      padding: var(--kb-space-7) var(--kb-space-6);
+      border-right: 1px solid var(--kb-stroke-dark);
+      border-bottom: 0;
+    }
+
+    .about-context-point:first-child {
+      padding-left: 0;
+    }
+
+    .about-context-point:last-child {
+      padding-right: 0;
+      border-right: 0;
+    }
+  }
+</style>

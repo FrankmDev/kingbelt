@@ -1,0 +1,117 @@
+---
+import Badge from '../ui/Badge.astro';
+
+interface CategoryLink {
+  label: string;
+  slug: string;
+}
+
+interface Props {
+  categories: readonly CategoryLink[];
+  activeSlug?: string | null;
+}
+
+const { categories, activeSlug = Astro.url.searchParams.get('categoria') } = Astro.props;
+---
+
+<nav class="blog-categories" aria-label="Temáticas de la revista">
+  <div class="kb-shell-wide blog-categories__inner">
+    <p class="kb-meta-label blog-categories__label" id="blog-categories-label">Temáticas</p>
+    <div class="blog-categories__scroll">
+      <ul class="blog-categories__list" aria-labelledby="blog-categories-label">
+        {categories.map((category) => {
+          const isActive = activeSlug === category.slug;
+
+          return (
+            <li>
+              <Badge
+                href={`/blog?categoria=${category.slug}`}
+                variant={isActive ? 'accent' : 'default'}
+                aria-current={isActive ? 'page' : undefined}
+              >
+                {category.label}
+              </Badge>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<style>
+  .blog-categories {
+    position: sticky;
+    top: 0;
+    z-index: var(--kb-z-sticky);
+    border-bottom: 1px solid var(--kb-stroke-dark);
+    background: color-mix(in srgb, var(--color-king-bg) 90%, transparent);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  }
+
+  .blog-categories__inner {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--kb-space-4) var(--kb-space-5);
+    padding-block: var(--kb-space-5);
+  }
+
+  .blog-categories__label {
+    margin: 0;
+    flex-shrink: 0;
+    color: var(--color-king-muted);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+
+  .blog-categories__scroll {
+    min-width: 0;
+  }
+
+  .blog-categories__list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--kb-space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  @media (max-width: 39.99rem) {
+    .blog-categories__inner {
+      flex-wrap: nowrap;
+      align-items: center;
+      gap: var(--kb-space-4);
+      padding-block: var(--kb-space-4);
+    }
+
+    .blog-categories__scroll {
+      flex: 1;
+      min-width: 0;
+      margin-inline-end: calc(var(--kb-gutter) * -1);
+      padding-inline-end: var(--kb-gutter);
+      overflow: hidden;
+    }
+
+    .blog-categories__list {
+      flex-wrap: nowrap;
+      gap: var(--kb-space-2);
+      overflow-x: auto;
+      overscroll-behavior-x: contain;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      padding-block: 2px;
+    }
+
+    .blog-categories__list::-webkit-scrollbar {
+      display: none;
+    }
+
+    .blog-categories__list > li {
+      flex-shrink: 0;
+    }
+  }
+</style>

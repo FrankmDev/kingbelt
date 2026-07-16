@@ -1,18 +1,55 @@
 ---
-import BaseLayout from "../layouts/BaseLayout.astro";
-import Header from "../components/layout/Header.astro";
-import HeroSection from "../sections/HeroSection.astro";
-import BrandSection from "../sections/BrandSection.astro";
-import BuyingSection from "../sections/BuyingSection.astro";
-import MarqueeSection from "../sections/MarqueeSection.astro";
-import FooterSection from "../components/layout/FooterSection.astro";
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/layout/Header.astro';
+import FooterSection from '../components/layout/FooterSection.astro';
+import HeroSection from '../sections/HeroSection.astro';
+import HomeBrandStatement from '../sections/HomeBrandStatement.astro';
+import HomeCategoriesSection from '../sections/HomeCategoriesSection.astro';
+import HomeFeaturedProducts from '../sections/HomeFeaturedProducts.astro';
+import HomeProductStandards from '../sections/HomeProductStandards.astro';
+import HomeStyleBanner from '../sections/HomeStyleBanner.astro';
+import HomeJournalSection from '../sections/HomeJournalSection.astro';
+import HomeTrustSection from '../sections/HomeTrustSection.astro';
+import HomeClosingCta from '../sections/HomeClosingCta.astro';
+import { blogPosts } from '../data/blog';
+import { site } from '../data/site';
+
+const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href;
+const featuredPost = blogPosts.find((post) => post.status === 'featured') ?? blogPosts[0];
+const journalPosts = [featuredPost, blogPosts[1], blogPosts[2]].filter(Boolean);
+
+const homeSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: site.name,
+  description: site.description,
+  url: canonicalURL,
+  publisher: {
+    '@type': 'Organization',
+    name: site.name,
+    url: Astro.site ?? Astro.url.origin,
+  },
+};
 ---
 
-<BaseLayout>
-    <Header slot="header" />
-    <HeroSection />
-    <BrandSection />
-    <BuyingSection />
-    <MarqueeSection />
-    <FooterSection slot="footer" />
+<BaseLayout
+  title={`${site.name} — Cinturones de cuero hechos en España`}
+  description="KingBelt selecciona cinturones masculinos con criterio: cuero, herrajes y proporción pensados para el día a día. Explora categorías, selección y revista."
+  image="/image.jpg"
+  canonicalURL={canonicalURL}
+  schema={homeSchema}
+>
+  <Header slot="header" initialTheme="dark" scrolledTheme="light" compactThreshold={48} />
+
+  <HeroSection />
+  <HomeBrandStatement />
+  <HomeCategoriesSection />
+  <HomeFeaturedProducts />
+  <HomeProductStandards />
+  <HomeStyleBanner />
+  <HomeJournalSection posts={journalPosts} />
+  <HomeTrustSection />
+  <HomeClosingCta />
+
+  <FooterSection slot="footer" connected />
 </BaseLayout>

@@ -2,385 +2,74 @@
 interface Props {
   eyebrow?: string;
   title?: string;
+  titleId?: string;
   body?: string;
   meta?: string;
-  number?: string;
-  numberTotal?: string;
   align?: 'left' | 'center';
   tone?: 'light' | 'dark';
+  density?: 'default' | 'compact';
   class?: string;
 }
 
 const {
   eyebrow,
   title,
+  titleId,
   body,
   meta,
-  number,
-  numberTotal,
-  align = 'left',
+  align = 'center',
   tone = 'light',
+  density = 'default',
   class: className = '',
 } = Astro.props;
 
 const hasTitle = Boolean(title || Astro.slots.has('title'));
-const hasCopy = Boolean(body);
+const hasCopy = Boolean(body || Astro.slots.has('body'));
+const hasKicker = Boolean(eyebrow || meta);
+const isCentered = align === 'center';
 ---
 
 <header
   class:list={['section-header', className]}
   data-align={align}
   data-tone={tone}
+  data-density={density}
 >
-  {number && (
-    <div class="sh-number" aria-hidden="true">
-      <span class="sh-number-rule"></span>
-      <span class="sh-number-text">
-        <span class="sh-number-current">{number}</span>
-        {numberTotal && (
-          <>
-            <span class="sh-number-divider">/</span>
-            <span class="sh-number-total">{numberTotal}</span>
-          </>
-        )}
-      </span>
-    </div>
-  )}
+  <div class="sh-head">
+    {hasKicker && (
+      <div class="sh-kicker">
+        {isCentered && <span class="sh-kicker-wing" aria-hidden="true"></span>}
 
-  <div class="sh-rule" aria-hidden="true">
-    <span class="sh-rule-accent"></span>
-  </div>
+        <div class="sh-kicker-inner">
+          {eyebrow && (
+            <p class="sh-eyebrow kb-eyebrow">
+              <span class="sh-eyebrow-mark" aria-hidden="true"></span>
+              <span class="sh-eyebrow-text">{eyebrow}</span>
+            </p>
+          )}
 
-  {(eyebrow || meta) && (
-    <div class="sh-meta-row">
-      {eyebrow && (
-        <p class="sh-eyebrow">
-          <span class="sh-eyebrow-mark" aria-hidden="true"></span>
-          <span class="sh-eyebrow-text">{eyebrow}</span>
-        </p>
-      )}
-      {meta && <p class="sh-meta">{meta}</p>}
-    </div>
-  )}
+          {eyebrow && meta && <span class="sh-kicker-sep" aria-hidden="true"></span>}
 
-  <div class:list={['sh-content', hasCopy && 'has-copy']}>
+          {meta && <p class="sh-meta kb-meta-label">{meta}</p>}
+        </div>
+
+        {isCentered && <span class="sh-kicker-wing" aria-hidden="true"></span>}
+      </div>
+    )}
+
     {hasTitle && (
-      <h2 class="sh-title">
+      <h2 id={titleId} class="sh-title">
         {Astro.slots.has('title') ? <slot name="title" /> : title}
       </h2>
     )}
-
-    {hasCopy && (
-      <div class="sh-copy">
-        <p>{body}</p>
-      </div>
-    )}
   </div>
+
+  {hasCopy && (
+    <div class="sh-lede">
+      <div class="sh-lede-rule" aria-hidden="true"></div>
+      <div class="sh-copy">
+        {Astro.slots.has('body') ? <slot name="body" /> : <p>{body}</p>}
+      </div>
+    </div>
+  )}
 </header>
-
-<style>
-  .section-header {
-    /* Ink palette */
-    --sh-ink: var(--color-king-text);
-    --sh-muted: var(--color-king-muted);
-    --sh-line: var(--kb-stroke-dark);
-    --sh-accent: var(--color-king-accent);
-
-    /* Editorial rhythm */
-    --sh-gap-number: 0.85rem;
-    --sh-gap-rule: clamp(1.2rem, 2.2vw, 1.7rem);
-    --sh-gap-meta: clamp(1.5rem, 2.6vw, 2rem);
-    --sh-gap-content: clamp(2rem, 4vw, 3.5rem);
-
-    width: 100%;
-    color: var(--sh-ink);
-  }
-
-  .section-header[data-tone='dark'] {
-    --sh-ink: rgba(255, 250, 241, 0.96);
-    --sh-muted: rgba(255, 250, 241, 0.64);
-    --sh-line: rgba(255, 255, 255, 0.12);
-    --sh-accent: var(--color-king-accent-light);
-  }
-
-  .section-header[data-align='center'] {
-    margin-inline: auto;
-    text-align: center;
-  }
-
-  /* ============ Number mark (folio) ============ */
-  .sh-number {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    margin-bottom: var(--sh-gap-number);
-    line-height: 1;
-  }
-
-  .section-header[data-align='center'] .sh-number {
-    justify-content: center;
-  }
-
-  .sh-number-rule {
-    display: block;
-    width: 2.25rem;
-    height: 1.5px;
-    background: linear-gradient(90deg, var(--sh-accent), transparent);
-    border-radius: 1px;
-    opacity: 0.7;
-  }
-
-  .sh-number-text {
-    display: inline-flex;
-    align-items: baseline;
-    gap: 0.45rem;
-    font-family: var(--font-sans, 'Satoshi', sans-serif);
-    font-size: var(--kb-label-size);
-    font-weight: 600;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    color: var(--sh-accent);
-    font-variant-numeric: tabular-nums lining-nums;
-    font-feature-settings: 'tnum' on, 'lnum' on;
-  }
-
-  .sh-number-divider {
-    font-weight: 400;
-    opacity: 0.4;
-    margin-inline: 0.05rem;
-  }
-
-  .sh-number-total {
-    font-weight: 500;
-    opacity: 0.55;
-  }
-
-  /* ============ Hairline rule with copper accent ============ */
-  .sh-rule {
-    position: relative;
-    height: 1px;
-    margin-bottom: var(--sh-gap-rule);
-    background: var(--sh-line);
-  }
-
-  .sh-rule-accent {
-    position: absolute;
-    inset-block: -0.5px;
-    left: 0;
-    width: clamp(4rem, 10vw, 7rem);
-    height: 2px;
-    background: linear-gradient(
-      90deg,
-      var(--sh-accent),
-      color-mix(in srgb, var(--sh-accent) 40%, transparent)
-    );
-    border-radius: 1px;
-    box-shadow:
-      0 0 12px color-mix(in srgb, var(--sh-accent) 25%, transparent),
-      0 0 4px color-mix(in srgb, var(--sh-accent) 35%, transparent);
-  }
-
-  .section-header[data-align='center'] .sh-rule-accent {
-    left: 50%;
-    transform: translateX(-50%);
-  }
-
-  /* ============ Meta row (eyebrow + meta) ============ */
-  .sh-meta-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 0.75rem 1.5rem;
-    margin-bottom: var(--sh-gap-meta);
-    min-height: 1.4rem;
-  }
-
-  .section-header[data-align='center'] .sh-meta-row {
-    justify-content: center;
-  }
-
-  .sh-eyebrow,
-  .sh-meta {
-    margin: 0;
-    display: inline-flex;
-    align-items: center;
-    font-family: var(--font-sans, 'Satoshi', sans-serif);
-    font-size: var(--kb-label-size);
-    font-weight: 600;
-    letter-spacing: 0.18em;
-    line-height: 1.2;
-    text-transform: uppercase;
-  }
-
-  .sh-eyebrow {
-    gap: 0.7rem;
-    color: var(--sh-accent);
-  }
-
-  .sh-eyebrow-mark {
-    display: inline-block;
-    width: 1.5rem;
-    height: 1.5px;
-    background: linear-gradient(90deg, var(--sh-accent), rgba(138, 90, 43, 0.25));
-    border-radius: 1px;
-    opacity: 0.7;
-    flex-shrink: 0;
-  }
-
-  .sh-meta {
-    color: var(--sh-muted);
-    font-weight: 500;
-    letter-spacing: 0.16em;
-    white-space: nowrap;
-  }
-
-  /* ============ Content (title + copy) ============ */
-  .sh-content {
-    display: grid;
-    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
-    align-items: end;
-    column-gap: var(--sh-gap-content);
-    row-gap: clamp(1.25rem, 2.4vw, 1.75rem);
-  }
-
-  .sh-content:not(.has-copy),
-  .section-header[data-align='center'] .sh-content {
-    display: block;
-  }
-
-  /* Title — display serif */
-  .sh-title {
-    margin: 0;
-    max-width: 18ch;
-    color: var(--sh-ink);
-    font-family: var(--font-display, 'Bitter', Georgia, serif);
-    font-size: clamp(1.875rem, 3.6vw, 2.65rem);
-    font-weight: var(--kb-w-heading-strong);
-    letter-spacing: 0;
-    line-height: 1.05;
-    text-wrap: balance;
-  }
-
-  .section-header[data-align='center'] .sh-title {
-    max-width: 22ch;
-    margin-inline: auto;
-  }
-
-  .sh-title :global(em) {
-    color: var(--sh-accent);
-    font-style: italic;
-    font-weight: 400;
-  }
-
-  /* Copy — refined lede */
-  .sh-copy {
-    position: relative;
-    max-width: 32rem;
-    padding-top: 1rem;
-    color: var(--sh-muted);
-    font-size: clamp(0.9375rem, 0.9rem + 0.16vw, 1rem);
-    font-weight: 400;
-    letter-spacing: 0.005em;
-    line-height: 1.75;
-  }
-
-  .sh-copy::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 2.75rem;
-    height: 1.5px;
-    background: linear-gradient(90deg, var(--sh-accent), transparent);
-    border-radius: 1px;
-    opacity: 0.7;
-  }
-
-  .sh-copy p {
-    margin: 0;
-  }
-
-  .section-header[data-align='center'] .sh-copy {
-    width: min(100%, 40rem);
-    margin: clamp(1.4rem, 2.6vw, 1.85rem) auto 0;
-  }
-
-  .section-header[data-align='center'] .sh-copy::before {
-    left: 50%;
-    transform: translateX(-50%);
-    width: 3.5rem;
-  }
-
-  /* ============ Tablet ============ */
-  @media (max-width: 960px) {
-    .sh-content {
-      grid-template-columns: 1fr;
-      row-gap: clamp(1rem, 2.4vw, 1.5rem);
-    }
-
-    .sh-copy {
-      width: min(100%, 38rem);
-      padding-top: 0.85rem;
-    }
-
-    .sh-title {
-      max-width: 16ch;
-    }
-  }
-
-  /* ============ Mobile ============ */
-  @media (max-width: 640px) {
-    .section-header {
-      --sh-gap-number: 0.7rem;
-      --sh-gap-rule: 1.05rem;
-      --sh-gap-meta: 1.1rem;
-    }
-
-    .sh-number-rule {
-      width: 1.75rem;
-    }
-
-    .sh-number-text {
-      font-size: 0.5625rem;
-      letter-spacing: 0.2em;
-    }
-
-    .sh-rule-accent {
-      width: 2.75rem;
-    }
-
-    .sh-meta-row {
-      align-items: flex-start;
-      flex-direction: column;
-      gap: 0.4rem;
-      min-height: 0;
-    }
-
-    .section-header[data-align='center'] .sh-meta-row {
-      align-items: center;
-    }
-
-    .sh-eyebrow,
-    .sh-meta {
-      font-size: 0.5625rem;
-      letter-spacing: 0.18em;
-    }
-
-    .sh-title {
-      max-width: 14ch;
-      font-size: clamp(1.625rem, 7.2vw, 2.05rem);
-      line-height: 1.05;
-    }
-
-    .sh-copy {
-      font-size: 0.95rem;
-      line-height: 1.7;
-      padding-top: 0.75rem;
-    }
-
-    .sh-copy::before {
-      width: 1.5rem;
-    }
-  }
-</style>

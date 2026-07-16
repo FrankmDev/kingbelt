@@ -1,0 +1,111 @@
+---
+import SectionHeader from '../components/common/SectionHeader.astro';
+import Button from '../components/ui/Button.astro';
+import Icon from '../components/ui/Icon.astro';
+import ProductCard from '../components/ui/ProductCard.astro';
+import { featuredProducts } from '../data/catalog';
+import { featuredSection } from '../data/home';
+---
+
+<section
+  id="seleccion"
+  class="home-featured section-spacing"
+  aria-labelledby="home-featured-title"
+>
+  <div class="kb-shell-wide section-stack-lg">
+    <div class="home-featured__head">
+      <SectionHeader
+        eyebrow={featuredSection.eyebrow}
+        body={featuredSection.body}
+        meta={featuredSection.meta}
+        titleId="home-featured-title"
+        align="left"
+        class="home-featured__header"
+      >
+        <Fragment slot="title">
+          <span set:html={featuredSection.title} />
+        </Fragment>
+      </SectionHeader>
+
+      <div class="home-featured__cta">
+        <Button href={featuredSection.cta.href} variant="outline" size="md">
+          {featuredSection.cta.label}
+          <Icon name="arrow-right" class="h-3.5 w-3.5 transition-transform duration-[var(--kb-dur-fast)] group-hover:translate-x-1" />
+        </Button>
+      </div>
+    </div>
+
+    <ul class="home-featured__grid" aria-label="Selección de productos">
+      {featuredProducts.map((product) => (
+        <li class="home-featured__item">
+          <ProductCard
+            name={product.name}
+            href={product.href}
+            image={product.image}
+            imageAlt={product.imageAlt}
+            category={product.category}
+            color={product.color}
+            price={product.price}
+            currency={product.currency}
+            imagePosition={product.imagePosition}
+            badge={product.badge}
+          />
+        </li>
+      ))}
+    </ul>
+  </div>
+</section>
+
+<style>
+  .home-featured {
+    background: var(--color-king-bg);
+  }
+
+  .home-featured__head {
+    display: grid;
+    gap: var(--kb-space-6);
+    align-items: end;
+  }
+
+  .home-featured__header:global(.section-header) {
+    --sh-max-copy: 40ch;
+  }
+
+  .home-featured__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--kb-space-gap);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .home-featured__item {
+    min-width: 0;
+  }
+
+  @media (min-width: 40rem) {
+    .home-featured__grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 48rem) {
+    .home-featured__head {
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: var(--kb-space-8);
+    }
+
+    .home-featured__cta {
+      justify-self: end;
+      padding-bottom: 0.35rem;
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .home-featured__grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: var(--kb-space-gap-lg);
+    }
+  }
+</style>

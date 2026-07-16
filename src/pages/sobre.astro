@@ -1,0 +1,81 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/layout/Header.astro';
+import FooterSection from '../components/layout/FooterSection.astro';
+import AboutContextSection from '../components/sections/AboutContextSection.astro';
+import AboutDirectionSection from '../components/sections/AboutDirectionSection.astro';
+import AboutOriginSection from '../components/sections/AboutOriginSection.astro';
+import AboutStandardsSection from '../components/sections/AboutStandardsSection.astro';
+import CTABox from '../components/ui/CTABox.astro';
+import PageHeader from '../components/ui/PageHeader.astro';
+import { aboutPage } from '../data/about';
+import { site } from '../data/site';
+
+const { meta, hero, origin, standards, direction, context, cta } = aboutPage;
+const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href;
+
+const aboutSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'AboutPage',
+  name: meta.title,
+  description: meta.description,
+  url: canonicalURL,
+  mainEntity: {
+    '@type': 'Organization',
+    name: site.name,
+    url: Astro.site ?? Astro.url.origin,
+    sameAs: [site.urls.instagram],
+  },
+};
+---
+
+<BaseLayout title={meta.title} description={meta.description} canonicalURL={canonicalURL} schema={aboutSchema}>
+  <Header slot="header" initialTheme="dark" scrolledTheme="light" compactThreshold={32} />
+
+  <PageHeader
+    eyebrow={hero.eyebrow}
+    description={hero.lede}
+    image={hero.image}
+    imageAlt={hero.imageAlt}
+    imagePosition={hero.imagePosition}
+    meta={hero.meta}
+    breadcrumbs={[{ label: 'Sobre KingBelt' }]}
+  >
+    <Fragment slot="title">
+      <span set:html={hero.title} />
+    </Fragment>
+  </PageHeader>
+
+  <AboutOriginSection data={origin} />
+  <AboutStandardsSection data={standards} />
+  <AboutDirectionSection data={direction} />
+  <AboutContextSection data={context} />
+
+  <section class="about-cta section-spacing section-spacing-close" aria-label={cta.eyebrow}>
+    <div class="cta-section-inner kb-shell-wide">
+      <CTABox
+        eyebrow={cta.eyebrow}
+        title={cta.title}
+        description={cta.description}
+        buttonLabel={cta.label}
+        buttonHref={cta.href}
+        buttonVariant="secondary"
+        backgroundImage={hero.image}
+        backgroundAlt=""
+        backgroundWidth={1920}
+        backgroundHeight={1080}
+        backgroundPosition="center 58%"
+        titleTag="h2"
+      />
+    </div>
+  </section>
+
+  <FooterSection slot="footer" connected />
+</BaseLayout>
+
+<style>
+  .about-cta {
+    padding-top: var(--kb-space-section);
+    background: var(--color-king-bg);
+  }
+</style>

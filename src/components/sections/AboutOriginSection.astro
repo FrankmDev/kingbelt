@@ -1,0 +1,89 @@
+---
+import SectionHeader from '../common/SectionHeader.astro';
+import MediaFrame from '../ui/MediaFrame.astro';
+import Panel from '../ui/Panel.astro';
+
+interface OriginData {
+  eyebrow: string;
+  title: string;
+  body: string;
+  statement: string;
+  image: string;
+  imageAlt: string;
+  imageLabel: string;
+  imageCaption: string;
+}
+
+interface Props {
+  data: OriginData;
+  class?: string;
+}
+
+const { data, class: className = '' } = Astro.props;
+---
+
+<section
+  id="origen"
+  class:list={['about-origin section-spacing', className]}
+  aria-labelledby="about-origin-title"
+>
+  <div class="kb-shell-wide section-stack-lg">
+    <SectionHeader eyebrow={data.eyebrow} meta="KingBelt / Marca">
+      <Fragment slot="title">
+        <span id="about-origin-title" set:html={data.title} />
+      </Fragment>
+    </SectionHeader>
+
+    <div class="about-origin-layout">
+      <Panel padding="lg" class="about-origin-panel kb-origin-panel">
+        <div class="kb-origin-panel__main">
+          <p class="kb-eyebrow text-king-accent kb-origin-panel__kicker">Posicionamiento</p>
+          <p class="body-copy-lg text-king-muted kb-origin-panel__body">{data.body}</p>
+        </div>
+
+        <blockquote class="kb-origin-panel__quote">
+          <p>{data.statement}</p>
+        </blockquote>
+      </Panel>
+
+      <MediaFrame
+        src={data.image}
+        alt={data.imageAlt}
+        ratio="4/3"
+        label={data.imageLabel}
+        caption={data.imageCaption}
+        captionNumber="01"
+        width={1200}
+        height={900}
+        loading="lazy"
+        class="about-origin-media"
+      />
+    </div>
+  </div>
+</section>
+
+<style>
+  .about-origin-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--kb-space-gap-lg);
+    align-items: start;
+  }
+
+  @media (min-width: 64rem) {
+    .about-origin-layout {
+      grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+      align-items: stretch;
+    }
+
+    .about-origin-panel,
+    :global(.about-origin-media.media-frame) {
+      height: 100%;
+      min-height: 0;
+    }
+
+    :global(.about-origin-media.media-frame) {
+      aspect-ratio: auto;
+    }
+  }
+</style>

@@ -26,7 +26,14 @@ import Panel from '../ui/Panel.astro';
       imageAlt=""
       imagePosition="center 40%"
       breadcrumbs={[{ label: 'Blog', href: '/blog' }, { label: 'Cuidado del cuero' }]}
-      articleMeta={{ category: 'Mantenimiento', date: '09 jul. 2026', readTime: '6 min' }}
+      articleMeta={{
+        category: 'Mantenimiento',
+        date: '09 jul. 2026',
+        readTime: '6 min',
+        image: '/image.jpg',
+        imageAlt: 'Detalle de cuero para artículo de mantenimiento',
+        imagePosition: 'center 40%',
+      }}
     >
       <Fragment slot="title">Cómo curar el cuero para que dure <em>kilómetros.</em></Fragment>
     </PageHeader>

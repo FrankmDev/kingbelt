@@ -1,0 +1,35 @@
+---
+interface Props {
+  href?: string;
+  variant?: 'default' | 'accent' | 'dark' | 'steel';
+  class?: string;
+  'aria-current'?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+}
+
+const {
+  href,
+  variant = 'default',
+  class: className,
+  'aria-current': ariaCurrent,
+  ...rest
+} = Astro.props;
+
+const Tag = href ? 'a' : 'span';
+
+const classes = [
+  'kb-badge',
+  variant === 'accent' && 'kb-badge-accent',
+  variant === 'dark' && 'kb-badge-dark',
+  variant === 'steel' && 'kb-badge-steel',
+  className,
+];
+---
+
+<Tag
+  href={href}
+  class:list={classes}
+  aria-current={ariaCurrent}
+  {...rest}
+>
+  <slot />
+</Tag>

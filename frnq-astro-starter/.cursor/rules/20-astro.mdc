@@ -1,0 +1,20 @@
+---
+description: Astro and TypeScript implementation rules
+globs:
+  - "**/*.astro"
+  - "**/*.ts"
+  - "**/*.tsx"
+  - "astro.config.*"
+alwaysApply: false
+---
+
+- Follow `docs/project/ARCHITECTURE.md`.
+- Prefer static Astro components and native platform behavior.
+- Type props, data, routes, and integration boundaries without `any`.
+- Use `class:list`, focused slots, and small explicit variants.
+- Use Tailwind utilities by default; do not create extra CSS files.
+- Keep pages responsible for data, SEO, and section order.
+- Use `astro:assets`; reserve `public/` for unprocessed assets.
+- Scope scripts to a component root and avoid duplicate listeners.
+- Add React only for a justified, bounded interactive island.
+- Run `bun run check`; run build when routes, assets, data, or config change.

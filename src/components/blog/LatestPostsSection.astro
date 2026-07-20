@@ -5,25 +5,33 @@ import type { BlogPost } from '../../data/blog';
 
 interface Props {
   posts: BlogPost[];
+  showHeader?: boolean;
+  class?: string;
 }
 
-const { posts } = Astro.props;
+const { posts, showHeader = true, class: className = '' } = Astro.props;
 ---
 
-<section class="blog-latest section-spacing section-spacing-chapter" aria-labelledby="blog-latest-title">
+<section
+  class:list={['blog-latest section-spacing section-spacing-chapter', className]}
+  aria-labelledby={showHeader ? 'blog-latest-title' : undefined}
+  {...(!showHeader && { 'aria-label': 'Más lecturas de la revista' })}
+>
   <div class="kb-shell-wide blog-latest-inner">
-    <SectionHeader
-      eyebrow="Edición actual"
-      body="Guías concretas y piezas de lectura sobre estilo, materiales, uso y cultura de carretera."
-      meta={`${posts.length} nuevas lecturas`}
-      titleId="blog-latest-title"
-      align="left"
-      class="blog-latest-header"
-    >
-      <Fragment slot="title">
-        Últimas <em>publicaciones</em>.
-      </Fragment>
-    </SectionHeader>
+    {showHeader && (
+      <SectionHeader
+        eyebrow="Edición actual"
+        body="Guías concretas y piezas de lectura sobre estilo, materiales, uso y cultura de carretera."
+        meta={`${posts.length} nuevas lecturas`}
+        titleId="blog-latest-title"
+        align="left"
+        class="blog-latest-header"
+      >
+        <Fragment slot="title">
+          Últimas <em>publicaciones</em>.
+        </Fragment>
+      </SectionHeader>
+    )}
 
     <div class="blog-latest-stage">
       <div class="blog-latest-stage__texture" aria-hidden="true"></div>

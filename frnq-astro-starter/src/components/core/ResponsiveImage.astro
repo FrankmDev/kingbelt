@@ -1,0 +1,62 @@
+---
+import { Image } from 'astro:assets';
+
+interface Props {
+  src: ImageMetadata | string;
+  alt: string;
+  width?: number;
+  height?: number;
+  widths?: number[];
+  sizes?: string;
+  loading?: 'eager' | 'lazy';
+  fetchpriority?: 'high' | 'low' | 'auto';
+  fit?: 'cover' | 'contain' | 'fill' | 'none' | 'scale-down';
+  position?: string;
+  class?: string;
+}
+
+const {
+  src,
+  alt,
+  width = 1600,
+  height = 900,
+  widths = [480, 768, 1024, 1440, 1920],
+  sizes = '100vw',
+  loading = 'lazy',
+  fetchpriority = 'auto',
+  fit = 'cover',
+  position = 'center',
+  class: className,
+} = Astro.props;
+
+const isExternalOrPublicSource = typeof src === 'string';
+---
+
+{isExternalOrPublicSource ? (
+  <img
+    src={src}
+    alt={alt}
+    width={width}
+    height={height}
+    loading={loading}
+    fetchpriority={fetchpriority}
+    class={className}
+    decoding="async"
+    style={`object-fit: ${fit}; object-position: ${position};`}
+  />
+) : (
+  <Image
+    src={src}
+    alt={alt}
+    width={width}
+    height={height}
+    widths={widths}
+    sizes={sizes}
+    loading={loading}
+    fetchpriority={fetchpriority}
+    fit={fit}
+    position={position}
+    class={className}
+    decoding="async"
+  />
+)}

@@ -1,5 +1,5 @@
 ---
-import SectionHeader from '../components/common/SectionHeader.astro';
+import SectionHeaderHome from '../components/common/SectionHeaderHome.astro';
 import FeatureCard from '../components/ui/FeatureCard.astro';
 import Button from '../components/ui/Button.astro';
 import { trustSection } from '../data/home';
@@ -13,16 +13,16 @@ const cardVariants = ['default', 'steel', 'default'] as const;
   aria-labelledby="home-trust-title"
 >
   <div class="kb-shell-wide section-stack-lg">
-    <SectionHeader
+    <SectionHeaderHome
+      index={trustSection.index}
       eyebrow={trustSection.eyebrow}
       titleId="home-trust-title"
-      align="left"
       class="home-trust__header"
     >
       <Fragment slot="title">
         <span set:html={trustSection.title} />
       </Fragment>
-    </SectionHeader>
+    </SectionHeaderHome>
 
     <ul class="home-trust__grid">
       {trustSection.items.map((item, index) => (
@@ -50,8 +50,8 @@ const cardVariants = ['default', 'steel', 'default'] as const;
     background: var(--color-king-surface);
   }
 
-  .home-trust__header:global(.section-header) {
-    --sh-max-title: 20ch;
+  .home-trust__header:global(.section-header-home) .shh-title {
+    max-width: 20ch;
   }
 
   .home-trust__grid {

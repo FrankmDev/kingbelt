@@ -8,29 +8,40 @@ import type { BlogPost } from '../../data/blog';
 
 interface Props {
   post: BlogPost;
+  showHeader?: boolean;
+  afterNav?: boolean;
+  class?: string;
 }
 
-const { post } = Astro.props;
+const { post, showHeader = true, afterNav = true, class: className = '' } = Astro.props;
 const href = `/blog/${post.slug}`;
 ---
 
 <section
-  id="articulo-destacado"
-  class="blog-featured section-spacing blog-featured--after-nav blog-featured--chapter-end"
-  aria-labelledby="blog-featured-title"
+  id={showHeader ? 'articulo-destacado' : undefined}
+  class:list={[
+    'blog-featured section-spacing',
+    afterNav && 'blog-featured--after-nav',
+    'blog-featured--chapter-end',
+    className,
+  ]}
+  aria-labelledby={showHeader ? 'blog-featured-title' : undefined}
+  {...(!showHeader && { 'aria-label': 'Artículo destacado de la revista' })}
 >
   <div class="kb-shell-wide section-stack-lg">
-    <SectionHeader
-      eyebrow="El cuaderno KingBelt"
-      body="Guías sobre proporción, materiales, cuidado y estilo masculino. Información directa para entender cada pieza antes y después de usarla."
-      meta="Cuaderno 01 / Verano 2026"
-      titleId="blog-featured-title"
-      class="blog-featured-header"
-    >
-      <Fragment slot="title">
-        Una lectura para empezar <em>por lo esencial</em>.
-      </Fragment>
-    </SectionHeader>
+    {showHeader && (
+      <SectionHeader
+        eyebrow="El cuaderno KingBelt"
+        body="Guías sobre proporción, materiales, cuidado y estilo masculino. Información directa para entender cada pieza antes y después de usarla."
+        meta="Cuaderno 01 / Verano 2026"
+        titleId="blog-featured-title"
+        class="blog-featured-header"
+      >
+        <Fragment slot="title">
+          Una lectura para empezar <em>por lo esencial</em>.
+        </Fragment>
+      </SectionHeader>
+    )}
 
     <Panel variant="steel" padding="none" class="blog-featured-cover">
       <article class="blog-featured-cover__layout" aria-labelledby="blog-featured-article-title">

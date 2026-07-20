@@ -1,0 +1,13 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+type HeadingLevel = 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
+
+interface Props extends HTMLAttributes<'h2'> {
+  as?: HeadingLevel;
+}
+
+const { as: Tag = 'h2', class: className, ...rest } = Astro.props;
+---
+
+<Tag class={className} {...rest}><slot /></Tag>

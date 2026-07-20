@@ -2,7 +2,7 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Header from '../components/layout/Header.astro';
 import FooterSection from '../components/layout/FooterSection.astro';
-import HeroSection from '../sections/HeroSection.astro';
+import HeroHome from '../sections/HeroHome.astro';
 import HomeBrandStatement from '../sections/HomeBrandStatement.astro';
 import HomeCategoriesSection from '../sections/HomeCategoriesSection.astro';
 import HomeFeaturedProducts from '../sections/HomeFeaturedProducts.astro';
@@ -41,7 +41,7 @@ const homeSchema = {
 >
   <Header slot="header" initialTheme="dark" scrolledTheme="light" compactThreshold={48} />
 
-  <HeroSection />
+  <HeroHome />
   <HomeBrandStatement />
   <HomeCategoriesSection />
   <HomeFeaturedProducts />

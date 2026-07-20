@@ -1,12 +1,7 @@
 ---
-import { productCategories } from '../data/catalog';
 import { hero } from '../data/home';
-import Badge from '../components/ui/Badge.astro';
 import Button from '../components/ui/Button.astro';
 import Icon from '../components/ui/Icon.astro';
-
-const featuredCategory =
-  productCategories.find((category) => category.featured) ?? productCategories[0];
 ---
 
 <section
@@ -15,47 +10,14 @@ const featuredCategory =
   data-home-hero
   aria-labelledby="home-hero-title"
 >
-  <div class="home-hero__stage">
-    <div class="home-hero__visual">
-      <div class="home-hero__frame">
-        <div class="home-hero__media page-header-media" aria-hidden="true">
-          <video
-            src="/heroVideo.mp4"
-            autoplay
-            muted
-            loop
-            playsinline
-            poster="/image.jpg"
-            tabindex="-1"
-            class="home-hero__video page-header-img"
-          ></video>
-          <div class="home-hero__grade"></div>
-          <div class="page-header-vignette"></div>
-          <div class="page-header-grain"></div>
-        </div>
-
-        <div class="home-hero__frame-caption">
-          {featuredCategory.badge && (
-            <Badge variant="accent" class="home-hero__frame-badge">{featuredCategory.badge}</Badge>
-          )}
-          <span class="kb-meta-label home-hero__frame-label">{featuredCategory.name}</span>
-        </div>
-
-        <span class="home-hero__frame-index kb-folio" aria-hidden="true">{hero.index}</span>
-        <span
-          class="home-hero__frame-bracket kb-corner-bracket kb-corner-bracket-br"
-          aria-hidden="true"
-        ></span>
-      </div>
-    </div>
-
+  <div class="home-hero__main">
     <div class="home-hero__copy">
-      <div class="home-hero__panel">
-        <header class="home-hero__chapter">
-          <span class="home-hero__folio kb-folio" aria-hidden="true">{hero.index}</span>
-          <Badge variant="dark" class="home-hero__origin-badge">{hero.badge}</Badge>
-          <span class="home-hero__chapter-rule" aria-hidden="true"></span>
-          <span class="kb-meta-label home-hero__chapter-meta">{hero.meta}</span>
+      <span class="home-hero__seam" aria-hidden="true"></span>
+
+      <div class="home-hero__copy-inner">
+        <header class="home-hero__head">
+          <span class="kb-eyebrow kb-eyebrow-lined text-king-accent">{hero.badge}</span>
+          <span class="kb-code-label home-hero__code" aria-hidden="true">KB.{hero.index}</span>
         </header>
 
         <h1 id="home-hero-title" class="home-hero__title font-display font-display-hero">
@@ -63,63 +25,17 @@ const featuredCategory =
             <span
               class:list={[
                 'home-hero__title-line',
-                line.variant === 'light' && 'home-hero__title-line--light font-display-light',
                 line.variant === 'em' && 'home-hero__title-line--accent',
               ]}
             >
-              {line.variant === 'em' ? (
-                <span class="home-hero__title-band kb-texture-asphalt">
-                  <span class="home-hero__title-inner">
-                    <em>{line.text}</em>
-                  </span>
-                </span>
-              ) : (
-                <span class="home-hero__title-inner">{line.text}</span>
-              )}
+              <span class="home-hero__title-inner">
+                {line.variant === 'em' ? <em>{line.text}</em> : line.text}
+              </span>
             </span>
           ))}
         </h1>
 
-        <p class="home-hero__lede body-copy-lg text-pretty">{hero.description}</p>
-
-        <div class="home-hero__collection">
-          <div class="home-hero__collection-head">
-            <span class="kb-eyebrow kb-eyebrow-lined text-king-accent">{hero.collection.eyebrow}</span>
-            <span class="kb-meta-label home-hero__collection-meta">{hero.collection.meta}</span>
-          </div>
-
-          <ul class="home-hero__categories" aria-label="Categorías de la colección">
-            {productCategories.map((category, index) => (
-              <li class="home-hero__category-item">
-                <a
-                  href={category.href}
-                  class="home-hero__category"
-                  aria-label={`Explorar categoría ${category.name}`}
-                >
-                  <span class="home-hero__category-num kb-section-num" aria-hidden="true">
-                    {String(index + 1).padStart(2, '0')}
-                  </span>
-
-                  <span class="home-hero__category-body">
-                    <span class="home-hero__category-head">
-                      <span class="home-hero__category-name font-display">{category.name}</span>
-                      {category.badge && (
-                        <Badge variant="steel" class="home-hero__category-badge">{category.badge}</Badge>
-                      )}
-                    </span>
-                    {category.tagline && (
-                      <span class="home-hero__category-tagline">{category.tagline}</span>
-                    )}
-                  </span>
-
-                  <span class="home-hero__category-action" aria-hidden="true">
-                    <Icon name="arrow-up-right" class="h-3.5 w-3.5" />
-                  </span>
-                </a>
-              </li>
-            ))}
-          </ul>
-        </div>
+        <p class="home-hero__lede body-copy text-pretty">{hero.description}</p>
 
         <div class="home-hero__actions">
           <Button href={hero.primaryCta.href} variant="primary" size="lg">
@@ -137,29 +53,41 @@ const featuredCategory =
         </div>
       </div>
     </div>
+
+    <div class="home-hero__visual">
+      <div class="home-hero__frame grain-overlay">
+        <div class="home-hero__media page-header-media" aria-hidden="true">
+          <video
+            src="/heroVideo.mp4"
+            autoplay
+            muted
+            loop
+            playsinline
+            poster="/image.jpg"
+            tabindex="-1"
+            class="home-hero__video page-header-img"
+          ></video>
+          <div class="home-hero__grade"></div>
+          <div class="page-header-vignette"></div>
+          <div class="page-header-grain"></div>
+        </div>
+
+        <span class="home-hero__frame-folio kb-folio" aria-hidden="true">{hero.index}</span>
+        <span
+          class="home-hero__frame-mark kb-corner-bracket kb-corner-bracket-br"
+          aria-hidden="true"
+        ></span>
+      </div>
+    </div>
   </div>
 
-  <footer class="home-hero__baseline">
-    <div class="home-hero__baseline-inner">
-      <span class="home-hero__baseline-folio kb-meta-label" aria-hidden="true">{hero.index}</span>
-
-      <nav class="home-hero__baseline-nav" aria-label="Acceso rápido a categorías">
-        <ul class="home-hero__baseline-links">
-          {productCategories.map((category) => (
-            <li>
-              <a href={category.href} class="home-hero__baseline-link kb-meta-label">
-                {category.name}
-              </a>
-            </li>
-          ))}
-        </ul>
-      </nav>
-
-      <span class="home-hero__baseline-rule" aria-hidden="true"></span>
-
-      <a href="#marca" class="home-hero__scroll kb-action-label" aria-label="Descubrir KingBelt">
+  <footer class="home-hero__rail">
+    <span class="home-hero__rail-accent" aria-hidden="true"></span>
+    <div class="home-hero__rail-inner">
+      <span class="kb-meta-label home-hero__rail-meta">{hero.meta}</span>
+      <a href="#marca" class="home-hero__discover kb-action-label" aria-label="Descubrir KingBelt">
         <span>Descubrir</span>
-        <span class="home-hero__scroll-icon" aria-hidden="true">
+        <span class="home-hero__discover-icon" aria-hidden="true">
           <Icon name="caret-down" class="h-3.5 w-3.5" />
         </span>
       </a>
@@ -171,174 +99,84 @@ const featuredCategory =
   .home-hero {
     position: relative;
     isolation: isolate;
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) auto;
     min-height: max(42rem, 100svh);
     background: var(--color-king-oil);
     color: var(--color-king-bone);
   }
 
-  .home-hero__stage {
-    position: relative;
+  .home-hero__main {
     display: grid;
-    flex: 1;
-    grid-template-columns: 1fr;
-    grid-template-rows: 1fr;
+    grid-template-columns: minmax(0, 0.94fr) minmax(0, 1.06fr);
     min-height: 0;
   }
 
-  .home-hero__visual {
-    grid-area: 1 / 1;
-    z-index: 1;
-    justify-self: end;
-    width: min(100%, 57%);
-    min-width: 0;
-    padding: clamp(5rem, 10.5vh, 6.5rem) 0 clamp(1.25rem, 2.5vh, 1.75rem)
-      clamp(1.25rem, 2.8vw, 2rem);
-  }
-
-  .home-hero__frame {
-    position: relative;
-    height: 100%;
-    min-height: clamp(22rem, 62vh, 36rem);
-    overflow: hidden;
-    border: 1px solid color-mix(in srgb, var(--color-king-bone), transparent 86%);
-    border-right: 0;
-    border-radius: var(--kb-radius-2xl) 0 0 var(--kb-radius-lg);
-    box-shadow: var(--kb-shadow-float-dark);
-  }
-
-  .home-hero__media {
-    position: absolute;
-    inset: 0;
-    overflow: hidden;
-    border-radius: inherit;
-  }
-
-  .home-hero__video {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: 54% 42%;
-  }
-
-  .home-hero__grade {
-    position: absolute;
-    inset: 0;
-    background:
-      linear-gradient(90deg, rgba(13, 13, 12, 0.72) 0%, rgba(13, 13, 12, 0.18) 22%, transparent 42%),
-      linear-gradient(180deg, rgba(13, 13, 12, 0.16) 0%, transparent 36%, rgba(13, 13, 12, 0.42) 100%);
-    pointer-events: none;
-  }
-
-  .home-hero__frame-caption {
-    position: absolute;
-    z-index: 4;
-    top: var(--kb-space-4);
-    left: var(--kb-space-4);
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: var(--kb-space-2);
-    max-width: calc(100% - var(--kb-space-8));
-    pointer-events: none;
-  }
-
-  .home-hero__frame-badge:global(.kb-badge) {
-    backdrop-filter: blur(8px);
-  }
-
-  .home-hero__frame-label {
-    color: color-mix(in srgb, var(--color-king-bone), transparent 16%);
-    letter-spacing: 0.14em;
-  }
-
-  .home-hero__frame-index {
-    position: absolute;
-    z-index: 3;
-    right: clamp(1rem, 2.4vw, 1.5rem);
-    bottom: clamp(0.85rem, 2vh, 1.15rem);
-    font-size: clamp(2.75rem, 5vw, 4.25rem);
-    color: color-mix(in srgb, var(--color-king-bone), transparent 78%);
-    pointer-events: none;
-    user-select: none;
-  }
-
-  .home-hero__frame-bracket {
-    z-index: 4;
-    right: var(--kb-space-4);
-    bottom: var(--kb-space-4);
-    border-color: color-mix(in srgb, var(--color-king-bone), transparent 68%);
-  }
-
   .home-hero__copy {
-    grid-area: 1 / 1;
+    position: relative;
     z-index: 3;
     display: flex;
     align-items: center;
-    align-self: center;
-    width: min(100%, 52rem);
     min-width: 0;
-    padding-block: clamp(6.5rem, 12vh, 8.25rem) clamp(1.5rem, 3vh, 2.25rem);
-    padding-inline: max(var(--kb-gutter), calc((100vw - var(--kb-shell-wide)) / 2 + var(--kb-gutter)))
-      clamp(1rem, 3vw, 2rem);
+    background: var(--color-king-oil);
+  }
+
+  .home-hero__seam {
+    position: absolute;
+    top: clamp(5.25rem, 11vh, 7rem);
+    right: 0;
+    bottom: clamp(1.25rem, 2.5vh, 1.75rem);
+    width: 1px;
+    background: linear-gradient(
+      180deg,
+      transparent 0%,
+      color-mix(in srgb, var(--color-king-bone), transparent 82%) 14%,
+      color-mix(in srgb, var(--color-king-accent), transparent 48%) 50%,
+      color-mix(in srgb, var(--color-king-bone), transparent 82%) 86%,
+      transparent 100%
+    );
     pointer-events: none;
   }
 
-  .home-hero__panel {
+  .home-hero__copy-inner {
+    position: relative;
+    z-index: 2;
     display: flex;
     flex-direction: column;
-    gap: 0;
-    width: min(100%, 39.5rem);
-    pointer-events: auto;
+    justify-content: center;
+    width: min(100%, 41rem);
+    margin-inline: auto 0;
+    margin-left: max(var(--kb-gutter), calc((100vw - var(--kb-shell-wide)) / 2 + var(--kb-gutter)));
+    padding-block: clamp(7rem, 13vh, 9rem) clamp(2rem, 4vh, 2.75rem);
+    padding-right: clamp(0.75rem, 2vw, 1.5rem);
   }
 
-  .home-hero__chapter {
-    display: grid;
-    grid-template-columns: auto auto 1fr auto;
+  .home-hero__head {
+    display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: var(--kb-space-4);
-    margin-bottom: clamp(1.25rem, 2.6vh, 1.85rem);
-    padding-bottom: var(--kb-space-3);
-    border-bottom: 1px solid color-mix(in srgb, var(--color-king-bone), transparent 88%);
+    margin-bottom: clamp(1.5rem, 3vh, 2.25rem);
   }
 
-  .home-hero__folio {
-    font-size: clamp(1.65rem, 2.8vw, 2.35rem);
-    color: var(--color-king-accent-light);
-    opacity: 0.9;
-  }
-
-  .home-hero__origin-badge:global(.kb-badge) {
-    white-space: nowrap;
-  }
-
-  .home-hero__chapter-rule {
-    display: block;
-    height: 1px;
-    background: linear-gradient(
-      90deg,
-      color-mix(in srgb, var(--color-king-accent), transparent 18%),
-      color-mix(in srgb, var(--color-king-accent) 10%, transparent) 68%,
-      transparent
-    );
-  }
-
-  .home-hero__chapter-meta {
-    margin: 0;
-    color: color-mix(in srgb, var(--color-king-bone), transparent 42%);
-    white-space: nowrap;
+  .home-hero__code {
+    color: color-mix(in srgb, var(--color-king-bone), transparent 50%);
+    letter-spacing: 0.16em;
   }
 
   .home-hero__title {
+    position: relative;
+    z-index: 4;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: 0.02em;
+    gap: 0.08em;
     margin: 0;
-    font-size: clamp(3.15rem, 7.4vw, 6.85rem);
-    line-height: 0.88;
-    letter-spacing: -0.048em;
+    width: calc(100% + clamp(1.5rem, 5vw, 4rem));
+    max-width: 14ch;
+    font-size: clamp(2.75rem, 5.8vw, 5.5rem);
+    line-height: 0.93;
+    letter-spacing: -0.04em;
     text-wrap: pretty;
   }
 
@@ -351,149 +189,37 @@ const featuredCategory =
     display: block;
   }
 
-  .home-hero__title-line--light .home-hero__title-inner {
-    color: color-mix(in srgb, var(--color-king-bone), transparent 22%);
-    font-size: 0.94em;
-    letter-spacing: -0.038em;
+  .home-hero__title-line--accent {
+    position: relative;
+    padding-bottom: 0.12em;
   }
 
-  .home-hero__title-band {
-    display: inline-block;
-    margin-top: 0.06em;
-    padding: 0.06em clamp(0.85rem, 2vw, 1.35rem) 0.14em;
-    border-radius: 0 var(--kb-radius-sm) var(--kb-radius-sm) 0;
-    background: var(--color-king-asphalt);
-    box-shadow: var(--kb-shadow-steel-soft);
+  .home-hero__title-line--accent::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: clamp(4rem, 36%, 7.5rem);
+    height: 2px;
+    background: linear-gradient(
+      90deg,
+      var(--color-king-accent),
+      color-mix(in srgb, var(--color-king-accent) 22%, transparent)
+    );
   }
 
   .home-hero__title :global(em) {
-    color: color-mix(in srgb, var(--color-king-accent-light), white 12%);
+    color: color-mix(in srgb, var(--color-king-accent-light), white 10%);
     font-style: italic;
     font-weight: var(--kb-w-heading);
+    letter-spacing: -0.03em;
   }
 
   .home-hero__lede {
-    margin: clamp(1.35rem, 2.8vh, 1.95rem) 0 0;
-    max-width: 38ch;
-    line-height: 1.62;
-    color: color-mix(in srgb, var(--color-king-bone), transparent 18%);
-  }
-
-  .home-hero__collection {
-    margin-top: clamp(1.5rem, 3vh, 2.15rem);
-    padding: clamp(0.85rem, 1.8vw, 1rem);
-    border: 1px solid color-mix(in srgb, var(--color-king-bone), transparent 88%);
-    border-radius: var(--kb-radius-lg);
-    background: color-mix(in srgb, var(--color-king-graphite), var(--color-king-oil) 28%);
-    box-shadow: var(--kb-shadow-inset-steel);
-  }
-
-  .home-hero__collection-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--kb-space-3);
-    margin-bottom: var(--kb-space-3);
-    padding-inline: var(--kb-space-1);
-  }
-
-  .home-hero__collection-meta {
-    margin: 0;
-    color: color-mix(in srgb, var(--color-king-bone), transparent 44%);
-    white-space: nowrap;
-  }
-
-  .home-hero__categories {
-    display: grid;
-    gap: 0.125rem;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  .home-hero__category {
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    align-items: center;
-    gap: var(--kb-space-3);
-    min-height: 3.35rem;
-    padding: var(--kb-space-3);
-    border-radius: var(--kb-radius-md);
-    color: inherit;
-    text-decoration: none;
-    transition:
-      background-color var(--kb-dur-fast) var(--kb-ease-out),
-      border-color var(--kb-dur-fast) var(--kb-ease-out),
-      transform var(--kb-dur-fast) var(--kb-ease-out);
-  }
-
-  .home-hero__category-num {
-    color: color-mix(in srgb, var(--color-king-accent-light), transparent 22%);
-  }
-
-  .home-hero__category-body {
-    display: grid;
-    gap: 0.2rem;
-    min-width: 0;
-  }
-
-  .home-hero__category-head {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: var(--kb-space-2);
-  }
-
-  .home-hero__category-name {
-    font-size: clamp(1.15rem, 2vw, 1.35rem);
-    font-weight: var(--kb-w-heading-strong);
-    line-height: 1;
-    letter-spacing: -0.02em;
-  }
-
-  .home-hero__category-badge:global(.kb-badge) {
-    font-size: 0.625rem;
-    padding-inline: 0.55rem;
-  }
-
-  .home-hero__category-tagline {
-    font-size: var(--kb-text-meta);
-    line-height: 1.4;
-    color: color-mix(in srgb, var(--color-king-bone), transparent 38%);
-  }
-
-  .home-hero__category-action {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 2rem;
-    height: 2rem;
-    border: 1px solid color-mix(in srgb, var(--color-king-bone), transparent 80%);
-    border-radius: var(--kb-radius-pill);
+    margin: clamp(1.5rem, 3vh, 2.1rem) 0 0;
+    max-width: 34ch;
+    line-height: 1.64;
     color: color-mix(in srgb, var(--color-king-bone), transparent 20%);
-    transition:
-      border-color var(--kb-dur-fast) var(--kb-ease-out),
-      color var(--kb-dur-fast) var(--kb-ease-out),
-      transform var(--kb-dur-fast) var(--kb-ease-out),
-      background-color var(--kb-dur-fast) var(--kb-ease-out);
-  }
-
-  .home-hero__category:hover,
-  .home-hero__category:focus-visible {
-    background: color-mix(in srgb, var(--color-king-asphalt), var(--color-king-oil) 20%);
-  }
-
-  .home-hero__category:hover .home-hero__category-action,
-  .home-hero__category:focus-visible .home-hero__category-action {
-    border-color: color-mix(in srgb, var(--color-king-accent-light), transparent 30%);
-    color: var(--color-king-accent-light);
-    background: color-mix(in srgb, var(--color-king-accent), transparent 88%);
-    transform: translate(0.1rem, -0.1rem);
-  }
-
-  .home-hero__category:focus-visible {
-    outline: 2px solid var(--color-king-accent);
-    outline-offset: 2px;
   }
 
   .home-hero__actions {
@@ -501,9 +227,7 @@ const featuredCategory =
     flex-wrap: wrap;
     align-items: center;
     gap: var(--kb-space-5);
-    margin-top: clamp(1.5rem, 3vh, 2.15rem);
-    padding-top: var(--kb-space-4);
-    border-top: 1px solid color-mix(in srgb, var(--color-king-bone), transparent 90%);
+    margin-top: clamp(1.75rem, 3.4vh, 2.5rem);
   }
 
   .home-hero__secondary {
@@ -512,7 +236,7 @@ const featuredCategory =
     gap: var(--kb-space-2);
     min-height: 2.75rem;
     padding-block: var(--kb-space-2);
-    color: color-mix(in srgb, var(--color-king-bone), transparent 12%);
+    color: color-mix(in srgb, var(--color-king-bone), transparent 14%);
     transition:
       color var(--kb-dur-fast) var(--kb-ease-out),
       background-size var(--kb-dur-med) var(--kb-ease-out);
@@ -532,87 +256,123 @@ const featuredCategory =
     transform: translate(0.15rem, -0.15rem);
   }
 
-  .home-hero__baseline {
+  .home-hero__visual {
+    position: relative;
+    z-index: 2;
+    min-width: 0;
+    padding: clamp(5.5rem, 11.5vh, 7rem) 0 clamp(1.25rem, 2.5vh, 1.75rem)
+      clamp(1.25rem, 2.6vw, 2rem);
+    background: var(--color-king-oil);
+  }
+
+  .home-hero__frame {
+    position: relative;
+    height: 100%;
+    min-height: clamp(20rem, 58vh, 34rem);
+    overflow: hidden;
+    border: 1px solid color-mix(in srgb, var(--color-king-bone), transparent 84%);
+    border-right: 0;
+    border-radius: var(--kb-radius-2xl) 0 0 var(--kb-radius-xl);
+    box-shadow: var(--kb-shadow-float-dark);
+  }
+
+  .home-hero__media {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    border-radius: inherit;
+  }
+
+  .home-hero__video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 56% 42%;
+  }
+
+  .home-hero__grade {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(90deg, rgba(13, 13, 12, 0.38) 0%, transparent 30%),
+      linear-gradient(180deg, rgba(13, 13, 12, 0.1) 0%, transparent 40%, rgba(13, 13, 12, 0.28) 100%);
+    pointer-events: none;
+  }
+
+  .home-hero__frame-folio {
+    position: absolute;
+    z-index: 3;
+    right: clamp(1rem, 2.2vw, 1.35rem);
+    bottom: clamp(0.75rem, 1.8vh, 1rem);
+    font-size: clamp(3rem, 5.5vw, 5rem);
+    color: color-mix(in srgb, var(--color-king-bone), transparent 80%);
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .home-hero__frame-mark {
+    z-index: 4;
+    right: var(--kb-space-4);
+    bottom: var(--kb-space-4);
+    border-color: color-mix(in srgb, var(--color-king-bone), transparent 66%);
+  }
+
+  .home-hero__rail {
     position: relative;
     z-index: 4;
     border-top: 1px solid color-mix(in srgb, var(--color-king-bone), transparent 88%);
-    background: color-mix(in srgb, var(--color-king-oil), var(--color-king-graphite) 22%);
+    background: color-mix(in srgb, var(--color-king-graphite), var(--color-king-oil) 24%);
   }
 
-  .home-hero__baseline-inner {
-    display: grid;
-    grid-template-columns: auto 1fr auto auto;
+  .home-hero__rail-accent {
+    position: absolute;
+    top: 0;
+    left: max(var(--kb-gutter), calc((100vw - var(--kb-shell-wide)) / 2 + var(--kb-gutter)));
+    right: 0;
+    height: 2px;
+    background: linear-gradient(
+      90deg,
+      var(--color-king-accent),
+      color-mix(in srgb, var(--color-king-brass) 50%, transparent) 40%,
+      transparent
+    );
+    opacity: 0.85;
+    pointer-events: none;
+  }
+
+  .home-hero__rail-inner {
+    display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: var(--kb-space-4);
     width: min(calc(100% - (var(--kb-gutter) * 2)), var(--kb-shell-wide));
     margin-inline: auto;
-    min-height: 3.35rem;
+    min-height: 3.25rem;
     padding-block: var(--kb-space-3);
   }
 
-  .home-hero__baseline-folio {
-    color: color-mix(in srgb, var(--color-king-accent-light), transparent 18%);
+  .home-hero__rail-meta {
+    color: color-mix(in srgb, var(--color-king-bone), transparent 36%);
     letter-spacing: 0.14em;
   }
 
-  .home-hero__baseline-nav {
-    min-width: 0;
-  }
-
-  .home-hero__baseline-links {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: var(--kb-space-2) var(--kb-space-4);
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  .home-hero__baseline-link {
-    color: color-mix(in srgb, var(--color-king-bone), transparent 36%);
-    text-decoration: none;
-    letter-spacing: 0.13em;
-    transition: color var(--kb-dur-fast) var(--kb-ease-out);
-  }
-
-  .home-hero__baseline-link:hover,
-  .home-hero__baseline-link:focus-visible {
-    color: var(--color-king-bone);
-  }
-
-  .home-hero__baseline-link:focus-visible {
-    outline: 2px solid var(--color-king-accent);
-    outline-offset: 2px;
-    border-radius: var(--kb-radius-xs);
-  }
-
-  .home-hero__baseline-rule {
-    display: block;
-    width: 1px;
-    height: 1.5rem;
-    background: color-mix(in srgb, var(--color-king-bone), transparent 84%);
-  }
-
-  .home-hero__scroll {
+  .home-hero__discover {
     display: inline-flex;
     align-items: center;
     gap: var(--kb-space-2);
-    justify-self: end;
     min-height: 2.75rem;
     padding-inline: var(--kb-space-2);
-    color: color-mix(in srgb, var(--color-king-bone), transparent 26%);
+    color: color-mix(in srgb, var(--color-king-bone), transparent 28%);
     text-decoration: none;
-    white-space: nowrap;
     transition: color var(--kb-dur-fast) var(--kb-ease-out);
   }
 
-  .home-hero__scroll:hover,
-  .home-hero__scroll:focus-visible {
+  .home-hero__discover:hover,
+  .home-hero__discover:focus-visible {
     color: var(--color-king-bone);
   }
 
-  .home-hero__scroll-icon {
+  .home-hero__discover-icon {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -625,23 +385,21 @@ const featuredCategory =
       transform var(--kb-dur-fast) var(--kb-ease-out);
   }
 
-  .home-hero__scroll:hover .home-hero__scroll-icon,
-  .home-hero__scroll:focus-visible .home-hero__scroll-icon {
+  .home-hero__discover:hover .home-hero__discover-icon,
+  .home-hero__discover:focus-visible .home-hero__discover-icon {
     border-color: color-mix(in srgb, var(--color-king-accent-light), transparent 35%);
     transform: translateY(0.1rem);
   }
 
-  @media (max-width: 74rem) {
-    .home-hero__visual {
-      width: min(100%, 54%);
-    }
-
-    .home-hero__copy {
-      width: min(100%, 54rem);
-    }
-
+  @media (min-width: 80rem) {
     .home-hero__title {
-      font-size: clamp(2.85rem, 6.6vw, 5.5rem);
+      font-size: clamp(3.5rem, 5vw, 5.65rem);
+      width: calc(100% + clamp(2rem, 6vw, 5.5rem));
+      max-width: 15ch;
+    }
+
+    .home-hero__copy-inner {
+      width: min(100%, 43rem);
     }
   }
 
@@ -650,116 +408,75 @@ const featuredCategory =
       min-height: auto;
     }
 
-    .home-hero__stage {
-      display: flex;
-      flex-direction: column;
+    .home-hero__main {
+      grid-template-columns: 1fr;
+    }
+
+    .home-hero__seam {
+      display: none;
+    }
+
+    .home-hero__copy-inner {
+      width: 100%;
+      margin-inline: auto;
+      padding-inline: var(--kb-gutter);
+      padding-top: 7rem;
+      padding-bottom: var(--kb-space-6);
+    }
+
+    .home-hero__title {
+      font-size: clamp(2.35rem, 11.5vw, 3.65rem);
+      max-width: 13ch;
     }
 
     .home-hero__visual {
-      order: 2;
-      width: 100%;
       padding: 0 var(--kb-gutter) var(--kb-space-4);
     }
 
     .home-hero__frame {
       min-height: 0;
-      aspect-ratio: 16 / 10;
+      aspect-ratio: 5 / 3;
       height: auto;
-      border-right: 1px solid color-mix(in srgb, var(--color-king-bone), transparent 86%);
+      border-right: 1px solid color-mix(in srgb, var(--color-king-bone), transparent 84%);
       border-radius: var(--kb-radius-lg);
     }
 
     .home-hero__grade {
       background:
-        linear-gradient(180deg, rgba(13, 13, 12, 0.14) 0%, transparent 40%),
-        linear-gradient(0deg, rgba(13, 13, 12, 0.48) 0%, transparent 38%);
+        linear-gradient(180deg, rgba(13, 13, 12, 0.12) 0%, transparent 38%),
+        linear-gradient(0deg, rgba(13, 13, 12, 0.35) 0%, transparent 36%);
     }
 
-    .home-hero__frame-index {
+    .home-hero__frame-folio {
       font-size: clamp(2.25rem, 10vw, 3.25rem);
     }
 
-    .home-hero__copy {
-      order: 1;
-      width: 100%;
-      padding-inline: var(--kb-gutter);
-      padding-top: 6.75rem;
-      padding-bottom: var(--kb-space-5);
-    }
-
-    .home-hero__panel {
-      width: 100%;
-    }
-
-    .home-hero__chapter {
-      grid-template-columns: auto auto 1fr;
-    }
-
-    .home-hero__chapter-meta {
-      display: none;
-    }
-
-    .home-hero__title {
-      font-size: clamp(2.65rem, 12vw, 4rem);
-    }
-
-    .home-hero__baseline-inner {
-      grid-template-columns: auto 1fr auto;
-      gap: var(--kb-space-3);
-    }
-
-    .home-hero__baseline-rule {
-      display: none;
+    .home-hero__rail-accent {
+      left: var(--kb-gutter);
     }
   }
 
   @media (max-width: 29.99rem) {
-    .home-hero__copy {
-      padding-top: 6.5rem;
+    .home-hero__copy-inner {
+      padding-top: 6.75rem;
     }
 
-    .home-hero__chapter {
-      grid-template-columns: auto 1fr;
-      gap: var(--kb-space-3);
-    }
-
-    .home-hero__chapter-rule {
-      display: none;
+    .home-hero__head {
+      margin-bottom: var(--kb-space-5);
     }
 
     .home-hero__title {
-      font-size: clamp(2.35rem, 13vw, 3.15rem);
-    }
-
-    .home-hero__category {
-      grid-template-columns: auto 1fr auto;
-      gap: var(--kb-space-2);
-      padding: var(--kb-space-2) var(--kb-space-3);
-    }
-
-    .home-hero__category-tagline {
-      display: none;
+      font-size: clamp(2.1rem, 12.5vw, 2.85rem);
     }
 
     .home-hero__actions {
       align-items: flex-start;
       gap: var(--kb-space-3);
     }
-
-    .home-hero__baseline-inner {
-      grid-template-columns: 1fr auto;
-    }
-
-    .home-hero__baseline-folio,
-    .home-hero__baseline-nav {
-      display: none;
-    }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .home-hero__category,
-    .home-hero__category-action,
-    .home-hero__scroll-icon {
+    .home-hero__discover-icon {
       transition: none;
     }
   }
@@ -776,32 +493,27 @@ const featuredCategory =
   if (scope && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     const video = scope.querySelector<HTMLElement>('.home-hero__video');
     const frame = scope.querySelector<HTMLElement>('.home-hero__frame');
-    const panel = scope.querySelector<HTMLElement>('.home-hero__panel');
+    const copy = scope.querySelector<HTMLElement>('.home-hero__copy-inner');
     const titleLines = scope.querySelectorAll<HTMLElement>('.home-hero__title-inner');
-    const titleBand = scope.querySelector<HTMLElement>('.home-hero__title-band');
-    const categories = scope.querySelectorAll<HTMLElement>('.home-hero__category');
+    const frameMark = scope.querySelector<HTMLElement>('.home-hero__frame-mark');
 
     gsap.set(frame, { clipPath: 'inset(0 100% 0 0)' });
-    gsap.set(titleLines, { yPercent: 112, opacity: 0 });
-    if (titleBand) gsap.set(titleBand, { scaleX: 0, transformOrigin: 'left center' });
-    gsap.set(categories, { y: 12, opacity: 0 });
+    gsap.set(titleLines, { yPercent: 108, opacity: 0 });
+    if (frameMark) gsap.set(frameMark, { opacity: 0 });
 
-    const intro = gsap.timeline({ defaults: { ease: 'power3.out' }, delay: 0.03 });
+    const intro = gsap.timeline({ defaults: { ease: 'power3.out' }, delay: 0.04 });
 
     intro
-      .to(frame, { clipPath: 'inset(0 0% 0 0)', duration: 1.1, ease: 'power3.inOut' }, 0)
-      .from(video, { scale: 1.08, duration: 1.2, ease: 'power2.out' }, 0.04)
-      .from(scope.querySelector('.home-hero__frame-caption'), { y: -8, opacity: 0, duration: 0.55 }, 0.42)
-      .from(panel, { x: -28, opacity: 0, duration: 0.88 }, 0.22)
-      .to(titleLines, { yPercent: 0, opacity: 1, duration: 0.78, stagger: 0.1 }, 0.48)
-      .to(titleBand, { scaleX: 1, duration: 0.68, ease: 'power3.inOut' }, 0.72)
-      .from(scope.querySelector('.home-hero__chapter'), { y: 10, opacity: 0, duration: 0.52 }, 0.62)
-      .from(scope.querySelector('.home-hero__lede'), { y: 12, opacity: 0, duration: 0.58 }, 0.82)
-      .from(scope.querySelector('.home-hero__collection'), { y: 14, opacity: 0, duration: 0.62 }, 0.88)
-      .to(categories, { y: 0, opacity: 1, duration: 0.5, stagger: 0.07 }, 0.96)
-      .from(scope.querySelector('.home-hero__actions'), { y: 12, opacity: 0, duration: 0.58 }, 1.08)
-      .from(scope.querySelector('.home-hero__frame-index'), { opacity: 0, y: 8, duration: 0.5 }, 1.1)
-      .from(scope.querySelector('.home-hero__baseline'), { y: 10, opacity: 0, duration: 0.52 }, 1.14);
+      .to(frame, { clipPath: 'inset(0 0% 0 0)', duration: 1.08, ease: 'power3.inOut' }, 0)
+      .from(video, { scale: 1.07, duration: 1.18, ease: 'power2.out' }, 0.04)
+      .from(copy, { x: -24, opacity: 0, duration: 0.86 }, 0.26)
+      .to(titleLines, { yPercent: 0, opacity: 1, duration: 0.76, stagger: 0.1 }, 0.52)
+      .from(scope.querySelector('.home-hero__head'), { y: 8, opacity: 0, duration: 0.5 }, 0.68)
+      .from(scope.querySelector('.home-hero__lede'), { y: 10, opacity: 0, duration: 0.55 }, 0.8)
+      .from(scope.querySelector('.home-hero__actions'), { y: 12, opacity: 0, duration: 0.58 }, 0.9)
+      .to(frameMark, { opacity: 1, duration: 0.45 }, 0.98)
+      .from(scope.querySelector('.home-hero__frame-folio'), { opacity: 0, y: 8, duration: 0.5 }, 1)
+      .from(scope.querySelector('.home-hero__rail'), { y: 10, opacity: 0, duration: 0.55 }, 1.06);
 
     if (video) {
       gsap.to(video, {

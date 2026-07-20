@@ -1,4 +1,5 @@
 ---
+import SectionHeaderHome from '../components/common/SectionHeaderHome.astro';
 import Button from '../components/ui/Button.astro';
 import Icon from '../components/ui/Icon.astro';
 import MediaFrame from '../components/ui/MediaFrame.astro';
@@ -13,12 +14,13 @@ import { brandStatement } from '../data/home';
   aria-labelledby="home-brand-title"
 >
   <div class="kb-shell-wide home-brand__shell">
-    <header class="home-brand__chapter" data-brand-cell>
-      <span class="home-brand__folio kb-folio">{brandStatement.index}</span>
-      <span class="kb-eyebrow text-king-accent">{brandStatement.eyebrow}</span>
-      <span class="home-brand__chapter-rule" aria-hidden="true"></span>
-      <span class="kb-meta-label home-brand__chapter-meta">{brandStatement.meta}</span>
-    </header>
+    <SectionHeaderHome
+      index={brandStatement.index}
+      eyebrow={brandStatement.eyebrow}
+      meta={brandStatement.meta}
+      trackCell
+      class="home-brand__header"
+    />
 
     <div class="home-brand__folio-panel">
       <div class="home-brand__grid">
@@ -168,40 +170,8 @@ import { brandStatement } from '../data/home';
     gap: var(--kb-space-gap);
   }
 
-  .home-brand__chapter {
-    display: grid;
-    grid-template-columns: auto auto 1fr auto;
-    align-items: center;
-    gap: var(--kb-space-4);
-    padding-block: var(--kb-space-3);
-    border-block: 1px solid var(--kb-stroke-dark);
-  }
-
-  .home-brand__folio {
-    margin: 0;
-    color: var(--color-king-accent);
-  }
-
-  .home-brand__chapter .kb-eyebrow {
-    margin: 0;
-    white-space: nowrap;
-  }
-
-  .home-brand__chapter-rule {
-    display: block;
-    height: 1px;
-    background: linear-gradient(
-      90deg,
-      var(--kb-stroke-accent),
-      color-mix(in srgb, var(--color-king-accent) 12%, transparent) 72%,
-      transparent
-    );
-  }
-
-  .home-brand__chapter-meta {
-    margin: 0;
-    color: var(--color-king-muted);
-    white-space: nowrap;
+  .home-brand__header:global(.section-header-home) {
+    gap: 0;
   }
 
   .home-brand__folio-panel {

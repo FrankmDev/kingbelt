@@ -1,5 +1,5 @@
 ---
-import SectionHeader from '../components/common/SectionHeader.astro';
+import SectionHeaderHome from '../components/common/SectionHeaderHome.astro';
 import MediaFrame from '../components/ui/MediaFrame.astro';
 import { standardsSection } from '../data/home';
 
@@ -13,17 +13,17 @@ const layerCount = principles.length;
   aria-labelledby="home-standards-title"
 >
   <div class="kb-shell-wide section-stack-lg">
-    <SectionHeader
+    <SectionHeaderHome
+      index={standardsSection.index}
       eyebrow={standardsSection.eyebrow}
       body={standardsSection.lede}
       meta={standardsSection.meta}
-      align="left"
       class="home-standards__header"
     >
       <Fragment slot="title">
         <span id="home-standards-title" set:html={standardsSection.title} />
       </Fragment>
-    </SectionHeader>
+    </SectionHeaderHome>
 
     <div class="home-standards__layout">
       <MediaFrame
@@ -91,8 +91,8 @@ const layerCount = principles.length;
     background: var(--color-king-surface);
   }
 
-  .home-standards__header:global(.section-header) {
-    --sh-max-copy: 42ch;
+  .home-standards__header:global(.section-header-home) .shh-body {
+    max-width: 42ch;
   }
 
   .home-standards__layout {

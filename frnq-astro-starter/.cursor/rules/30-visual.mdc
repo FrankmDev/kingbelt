@@ -1,0 +1,17 @@
+---
+description: Visual, layout, and responsive work
+globs:
+  - "src/components/**/*.astro"
+  - "src/styles/**/*.css"
+  - "src/pages/**/*.astro"
+alwaysApply: false
+---
+
+- Read `docs/project/DESIGN.md` and the relevant page plan before editing.
+- Respect each reference file's declared `useFor` and `doNotUseFor`.
+- Use semantic Tailwind theme tokens and utilities.
+- Modify `src/styles/globals.css` only for shared project-wide decisions.
+- Do not create a rigid card or section library.
+- Design mobile-first and transform by content capacity.
+- Check long text, media stability, targets, focus, overflow, and reduced motion.
+- Inspect the real rendered page at mobile and desktop.

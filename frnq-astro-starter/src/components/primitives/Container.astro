@@ -1,0 +1,21 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+interface Props extends HTMLAttributes<'div'> {
+  size?: 'wide' | 'default' | 'narrow';
+}
+
+const { size = 'default', class: className, ...rest } = Astro.props;
+const sizeClasses = {
+  wide: 'max-w-wide',
+  default: 'max-w-content',
+  narrow: 'max-w-narrow',
+};
+---
+
+<div
+  class:list={['mx-auto w-full min-w-0 px-[var(--page-gutter)]', sizeClasses[size], className]}
+  {...rest}
+>
+  <slot />
+</div>

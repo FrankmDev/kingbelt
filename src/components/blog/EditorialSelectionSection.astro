@@ -6,30 +6,38 @@ import type { BlogPost } from '../../data/blog';
 
 interface Props {
   posts: BlogPost[];
+  showHeader?: boolean;
+  class?: string;
 }
 
-const { posts } = Astro.props;
+const { posts, showHeader = true, class: className = '' } = Astro.props;
 const [lead, ...secondary] = posts;
 ---
 
 <section
-  class="blog-selection section-spacing section-spacing-chapter section-steel blog-selection--chapter-end"
-  aria-labelledby="blog-selection-title"
+  class:list={[
+    'blog-selection section-spacing section-spacing-chapter section-steel blog-selection--chapter-end',
+    className,
+  ]}
+  aria-labelledby={showHeader ? 'blog-selection-title' : undefined}
+  {...(!showHeader && { 'aria-label': 'Selección editorial de la revista' })}
 >
   <div class="kb-shell-wide section-stack-lg">
-    <SectionHeader
-      eyebrow="Selección editorial"
-      body="Una lectura principal y dos referencias concretas sobre medida, herrajes y proporción."
-      meta={`${posts.length} lecturas de referencia`}
-      titleId="blog-selection-title"
-      tone="dark"
-      align="left"
-      class="blog-selection-header"
-    >
-      <Fragment slot="title">
-        Lecturas para <em>volver</em>.
-      </Fragment>
-    </SectionHeader>
+    {showHeader && (
+      <SectionHeader
+        eyebrow="Selección editorial"
+        body="Una lectura principal y dos referencias concretas sobre medida, herrajes y proporción."
+        meta={`${posts.length} lecturas de referencia`}
+        titleId="blog-selection-title"
+        tone="dark"
+        align="left"
+        class="blog-selection-header"
+      >
+        <Fragment slot="title">
+          Lecturas para <em>volver</em>.
+        </Fragment>
+      </SectionHeader>
+    )}
 
     {lead && (
       <div class="blog-selection-spread">

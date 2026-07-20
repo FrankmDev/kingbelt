@@ -1,6 +1,6 @@
 ---
 import CTABox from '../components/ui/CTABox.astro';
-import SectionHeader from '../components/common/SectionHeader.astro';
+import SectionHeaderHome from '../components/common/SectionHeaderHome.astro';
 import { closingCta } from '../data/home';
 ---
 
@@ -21,18 +21,18 @@ import { closingCta } from '../data/home';
       backgroundPosition={closingCta.backgroundPosition}
       titleTag="h2"
     >
-      <SectionHeader
+      <SectionHeaderHome
         slot="header"
+        index={closingCta.index}
         eyebrow={closingCta.eyebrow}
         body={closingCta.description}
-        align="left"
         tone="dark"
         density="compact"
       >
         <Fragment slot="title">
           <span set:html={closingCta.title} />
         </Fragment>
-      </SectionHeader>
+      </SectionHeaderHome>
     </CTABox>
   </div>
 </section>

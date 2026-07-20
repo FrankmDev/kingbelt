@@ -1,0 +1,183 @@
+---
+import CollectionFilters from './CollectionFilters.astro';
+import ProductCard from './ProductCard.astro';
+import type { CollectionFacets, CollectionProduct, ProductCategory } from '../../data/catalog';
+
+interface Props {
+  category: ProductCategory;
+  products: CollectionProduct[];
+  facets: CollectionFacets;
+  class?: string;
+}
+
+const { category, products, facets, class: className } = Astro.props;
+
+const countLabel = `${products.length} ${products.length === 1 ? 'referencia' : 'referencias'}`;
+---
+
+<section
+  id="productos"
+  class:list={['collection-catalog', className]}
+  aria-label={`Productos de la categoría ${category.name}`}
+>
+  <div class="collection-catalog__layout kb-shell-wide">
+    <aside class="collection-catalog__aside" aria-label="Filtros de catálogo">
+      <CollectionFilters facets={facets} idPrefix={`filters-${category.slug}`} />
+    </aside>
+
+    <div class="collection-catalog__results">
+      <header class="collection-catalog__toolbar">
+        <div class="collection-catalog__toolbar-main">
+          <p class="collection-catalog__folio kb-code-label text-king-muted">Catálogo</p>
+          <p class="collection-catalog__heading font-display">{countLabel}</p>
+        </div>
+        <p class="collection-catalog__scope text-king-muted">
+          Selección de {category.name.toLowerCase()} con material, color y precio visibles en cada referencia.
+        </p>
+      </header>
+
+      <ul class="collection-catalog__grid">
+        {products.map((product, index) => (
+          <li class="collection-catalog__item">
+            <ProductCard
+              product={product}
+              index={index}
+              meta={`${product.subcategory} · ${product.color}`}
+            />
+          </li>
+        ))}
+      </ul>
+    </div>
+  </div>
+</section>
+
+<style>
+  .collection-catalog {
+    padding-top: var(--kb-space-8);
+    padding-bottom: var(--kb-space-section);
+    border-top: 1px solid var(--kb-stroke-hairline);
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-king-bone) 28%, transparent),
+      transparent 12rem
+    );
+  }
+
+  .collection-catalog__layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--kb-space-7);
+    align-items: start;
+  }
+
+  .collection-catalog__aside,
+  .collection-catalog__results {
+    min-width: 0;
+  }
+
+  /* ---------- Toolbar ---------- */
+
+  .collection-catalog__toolbar {
+    display: grid;
+    gap: var(--kb-space-3);
+    margin-bottom: var(--kb-space-8);
+    padding-bottom: var(--kb-space-6);
+    border-bottom: 1px solid var(--kb-stroke-hairline);
+  }
+
+  .collection-catalog__toolbar-main {
+    display: grid;
+    gap: var(--kb-space-2);
+  }
+
+  .collection-catalog__folio {
+    margin: 0;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  .collection-catalog__heading {
+    margin: 0;
+    font-size: clamp(1.75rem, 1.35rem + 1.4vw, 2.5rem);
+    font-weight: var(--kb-w-heading-light);
+    line-height: 0.98;
+    letter-spacing: -0.02em;
+    color: var(--color-king-text);
+    text-wrap: balance;
+  }
+
+  .collection-catalog__scope {
+    margin: 0;
+    max-width: 52ch;
+    font-size: var(--kb-text-sm);
+    line-height: 1.6;
+    text-wrap: pretty;
+  }
+
+  /* ---------- Grid de productos ---------- */
+
+  .collection-catalog__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--kb-space-8) var(--kb-space-4);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .collection-catalog__item {
+    min-width: 0;
+  }
+
+  @media (min-width: 40rem) {
+    .collection-catalog__grid {
+      gap: var(--kb-space-8) var(--kb-space-5);
+    }
+  }
+
+  @media (min-width: 48rem) {
+    .collection-catalog__grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  /* ---------- Escritorio ---------- */
+
+  @media (min-width: 64rem) {
+    .collection-catalog__layout {
+      grid-template-columns: minmax(0, 19rem) minmax(0, 1fr);
+      gap: clamp(2.5rem, 4vw, 4.5rem);
+    }
+
+    .collection-catalog__aside {
+      position: sticky;
+      top: 7rem;
+      align-self: start;
+      z-index: calc(var(--kb-z-sticky) - 2);
+      padding-right: clamp(1.25rem, 2vw, 2rem);
+      border-right: 1px solid var(--kb-stroke-hairline);
+    }
+
+    .collection-catalog__grid {
+      gap: var(--kb-space-8) var(--kb-space-6);
+    }
+
+    .collection-catalog__toolbar {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 22rem);
+      align-items: end;
+      gap: var(--kb-space-6);
+    }
+
+    .collection-catalog__scope {
+      justify-self: end;
+      text-align: right;
+    }
+  }
+
+  @media (min-width: 80rem) {
+    .collection-catalog__layout {
+      grid-template-columns: minmax(0, 20.5rem) minmax(0, 1fr);
+      gap: clamp(3rem, 5vw, 5rem);
+    }
+  }
+</style>

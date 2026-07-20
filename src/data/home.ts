@@ -1,17 +1,12 @@
 export const hero = {
+  brand: 'KingBelt',
   badge: 'Hecho en España',
   meta: 'Cuero · Herraje · Proporción',
   titleLines: [
-    { text: 'Cinturones', variant: 'plain' as const },
-    { text: 'de cuero', variant: 'light' as const },
-    { text: 'con criterio.', variant: 'em' as const },
+    { text: 'Cinturones de cuero', variant: 'plain' as const },
+    { text: 'hechos en España.', variant: 'em' as const },
   ],
-  description:
-    'Piezas masculinas producidas en España para el uso diario. Proporción clara, materiales con cuerpo y un acabado que se nota al abrochar.',
-  collection: {
-    eyebrow: 'Colección',
-    meta: '3 líneas',
-  },
+  description: 'Proporción clara y acabado verificable para el uso diario.',
   index: '01',
   primaryCta: { label: 'Ver colección', href: '#coleccion' },
   secondaryCta: { label: 'Sobre KingBelt', href: '/sobre' },
@@ -69,6 +64,7 @@ export const brandStatement = {
 } as const;
 
 export const categoriesSection = {
+  index: '03',
   eyebrow: 'Colección',
   title: 'Tres líneas, <em>un mismo criterio.</em>',
   body: 'Entrada al catálogo por uso y estilo. Cada categoría agrupa piezas con la misma lógica de proporción y acabado.',
@@ -76,14 +72,16 @@ export const categoriesSection = {
 } as const;
 
 export const featuredSection = {
-  eyebrow: 'Selección',
-  title: 'Piezas para empezar <em>a mirar.</em>',
-  body: 'Una muestra de la colección KingBelt. Imagen, nombre, color y precio — sin ruido comercial de más.',
-  meta: '4 referencias',
+  index: '04',
+  eyebrow: 'Destacados',
+  title: 'Las cuatro <em>más pedidas.</em>',
+  body: 'Referencias destacadas de la colección. Imagen, categoría, descripción breve y precio — sin ruido comercial de más.',
+  meta: '4 destacados',
   cta: { label: 'Ver colección', href: '#coleccion' },
 } as const;
 
 export const standardsSection = {
+  index: '05',
   eyebrow: 'Qué recibes',
   title: 'Tres cosas que buscamos <em>en cada pieza.</em>',
   lede: 'No es filosofía de marca: es lo que debe notarse cuando abrochas el cinturón y lo usas una semana.',
@@ -128,13 +126,16 @@ export const styleBanner = {
 } as const;
 
 export const journalSection = {
+  index: '06',
   eyebrow: 'Revista KingBelt',
   title: 'Lecturas que <em>acompañan</em> la compra.',
   body: 'Guías sobre medida, materiales y estilo. Contenido real para decidir con más contexto.',
+  meta: '3 lecturas de referencia',
   cta: { label: 'Ir a la revista', href: '/blog' },
 } as const;
 
 export const trustSection = {
+  index: '07',
   eyebrow: 'Antes de elegir',
   title: 'Menos dudas, <em>más claridad.</em>',
   items: [
@@ -154,6 +155,7 @@ export const trustSection = {
 } as const;
 
 export const closingCta = {
+  index: '08',
   eyebrow: 'KingBelt',
   title: 'Descubre la colección <em>o conoce la marca.</em>',
   description:

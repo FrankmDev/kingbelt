@@ -1,0 +1,109 @@
+---
+import SectionHeader from '../../common/SectionHeader.astro';
+import FAQ from '../../ui/FAQ.astro';
+import MediaFrame from '../../ui/MediaFrame.astro';
+import type { FAQItem, FAQSidebar } from '../../../data/contact';
+
+interface Props {
+  items: readonly FAQItem[];
+  sidebar: FAQSidebar;
+}
+
+const { items, sidebar } = Astro.props;
+---
+
+<FAQ
+  class="contact-faq section-spacing-chapter"
+  items={[...items]}
+  tone="light"
+  stickySidebar={false}
+>
+  <SectionHeader
+    slot="header"
+    eyebrow="Preguntas frecuentes"
+    body="Respuestas rápidas a las dudas más comunes. Si no encuentras lo que buscas, escríbenos y te respondemos en menos de 24 horas laborables."
+    align="center"
+    tone="light"
+    class="contact-faq-header mb-12 md:mb-16"
+  >
+    <Fragment slot="title">
+      Resolvemos las dudas <em>antes de que surjan</em>.
+    </Fragment>
+  </SectionHeader>
+
+  <Fragment slot="sidebar">
+    <div class="faq-media-sidebar">
+      <MediaFrame
+        src={sidebar.image}
+        alt={sidebar.imageAlt}
+        ratio="3/4"
+        label={sidebar.label}
+        caption={sidebar.caption}
+        width={800}
+        height={1067}
+        loading="lazy"
+        class="faq-media-frame"
+      />
+    </div>
+  </Fragment>
+</FAQ>
+
+<style>
+  .contact-faq:global(.faq-section) {
+    padding-top: var(--kb-space-section);
+    padding-bottom: clamp(2rem, 3.5vw, 3.5rem);
+  }
+
+  .contact-faq :global(.faq-layout) {
+    align-items: stretch;
+  }
+
+  .contact-faq :global(.faq-sidebar--static) {
+    height: 100%;
+    min-height: 100%;
+  }
+
+  .faq-media-sidebar {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 100%;
+  }
+
+  .contact-faq :global(.faq-media-sidebar .media-frame.media-frame--ratio-3-4) {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    height: 100%;
+    aspect-ratio: auto;
+    border-radius: var(--kb-panel-radius);
+    content-visibility: visible;
+  }
+
+  .contact-faq :global(.faq-media-sidebar .media-frame__stage) {
+    height: 100%;
+  }
+
+  .contact-faq :global(.faq-media-sidebar .media-frame__image) {
+    object-position: center 35%;
+  }
+
+  .contact-faq-header {
+    --sh-max-copy: 36rem;
+    --sh-gap-head-copy: 0.85rem;
+  }
+
+  @media (max-width: 63.99rem) {
+    .faq-media-sidebar {
+      min-height: clamp(24rem, 60vw, 34rem);
+    }
+
+    .contact-faq :global(.faq-media-sidebar .media-frame) {
+      aspect-ratio: 16 / 9;
+    }
+
+    .contact-faq :global(.faq-media-sidebar .media-frame__stage) {
+      height: auto;
+    }
+  }
+</style>

@@ -1,11 +1,11 @@
 ---
-import SectionHeaderHome from '../components/common/SectionHeaderHome.astro';
-import FeaturedArticleSection from '../components/blog/FeaturedArticleSection.astro';
-import LatestPostsSection from '../components/blog/LatestPostsSection.astro';
-import Button from '../components/ui/Button.astro';
-import Icon from '../components/ui/Icon.astro';
-import type { BlogPost } from '../data/blog';
-import { journalSection } from '../data/home';
+import SectionHeaderHome from './SectionHeaderHome.astro';
+import FeaturedArticleSection from '../../blog/FeaturedArticleSection.astro';
+import LatestPostsSection from '../../blog/LatestPostsSection.astro';
+import Button from '../../ui/Button.astro';
+import Icon from '../../ui/Icon.astro';
+import type { BlogPost } from '../../../data/blog';
+import { journalSection } from '../../../data/home';
 
 interface Props {
   posts: BlogPost[];

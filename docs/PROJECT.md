@@ -25,7 +25,7 @@ El contenido debe ayudar a decidir. Evita claims vacíos, jerga motera gratuita 
 
 ## Arquitectura de información prevista
 
-Base editorial actual:
+Base editorial consolidada:
 
 - Inicio.
 - Sobre KingBelt.
@@ -33,7 +33,7 @@ Base editorial actual:
 - Contacto y preguntas frecuentes.
 - Sistema visual y componentes compartidos.
 
-Evolución ecommerce prevista:
+Evolución ecommerce:
 
 - Colecciones y búsqueda/exploración de catálogo.
 - Ficha de producto y variantes.
@@ -60,12 +60,12 @@ No introduzcas modelos como `Belt` cuando una entidad genérica de comercio resu
 
 ## Fases y límites
 
-1. **Base editorial/corporativa — actual:** páginas de marca, blog, contacto, navegación, SEO base y sistema de componentes.
-2. **Ecommerce local:** colecciones, productos y carrito de demostración con datos locales tipados.
+1. **Base editorial/corporativa — consolidada:** páginas de marca, blog, contacto, navegación, SEO base y sistema de componentes.
+2. **Ecommerce local — presente y aislado:** colecciones, productos y carrito de demostración con datos locales tipados.
 3. **Shopify:** adaptación de la capa de comercio a Storefront API y checkout.
 4. **Operación real:** pagos, pedidos, emails, legal, analítica, SEO completo, QA y lanzamiento.
 
-No adelantes una fase salvo petición explícita. En la fase actual no crees por iniciativa propia grids o fichas de producto, filtros, carrito, login, checkout ni llamadas a Shopify.
+No adelantes una fase salvo petición explícita. La implementación local existente no autoriza a ampliar por iniciativa propia grids o fichas de producto, filtros, carrito, login, checkout ni llamadas a Shopify.
 
 ## Decisiones no confirmadas
 

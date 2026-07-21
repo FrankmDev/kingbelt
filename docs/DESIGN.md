@@ -30,7 +30,7 @@ Referencias especialmente útiles:
 
 - Sistema y variantes: `Card.astro`, `Panel.astro`, `Button.astro`, `FormField.astro`, `Icon.astro`.
 - Páginas y composición: `PageHeader.astro`, `ContentSplit.astro`, `FAQ.astro`, `CTABox.astro`.
-- Contacto: `src/pages/contacto.astro`, `ContactMethod.astro`, `PurchaseInfo.astro`, `ContactEmailBanner.astro`.
+- Contacto: `src/pages/contacto.astro`, `src/components/sections/contact/`, `ContactMethod.astro` y `FAQ.astro`.
 - Catálogo visual de patrones: `src/pages/style-museum.astro` y sus showcases.
 
 Inspecciona el componente afectado y una referencia con el mismo propósito. No copies un patrón solo porque se vea bien si su función es distinta.
@@ -171,4 +171,4 @@ Hover y motion deben aportar respuesta o jerarquía: cambios sutiles de color, b
 - Estados, semántica, foco, contraste y motion reducido están cubiertos cuando aplican.
 - No hay overflow ni roturas con texto largo en móvil, intermedio y escritorio.
 - La página mantiene un H1, metadata y estructura SEO correctos cuando el cambio afecta una ruta.
-- `npm run check` pasa y se inspecciona visualmente el alcance modificado.
+- `bun run check` pasa y se inspecciona visualmente el alcance modificado.

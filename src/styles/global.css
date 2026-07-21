@@ -5,43 +5,9 @@
    Motorcycle Retail · Leather Gear · Asphalt Editorial
    Display serif: Bitter (slab, variable weight 100–900)
    Sans/body: Satoshi
-
-   ------------------------------------------------------------
-   CHANGELOG — revisión de auditoría (ver AGENTS.md §Auditoría)
-   ------------------------------------------------------------
-   1. NUEVO: familia "steel/graphite" de superficies (kb-card-steel,
-      kb-panel-steel, kb-badge-steel, kb-tag-steel) para poder
-      alternar piezas industriales dentro de secciones claras,
-      no solo en fondos oscuros completos. Antes --color-king-steel
-      y --color-king-oil no se usaban en ningún componente.
-   2. CAMBIO: la textura/sombra "leather" (grano de cuero +
-      inset-leather) deja de ser el default de kb-card / kb-panel /
-      kb-card-static / kb-card-dry. Ahora es opt-in vía la clase
-      modificadora .kb-leather, reservada para producto de cuero
-      real (ficha de producto, swatches, packaging). El resto de
-      superficies usa un inset neutro (--kb-shadow-inset-soft).
-   3. FIX: typo de variable --kbd-badge-radius → --kb-badge-radius.
-   4. LIMPIEZA: eliminadas --kb-title-weight / --kb-title-light-weight
-      (duplicaban --kb-w-heading / --kb-w-heading-light sin uso real).
-   5. CAMBIO: --color-king-bone diverge ligeramente de
-      --color-king-bg para que "bone" sea un tono de marca/material
-      y no un alias 1:1 del fondo funcional.
-   6. CAMBIO: --color-king-accent-light desaturado/oscurecido un
-      punto (era muy cercano a "cognac", expresamente vetado en el
-      brief). Sigue sirviendo como acento cálido pero se usa con
-      moderación (nunca en superficies grandes).
-    7. CAMBIO: pesos de heading — h1/h2 suben a semibold/bold para
-       leer "retail masculino" en vez de "editorial delicado". h3
-       baja escalón, h4/h5 se mantienen ligeros para metadatos.
-    10. CAMBIO: heading weights reducidos un escalón (hero 700→600,
-        strong 600→500, h3 500→400) para afinar los títulos serif.
-        PageHeader.title reduce tamaño a clamp(2.75rem,6vw,5rem).
-    8. DOC: comentario explícito sobre --kb-z-noise (9999) — es una
-       textura global por encima de todo, no indica jerarquía.
-    9. NUEVO: tokens tipográficos intermedios --kb-text-sm,
-       --kb-text-xs y --kb-text-2xs para evitar valores hardcodeados
-       en componentes pequeños (caption, meta, help, footer) y para
-       mantener la escala tipográfica completa bajo un mismo sistema.
+   Orden: theme → tokens → base → shells/utilidades → primitivas.
+   Mantener esta cascada estable; los estilos de página viven junto
+   a su sección y las excepciones de producto permanecen separadas.
     ============================================================ */
 
 @theme {
@@ -146,13 +112,15 @@
   --kb-ease-spring: cubic-bezier(0.34, 1.3, 0.42, 1);
   --kb-ease-soft: cubic-bezier(0.16, 1, 0.3, 1);
 
-  /* --- Labels --- */
-  --kb-label-size: 0.625rem;
+  /* --- Labels ---
+     Los tamaños de label y action se apoyan en la escala
+     tipográfica (--kb-text-eyebrow) como fuente única. */
+  --kb-label-size: var(--kb-text-eyebrow);
   --kb-label-tracking: 0.22em;
   --kb-label-weight: 500;
   --kb-micro-size: 0.5625rem;
   --kb-micro-tracking: 0.26em;
-  --kb-action-size: 0.625rem;
+  --kb-action-size: var(--kb-text-eyebrow);
   --kb-action-tracking: 0.14em;
   --kb-title-tracking: 0;
 
@@ -409,11 +377,6 @@ body::before {
   background: var(--color-king-accent);
 }
 
-::-moz-scrollbar-thumb {
-  background: #b5b0a6;
-  border-radius: var(--kb-radius-pill);
-}
-
 /* Selection — bronze tint */
 ::selection {
   background-color: rgba(138, 90, 43, 0.2);
@@ -440,22 +403,12 @@ body::before {
   font-weight: var(--kb-w-heading-strong);
 }
 
-.font-display-hero {
-  font-weight: var(--kb-w-heading-hero);
-}
-
 .font-display-light {
   font-weight: var(--kb-w-heading-light);
 }
 
 .font-serif {
   font-family: var(--font-serif);
-}
-
-.font-serif-italic {
-  font-family: var(--font-serif);
-  font-style: italic;
-  font-weight: 400;
 }
 
 .eyebrow-text {
@@ -486,24 +439,12 @@ body::before {
   line-height: 1.75;
 }
 
-.text-balance {
-  text-wrap: balance;
-}
-
-.text-pretty {
-  text-wrap: pretty;
-}
-
 .text-king-accent {
   color: var(--color-king-accent);
 }
 
 .text-king-muted {
   color: var(--color-king-muted);
-}
-
-.text-king-steel {
-  color: var(--color-king-steel);
 }
 
 /* Prose rhythm for rich text blocks */
@@ -524,11 +465,6 @@ body::before {
   padding-bottom: var(--kb-space-section);
 }
 
-.section-spacing-lg {
-  padding-top: var(--kb-space-section-lg);
-  padding-bottom: var(--kb-space-section-lg);
-}
-
 /* Ritmo de cierre de página — menos aire antes del footer/wordmark */
 .section-spacing-close {
   padding-bottom: clamp(1.75rem, 3vw, 2.75rem);
@@ -544,26 +480,12 @@ body::before {
   padding-block: clamp(2rem, 3.5vw, 3.5rem);
 }
 
-.section-stack > * + * {
-  margin-top: var(--kb-space-gap);
-}
-
 .section-stack-lg > * + * {
   margin-top: var(--kb-space-gap-lg);
 }
 
-.kb-shell {
-  width: min(calc(100% - (var(--kb-gutter) * 2)), var(--kb-shell-max));
-  margin-inline: auto;
-}
-
 .kb-shell-wide {
   width: min(calc(100% - (var(--kb-gutter) * 2)), var(--kb-shell-wide));
-  margin-inline: auto;
-}
-
-.kb-shell-narrow {
-  width: min(calc(100% - (var(--kb-gutter) * 2)), var(--kb-shell-narrow));
   margin-inline: auto;
 }
 
@@ -686,18 +608,6 @@ body::before {
 
 .kb-rounded-sm {
   border-radius: var(--kb-radius-sm);
-}
-.kb-rounded-md {
-  border-radius: var(--kb-radius-md);
-}
-.kb-rounded-lg {
-  border-radius: var(--kb-radius-lg);
-}
-.kb-rounded-xl {
-  border-radius: var(--kb-radius-xl);
-}
-.kb-rounded-2xl {
-  border-radius: var(--kb-radius-2xl);
 }
 
 /* Card — retail surface, controlled lift, edge highlight */
@@ -987,26 +897,6 @@ body::before {
   flex: 0 0 auto;
 }
 
-/* Road line — dashed rule, asphalt editorial */
-.kb-road-line {
-  background-image: repeating-linear-gradient(
-    90deg,
-    transparent,
-    transparent 8px,
-    rgba(123, 125, 120, 0.35) 8px,
-    rgba(123, 125, 120, 0.35) 16px
-  );
-  background-size: 16px 1px;
-  background-repeat: repeat-x;
-}
-
-/* Steel rule — solid heavy divider */
-.kb-steel-rule {
-  background: rgba(123, 125, 120, 0.25);
-  height: 1px;
-  width: 100%;
-}
-
 /* Decorative stitch line (leather motif) — reduced prominence.
    Reserve for product/leather contexts alongside .kb-leather. */
 .kb-stitch-line {
@@ -1018,18 +908,6 @@ body::before {
     rgba(138, 90, 43, 0.12) 9px
   );
   background-size: 9px 1px;
-  background-repeat: repeat-x;
-}
-
-.stitch-line {
-  background-image: repeating-linear-gradient(
-    90deg,
-    transparent,
-    transparent 4px,
-    currentColor 4px,
-    currentColor 8px
-  );
-  background-size: 8px 1px;
   background-repeat: repeat-x;
 }
 
@@ -1079,26 +957,6 @@ body::before {
   background-size: 256px 256px;
   z-index: 50;
   mix-blend-mode: overlay;
-}
-
-/* Leather grain texture — warm, organic surface (opt-in via
-   .kb-leather above for cards/panels; use this class directly
-   for full media blocks, e.g. a hero panel showing a belt). */
-.kb-texture-leather {
-  position: relative;
-}
-
-.kb-texture-leather::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0.028;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='leather'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='5' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23leather)'/%3E%3C/svg%3E");
-  background-size: 200px 200px;
-  border-radius: inherit;
-  z-index: 1;
-  mix-blend-mode: multiply;
 }
 
 /* Asphalt texture — rough, industrial surface */
@@ -1217,23 +1075,6 @@ body::before {
   }
 }
 
-/* Decorative dot with ring */
-.kb-dot {
-  width: 0.375rem;
-  height: 0.375rem;
-  border-radius: var(--kb-radius-pill);
-  background: var(--color-king-accent);
-  box-shadow: 0 0 0 3px rgba(138, 90, 43, 0.12);
-}
-
-/* Decorative slash separator */
-.kb-slash {
-  width: 1px;
-  height: 0.875rem;
-  background: var(--kb-stroke-dark);
-  transform: rotate(22deg);
-}
-
 /* Reusable noise overlay */
 .kb-noise-overlay {
   position: relative;
@@ -1288,25 +1129,6 @@ body::before {
   opacity: 0.5;
 }
 
-.kb-divider {
-  height: 1px;
-  width: 100%;
-  background: var(--kb-stroke-hairline);
-  border: 0;
-}
-
-.kb-divider-accent {
-  height: 1px;
-  width: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    var(--kb-stroke-accent),
-    transparent
-  );
-  border: 0;
-}
-
 /* ============================================================
    EDITORIAL REFINEMENTS
    ============================================================ */
@@ -1342,20 +1164,6 @@ a:focus-visible {
 .kb-link:hover {
   background-size: 0% 1px;
   background-position: 100% 100%;
-}
-
-/* Underline slide utility — accent line grows under text */
-.kb-underline-slide {
-  background-image: linear-gradient(currentColor, currentColor);
-  background-size: 0% 1.5px;
-  background-repeat: no-repeat;
-  background-position: 0 92%;
-  transition: background-size var(--kb-dur-med) var(--kb-ease-out);
-  padding-bottom: 1px;
-}
-
-.kb-underline-slide:hover {
-  background-size: 100% 1.5px;
 }
 
 /* Section number marker */
@@ -1405,34 +1213,11 @@ a:focus-visible {
   border-radius: 1px;
 }
 
-/* Label size variants */
-.kb-label-sm {
-  font-size: 0.5625rem;
-  letter-spacing: 0.18em;
-}
-
-.kb-label-lg {
-  font-size: 0.6875rem;
-  letter-spacing: 0.18em;
-}
-
 /* ============================================================
    INTERACTION UTILITIES
    ============================================================ */
 
 /* Soft rise-on-hover */
-.kb-rise {
-  transition:
-    transform 400ms cubic-bezier(0.16, 1, 0.3, 1),
-    box-shadow 400ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .kb-rise:hover {
-    transform: translateY(-3px);
-  }
-}
-
 .kb-rise-sm {
   transition:
     transform 280ms cubic-bezier(0.16, 1, 0.3, 1),
@@ -1442,33 +1227,6 @@ a:focus-visible {
 @media (hover: hover) and (pointer: fine) {
   .kb-rise-sm:hover {
     transform: translateY(-2px);
-  }
-}
-
-/* Soft press scale */
-.kb-press {
-  transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.kb-press:active {
-  transform: scale(0.97);
-}
-
-/* Fade-in compound */
-.kb-fade-in {
-  transition:
-    opacity 400ms cubic-bezier(0.16, 1, 0.3, 1),
-    transform 400ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-/* Image hover composition */
-.kb-zoom {
-  transition: transform 600ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .kb-zoom:hover {
-    transform: scale(1.03);
   }
 }
 
@@ -2217,47 +1975,6 @@ a.kb-badge:focus-visible {
    ANIMATIONS
    ============================================================ */
 
-/* Marquee — smooth linear drift */
-@keyframes marquee-left {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(-50%);
-  }
-}
-
-@keyframes marquee-right {
-  from {
-    transform: translateX(-50%);
-  }
-  to {
-    transform: translateX(0);
-  }
-}
-
-.animate-marquee-left {
-  animation: marquee-left 40s linear infinite;
-}
-
-.animate-marquee-right {
-  animation: marquee-right 40s linear infinite;
-}
-
-.animate-marquee-pause:hover {
-  animation-play-state: paused;
-}
-
-/* Card stacking base */
-.stack-card {
-  will-change: transform;
-}
-
-/* Bento image scale base */
-.bento-image-scale {
-  will-change: transform, opacity, filter;
-}
-
 /* Scroll-triggered fade/rise */
 .animate-on-scroll {
   opacity: 0;
@@ -2287,9 +2004,6 @@ a.kb-badge:focus-visible {
 .animate-delay-5 {
   transition-delay: 0.5s;
 }
-.animate-delay-6 {
-  transition-delay: 0.6s;
-}
 
 /* Pulsing status dot — softer breathe */
 @keyframes kb-pulse-dot {
@@ -2308,17 +2022,6 @@ a.kb-badge:focus-visible {
   animation: kb-pulse-dot 2.4s cubic-bezier(0.16, 1, 0.3, 1) infinite;
 }
 
-/* Slow rotate fallback */
-@keyframes kb-spin-slow {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.kb-spin-slow {
-  animation: kb-spin-slow 22s linear infinite;
-}
-
 /* ============================================================
    REDUCED MOTION
    ============================================================ */
@@ -2333,8 +2036,7 @@ a.kb-badge:focus-visible {
     scroll-behavior: auto !important;
   }
 
-  .kb-pulse-dot,
-  .kb-spin-slow {
+  .kb-pulse-dot {
     animation: none;
   }
 
@@ -2345,14 +2047,12 @@ a.kb-badge:focus-visible {
 }
 
 /* ============================================================
-   LAYER 2 — EDITORIAL COMPOSITION UTILITIES
+   EDITORIAL COMPOSITION UTILITIES
    ------------------------------------------------------------
-   Añadido en la segunda pasada de auditoría. La capa 1 corrigió
-   color/textura (cards, badges, tags, pesos de heading). Esta
-   capa da hooks estructurales a componentes de tipo "módulo"
+   Hooks estructurales para componentes de tipo "módulo"
    (PageHeader, Prose, MediaFrame, ContentSplit, StatBlock,
-   CTABox) para que ganen jerarquía y escala editorial en vez de
-   ser una caja crema con texto centrado dentro.
+   CTABox): jerarquía y escala editorial en vez de una caja
+   crema con texto centrado dentro.
    ============================================================ */
 
 /* Folio/index number — tratamiento tipográfico grande, no una
@@ -2371,36 +2071,8 @@ a.kb-badge:focus-visible {
   letter-spacing: -0.01em;
 }
 
-/* Pull quote — para Prose.astro. Reemplaza el blockquote plano:
-   serif itálica grande, sin caja, regla lateral fina en acento. */
-.kb-pull-quote {
-  font-family: "Bitter", Georgia, serif;
-  font-style: italic;
-  font-weight: 400;
-  font-size: clamp(1.375rem, 2.4vw, 1.875rem);
-  line-height: 1.45;
-  color: var(--color-king-text);
-  border-left: 2px solid var(--color-king-accent);
-  padding-left: clamp(1.25rem, 2.5vw, 2rem);
-  margin-block: clamp(2rem, 4vw, 3rem);
-  max-width: 42ch;
-}
-
-/* Drop cap — primera letra de un lede editorial (Prose.astro) */
-.kb-drop-cap::first-letter {
-  font-family: "Bitter", Georgia, serif;
-  font-weight: 600;
-  font-size: 3.4em;
-  line-height: 0.85;
-  float: left;
-  padding-right: 0.1em;
-  padding-top: 0.02em;
-  color: var(--color-king-accent);
-}
-
-/* Stat value/label/divider — StatBlock.astro. Contraste de escala
-   fuerte entre número y etiqueta; divisores steel en vez de solo
-   espacio en blanco. */
+/* Stat value/label — StatBlock.astro. Contraste de escala
+   fuerte entre número y etiqueta. */
 .kb-stat-value {
   font-family: "Bitter", Georgia, serif;
   font-weight: 700;
@@ -2423,79 +2095,6 @@ a.kb-badge:focus-visible {
   text-transform: uppercase;
   color: var(--color-king-muted);
   margin-top: 0.5rem;
-}
-
-.kb-stat-divider {
-  width: 1px;
-  align-self: stretch;
-  background: var(--kb-stroke-steel);
-}
-
-/* Stat block on dark/steel — para el momento de credibilidad
-   (+200 modelos, hecho en España) con más peso visual que una
-   card crema */
-.kb-stat-block-steel {
-  background: var(--color-king-graphite);
-  color: rgba(255, 255, 255, 0.94);
-  border-radius: var(--kb-panel-radius);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.kb-stat-block-steel .kb-stat-value {
-  color: rgba(255, 255, 255, 0.96);
-}
-
-.kb-stat-block-steel .kb-stat-label {
-  color: rgba(255, 255, 255, 0.55);
-}
-
-.kb-stat-block-steel .kb-stat-divider {
-  background: rgba(255, 255, 255, 0.14);
-}
-
-/* MediaFrame — dominante/soporte. Rompe el patrón de dos
-   rectángulos gemelos: una imagen grande + una de apoyo. */
-.kb-media-dominant {
-  aspect-ratio: 4 / 5;
-}
-
-.kb-media-support {
-  aspect-ratio: 1 / 1;
-}
-
-@media (min-width: 768px) {
-  .kb-media-dominant {
-    aspect-ratio: 16 / 10;
-  }
-  .kb-media-support {
-    aspect-ratio: 3 / 4;
-  }
-}
-
-/* Caption como chip flotante sobre la imagen, no en franja aparte */
-.kb-media-caption-overlay {
-  position: absolute;
-  left: var(--kb-space-4);
-  bottom: var(--kb-space-4);
-  z-index: 2;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 0.875rem;
-  border-radius: var(--kb-radius-xs);
-  background: rgba(13, 13, 12, 0.55);
-  backdrop-filter: blur(6px);
-  color: rgba(255, 255, 255, 0.92);
-  font-size: var(--kb-text-meta);
-}
-
-/* Bleed — la imagen ignora el gutter del shell en el lado dado */
-.kb-bleed-right {
-  margin-right: calc(var(--kb-gutter) * -1);
-}
-
-.kb-bleed-left {
-  margin-left: calc(var(--kb-gutter) * -1);
 }
 
 /* CTABox oscuro — momento de cierre con peso real, textura
@@ -2693,9 +2292,7 @@ a.kb-badge:focus-visible {
 }
 
 .sh-title em,
-.sh-title :global(em),
-.sh-title .sh-highlight,
-.sh-title :global(.sh-highlight) {
+.sh-title .sh-highlight {
   color: var(--sh-accent);
   font-style: italic;
   font-weight: var(--kb-w-heading-strong);
@@ -2703,9 +2300,7 @@ a.kb-badge:focus-visible {
 }
 
 .section-header[data-tone='dark'] .sh-title em,
-.section-header[data-tone='dark'] .sh-title :global(em),
-.section-header[data-tone='dark'] .sh-title .sh-highlight,
-.section-header[data-tone='dark'] .sh-title :global(.sh-highlight) {
+.section-header[data-tone='dark'] .sh-title .sh-highlight {
   color: var(--color-king-accent-light);
 }
 

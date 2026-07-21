@@ -1,4 +1,5 @@
 import { site } from './site';
+import type { IconName } from '../components/ui/icon-paths';
 
 export interface NavItem {
   label: string;
@@ -41,14 +42,22 @@ export const footerContact = [
     value: site.contact.email,
     href: `mailto:${site.contact.email}`,
     external: false,
+    icon: 'mail',
   },
   {
     label: 'Instagram',
     value: '@kingbelt',
     href: site.urls.instagram,
     external: true,
+    icon: 'instagram',
   },
-] as const;
+] as const satisfies readonly {
+  label: string;
+  value: string;
+  href: string;
+  external: boolean;
+  icon: IconName;
+}[];
 
 export const contactChannels: ChannelLink[] = [
   { label: 'Escribir por email', href: `mailto:${site.contact.email}`, external: false },

@@ -3,8 +3,8 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import Header from '../components/layout/Header.astro';
 import FooterSection from '../components/layout/FooterSection.astro';
 import PageHeader from '../components/ui/PageHeader.astro';
-import CTABox from '../components/ui/CTABox.astro';
 
+import BlogBrandCta from '../components/blog/BlogBrandCta.astro';
 import BlogTopicNavigation from '../components/blog/BlogTopicNavigation.astro';
 import EditorialSelectionSection from '../components/blog/EditorialSelectionSection.astro';
 import FeaturedArticleSection from '../components/blog/FeaturedArticleSection.astro';
@@ -68,24 +68,7 @@ const blogSchema = {
   <FeaturedArticleSection post={featured} />
   <LatestPostsSection posts={latestPosts} />
   <EditorialSelectionSection posts={selection} />
-  <section class="blog-cta section-spacing-tight section-spacing-close" aria-label="Conocer KingBelt">
-    <div class="cta-section-inner kb-shell-wide">
-      <CTABox
-        eyebrow="Detrás de la revista"
-        title="De la lectura a <em>la marca</em>."
-        description="El criterio editorial nace de una forma de mirar el producto: proporción, función, material y uso real."
-        buttonLabel="Conocer KingBelt"
-        buttonHref="/sobre"
-        buttonVariant="secondary"
-        backgroundImage={featured.image}
-        backgroundAlt=""
-        backgroundWidth={1168}
-        backgroundHeight={784}
-        backgroundPosition={featured.imagePosition}
-        titleTag="h2"
-      />
-    </div>
-  </section>
+  <BlogBrandCta image={featured.image} imagePosition={featured.imagePosition} />
 
   <FooterSection slot="footer" connected />
 </BaseLayout>
@@ -98,9 +81,5 @@ const blogSchema = {
   .blog-page-header :global(.page-header-inner) {
     padding-top: clamp(5.5rem, 12vw, 7rem);
     padding-bottom: clamp(4.5rem, 9vw, 6rem);
-  }
-
-  .blog-cta {
-    background: var(--color-king-bg);
   }
 </style>

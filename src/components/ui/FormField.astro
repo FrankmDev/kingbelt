@@ -1,6 +1,7 @@
 ---
 import type { HTMLAttributes } from 'astro/types';
 import Icon from './Icon.astro';
+import type { IconName } from './icon-paths';
 
 interface Props extends HTMLAttributes<'div'> {
   label: string;
@@ -8,7 +9,7 @@ interface Props extends HTMLAttributes<'div'> {
   help?: string;
   error?: string;
   required?: boolean;
-  icon?: string;
+  icon?: IconName;
 }
 
 const {

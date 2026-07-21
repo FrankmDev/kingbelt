@@ -40,7 +40,6 @@ const {
 } = Astro.props;
 
 const isBlog = variant === 'blog';
-const hasBreadcrumbs = Boolean(breadcrumbs && breadcrumbs.length);
 const hasArticleMeta = Boolean(
   articleMeta &&
     (articleMeta.date ||
@@ -95,10 +94,10 @@ const objectStyle = `object-position:${heroImagePosition}`;
         isBlog ? 'max-w-[var(--kb-shell-narrow)] mx-auto text-center' : 'max-w-[var(--kb-shell-copy)]',
       ]}
     >
-      {hasBreadcrumbs && (
+      {breadcrumbs && breadcrumbs.length > 0 && (
         <div class="page-header-breadcrumbs">
           <Breadcrumbs
-            items={breadcrumbs as { label: string; href?: string }[]}
+            items={breadcrumbs}
             includeHome={!isBlog}
             class={isBlog ? 'justify-center' : undefined}
           />

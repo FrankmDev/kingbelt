@@ -1,0 +1,44 @@
+---
+import CTABox from '../../ui/CTABox.astro';
+
+interface CtaData {
+  eyebrow: string;
+  title: string;
+  description: string;
+  label: string;
+  href: string;
+}
+
+interface Props {
+  cta: CtaData;
+  backgroundImage: string;
+}
+
+const { cta, backgroundImage } = Astro.props;
+---
+
+<section class="about-cta section-spacing section-spacing-close" aria-label={cta.eyebrow}>
+  <div class="cta-section-inner kb-shell-wide">
+    <CTABox
+      eyebrow={cta.eyebrow}
+      title={cta.title}
+      description={cta.description}
+      buttonLabel={cta.label}
+      buttonHref={cta.href}
+      buttonVariant="secondary"
+      backgroundImage={backgroundImage}
+      backgroundAlt=""
+      backgroundWidth={1920}
+      backgroundHeight={1080}
+      backgroundPosition="center 58%"
+      titleTag="h2"
+    />
+  </div>
+</section>
+
+<style>
+  .about-cta {
+    padding-top: var(--kb-space-section);
+    background: var(--color-king-bg);
+  }
+</style>

@@ -1,11 +1,12 @@
 import { site } from './site';
+import type { IconName } from '../components/ui/icon-paths';
 
 export interface ContactChannel {
   label: string;
   value: string;
   description?: string;
   href: string;
-  icon: string;
+  icon: IconName;
   meta?: string;
 }
 
@@ -13,7 +14,7 @@ export interface FAQItem {
   question: string;
   answer: string;
   category: string;
-  icon: string;
+  icon: IconName;
 }
 
 export interface PurchaseInfoItem {
@@ -21,7 +22,19 @@ export interface PurchaseInfoItem {
   description: string;
   label: string;
   meta?: string;
-  icon: string;
+  icon: IconName;
+}
+
+export interface InquiryType {
+  value: string;
+  label: string;
+}
+
+export interface FAQSidebar {
+  image: string;
+  imageAlt: string;
+  caption: string;
+  label: string;
 }
 
 interface ContactData {
@@ -34,14 +47,9 @@ interface ContactData {
     meta: string;
   };
   channels: ContactChannel[];
-  inquiryTypes: { value: string; label: string }[];
+  inquiryTypes: InquiryType[];
   faqs: FAQItem[];
-  faqSidebar: {
-    image: string;
-    imageAlt: string;
-    caption: string;
-    label: string;
-  };
+  faqSidebar: FAQSidebar;
   purchaseInfo: {
     eyebrow: string;
     title: string;

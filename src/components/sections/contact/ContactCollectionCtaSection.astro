@@ -1,0 +1,30 @@
+---
+import SectionHeader from '../../common/SectionHeader.astro';
+import CTABox from '../../ui/CTABox.astro';
+---
+
+<section class="contact-collection-cta section-spacing-tight" aria-labelledby="contact-collection-title">
+  <div class="cta-section-inner kb-shell-wide">
+    <CTABox
+      eyebrow="Colección"
+      title="Piezas pensadas para durar."
+      description="Cuero vegetal, herrajes macizos y diseño español. Explora la colección antes de escribirnos."
+      buttonLabel="Ver colección"
+      buttonHref="/coleccion"
+      buttonVariant="secondary"
+      backgroundImage="/image.jpg"
+      backgroundAlt="Cinturón KingBelt de cuero"
+      backgroundPosition="center 40%"
+    >
+      <SectionHeader
+        slot="header"
+        eyebrow="Colección"
+        title="Piezas pensadas para durar."
+        titleId="contact-collection-title"
+        body="Cuero vegetal, herrajes macizos y diseño español. Explora la colección antes de escribirnos."
+        align="left"
+        tone="dark"
+      />
+    </CTABox>
+  </div>
+</section>

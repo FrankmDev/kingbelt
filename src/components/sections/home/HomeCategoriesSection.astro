@@ -1,8 +1,8 @@
 ---
-import SectionHeaderHome from '../components/common/SectionHeaderHome.astro';
-import Badge from '../components/ui/Badge.astro';
-import { productCategories } from '../data/catalog';
-import { categoriesSection } from '../data/home';
+import SectionHeaderHome from './SectionHeaderHome.astro';
+import Badge from '../../ui/Badge.astro';
+import { productCategories } from '../../../data/catalog';
+import { categoriesSection } from '../../../data/home';
 
 const featured = productCategories.find((category) => category.featured) ?? productCategories[0];
 const secondary = productCategories.filter((category) => category.id !== featured.id);

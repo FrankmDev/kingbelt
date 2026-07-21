@@ -1,0 +1,322 @@
+---
+import SectionHeader from '../../common/SectionHeader.astro';
+import Button from '../../ui/Button.astro';
+import ContactMethod from '../../ui/ContactMethod.astro';
+import FormField from '../../ui/FormField.astro';
+import Icon from '../../ui/Icon.astro';
+import type { ContactChannel, InquiryType } from '../../../data/contact';
+
+interface Props {
+  channels: readonly ContactChannel[];
+  inquiryTypes: readonly InquiryType[];
+}
+
+const { channels, inquiryTypes } = Astro.props;
+---
+
+<section class="contact-main section-spacing" aria-labelledby="contact-form-title">
+  <div class="contact-layout kb-shell-wide">
+    <aside class="contact-aside" aria-labelledby="contact-channels-title">
+      <SectionHeader
+        eyebrow="Contacto directo"
+        title="Elige el canal."
+        titleId="contact-channels-title"
+        body="El formulario es la vía más completa. También puedes escribir directamente por email o Instagram."
+        align="left"
+        density="compact"
+        class="contact-aside-header"
+      />
+
+      <div class="contact-channels">
+        {channels.map((channel, index) => (
+          <ContactMethod
+            label={channel.label}
+            value={channel.value}
+            description={channel.description}
+            href={channel.href}
+            icon={channel.icon}
+            index={index + 1}
+            meta={channel.meta}
+            variant={index === 0 ? 'steel' : 'default'}
+          />
+        ))}
+      </div>
+    </aside>
+
+    <div class="contact-form-column kb-panel">
+      <SectionHeader
+        eyebrow="Escríbenos"
+        title="Cuéntanos el contexto."
+        titleId="contact-form-title"
+        align="left"
+        density="compact"
+        class="contact-form-header"
+      >
+        <p slot="body">Los campos marcados con <span aria-hidden="true">*</span> son obligatorios.</p>
+      </SectionHeader>
+
+      <!-- Integración pendiente: sustituir action por el endpoint real sin cambiar el markup del formulario. -->
+      <form
+        id="contact-form"
+        class="contact-form"
+        action="/api/contacto"
+        method="post"
+        aria-describedby="contact-form-note"
+      >
+        <div class="contact-form-row">
+          <FormField label="Nombre" for="contact-name" required>
+            <input
+              id="contact-name"
+              class="kb-input"
+              name="name"
+              type="text"
+              autocomplete="name"
+              required
+            />
+          </FormField>
+
+          <FormField label="Email" for="contact-email" required>
+            <input
+              id="contact-email"
+              class="kb-input"
+              name="email"
+              type="email"
+              autocomplete="email"
+              inputmode="email"
+              spellcheck="false"
+              required
+            />
+          </FormField>
+        </div>
+
+        <FormField label="Tipo de consulta" for="contact-subject" required>
+          <div class="kb-select-wrap">
+            <select id="contact-subject" class="kb-input" name="subject" required>
+              <option value="" disabled selected>Selecciona una opción</option>
+              {inquiryTypes.map((item) => <option value={item.value}>{item.label}</option>)}
+            </select>
+            <span class="kb-select-icon" aria-hidden="true">
+              <Icon name="caret-down" />
+            </span>
+          </div>
+        </FormField>
+
+        <FormField
+          label="Mensaje"
+          for="contact-message"
+          required
+          help="Incluye referencia de pedido o producto si ayuda a entender la consulta."
+        >
+          <textarea
+            id="contact-message"
+            class="kb-input contact-textarea"
+            name="message"
+            rows={6}
+            autocomplete="off"
+            aria-describedby="contact-message-help"
+            required
+          ></textarea>
+        </FormField>
+
+        <div class="contact-privacy">
+          <label class="contact-privacy-label" for="contact-privacy">
+            <input
+              id="contact-privacy"
+              class="contact-privacy-input"
+              name="privacy"
+              type="checkbox"
+              required
+            />
+            <span class="contact-privacy-text">
+              He leído y acepto la
+              <a href="/privacidad" class="kb-link">política de privacidad</a>.
+              <span class="contact-privacy-required" aria-hidden="true">*</span>
+            </span>
+          </label>
+        </div>
+
+        <div class="contact-form-actions">
+          <Button type="submit" variant="primary" size="md">
+            Enviar consulta
+            <Icon name="arrow-right" />
+          </Button>
+          <p id="contact-form-note">
+            No incluyas contraseñas, datos de pago ni otra información sensible.
+          </p>
+        </div>
+
+        <p id="contact-form-status" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></p>
+      </form>
+    </div>
+  </div>
+</section>
+
+<style>
+  .contact-main {
+    padding-bottom: clamp(2rem, 3.5vw, 3.5rem);
+  }
+
+  .contact-layout {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr;
+    gap: clamp(2.75rem, 7vw, 8rem);
+    align-items: stretch;
+  }
+
+  .contact-aside,
+  .contact-channels,
+  .contact-form-column {
+    min-width: 0;
+  }
+
+  .contact-channels :global(.kb-card),
+  .contact-channels :global(.kb-card-steel) {
+    box-sizing: border-box;
+    max-width: 100%;
+  }
+
+  .contact-aside-header:global(.section-header) {
+    --sh-max-title: 22ch;
+    --sh-max-copy: 42ch;
+  }
+
+  .contact-channels {
+    display: grid;
+    gap: var(--kb-form-row-gap);
+    margin-top: var(--kb-space-8);
+  }
+
+  .contact-form-column {
+    padding: var(--kb-form-panel-padding);
+  }
+
+  .contact-form-header:global(.section-header) {
+    --sh-max-copy: 38rem;
+    max-width: 38rem;
+    margin-bottom: var(--kb-space-6);
+  }
+
+  .contact-form {
+    display: grid;
+    gap: var(--kb-space-3);
+    max-width: 38rem;
+  }
+
+  .contact-form-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--kb-form-row-gap);
+  }
+
+  .contact-textarea {
+    min-height: 8.75rem;
+    resize: vertical;
+  }
+
+  .contact-privacy {
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+  }
+
+  .contact-privacy-label {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--kb-space-3);
+    cursor: pointer;
+  }
+
+  .contact-privacy-input {
+    flex-shrink: 0;
+    width: 1.125rem;
+    height: 1.125rem;
+    margin-top: 0.15rem;
+    accent-color: var(--color-king-accent);
+    cursor: pointer;
+  }
+
+  .contact-privacy-text {
+    color: var(--color-king-muted);
+    font-size: var(--kb-text-xs);
+    line-height: 1.6;
+  }
+
+  .contact-privacy-text .kb-link {
+    color: var(--color-king-text);
+  }
+
+  .contact-privacy-text .kb-link:hover {
+    color: var(--color-king-accent);
+  }
+
+  .contact-privacy-required {
+    color: var(--color-king-accent);
+    font-weight: var(--kb-w-medium);
+    margin-left: 0.125rem;
+  }
+
+  .contact-form-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--kb-form-row-gap);
+    padding-top: var(--kb-space-2);
+  }
+
+  .contact-form-actions p {
+    max-width: 30ch;
+    color: var(--color-king-muted);
+    font-size: var(--kb-text-2xs);
+    line-height: 1.6;
+  }
+
+  @media (max-width: 63.99rem) {
+    .contact-layout {
+      grid-template-columns: 1fr;
+    }
+
+    .contact-aside {
+      display: grid;
+      grid-template-columns: minmax(14rem, 0.55fr) minmax(0, 1.45fr);
+      gap: var(--kb-space-gap-lg);
+    }
+
+    .contact-aside-header:global(.section-header) {
+      grid-column: 1 / -1;
+    }
+
+    .contact-channels {
+      grid-column: 1 / -1;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      margin-top: 0;
+    }
+  }
+
+  @media (max-width: 47.99rem) {
+    .contact-aside,
+    .contact-form-row {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 29.99rem) {
+    .contact-form-column {
+      padding: var(--kb-space-5);
+    }
+
+    .contact-form-actions {
+      align-items: stretch;
+      flex-direction: column;
+    }
+
+    .contact-form-actions :global(.kb-btn) {
+      width: 100%;
+      min-height: 2.75rem;
+    }
+
+    .contact-form-actions p {
+      max-width: none;
+    }
+  }
+</style>

@@ -1,15 +1,16 @@
 ---
-import Button from '../ui/Button.astro';
-import Icon from '../ui/Icon.astro';
-import MediaFrame from '../ui/MediaFrame.astro';
-import SectionHeader from '../common/SectionHeader.astro';
+import SectionHeader from '../../common/SectionHeader.astro';
+import Button from '../../ui/Button.astro';
+import Icon from '../../ui/Icon.astro';
+import MediaFrame from '../../ui/MediaFrame.astro';
+import type { IconName } from '../../ui/icon-paths';
 
 interface PurchaseInfoItem {
   title: string;
   description: string;
   label: string;
   meta?: string;
-  icon: string;
+  icon: IconName;
 }
 
 interface BadgeData {
@@ -33,7 +34,7 @@ interface Props {
   eyebrow: string;
   title: string;
   description: string;
-  items: PurchaseInfoItem[];
+  items: readonly PurchaseInfoItem[];
   badge?: BadgeData;
   cta?: CtaData;
   image?: ImageData;
@@ -58,7 +59,7 @@ const cardVariants = ['default', 'steel', 'default'] as const;
 
 <section
   id={id}
-  class:list={['purchase-info section-spacing', className]}
+  class:list={['purchase-info section-spacing section-spacing-chapter', className]}
   aria-labelledby={titleId}
 >
   <div class="purchase-info-bg" aria-hidden="true"></div>
@@ -165,6 +166,7 @@ const cardVariants = ['default', 'steel', 'default'] as const;
     position: relative;
     isolation: isolate;
     overflow: hidden;
+    padding-bottom: clamp(2rem, 3.5vw, 3.5rem);
   }
 
   .purchase-info-bg {

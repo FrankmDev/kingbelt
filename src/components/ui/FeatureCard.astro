@@ -1,11 +1,12 @@
 ---
 import Icon from './Icon.astro';
+import type { IconName } from './icon-paths';
 
 interface Props {
   eyebrow?: string;
   title: string;
   description?: string;
-  icon?: string;
+  icon?: IconName;
   number?: string;
   meta?: string;
   href?: string;

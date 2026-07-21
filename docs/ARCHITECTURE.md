@@ -4,8 +4,9 @@ Lee este archivo para arquitectura de páginas, componentización, datos, estilo
 
 ## Stack y criterio base
 
-- Astro 6 y TypeScript estricto.
+- Astro 7.1, Vite 8 y TypeScript estricto.
 - Tailwind CSS 4 junto al sistema CSS propio.
+- Bun como único gestor de paquetes.
 - Renderizado estático por defecto.
 - GSAP disponible, reservado para motion complejo que CSS no resuelva bien.
 - `src/styles/global.css` como entrada global y fuente de tokens.
@@ -18,10 +19,14 @@ Usa Astro y HTML nativo para contenido y UI estática. Añade JavaScript cliente
 src/
   components/
     layout/       # cabecera, pie y estructura global
+    common/       # infraestructura editorial compartida
     ui/           # primitivas visuales reutilizables
-    sections/     # secciones reutilizables de página
+    museum/       # documentación ejecutable del sistema visual
     blog/         # composición específica del dominio editorial
-    contact/      # composición específica de contacto, si crece
+    sections/
+      home/       # composición de portada
+      about/      # composición corporativa
+      contact/    # composición de contacto
     product/      # ficha de producto: galería y compra
     collection/   # catálogo de categoría: grid, tarjetas y filtros
     cart/         # cajón (drawer) y disparador del carrito local
@@ -32,10 +37,14 @@ src/
   layouts/
   pages/          # rutas; coordinan datos y componentes
   scripts/        # inicialización cliente global (p. ej. carrito)
-  styles/global.css
+  styles/
+    global.css    # tokens, base y patrones compartidos
+    cart.css      # excepción de dominio del carrito
 ```
 
 La estructura es una guía, no un motivo para crear carpetas vacías. Coloca cada pieza en el nivel más pequeño que refleje su responsabilidad real.
+
+`astro.config.mjs` mantiene `compressHTML: true` para conservar el tratamiento de espacios de Astro 6 y `fetchFile: null` para no activar Advanced Routing. El proyecto no usa adapter, SSR ni flags experimentales.
 
 ## Responsabilidades
 

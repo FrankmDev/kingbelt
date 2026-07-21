@@ -3,7 +3,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import Header from '../components/layout/Header.astro';
 import Button from '../components/ui/Button.astro';
 import Icon from '../components/ui/Icon.astro';
-import MuseumSection from '../components/common/MuseumSection.astro';
+import MuseumSection from '../components/museum/MuseumSection.astro';
 import ButtonShowcase from '../components/museum/ButtonShowcase.astro';
 import IconShowcase from '../components/museum/IconShowcase.astro';
 import SectionHeaderShowcase from '../components/museum/SectionHeaderShowcase.astro';
@@ -101,7 +101,7 @@ const navItems = [
     <ButtonShowcase />
   </MuseumSection>
 
-  <MuseumSection id="icons" title="Icon.astro" subtitle="20 SVG icons estilo Lucide" tone="alt">
+  <MuseumSection id="icons" title="Icon.astro" subtitle="Catálogo SVG del sistema" tone="alt">
     <IconShowcase />
   </MuseumSection>
 
@@ -190,7 +190,7 @@ const navItems = [
   </div>
 </BaseLayout>
 
-<style is:global>
+<style>
   .scrollbar-none::-webkit-scrollbar {
     display: none;
   }

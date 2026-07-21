@@ -16,11 +16,6 @@ interface Props {
 }
 
 const { class: className = '', connected = false } = Astro.props;
-
-const contactIcons: Record<string, string> = {
-  Email: 'mail',
-  Instagram: 'instagram',
-};
 ---
 
 <footer
@@ -167,7 +162,7 @@ const contactIcons: Record<string, string> = {
                 class="footer-contact-card group flex items-center gap-3 rounded-[var(--kb-radius-xs)] border border-king-border/30 bg-king-surface/60 px-3 py-2.5 transition-[border-color,box-shadow,transform,background-color] duration-[var(--kb-dur-med)] hover:border-king-accent/35 hover:bg-king-surface hover:shadow-[0_10px_28px_rgba(138,90,43,0.07)]"
               >
                 <span class="footer-contact-icon flex h-8 w-8 shrink-0 items-center justify-center rounded-[var(--kb-radius-xs)] border border-king-border/35 bg-king-bg text-king-muted/70 transition-[border-color,color,transform] duration-[var(--kb-dur-med)] group-hover:border-king-accent/40 group-hover:text-king-accent">
-                  <Icon name={contactIcons[item.label] ?? 'mail'} class="h-3.5 w-3.5" />
+                  <Icon name={item.icon} class="h-3.5 w-3.5" />
                 </span>
                 <span class="min-w-0">
                   <span class="mb-0.5 block text-[var(--kb-text-2xs)] font-medium uppercase tracking-[0.14em] text-king-muted/60 transition-colors duration-[var(--kb-dur-med)] group-hover:text-king-accent">

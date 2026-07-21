@@ -1,7 +1,7 @@
 ---
-import Button from '../ui/Button.astro';
-import Icon from '../ui/Icon.astro';
-import SectionHeader from '../common/SectionHeader.astro';
+import SectionHeader from '../../common/SectionHeader.astro';
+import Button from '../../ui/Button.astro';
+import Icon from '../../ui/Icon.astro';
 
 interface Props {
   id?: string;
@@ -91,7 +91,8 @@ const titleId = `${id}-title`;
 
 <style>
   .contact-email-banner {
-    padding-block: var(--kb-space-section-lg);
+    padding-top: var(--kb-space-section);
+    padding-bottom: clamp(1.75rem, 3vw, 2.75rem);
     background: var(--color-king-bg);
   }
 

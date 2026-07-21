@@ -1,15 +1,9 @@
 ---
-interface Props {
-  href?: string;
+interface BaseProps {
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'surface' | 'surfaceOutline';
   size?: 'sm' | 'md' | 'lg';
   class?: string;
   id?: string;
-  name?: string;
-  form?: string;
-  target?: string;
-  rel?: string;
-  type?: 'button' | 'submit' | 'reset';
   disabled?: boolean;
   loading?: boolean;
   title?: string;
@@ -17,11 +11,31 @@ interface Props {
   'aria-describedby'?: string;
 }
 
+interface LinkProps extends BaseProps {
+  href: string;
+  target?: string;
+  rel?: string;
+  type?: never;
+  name?: never;
+  form?: never;
+}
+
+interface ButtonProps extends BaseProps {
+  href?: undefined;
+  target?: never;
+  rel?: never;
+  type?: 'button' | 'submit' | 'reset';
+  name?: string;
+  form?: string;
+}
+
+type Props = LinkProps | ButtonProps;
+
 const {
   href,
   variant = 'primary',
   size = 'md',
-  class: className = '',
+  class: className,
   target,
   rel,
   type = 'button',
@@ -31,7 +45,7 @@ const {
   ...rest
 } = Astro.props;
 
-const btnVariants: Record<NonNullable<Props['variant']>, string> = {
+const btnVariants: Record<NonNullable<BaseProps['variant']>, string> = {
   primary: 'kb-btn-primary',
   secondary: 'kb-btn-secondary',
   outline: 'kb-btn-outline',
@@ -40,23 +54,11 @@ const btnVariants: Record<NonNullable<Props['variant']>, string> = {
   surfaceOutline: 'kb-btn-surface-outline',
 };
 
-const btnSizes: Record<NonNullable<Props['size']>, string> = {
+const btnSizes: Record<NonNullable<BaseProps['size']>, string> = {
   sm: 'kb-btn-sm',
   md: 'kb-btn-md',
   lg: 'kb-btn-lg',
 };
-
-const classes = [
-  'kb-btn',
-  'group',
-  btnSizes[size],
-  btnVariants[variant],
-  disabled && 'kb-btn-disabled',
-  loading && 'kb-btn-loading',
-  className,
-]
-  .filter(Boolean)
-  .join(' ');
 
 const Element = href ? 'a' : 'button';
 const isInactive = disabled || loading;
@@ -76,7 +78,15 @@ const elementProps = href
 ---
 
 <Element
-  class={classes}
+  class:list={[
+    'kb-btn',
+    'group',
+    btnSizes[size],
+    btnVariants[variant],
+    disabled && 'kb-btn-disabled',
+    loading && 'kb-btn-loading',
+    className,
+  ]}
   {...elementProps}
   {...rest}
   aria-label={ariaLabel}

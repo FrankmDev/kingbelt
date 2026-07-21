@@ -4,12 +4,13 @@ import Eyebrow from './Eyebrow.astro';
 import FormField from './FormField.astro';
 import Icon from './Icon.astro';
 import Tag from './Tag.astro';
+import type { IconName } from './icon-paths';
 
 interface FAQItem {
   question: string;
   answer: string;
   category: string;
-  icon: string;
+  icon: IconName;
 }
 
 interface FAQCTA {
@@ -432,7 +433,7 @@ const counts = items.reduce<Record<string, number>>((acc, item) => {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23a67c4e' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.3-4.3'/%3E%3C/svg%3E");
   }
 
-  .faq-section--dark   .faq-search :global(.kb-input)::placeholder {
+  .faq-section--dark .faq-search :global(.kb-input)::placeholder {
     color: rgba(255, 255, 255, 0.35);
   }
 

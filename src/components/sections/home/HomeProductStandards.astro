@@ -1,68 +1,46 @@
 ---
-import SectionHeader from '../common/SectionHeader.astro';
-import MediaFrame from '../ui/MediaFrame.astro';
-import type { AboutReadingLayer } from '../../data/about';
+import SectionHeaderHome from './SectionHeaderHome.astro';
+import MediaFrame from '../../ui/MediaFrame.astro';
+import { standardsSection } from '../../../data/home';
 
-interface DirectionPanel {
-  eyebrow: string;
-  statement: string;
-  layers: readonly AboutReadingLayer[];
-}
-
-interface DirectionData {
-  eyebrow: string;
-  title: string;
-  lede: string;
-  panel: DirectionPanel;
-  image: string;
-  imageAlt: string;
-  imageLabel: string;
-  imageCaption: string;
-}
-
-interface Props {
-  data: DirectionData;
-  class?: string;
-}
-
-const { data, class: className = '' } = Astro.props;
-const { panel } = data;
-const layerCount = panel.layers.length;
+const { panel, principles } = standardsSection;
+const layerCount = principles.length;
 ---
 
 <section
-  class:list={['about-direction section-spacing about-direction--chapter-start', className]}
-  aria-labelledby="about-direction-title"
+  id="criterio"
+  class="home-standards section-spacing section-spacing-chapter"
+  aria-labelledby="home-standards-title"
 >
   <div class="kb-shell-wide section-stack-lg">
-    <SectionHeader
-      eyebrow={data.eyebrow}
-      body={data.lede}
-      meta="Material / Proporción / Cierre"
+    <SectionHeaderHome
+      index={standardsSection.index}
+      eyebrow={standardsSection.eyebrow}
+      body={standardsSection.lede}
+      meta={standardsSection.meta}
+      class="home-standards__header"
     >
       <Fragment slot="title">
-        <span id="about-direction-title" set:html={data.title} />
+        <span id="home-standards-title" set:html={standardsSection.title} />
       </Fragment>
-    </SectionHeader>
+    </SectionHeaderHome>
 
-    <div class="about-direction-layout">
+    <div class="home-standards__layout">
       <MediaFrame
-        src={data.image}
-        alt={data.imageAlt}
+        src={standardsSection.image}
+        alt={standardsSection.imageAlt}
         ratio="4/3"
-        label={data.imageLabel}
-        caption={data.imageCaption}
-        captionNumber="02"
+        label={standardsSection.imageLabel}
+        caption={standardsSection.imageCaption}
+        captionNumber="01"
+        imagePosition="center 58%"
         width={1600}
         height={1200}
         loading="lazy"
-        class="about-direction-media"
+        class="home-standards__media"
       />
 
-      <aside
-        class="kb-reading-panel"
-        aria-labelledby="about-direction-panel-title"
-      >
+      <aside class="kb-reading-panel" aria-labelledby="home-standards-panel-title">
         <header class="kb-reading-panel__head">
           <div class="kb-reading-panel__head-bar">
             <p class="kb-eyebrow kb-eyebrow-lined kb-reading-panel__eyebrow">
@@ -73,13 +51,13 @@ const layerCount = panel.layers.length;
             </span>
           </div>
 
-          <p id="about-direction-panel-title" class="kb-reading-panel__statement">
+          <p id="home-standards-panel-title" class="kb-reading-panel__statement">
             {panel.statement}
           </p>
         </header>
 
         <ol class="kb-reading-panel__layers">
-          {panel.layers.map((layer, index) => (
+          {principles.map((layer, index) => (
             <li class="kb-reading-panel__layer">
               <div class="kb-reading-panel__rail" aria-hidden="true">
                 <span class="kb-reading-panel__num">{layer.number}</span>
@@ -109,15 +87,15 @@ const layerCount = panel.layers.length;
 </section>
 
 <style>
-  .about-direction {
+  .home-standards {
     background: var(--color-king-surface);
   }
 
-  .about-direction--chapter-start {
-    padding-top: clamp(4.25rem, 7.5vw, 6.5rem);
+  .home-standards__header:global(.section-header-home) .shh-body {
+    max-width: 42ch;
   }
 
-  .about-direction-layout {
+  .home-standards__layout {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
     gap: var(--kb-space-gap-lg);
@@ -125,7 +103,7 @@ const layerCount = panel.layers.length;
   }
 
   @media (min-width: 64rem) {
-    .about-direction-layout {
+    .home-standards__layout {
       grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
       align-items: stretch;
     }
@@ -134,7 +112,7 @@ const layerCount = panel.layers.length;
       height: 100%;
     }
 
-    :global(.about-direction-media.media-frame) {
+    .home-standards__media:global(.media-frame) {
       height: 100%;
       min-height: 0;
       aspect-ratio: auto;

@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import '../styles/cart.css';
 import { site } from '../data/site';
 import ScrollReveal from '../components/common/ScrollReveal.astro';
 
@@ -21,7 +22,8 @@ const {
   ogType = 'website',
 } = Astro.props;
 
-const schemaScript = schema ? JSON.stringify(schema) : null;
+// Evita cerrar prematuramente el script si el contenido futuro procede de un CMS/Shopify.
+const schemaScript = schema ? JSON.stringify(schema).replace(/</g, '\\u003c') : null;
 const ogImageUrl = new URL(image, Astro.site || Astro.url).href;
 ---
 
@@ -38,6 +40,7 @@ const ogImageUrl = new URL(image, Astro.site || Astro.url).href;
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="format-detection" content="telephone=no" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
 
     {/* Fonts: Satoshi (sans) + Bitter (slab serif) */}
     <link rel="preconnect" href="https://api.fontshare.com" crossorigin />

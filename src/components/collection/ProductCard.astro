@@ -63,7 +63,7 @@ const folio = String(index + 1).padStart(2, '0');
     <div class="product-card__stitch kb-stitch-line" aria-hidden="true" />
 
     <div class="product-card__foot">
-      <span class="product-card__price">{priceLabel}</span>
+      <span class="product-card__price font-display">{priceLabel}</span>
       <span class="product-card__ref kb-code-label text-king-muted">{ref}</span>
     </div>
   </div>
@@ -86,7 +86,7 @@ const folio = String(index + 1).padStart(2, '0');
     overflow: hidden;
     aspect-ratio: 4 / 5;
     border: 1px solid var(--kb-stroke-hairline);
-    border-radius: var(--kb-radius-xs);
+    border-radius: var(--kb-radius-sm);
     background: var(--color-king-bone);
     transition: border-color var(--kb-dur-med) var(--kb-ease-out);
   }
@@ -110,6 +110,7 @@ const folio = String(index + 1).padStart(2, '0');
     width: 100%;
     height: 100%;
     object-fit: cover;
+    border-radius: inherit;
     filter: saturate(0.92) contrast(1.03);
     transform: translateZ(0);
     transition: transform var(--kb-dur-slow) var(--kb-ease-soft);
@@ -166,7 +167,7 @@ const folio = String(index + 1).padStart(2, '0');
     -webkit-backdrop-filter: blur(6px);
     font-size: var(--kb-text-xs);
     font-weight: var(--kb-w-medium);
-    letter-spacing: 0.14em;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
     color: var(--color-king-bone);
     transform: translateY(0.35rem);
@@ -201,29 +202,32 @@ const folio = String(index + 1).padStart(2, '0');
     display: flex;
     flex: 1;
     flex-direction: column;
+    gap: var(--kb-space-2);
     min-width: 0;
     padding-top: var(--kb-space-4);
   }
 
   .product-card__meta {
-    margin: 0 0 var(--kb-space-2);
+    margin: 0;
+    letter-spacing: 0.17em;
   }
 
   .product-card__name {
-    margin: 0 0 var(--kb-space-2);
-    font-size: clamp(1.125rem, 1rem + 0.6vw, 1.5rem);
+    margin: 0;
+    font-size: clamp(1.0625rem, 0.98rem + 0.45vw, 1.4375rem);
     font-weight: var(--kb-w-heading-light);
-    line-height: 1.06;
-    letter-spacing: -0.018em;
+    line-height: 1.08;
+    letter-spacing: -0.02em;
     text-wrap: balance;
     color: var(--color-king-text);
     transition: color var(--kb-dur-med) var(--kb-ease-out);
   }
 
   .product-card__excerpt {
-    margin: 0 0 var(--kb-space-4);
+    margin: 0;
     font-size: var(--kb-text-sm);
-    line-height: 1.55;
+    line-height: 1.52;
+    color: color-mix(in srgb, var(--color-king-muted) 92%, var(--color-king-text));
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
@@ -231,25 +235,35 @@ const folio = String(index + 1).padStart(2, '0');
   }
 
   .product-card__stitch {
-    width: 100%;
+    width: 2.75rem;
     height: 1px;
-    margin: auto 0 var(--kb-space-3);
+    margin: var(--kb-space-2) 0 var(--kb-space-1);
   }
 
   .product-card__foot {
     display: flex;
-    align-items: baseline;
+    align-items: center;
     justify-content: space-between;
     gap: var(--kb-space-3);
+    margin-top: auto;
+    padding-top: var(--kb-space-1);
   }
 
   .product-card__price {
-    font-family: var(--font-sans);
-    font-size: var(--kb-text-body-lg);
-    font-weight: var(--kb-w-semibold);
-    letter-spacing: 0.01em;
+    font-size: clamp(1.1875rem, 1.05rem + 0.35vw, 1.375rem);
+    font-weight: var(--kb-w-heading-light);
+    line-height: 1;
+    letter-spacing: -0.015em;
     font-variant-numeric: tabular-nums;
     color: var(--color-king-text);
+    transition: color var(--kb-dur-med) var(--kb-ease-out);
+  }
+
+  .product-card__ref {
+    font-size: var(--kb-text-xs);
+    letter-spacing: 0.12em;
+    opacity: 0.72;
+    transition: opacity var(--kb-dur-fast) var(--kb-ease-out);
   }
 
   /* ---------- Responsive ---------- */
@@ -257,12 +271,25 @@ const folio = String(index + 1).padStart(2, '0');
   @media (min-width: 40rem) {
     .product-card__info {
       padding-top: var(--kb-space-5);
+      gap: var(--kb-space-3);
+    }
+
+    .product-card__stitch {
+      margin: var(--kb-space-3) 0 var(--kb-space-2);
     }
   }
 
   @media (max-width: 47.99rem) {
     .product-card__excerpt {
       display: none;
+    }
+
+    .product-card__info {
+      gap: var(--kb-space-1);
+    }
+
+    .product-card__stitch {
+      margin-top: var(--kb-space-1);
     }
   }
 
@@ -296,12 +323,16 @@ const folio = String(index + 1).padStart(2, '0');
     .product-card:hover .product-card__name {
       color: var(--color-king-accent);
     }
+
+    .product-card:hover .product-card__ref {
+      opacity: 1;
+    }
   }
 
   .product-card:focus-visible {
     outline: 2px solid var(--color-king-accent);
     outline-offset: 4px;
-    border-radius: var(--kb-radius-xs);
+    border-radius: var(--kb-radius-sm);
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -312,7 +343,9 @@ const folio = String(index + 1).padStart(2, '0');
     .product-card__cta,
     .product-card__cta-icon,
     .product-card__media-line,
-    .product-card__name {
+    .product-card__name,
+    .product-card__price,
+    .product-card__ref {
       transition: none;
     }
 

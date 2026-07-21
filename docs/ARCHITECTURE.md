@@ -22,16 +22,16 @@ src/
     sections/     # secciones reutilizables de página
     blog/         # composición específica del dominio editorial
     contact/      # composición específica de contacto, si crece
-    product/      # futuro
-    collection/   # futuro
-    cart/         # futuro
+    product/      # ficha de producto: galería y compra
+    collection/   # catálogo de categoría: grid, tarjetas y filtros
+    cart/         # cajón (drawer) y disparador del carrito local
   data/           # contenido/configuración local tipada
   lib/
-    commerce/     # tipos, adaptadores y mappers de comercio
-    seo.ts
-    utils.ts
+    commerce/     # dominio neutral, proveedor activo y adaptador local
+    dom/          # utilidades cliente compartidas (scroll y estados de botón)
   layouts/
   pages/          # rutas; coordinan datos y componentes
+  scripts/        # inicialización cliente global (p. ej. carrito)
   styles/global.css
 ```
 
@@ -72,11 +72,27 @@ Flujo previsto:
 
 ```txt
 pages / components
-  → src/lib/commerce/
-  → implementación local o Shopify Storefront API
+  → cart-client.ts (estado observable de UI)
+  → provider.ts (selección de implementación)
+  → local-provider.ts ahora / adaptador Shopify después
 ```
 
-Los componentes no llaman a Shopify. La capa de comercio normaliza respuestas externas al modelo genérico del proyecto. Mantén contenido/configuración global en `src/data/` cuando evite duplicación y no mezcles transformación de datos con presentación.
+`src/lib/commerce/provider.ts` es el punto único de sustitución. Los componentes consumen el contrato `CommerceProvider` de `types.ts`; no importan tipos, respuestas ni clientes de Shopify. El proveedor local resuelve siempre producto, precio, URL, imagen y stock desde el catálogo tipado. `localStorage` conserva únicamente identificadores de producto, color, talla y cantidad bajo un esquema versionado y limitado; nunca es autoridad para precio, disponibilidad ni checkout.
+
+Al conectar Shopify:
+
+- normaliza `Money`, producto, variante y líneas dentro del adaptador;
+- conserva las credenciales privadas y tokens no públicos exclusivamente en código servidor mediante `astro:env/server`;
+- no pases secretos por `PUBLIC_*`, `define:vars`, HTML, atributos `data-*`, eventos DOM ni almacenamiento del navegador;
+- si la operación requiere un secreto, añade primero un adapter de despliegue y una frontera servidor; el build estático actual no puede custodiarlo;
+- devuelve la URL de checkout junto con una lista exacta de hosts permitidos; la UI exige HTTPS, sin credenciales embebidas ni hosts por sufijo;
+- considera todo precio, stock y cantidad enviados por el navegador datos no confiables y vuelve a validarlos antes de crear o actualizar el carrito remoto.
+
+La política de referrer se define en `BaseLayout.astro`. Cuando se conozca el hosting, configura allí —como cabeceras HTTP y no como una falsa garantía dentro del cliente— CSP, HSTS, `X-Content-Type-Options`, `Permissions-Policy` y la política de framing. La CSP debe inventariar primero los scripts y las fuentes externas reales del proyecto.
+
+Los scripts interactivos dentro de `src/` deben mantenerse procesados por Astro para obtener bundling, TypeScript y deduplicación. No uses `define:vars` en un script que importe módulos: pasa únicamente identificadores públicos mediante el HTML y resuélvelos contra el proveedor.
+
+Mantén contenido/configuración global en `src/data/` cuando evite duplicación y no mezcles transformación de datos con presentación.
 
 ## CSS y sistema global
 
@@ -129,9 +145,10 @@ Promueve un patrón a global o a componente cuando se repita con la misma intenc
 
 Según el cambio:
 
-1. `npm run check` para tipos y diagnósticos Astro.
-2. `npm run build` para cambios estructurales, rutas, datos o integración.
-3. Inspección visual de móvil y escritorio para UI.
-4. Comprobación de overflow, focus, reduced motion, estados hover/active/disabled y contenido largo cuando apliquen.
+1. `bun run check` para tipos y diagnósticos Astro.
+2. `bun run test` para contratos de comercio y persistencia.
+3. `bun run build` para cambios estructurales, rutas, datos o integración.
+4. Inspección visual de móvil y escritorio para UI.
+5. Comprobación de overflow, focus, reduced motion, estados hover/active/disabled y contenido largo cuando apliquen.
 
 No declares completada una tarea si el check relevante falla por tus cambios. Distingue claramente errores previos del proyecto.

@@ -1,0 +1,73 @@
+---
+import Icon from '../ui/Icon.astro';
+---
+
+<a
+  href="/carrito"
+  class="cart-trigger"
+  data-cart-drawer-open
+  data-cart-count-wrapper
+  aria-label="Carrito vacío"
+>
+  <Icon name="shopping-bag" class="cart-trigger__icon h-[1.125rem] w-[1.125rem]" strokeWidth={1.7} />
+  <span class="cart-trigger__count" data-cart-count aria-hidden="true"></span>
+</a>
+
+<style>
+  .cart-trigger {
+    position: relative;
+    display: inline-grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border: 1px solid transparent;
+    border-radius: var(--kb-radius-xs);
+    color: inherit;
+    text-decoration: none;
+    transition:
+      border-color var(--kb-dur-fast) var(--kb-ease-out),
+      color var(--kb-dur-fast) var(--kb-ease-out),
+      background-color var(--kb-dur-fast) var(--kb-ease-out);
+  }
+
+  .cart-trigger:hover {
+    border-color: currentColor;
+    opacity: 0.9;
+  }
+
+  .cart-trigger:focus-visible {
+    outline: 2px solid var(--color-king-accent);
+    outline-offset: 3px;
+  }
+
+  .cart-trigger__count {
+    position: absolute;
+    top: 0.2rem;
+    right: 0.15rem;
+    min-width: 1.125rem;
+    height: 1rem;
+    padding: 0 0.22rem;
+    border-radius: var(--kb-radius-pill);
+    font-size: 0.5625rem;
+    font-weight: var(--kb-w-semibold);
+    line-height: 1rem;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    color: var(--color-king-bg);
+    background: var(--color-king-accent);
+    opacity: 0;
+    transform: scale(0.85);
+    transition:
+      opacity var(--kb-dur-fast) var(--kb-ease-out),
+      transform var(--kb-dur-fast) var(--kb-ease-out);
+  }
+
+  .cart-trigger__count:not(:empty) {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .cart-trigger__count[aria-hidden='true']:empty {
+    opacity: 0;
+  }
+</style>

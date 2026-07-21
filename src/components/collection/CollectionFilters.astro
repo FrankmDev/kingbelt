@@ -127,8 +127,8 @@ const getSwatchStyle = (color: string) => {
                 >
                   {group.items.map((facet, index) => {
                     const inputId = `${idPrefix}-${group.id}-${index}`;
-                    const facetValue = 'value' in facet ? facet.value : facet.label;
-                    const facetCount = 'count' in facet ? facet.count : null;
+                    const facetValue = facet.value;
+                    const facetCount = facet.count;
 
                     return (
                       <li class="collection-filters__option">

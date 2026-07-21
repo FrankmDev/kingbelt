@@ -1,0 +1,296 @@
+---
+import type { GetStaticPaths } from 'astro';
+import ProductCard from '../../components/collection/ProductCard.astro';
+import FooterSection from '../../components/layout/FooterSection.astro';
+import Header from '../../components/layout/Header.astro';
+import ProductAddToCart from '../../components/product/ProductAddToCart.astro';
+import ProductGallery from '../../components/product/ProductGallery.astro';
+import Breadcrumbs from '../../components/ui/Breadcrumbs.astro';
+import {
+  getAllProductDetails,
+  getProductCategory,
+  getRelatedProducts,
+  type ProductDetail,
+} from '../../data/catalog';
+import { site } from '../../data/site';
+import { isProductPurchasable } from '../../lib/commerce/inventory';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+export const getStaticPaths = (() =>
+  getAllProductDetails().map((product) => ({
+    params: { slug: product.slug },
+    props: { product },
+  }))) satisfies GetStaticPaths;
+
+interface Props {
+  product: ProductDetail;
+}
+
+const { product } = Astro.props;
+const category = getProductCategory(product);
+const related = getRelatedProducts(product, 4);
+const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href;
+const purchasable = isProductPurchasable(
+  product.id,
+  product.colorOptions.map((option) => option.name),
+  product.sizes
+);
+
+const breadcrumbs = [
+  { label: 'Colección', href: '/#coleccion' },
+  ...(category ? [{ label: category.name, href: category.href }] : []),
+  { label: product.name },
+];
+
+const productSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Product',
+  name: product.name,
+  description: product.description,
+  image: new URL(product.image, Astro.site ?? Astro.url.origin).href,
+  sku: product.id.toUpperCase(),
+  brand: { '@type': 'Brand', name: site.name },
+  offers: {
+    '@type': 'Offer',
+    price: product.price,
+    priceCurrency: product.currency,
+    availability: purchasable
+      ? 'https://schema.org/InStock'
+      : 'https://schema.org/OutOfStock',
+    url: canonicalURL,
+  },
+};
+---
+
+<BaseLayout
+  title={`${product.name} — KingBelt`}
+  description={product.excerpt}
+  image={product.image}
+  canonicalURL={canonicalURL}
+  schema={productSchema}
+>
+  <Header slot="header" initialTheme="light" scrolledTheme="light" compactThreshold={32} />
+
+  <article class="pdp" data-product-page>
+    <div class="pdp__head kb-shell-wide">
+      <Breadcrumbs items={breadcrumbs} />
+    </div>
+
+    <div class="pdp__main kb-shell-wide">
+      <div class="pdp__gallery">
+        <ProductGallery images={product.gallery} idPrefix={product.slug} />
+      </div>
+
+      <div class="pdp__buy">
+        <header class="pdp__title-block">
+          <p class="pdp__eyebrow kb-eyebrow text-king-accent">
+            {product.category} · {product.subcategory}
+          </p>
+          <h1 class="pdp__title font-display">{product.name}</h1>
+          <p class="pdp__ref kb-code-label text-king-muted">{product.id.toUpperCase()}</p>
+          <p class="pdp__excerpt text-king-muted">{product.excerpt}</p>
+        </header>
+
+        <ProductAddToCart product={product} purchasable={purchasable} />
+
+        <dl class="pdp__specs">
+          {product.specs.map((spec) => (
+            <div class="pdp__spec">
+              <dt class="pdp__spec-label kb-meta-label text-king-muted">{spec.label}</dt>
+              <dd class="pdp__spec-value">{spec.value}</dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+    </div>
+
+    <section class="pdp__description kb-shell-copy" aria-labelledby="pdp-description-title">
+      <h2 id="pdp-description-title" class="pdp__section-title font-display">Descripción</h2>
+      <p class="pdp__description-text text-king-muted">{product.description}</p>
+    </section>
+
+    {related.length > 0 && (
+      <section class="pdp__related" aria-labelledby="pdp-related-title">
+        <div class="pdp__related-inner kb-shell-wide">
+          <div class="pdp__related-head">
+            <h2 id="pdp-related-title" class="pdp__section-title font-display">También en {product.category}</h2>
+            {category && (
+              <a href={category.href} class="pdp__related-link kb-meta-label text-king-accent">
+                Ver categoría
+              </a>
+            )}
+          </div>
+
+          <div class="pdp__related-grid">
+            {related.map((item, index) => (
+              <ProductCard product={item} index={index} />
+            ))}
+          </div>
+        </div>
+      </section>
+    )}
+  </article>
+
+  <FooterSection slot="footer" connected />
+</BaseLayout>
+
+<style>
+  .pdp {
+    padding-top: clamp(7.5rem, 10vw, 9.5rem);
+    padding-bottom: var(--kb-space-12);
+  }
+
+  .pdp__head {
+    padding-bottom: var(--kb-space-6);
+  }
+
+  .pdp__title-block {
+    display: grid;
+    gap: var(--kb-space-3);
+    min-width: 0;
+  }
+
+  .pdp__eyebrow {
+    margin: 0;
+  }
+
+  .pdp__title {
+    margin: 0;
+    font-size: clamp(1.875rem, 1.4rem + 1.8vw, 2.75rem);
+    font-weight: var(--kb-w-heading-light);
+    line-height: 0.98;
+    letter-spacing: -0.03em;
+    text-wrap: balance;
+    color: var(--color-king-text);
+  }
+
+  .pdp__ref {
+    margin: 0;
+  }
+
+  .pdp__excerpt {
+    margin: 0;
+    max-width: 48ch;
+    font-size: var(--kb-text-body);
+    line-height: 1.65;
+    text-wrap: pretty;
+  }
+
+  .pdp__main {
+    display: grid;
+    gap: var(--kb-space-8);
+    align-items: start;
+    padding-bottom: var(--kb-space-10);
+  }
+
+  .pdp__gallery,
+  .pdp__buy {
+    min-width: 0;
+  }
+
+  .pdp__buy {
+    display: grid;
+    gap: var(--kb-space-6);
+    align-content: start;
+  }
+
+  .pdp__specs {
+    display: grid;
+    gap: var(--kb-space-3);
+    margin: var(--kb-space-6) 0 0;
+    padding: var(--kb-space-5) 0 0;
+    border-top: 1px solid var(--kb-stroke-hairline);
+  }
+
+  .pdp__spec {
+    display: grid;
+    grid-template-columns: minmax(0, 8rem) minmax(0, 1fr);
+    gap: var(--kb-space-4);
+    align-items: baseline;
+    min-width: 0;
+  }
+
+  .pdp__spec-label,
+  .pdp__spec-value {
+    margin: 0;
+    min-width: 0;
+  }
+
+  .pdp__spec-value {
+    font-size: var(--kb-text-sm);
+    line-height: 1.5;
+    color: var(--color-king-text);
+  }
+
+  .pdp__description {
+    padding-block: var(--kb-space-8);
+    border-top: 1px solid var(--kb-stroke-hairline);
+  }
+
+  .pdp__section-title {
+    margin: 0 0 var(--kb-space-4);
+    font-size: clamp(1.375rem, 1.1rem + 0.8vw, 1.75rem);
+    font-weight: var(--kb-w-heading-light);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+  }
+
+  .pdp__description-text {
+    margin: 0;
+    max-width: 62ch;
+    font-size: var(--kb-text-body);
+    line-height: 1.7;
+    text-wrap: pretty;
+  }
+
+  .pdp__related {
+    padding-top: var(--kb-space-8);
+    border-top: 1px solid var(--kb-stroke-hairline);
+  }
+
+  .pdp__related-inner {
+    display: grid;
+    gap: var(--kb-space-6);
+  }
+
+  .pdp__related-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--kb-space-4);
+  }
+
+  .pdp__related-link {
+    text-decoration: none;
+    transition: opacity var(--kb-dur-fast) var(--kb-ease-out);
+  }
+
+  .pdp__related-link:hover {
+    opacity: 0.8;
+  }
+
+  .pdp__related-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--kb-space-5) var(--kb-space-4);
+  }
+
+  @media (min-width: 48rem) {
+    .pdp__main {
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+      gap: var(--kb-space-10);
+    }
+
+    .pdp__related-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: var(--kb-space-6);
+    }
+  }
+
+  @media (max-width: 47.99rem) {
+    .pdp__related-grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

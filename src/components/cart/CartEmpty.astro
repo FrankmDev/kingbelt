@@ -1,0 +1,117 @@
+---
+import Button from '../ui/Button.astro';
+import Icon from '../ui/Icon.astro';
+
+interface Props {
+  variant?: 'page' | 'drawer';
+}
+
+const { variant = 'page' } = Astro.props;
+const isDrawer = variant === 'drawer';
+---
+
+<div class:list={['cart-empty', isDrawer && 'cart-empty--drawer']} data-cart-empty-region>
+  <div class="cart-empty__icon" aria-hidden="true">
+    <Icon name="shopping-bag" class:list={[isDrawer ? 'h-6 w-6' : 'h-8 w-8']} strokeWidth={1.5} />
+  </div>
+
+  <h2 class:list={['cart-empty__title font-display', isDrawer && 'cart-empty__title--compact']}>
+    Tu carrito está vacío
+  </h2>
+
+  <p class="cart-empty__text text-king-muted">
+    {
+      isDrawer
+        ? 'Añade un producto desde la ficha para verlo aquí.'
+        : 'Aún no has añadido ningún producto. Explora la colección y elige talla y color en la ficha.'
+    }
+  </p>
+
+  <div class="cart-empty__actions">
+    <Button href="/#coleccion" variant="primary" size={isDrawer ? 'sm' : 'md'}>
+      Explorar colección
+    </Button>
+    {!isDrawer && (
+      <Button href="/categorias/vestir" variant="outline" size="md">
+        Ver categoría Vestir
+      </Button>
+    )}
+  </div>
+</div>
+
+<style>
+  .cart-empty {
+    display: grid;
+    gap: var(--kb-space-4);
+    justify-items: start;
+    padding: var(--kb-space-8) 0;
+    min-width: 0;
+  }
+
+  .cart-empty--drawer {
+    gap: var(--kb-space-3);
+    padding: var(--kb-space-4) 0 var(--kb-space-2);
+    justify-items: center;
+    text-align: center;
+  }
+
+  .cart-empty__icon {
+    display: grid;
+    place-items: center;
+    width: 3.5rem;
+    height: 3.5rem;
+    border: 1px solid var(--kb-stroke-hairline);
+    border-radius: var(--kb-radius-sm);
+    color: var(--color-king-muted);
+    background: var(--color-king-bone);
+  }
+
+  .cart-empty--drawer .cart-empty__icon {
+    width: 3rem;
+    height: 3rem;
+  }
+
+  .cart-empty__title {
+    margin: 0;
+    font-size: clamp(1.5rem, 1.2rem + 1vw, 2rem);
+    font-weight: var(--kb-w-heading-light);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    color: var(--color-king-text);
+  }
+
+  .cart-empty__title--compact {
+    font-size: 1.25rem;
+  }
+
+  .cart-empty__text {
+    margin: 0;
+    max-width: 42ch;
+    font-size: var(--kb-text-body);
+    line-height: 1.65;
+    text-wrap: pretty;
+  }
+
+  .cart-empty--drawer .cart-empty__text {
+    font-size: var(--kb-text-sm);
+    max-width: 28ch;
+  }
+
+  .cart-empty__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--kb-space-3);
+    padding-top: var(--kb-space-2);
+  }
+
+  .cart-empty--drawer .cart-empty__actions {
+    justify-content: center;
+    width: 100%;
+    padding-top: 0;
+  }
+
+  .cart-empty--drawer .cart-empty__actions :global(.kb-btn) {
+    width: 100%;
+    justify-content: center;
+  }
+</style>

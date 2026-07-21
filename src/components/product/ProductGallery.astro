@@ -1,0 +1,169 @@
+---
+import type { ProductGalleryImage } from '../../data/catalog';
+
+interface Props {
+  images: ProductGalleryImage[];
+  /** Prefijo único para name/ids del grupo de radios (p. ej. slug del producto). */
+  idPrefix: string;
+  class?: string;
+}
+
+const { images, idPrefix, class: className } = Astro.props;
+
+const groupName = `gallery-${idPrefix}`;
+---
+
+<div class:list={['product-gallery', className]} data-product-gallery>
+  {images.map((_, index) => (
+    <input
+      type="radio"
+      class:list={['product-gallery__input', `product-gallery__input--${index + 1}`, 'sr-only']}
+      id={`${groupName}-${index + 1}`}
+      name={groupName}
+      checked={index === 0}
+      aria-label={`Ver imagen ${index + 1} de ${images.length}`}
+    />
+  ))}
+
+  <div class="product-gallery__stage">
+    {images.map((image, index) => (
+      <img
+        src={image.src}
+        alt={image.alt}
+        width="960"
+        height="1200"
+        class:list={['product-gallery__slide', `product-gallery__slide--${index + 1}`]}
+        loading={index === 0 ? 'eager' : 'lazy'}
+        fetchpriority={index === 0 ? 'high' : undefined}
+        decoding="async"
+        style={`object-position: ${image.position ?? 'center'}`}
+      />
+    ))}
+  </div>
+
+  <div class="product-gallery__thumbs">
+    {images.map((image, index) => (
+      <label
+        class:list={['product-gallery__thumb', `product-gallery__thumb--${index + 1}`]}
+        for={`${groupName}-${index + 1}`}
+      >
+        <img
+          src={image.src}
+          alt=""
+          width="240"
+          height="300"
+          loading="lazy"
+          decoding="async"
+          aria-hidden="true"
+          style={`object-position: ${image.position ?? 'center'}`}
+        />
+      </label>
+    ))}
+  </div>
+</div>
+
+<style>
+  .product-gallery {
+    display: grid;
+    gap: var(--kb-space-3);
+    min-width: 0;
+    align-content: start;
+  }
+
+  /* ---------- Imagen principal ---------- */
+
+  .product-gallery__stage {
+    position: relative;
+    overflow: hidden;
+    aspect-ratio: 4 / 5;
+    border: 1px solid var(--kb-stroke-hairline);
+    border-radius: var(--kb-radius-sm);
+    background: var(--color-king-bone);
+  }
+
+  .product-gallery__slide {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    filter: saturate(0.92) contrast(1.03);
+    transition: opacity var(--kb-dur-med) var(--kb-ease-out);
+  }
+
+  .product-gallery__input--1:checked ~ .product-gallery__stage .product-gallery__slide--1,
+  .product-gallery__input--2:checked ~ .product-gallery__stage .product-gallery__slide--2,
+  .product-gallery__input--3:checked ~ .product-gallery__stage .product-gallery__slide--3 {
+    opacity: 1;
+  }
+
+  /* ---------- Miniaturas 3×1 ---------- */
+
+  .product-gallery__thumbs {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--kb-space-3);
+  }
+
+  .product-gallery__thumb {
+    position: relative;
+    overflow: hidden;
+    aspect-ratio: 4 / 5;
+    border: 1px solid var(--kb-stroke-hairline);
+    border-radius: var(--kb-radius-xs);
+    background: var(--color-king-bone);
+    cursor: pointer;
+    transition:
+      border-color var(--kb-dur-fast) var(--kb-ease-out),
+      box-shadow var(--kb-dur-fast) var(--kb-ease-out);
+  }
+
+  .product-gallery__thumb img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.7;
+    filter: saturate(0.92) contrast(1.03);
+    transition: opacity var(--kb-dur-fast) var(--kb-ease-out);
+  }
+
+  .product-gallery__input--1:checked ~ .product-gallery__thumbs .product-gallery__thumb--1,
+  .product-gallery__input--2:checked ~ .product-gallery__thumbs .product-gallery__thumb--2,
+  .product-gallery__input--3:checked ~ .product-gallery__thumbs .product-gallery__thumb--3 {
+    border-color: var(--color-king-accent);
+    box-shadow: inset 0 0 0 1px var(--color-king-accent);
+  }
+
+  .product-gallery__input--1:checked ~ .product-gallery__thumbs .product-gallery__thumb--1 img,
+  .product-gallery__input--2:checked ~ .product-gallery__thumbs .product-gallery__thumb--2 img,
+  .product-gallery__input--3:checked ~ .product-gallery__thumbs .product-gallery__thumb--3 img {
+    opacity: 1;
+  }
+
+  .product-gallery__input--1:focus-visible ~ .product-gallery__thumbs .product-gallery__thumb--1,
+  .product-gallery__input--2:focus-visible ~ .product-gallery__thumbs .product-gallery__thumb--2,
+  .product-gallery__input--3:focus-visible ~ .product-gallery__thumbs .product-gallery__thumb--3 {
+    outline: 2px solid var(--color-king-accent);
+    outline-offset: 3px;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .product-gallery__thumb:hover {
+      border-color: var(--kb-stroke-accent);
+    }
+
+    .product-gallery__thumb:hover img {
+      opacity: 1;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .product-gallery__slide,
+    .product-gallery__thumb,
+    .product-gallery__thumb img {
+      transition: none;
+    }
+  }
+</style>

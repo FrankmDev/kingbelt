@@ -1,0 +1,263 @@
+---
+import CartEmpty from '../components/cart/CartEmpty.astro';
+import FooterSection from '../components/layout/FooterSection.astro';
+import Header from '../components/layout/Header.astro';
+import Breadcrumbs from '../components/ui/Breadcrumbs.astro';
+import Button from '../components/ui/Button.astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href;
+
+const cartSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebPage',
+  name: 'Carrito — KingBelt',
+  description: 'Consulta y modifica los productos de tu carrito antes de finalizar la compra.',
+  url: canonicalURL,
+};
+---
+
+<BaseLayout
+  title="Carrito — KingBelt"
+  description="Consulta los productos de tu carrito, modifica cantidades y continúa hacia la compra."
+  canonicalURL={canonicalURL}
+  schema={cartSchema}
+>
+  <Header slot="header" initialTheme="light" scrolledTheme="light" compactThreshold={32} />
+
+  <div class="cart-page" data-cart-page>
+    <div class="cart-page__head kb-shell-wide">
+      <Breadcrumbs items={[{ label: 'Carrito' }]} />
+
+      <div class="cart-page__intro">
+        <h1 class="cart-page__title font-display">Tu carrito</h1>
+        <p class="cart-page__count kb-meta-label text-king-muted" data-cart-page-intro>
+          0 artículos
+        </p>
+      </div>
+
+      <p
+        class="cart-page__status kb-meta-label"
+        data-cart-page-status
+        id="cart-page-status"
+        role="status"
+        aria-live="polite"
+        tabindex="-1"
+        hidden
+      ></p>
+    </div>
+
+    <div class="cart-page__layout kb-shell-wide">
+      <section class="cart-page__lines-section" aria-labelledby="cart-lines-title">
+        <h2 id="cart-lines-title" class="sr-only">Productos en el carrito</h2>
+
+        <div class="cart-page__lines" data-cart-page-lines hidden></div>
+
+        <div data-cart-page-empty>
+          <CartEmpty />
+        </div>
+      </section>
+
+      <aside class="cart-page__summary" data-cart-page-summary hidden aria-labelledby="cart-summary-title">
+        <div class="cart-page__summary-panel">
+          <h2 id="cart-summary-title" class="cart-page__summary-title font-display">Resumen</h2>
+
+          <dl class="cart-page__summary-rows">
+            <div class="cart-page__summary-row">
+              <dt class="kb-meta-label text-king-muted">Artículos</dt>
+              <dd class="cart-page__summary-value" data-cart-page-count>0 artículos</dd>
+            </div>
+            <div class="cart-page__summary-row cart-page__summary-row--total">
+              <dt class="kb-meta-label text-king-muted">Subtotal</dt>
+              <dd class="cart-page__summary-total font-display" data-cart-page-subtotal>0 €</dd>
+            </div>
+          </dl>
+
+          <p class="cart-page__summary-note kb-meta-label text-king-muted">
+            Envío e impuestos se calcularán en el checkout.
+          </p>
+
+          <div class="cart-page__summary-actions">
+            <Button
+              type="button"
+              variant="primary"
+              size="lg"
+              data-cart-checkout
+              aria-describedby="cart-page-status"
+            >
+              Finalizar compra
+            </Button>
+            <Button href="/#coleccion" variant="outline" size="md">
+              Seguir comprando
+            </Button>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <FooterSection slot="footer" connected />
+</BaseLayout>
+
+<style>
+  .cart-page {
+    padding-top: clamp(7.5rem, 10vw, 9.5rem);
+    padding-bottom: var(--kb-space-12);
+  }
+
+  .cart-page__head {
+    display: grid;
+    gap: var(--kb-space-5);
+    padding-bottom: var(--kb-space-8);
+  }
+
+  .cart-page__head::after {
+    content: '';
+    display: block;
+    width: 100%;
+    height: 1px;
+    margin-top: var(--kb-space-2);
+    background: linear-gradient(
+      90deg,
+      var(--kb-stroke-dark),
+      var(--kb-stroke-hairline) 55%,
+      transparent
+    );
+  }
+
+  .cart-page__intro {
+    display: grid;
+    gap: var(--kb-space-2);
+    min-width: 0;
+  }
+
+  .cart-page__title {
+    margin: 0;
+    font-size: clamp(2.25rem, 4vw, 3.25rem);
+    font-weight: var(--kb-w-heading-light);
+    line-height: 0.98;
+    letter-spacing: -0.03em;
+    color: var(--color-king-text);
+  }
+
+  .cart-page__count {
+    margin: 0;
+  }
+
+  .cart-page__status {
+    margin: 0;
+    color: var(--color-king-muted);
+  }
+
+  .cart-page__status[data-status-error] {
+    color: var(--color-king-error);
+  }
+
+  .cart-page__status:focus {
+    outline: none;
+  }
+
+  .cart-page__layout {
+    display: grid;
+    gap: var(--kb-space-8);
+    align-items: start;
+    min-width: 0;
+  }
+
+  .cart-page__lines-section {
+    min-width: 0;
+  }
+
+  .cart-page__lines {
+    display: grid;
+    border-top: 1px solid var(--kb-stroke-hairline);
+  }
+
+  .cart-page__summary {
+    min-width: 0;
+  }
+
+  .cart-page__summary-panel {
+    display: grid;
+    gap: var(--kb-space-4);
+    padding: var(--kb-space-5);
+    border: 1px solid var(--kb-stroke-hairline);
+    border-radius: var(--kb-radius-sm);
+    background: var(--color-king-bone);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.45) inset;
+  }
+
+  .cart-page__summary-title {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: var(--kb-w-heading-light);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+  }
+
+  .cart-page__summary-rows {
+    display: grid;
+    gap: var(--kb-space-3);
+    margin: 0;
+  }
+
+  .cart-page__summary-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--kb-space-4);
+    min-width: 0;
+  }
+
+  .cart-page__summary-row dt,
+  .cart-page__summary-row dd {
+    margin: 0;
+    min-width: 0;
+  }
+
+  .cart-page__summary-value {
+    font-size: var(--kb-text-sm);
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+  }
+
+  .cart-page__summary-row--total {
+    padding-top: var(--kb-space-3);
+    border-top: 1px solid var(--kb-stroke-hairline);
+  }
+
+  .cart-page__summary-total {
+    font-size: 1.375rem;
+    font-weight: var(--kb-w-heading-light);
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+
+  .cart-page__summary-note {
+    margin: 0;
+    line-height: 1.5;
+  }
+
+  .cart-page__summary-actions {
+    display: grid;
+    gap: var(--kb-space-3);
+    padding-top: var(--kb-space-2);
+  }
+
+  .cart-page__summary-actions :global(.kb-btn) {
+    width: 100%;
+    justify-content: center;
+  }
+
+  @media (min-width: 64rem) {
+    .cart-page__layout {
+      grid-template-columns: minmax(0, 1.4fr) minmax(16rem, 22rem);
+      gap: var(--kb-space-10);
+    }
+
+    .cart-page__summary {
+      position: sticky;
+      top: calc(6rem + var(--kb-space-4));
+    }
+  }
+</style>

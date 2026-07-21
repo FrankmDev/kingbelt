@@ -1,5 +1,7 @@
 ---
 import { mainNav } from '../../data/navigation';
+import CartDrawer from '../cart/CartDrawer.astro';
+import CartTrigger from '../cart/CartTrigger.astro';
 
 interface Props {
   initialTheme?: 'dark' | 'light';
@@ -28,7 +30,7 @@ const links = mainNav;
   <div class="header-shell mx-auto overflow-hidden">
     <nav
       id="header-nav"
-      class="header-tier-2 mx-auto flex items-center justify-between px-5 md:px-8 lg:px-10"
+      class="header-tier-2 mx-auto flex items-center justify-between gap-3 px-5 md:px-8 lg:px-10"
     >
       <a href="/" id="header-logo" class="group relative flex items-center gap-3 md:gap-4" aria-label="KingBelt — Inicio">
         <span class="header-wordmark font-display whitespace-nowrap uppercase">KingBelt</span>
@@ -46,23 +48,28 @@ const links = mainNav;
           </>
         ))}
         <span class="header-divider mx-2.5 h-3.5 w-px lg:mx-3.5"></span>
+        <CartTrigger />
+        <span class="header-divider mx-2.5 h-3.5 w-px lg:mx-3.5"></span>
         <a href="/contacto" id="header-cta" class="group hidden items-center gap-2.5 uppercase lg:inline-flex">
           <span class="h-1.5 w-1.5 rounded-full bg-king-accent/65 transition-[background-color,transform] duration-[var(--kb-dur-fast)] group-hover:scale-110 group-hover:bg-king-accent"></span>
           Escribir
         </a>
       </div>
 
-      <button
-        id="menu-toggle"
-        class="relative -mr-2 flex h-11 w-11 flex-col items-end justify-center gap-[6px] p-2 lg:hidden"
-        aria-label="Abrir menú"
-        aria-controls="mobile-menu"
-        aria-expanded="false"
-        type="button"
-      >
-        <span class="menu-line menu-line-1 block h-[1.5px]" style="width: 1.5rem;"></span>
-        <span class="menu-line menu-line-2 block h-[1.5px]" style="width: 0.9rem;"></span>
-      </button>
+      <div class="flex items-center gap-1 lg:hidden">
+        <CartTrigger />
+        <button
+          id="menu-toggle"
+          class="relative -mr-2 flex h-11 w-11 flex-col items-end justify-center gap-[6px] p-2"
+          aria-label="Abrir menú"
+          aria-controls="mobile-menu"
+          aria-expanded="false"
+          type="button"
+        >
+          <span class="menu-line menu-line-1 block h-[1.5px]" style="width: 1.5rem;"></span>
+          <span class="menu-line menu-line-2 block h-[1.5px]" style="width: 0.9rem;"></span>
+        </button>
+      </div>
     </nav>
 
     <div class="header-stitch h-px"></div>
@@ -114,14 +121,27 @@ const links = mainNav;
 
     {/* CTA */}
     <a
-      href="/contacto"
+      href="/carrito"
       class="mobile-nav-cta kb-action-label group inline-flex items-center gap-3 border border-white/15 px-5 py-3 text-white/60 transition-[background-color,border-color,color,opacity,transform] duration-[var(--kb-dur-med)] hover:border-king-accent hover:bg-king-accent/10 hover:text-white"
+      data-cart-drawer-open
+      data-cart-count-wrapper
+      aria-label="Carrito vacío"
+    >
+      <span class="h-1.5 w-1.5 rounded-full bg-king-accent/40 transition-colors duration-[var(--kb-dur-fast)] group-hover:bg-king-accent"></span>
+      Carrito <span data-cart-count class="tabular-nums" aria-hidden="true"></span>
+    </a>
+
+    <a
+      href="/contacto"
+      class="mobile-nav-cta kb-action-label group mt-3 inline-flex items-center gap-3 border border-white/15 px-5 py-3 text-white/60 transition-[background-color,border-color,color,opacity,transform] duration-[var(--kb-dur-med)] hover:border-king-accent hover:bg-king-accent/10 hover:text-white"
     >
       <span class="h-1.5 w-1.5 rounded-full bg-king-accent/40 transition-colors duration-[var(--kb-dur-fast)] group-hover:bg-king-accent"></span>
       Escribir
     </a>
   </div>
 </nav>
+
+<CartDrawer />
 
 <style>
   #site-header {
@@ -385,6 +405,9 @@ const links = mainNav;
 </style>
 
 <script>
+  import { CART_DRAWER_OPEN_EVENT } from '../../lib/commerce/cart-client';
+  import { lockBodyScroll, unlockBodyScroll } from '../../lib/dom/scroll-lock';
+
   const header = document.getElementById('site-header');
   const menuToggle = document.getElementById('menu-toggle');
   const mobileMenu = document.getElementById('mobile-menu');
@@ -401,7 +424,7 @@ const links = mainNav;
     mobileMenu?.classList.remove('is-open');
     menuToggle?.querySelector('.menu-line-1')?.classList.remove('rotate-45', 'translate-y-[3.75px]');
     menuToggle?.querySelector('.menu-line-2')?.classList.remove('-rotate-45', '-translate-y-[2.25px]', 'w-6');
-    document.body.style.overflow = '';
+    unlockBodyScroll('mobile-navigation');
     if (restoreFocus) menuToggle?.focus();
   }
 
@@ -437,7 +460,7 @@ const links = mainNav;
       mobileMenu?.classList.add('is-open');
       menuToggle.querySelector('.menu-line-1')?.classList.add('rotate-45', 'translate-y-[3.75px]');
       menuToggle.querySelector('.menu-line-2')?.classList.add('-rotate-45', '-translate-y-[2.25px]', 'w-6');
-      document.body.style.overflow = 'hidden';
+      lockBodyScroll('mobile-navigation');
       const firstLink = mobileMenu?.querySelector<HTMLElement>('.mobile-nav-link');
       setTimeout(() => firstLink?.focus(), 400);
     } else {
@@ -473,4 +496,12 @@ const links = mainNav;
       }
     }
   });
+
+  document.addEventListener(CART_DRAWER_OPEN_EVENT, () => {
+    closeMenu({ restoreFocus: false });
+  });
+</script>
+
+<script>
+  import '../../scripts/init-cart.ts';
 </script>

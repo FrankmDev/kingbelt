@@ -1,0 +1,342 @@
+---
+import Button from '../ui/Button.astro';
+import Icon from '../ui/Icon.astro';
+import Panel from '../ui/Panel.astro';
+import type { BlogSection } from '../../data/blog';
+
+interface Props {
+  sections: readonly BlogSection[];
+}
+
+const { sections } = Astro.props;
+const sectionTotal = String(sections.length).padStart(2, '0');
+---
+
+<Panel variant="light" padding="lg" class="article-body-panel">
+  <span class="article-body-panel__mark" aria-hidden="true"></span>
+
+  <div class="article-sections">
+    {sections.map((section, index) => {
+      const number = String(index + 1).padStart(2, '0');
+      const isLast = index === sections.length - 1;
+
+      return (
+        <article
+          id={section.id}
+          class="article-section"
+          data-article-section
+          aria-labelledby={`${section.id}-title`}
+        >
+          <div class="article-section__layout">
+            <div class="article-section__rail" aria-hidden="true">
+              <span class="article-section__num">{number}</span>
+              {!isLast && <span class="article-section__rail-line"></span>}
+            </div>
+
+            <div class="article-section__content">
+              <header class="article-section-head">
+                <p class="kb-meta-label article-section-head__meta">
+                  Sección {number} <span aria-hidden="true">·</span> {sectionTotal}
+                </p>
+                <h2 id={`${section.id}-title`} class="article-section-title">
+                  {section.title}
+                </h2>
+              </header>
+
+              <div class="article-section-body kb-prose article-prose">
+                {section.paragraphs.map((paragraph) => <p>{paragraph}</p>)}
+              </div>
+
+              {section.points && (
+                <aside class="article-section-keypoints" aria-label="Puntos clave">
+                  <p class="kb-eyebrow article-section-keypoints__label">Puntos clave</p>
+                  <ul class="article-section-keypoints__list">
+                    {section.points.map((point) => (
+                      <li>
+                        <span class="article-section-keypoints__marker" aria-hidden="true"></span>
+                        <span>{point}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </aside>
+              )}
+            </div>
+          </div>
+        </article>
+      );
+    })}
+  </div>
+
+  <footer class="article-body-foot">
+    <div class="article-body-foot__copy">
+      <span class="article-body-foot__line" aria-hidden="true"></span>
+      <p class="kb-meta-label">KingBelt Journal · Cuaderno 01</p>
+    </div>
+    <Button href="/blog" variant="primary" size="md">
+      Explorar más artículos
+      <Icon name="arrow-right" />
+    </Button>
+  </footer>
+</Panel>
+
+<style>
+  :global(.article-body-panel) {
+    position: relative;
+    min-width: 0;
+  }
+
+  .article-body-panel__mark {
+    position: absolute;
+    top: var(--kb-space-7);
+    left: var(--kb-space-7);
+    width: 5px;
+    height: 5px;
+    border-radius: var(--kb-radius-pill);
+    background: var(--color-king-accent);
+    box-shadow:
+      1rem 0 0 rgba(138, 90, 43, 0.62),
+      2rem 0 0 rgba(138, 90, 43, 0.3);
+    pointer-events: none;
+  }
+
+  .article-sections {
+    display: grid;
+    gap: 0;
+  }
+
+  .article-section {
+    scroll-margin-top: 7rem;
+    padding-block: clamp(2rem, 4vw, 2.75rem);
+    border-bottom: 1px solid var(--kb-stroke-hairline);
+  }
+
+  .article-section:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  .article-section__layout {
+    display: grid;
+    grid-template-columns: 2.75rem minmax(0, 1fr);
+    gap: clamp(1rem, 2.4vw, 1.5rem);
+    align-items: start;
+  }
+
+  .article-section__rail {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    min-height: 100%;
+  }
+
+  .article-section__num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border: 1px solid rgba(138, 90, 43, 0.28);
+    border-radius: var(--kb-radius-xs);
+    font-family: var(--font-display);
+    font-size: var(--kb-text-h5);
+    font-variant-numeric: tabular-nums;
+    font-weight: var(--kb-w-heading-light);
+    line-height: 1;
+    color: var(--color-king-accent);
+    background: color-mix(in srgb, var(--color-king-accent) 8%, transparent);
+  }
+
+  .article-section__rail-line {
+    flex: 1;
+    width: 1px;
+    min-height: 1.5rem;
+    margin-block: var(--kb-space-3);
+    background: linear-gradient(180deg, rgba(138, 90, 43, 0.42) 0%, rgba(138, 90, 43, 0.1) 100%);
+  }
+
+  .article-section__content {
+    min-width: 0;
+  }
+
+  .article-section-head {
+    display: flex;
+    flex-direction: column;
+    gap: var(--kb-space-4);
+  }
+
+  .article-section-head__meta {
+    margin: 0;
+    color: var(--color-king-muted);
+  }
+
+  .article-section-head__meta span[aria-hidden='true'] {
+    margin-inline: 0.2em;
+    color: var(--kb-stroke-accent);
+  }
+
+  .article-section-title {
+    max-width: 24ch;
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: clamp(1.65rem, 3vw, 2.35rem);
+    font-weight: var(--kb-w-heading-light);
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+    color: var(--color-king-text);
+  }
+
+  :global(.article-prose.kb-prose) {
+    max-width: 44rem;
+    margin-top: var(--kb-space-5);
+    font-size: clamp(0.9375rem, 0.92rem + 0.2vw, 1.0625rem);
+    line-height: 1.8;
+  }
+
+  :global(.article-prose p) {
+    margin: 0;
+    color: var(--color-king-muted);
+    text-wrap: pretty;
+  }
+
+  :global(.article-prose p + p) {
+    margin-top: 1.2em;
+  }
+
+  .article-section:first-of-type :global(.article-prose p:first-of-type::first-letter) {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 3.4em;
+    line-height: 0.85;
+    float: left;
+    padding-right: 0.1em;
+    padding-top: 0.02em;
+    color: var(--color-king-accent);
+  }
+
+  :global(.article-prose strong) {
+    color: var(--color-king-text);
+    font-weight: var(--kb-w-semibold);
+  }
+
+  .article-section.is-active .article-section__num {
+    border-color: rgba(138, 90, 43, 0.55);
+    color: var(--color-king-text);
+    background: color-mix(in srgb, var(--color-king-accent) 14%, transparent);
+  }
+
+  .article-section-keypoints {
+    margin-top: var(--kb-space-6);
+    padding: var(--kb-space-5) var(--kb-space-5) var(--kb-space-5) var(--kb-space-4);
+    border: 1px solid var(--kb-stroke-dark);
+    border-radius: var(--kb-radius-sm);
+    background: var(--kb-surface-light);
+  }
+
+  .article-section-keypoints__label {
+    margin: 0 0 var(--kb-space-4);
+    color: var(--color-king-accent);
+  }
+
+  .article-section-keypoints__list {
+    display: grid;
+    gap: var(--kb-space-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .article-section-keypoints__list li {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--kb-space-3);
+    align-items: start;
+    font-size: var(--kb-text-sm);
+    line-height: 1.6;
+    color: var(--color-king-text);
+  }
+
+  .article-section-keypoints__marker {
+    width: 0.4rem;
+    height: 0.4rem;
+    margin-top: 0.55em;
+    border-radius: var(--kb-radius-pill);
+    background: var(--color-king-accent);
+    opacity: 0.8;
+  }
+
+  .article-body-foot {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--kb-form-row-gap);
+    margin-top: clamp(3rem, 7vw, 5rem);
+    padding-top: var(--kb-space-6);
+    border-top: 1px solid var(--kb-stroke-dark);
+  }
+
+  .article-body-foot__copy {
+    display: flex;
+    flex-direction: column;
+    gap: var(--kb-space-4);
+  }
+
+  .article-body-foot__line {
+    width: 4rem;
+    height: 2px;
+    background: var(--color-king-accent);
+  }
+
+  .article-body-foot p {
+    margin: 0;
+    color: var(--color-king-muted);
+  }
+
+  @media (min-width: 64rem) {
+    :global(.article-body-panel) {
+      order: 1;
+      min-height: 100%;
+    }
+  }
+
+  @media (max-width: 47.99rem) {
+    .article-body-foot {
+      align-items: stretch;
+      flex-direction: column;
+    }
+
+    .article-body-foot :global(.kb-btn) {
+      width: 100%;
+    }
+
+    .article-section__layout {
+      grid-template-columns: 2.35rem minmax(0, 1fr);
+      gap: var(--kb-space-4);
+    }
+
+    .article-section__num {
+      width: 2.35rem;
+      height: 2.35rem;
+      font-size: var(--kb-text-sm);
+    }
+
+    :global(.article-prose.kb-prose) {
+      max-width: none;
+      font-size: 1rem;
+      line-height: 1.78;
+    }
+
+    .article-section-title {
+      max-width: none;
+      font-size: clamp(1.5rem, 6.5vw, 1.85rem);
+    }
+  }
+
+  @media (max-width: 29.99rem) {
+    .article-body-panel__mark {
+      top: var(--kb-space-5);
+      left: var(--kb-space-5);
+    }
+  }
+</style>

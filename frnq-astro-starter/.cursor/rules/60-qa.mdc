@@ -1,6 +1,0 @@
----
-description: Run focused and release QA
-alwaysApply: false
----
-
-Read `docs/project/QA.md`. Run Astro check, build, and any project-specific checks in proportion to risk. Inspect the real interface at the required viewports. Report commands, viewports, failures, and limitations.

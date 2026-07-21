@@ -1,23 +1,47 @@
 <script>
-  const revealElements = document.querySelectorAll('.animate-on-scroll');
+  type Cleanup = () => void;
 
-  if ('IntersectionObserver' in window && revealElements.length) {
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
+  function initScrollReveal(root: HTMLElement): Cleanup {
+    if (root.dataset.scrollRevealInitialized === 'true') return () => {};
+
+    root.dataset.scrollRevealInitialized = 'true';
+    const revealElements = Array.from(root.querySelectorAll<HTMLElement>('.animate-on-scroll'));
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (reducedMotion || !('IntersectionObserver' in window)) {
+      revealElements.forEach((element) => element.classList.add('is-visible'));
+      return () => delete root.dataset.scrollRevealInitialized;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
           entry.target.classList.add('is-visible');
           observer.unobserve(entry.target);
-        }
-      });
-    }, {
-      threshold: 0.08,
-      rootMargin: '0px 0px -40px 0px',
-    });
+        });
+      },
+      {
+        threshold: 0.08,
+        rootMargin: '0px 0px -40px 0px',
+      }
+    );
 
-    revealElements.forEach((el) => observer.observe(el));
+    revealElements.forEach((element) => observer.observe(element));
 
-    window.addEventListener('beforeunload', () => observer.disconnect(), { once: true });
-  } else {
-    revealElements.forEach((el) => el.classList.add('is-visible'));
+    return () => {
+      observer.disconnect();
+      delete root.dataset.scrollRevealInitialized;
+    };
   }
+
+  const cleanups = Array.from(
+    document.querySelectorAll<HTMLElement>('[data-scroll-reveal-root]')
+  ).map((root) => initScrollReveal(root));
+
+  document.addEventListener(
+    'astro:before-swap',
+    () => cleanups.forEach((cleanup) => cleanup()),
+    { once: true }
+  );
 </script>

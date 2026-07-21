@@ -5,6 +5,7 @@
 export const iconPaths = {
   'arrow-right': '<path d="M5 12h14"/><path d="m13 6 6 6-6 6"/>',
   'arrow-left': '<path d="M19 12H5"/><path d="m11 18-6-6 6-6"/>',
+  'arrow-up': '<path d="m5 15 7-7 7 7"/>',
   'caret-down': '<path d="m6 9 6 6 6-6"/>',
   star: '<path d="m12 2 3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2Z"/>',
   motorcycle:

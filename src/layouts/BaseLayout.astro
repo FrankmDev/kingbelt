@@ -91,6 +91,7 @@ const ogImageUrl = new URL(image, Astro.site || Astro.url).href;
     <slot name="header" />
     <main
       id="main"
+      data-scroll-reveal-root
       class="relative z-[var(--kb-z-content)] flex-1 w-full max-w-full overflow-x-clip bg-king-bg"
     >
       <slot />

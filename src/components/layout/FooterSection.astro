@@ -215,15 +215,15 @@ const { class: className = '', connected = false } = Astro.props;
             Asfalto, cuero y carácter desde España.
           </p>
           <button
-            id="scroll-to-top"
             type="button"
+            data-footer-scroll-top
             class="footer-scroll-top group inline-flex items-center gap-2 rounded-full border border-king-border/35 bg-king-surface/70 px-3 py-1.5 text-[var(--kb-text-2xs)] font-medium uppercase tracking-[0.14em] text-king-muted/80 transition-[border-color,box-shadow,color,transform,background-color] duration-[var(--kb-dur-med)] hover:border-king-accent/40 hover:bg-king-surface hover:text-king-accent"
             aria-label="Volver arriba"
             hidden
           >
             <span class="hidden sm:inline">Arriba</span>
             <span class="flex h-5 w-5 items-center justify-center rounded-full border border-king-border/35 transition-[border-color,transform] duration-[var(--kb-dur-fast)] group-hover:border-king-accent/45 group-hover:-translate-y-0.5">
-              <svg class="h-2.5 w-2.5 transition-transform duration-[var(--kb-dur-fast)] group-hover:-translate-y-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" /></svg>
+              <Icon name="arrow-up" class="h-2.5 w-2.5 transition-transform duration-[var(--kb-dur-fast)] group-hover:-translate-y-0.5" strokeWidth={1.75} />
             </span>
           </button>
         </div>
@@ -232,7 +232,6 @@ const { class: className = '', connected = false } = Astro.props;
 
     <div
       class="footer-giant-wrap relative mt-3 overflow-hidden text-center md:mt-4"
-      style="height: clamp(7rem, 16vw, 14rem); mask-image: linear-gradient(to bottom, black 0%, black 72%, transparent 100%); -webkit-mask-image: linear-gradient(to bottom, black 0%, black 72%, transparent 100%);"
     >
       <span
         class="footer-giant font-display pointer-events-none inline-block select-none uppercase leading-[0.6] tracking-[0.06em]"
@@ -415,6 +414,12 @@ const { class: className = '', connected = false } = Astro.props;
     filter: drop-shadow(0 0 42px rgba(138, 90, 43, 0.08));
   }
 
+  .footer-giant-wrap {
+    height: clamp(7rem, 16vw, 14rem);
+    mask-image: linear-gradient(to bottom, black 0%, black 72%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, black 0%, black 72%, transparent 100%);
+  }
+
   .footer-dot-marker {
     transition: transform 600ms var(--kb-ease-out, cubic-bezier(0.22, 1, 0.36, 1)),
                 background-color 400ms ease;
@@ -457,66 +462,14 @@ const { class: className = '', connected = false } = Astro.props;
 </style>
 
 <script>
-  import gsap from 'gsap';
-  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+  import { initFooter } from '../../scripts/footer';
 
-  gsap.registerPlugin(ScrollTrigger);
+  const cleanups = Array.from(document.querySelectorAll<HTMLElement>('[data-gsap-footer]'))
+    .map((root) => initFooter(root));
 
-  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const footerScope = document.querySelector('[data-gsap-footer]');
-
-  if (footerScope && !reduceMotion) {
-    const footerBottom = footerScope.querySelector('[data-footer-bottom]');
-    if (footerBottom) {
-      const footerTl = gsap.timeline({
-        defaults: { ease: 'power3.out' },
-        scrollTrigger: {
-          trigger: footerBottom,
-          start: 'top 90%',
-          once: true,
-        },
-      });
-
-      footerTl
-        .from(footerBottom.querySelector('.footer-accent-bar'), { scaleX: 0, opacity: 0, duration: 0.9, transformOrigin: 'center' })
-        .from(footerBottom.querySelector('.footer-bg'), { opacity: 0, duration: 1.1 }, 0.05)
-        .from(footerBottom.querySelector('.footer-top-rule'), { scaleX: 0, opacity: 0, duration: 0.75, transformOrigin: 'center' }, 0.15)
-        .from(footerBottom.querySelector('.footer-cta'), { y: 18, opacity: 0, duration: 0.75 }, 0.22)
-        .from(footerBottom.querySelector('.footer-brand-col'), { y: 18, opacity: 0, duration: 0.65 }, 0.3)
-        .from(footerBottom.querySelector('.footer-nav-col'), { y: 18, opacity: 0, duration: 0.65 }, 0.38)
-        .from(footerBottom.querySelector('.footer-help-col'), { y: 18, opacity: 0, duration: 0.65 }, 0.44)
-        .from(footerBottom.querySelector('.footer-contact-col'), { y: 18, opacity: 0, duration: 0.65 }, 0.5)
-        .from(footerBottom.querySelectorAll('.footer-meta-tag'), { y: 10, opacity: 0, duration: 0.45, stagger: 0.06 }, 0.58)
-        .from(footerBottom.querySelector('.footer-giant'), { y: 36, opacity: 0, duration: 1.15 }, 0.52)
-        .from(footerBottom.querySelector('.footer-bottom-bar'), { y: 10, opacity: 0, duration: 0.55 }, 0.72);
-
-      const giant = footerBottom.querySelector('.footer-giant');
-      if (giant) {
-        gsap.to(giant, {
-          y: -8,
-          ease: 'none',
-          scrollTrigger: {
-            trigger: footerBottom,
-            start: 'top bottom',
-            end: 'bottom top',
-            scrub: 0.6,
-          },
-        });
-      }
-    }
-  }
-
-  const scrollToTopBtn = document.getElementById('scroll-to-top');
-  if (scrollToTopBtn) {
-    const toggleVisibility = () => {
-      scrollToTopBtn.hidden = window.scrollY <= 400;
-    };
-
-    window.addEventListener('scroll', toggleVisibility, { passive: true });
-    toggleVisibility();
-
-    scrollToTopBtn.addEventListener('click', () => {
-      window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
-    });
-  }
+  document.addEventListener(
+    'astro:before-swap',
+    () => cleanups.forEach((cleanup) => cleanup()),
+    { once: true }
+  );
 </script>

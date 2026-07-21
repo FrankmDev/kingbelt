@@ -1,6 +1,0 @@
----
-description: New project initialization gate
-alwaysApply: true
----
-
-If `project.config.ts` reports `initialized: false`, read `PROJECT_START.md` completely before editing any implementation file. Follow its initialization protocol and do not implement finished pages before the foundation is validated.

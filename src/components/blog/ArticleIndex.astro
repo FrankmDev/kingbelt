@@ -1,0 +1,274 @@
+---
+import Button from '../ui/Button.astro';
+import Icon from '../ui/Icon.astro';
+import type { BlogSection } from '../../data/blog';
+
+interface Props {
+  sections: readonly BlogSection[];
+  idPrefix: string;
+}
+
+const { sections, idPrefix } = Astro.props;
+const sectionTotal = String(sections.length).padStart(2, '0');
+const indexTitleId = `${idPrefix}-index-title`;
+---
+
+<div class="article-index-column">
+  <details class="article-index-disclosure" data-article-index-disclosure>
+    <summary class="article-index-disclosure__summary">
+      <span class="article-index-disclosure__label">
+        <Icon name="menu" class="article-index-disclosure__icon" />
+        Índice del artículo
+      </span>
+      <span class="kb-meta-label">{sectionTotal} bloques</span>
+      <Icon name="caret-down" class="article-index-disclosure__chevron" />
+    </summary>
+
+    <div class="article-index-sticky">
+      <aside class="kb-reading-panel article-index-panel" aria-labelledby={indexTitleId}>
+        <header class="kb-reading-panel__head">
+          <div class="kb-reading-panel__head-bar">
+            <p class="kb-eyebrow kb-eyebrow-lined kb-reading-panel__eyebrow">Índice</p>
+            <span class="kb-reading-panel__folio kb-meta-label" aria-hidden="true">
+              {sectionTotal}
+            </span>
+          </div>
+
+          <p id={indexTitleId} class="kb-reading-panel__statement">
+            Navega por cada bloque de lectura.
+          </p>
+        </header>
+
+        <ol class="kb-reading-panel__layers article-index-layers">
+          {sections.map((section, index) => (
+            <li
+              class="kb-reading-panel__layer"
+              data-index-layer
+              data-section-id={section.id}
+            >
+              <div class="kb-reading-panel__rail" aria-hidden="true">
+                <span class="kb-reading-panel__num">{String(index + 1).padStart(2, '0')}</span>
+                {index < sections.length - 1 && (
+                  <span class="kb-reading-panel__rail-line"></span>
+                )}
+              </div>
+
+              <div class="kb-reading-panel__body">
+                <a
+                  href={`#${section.id}`}
+                  class="article-index-link"
+                  data-index-link
+                  data-section-target={section.id}
+                >
+                  <div class="kb-reading-panel__layer-head">
+                    <h3 class="kb-reading-panel__label">{section.title}</h3>
+                    <span class="kb-reading-panel__tag">Ir</span>
+                  </div>
+                  <p class="kb-reading-panel__text article-index-text">
+                    Bloque {String(index + 1).padStart(2, '0')} del artículo.
+                  </p>
+                </a>
+              </div>
+            </li>
+          ))}
+        </ol>
+
+        <div class="kb-reading-panel__foot" aria-hidden="true">
+          <span class="kb-reading-panel__track"></span>
+          <span class="kb-reading-panel__track"></span>
+        </div>
+
+        <div class="article-index-actions">
+          <Button href="/blog" variant="surfaceOutline" size="sm" class="article-index-back">
+            <Icon name="arrow-left" />
+            Volver a la revista
+          </Button>
+        </div>
+      </aside>
+    </div>
+  </details>
+</div>
+
+<style>
+  .article-index-column,
+  .article-index-sticky,
+  .article-index-panel {
+    min-width: 0;
+  }
+
+  .article-index-disclosure {
+    border: 1px solid var(--kb-stroke-dark);
+    border-radius: var(--kb-card-radius);
+    background: var(--color-king-bg);
+    overflow: hidden;
+  }
+
+  .article-index-disclosure__summary {
+    display: flex;
+    align-items: center;
+    gap: var(--kb-space-3);
+    padding: var(--kb-space-4) var(--kb-space-5);
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .article-index-disclosure__summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .article-index-disclosure__label {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--kb-space-2);
+    flex: 1;
+    font-size: var(--kb-text-sm);
+    font-weight: var(--kb-w-medium);
+    color: var(--color-king-text);
+  }
+
+  .article-index-disclosure__icon,
+  .article-index-disclosure__chevron {
+    width: 1rem;
+    height: 1rem;
+    flex-shrink: 0;
+    color: var(--color-king-muted);
+  }
+
+  .article-index-disclosure__chevron {
+    transition: transform var(--kb-dur-fast) var(--kb-ease-out);
+  }
+
+  .article-index-disclosure[open] .article-index-disclosure__chevron {
+    transform: rotate(180deg);
+  }
+
+  .article-index-disclosure__summary:focus-visible {
+    outline: 2px solid var(--color-king-accent);
+    outline-offset: -2px;
+    border-radius: calc(var(--kb-card-radius) - 1px);
+  }
+
+  .article-index-link {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+    border-radius: var(--kb-radius-xs);
+    transition:
+      color var(--kb-dur-fast) var(--kb-ease-out),
+      background-color var(--kb-dur-fast) var(--kb-ease-out);
+  }
+
+  .article-index-text {
+    margin: 0;
+  }
+
+  .article-index-actions {
+    position: relative;
+    z-index: 1;
+    margin-top: var(--kb-space-6);
+    padding-top: var(--kb-space-5);
+    border-top: 1px solid rgba(255, 255, 255, 0.09);
+  }
+
+  :global(.article-index-back.kb-btn) {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .kb-reading-panel__layer.is-active .kb-reading-panel__num {
+    border-color: rgba(166, 124, 78, 0.55);
+    background: rgba(166, 124, 78, 0.14);
+    color: var(--color-king-bone);
+  }
+
+  .article-index-link.is-active .kb-reading-panel__label {
+    color: var(--color-king-accent-light);
+  }
+
+  .article-index-link.is-active .kb-reading-panel__tag {
+    border-color: rgba(166, 124, 78, 0.55);
+    color: var(--color-king-accent-light);
+    background: rgba(166, 124, 78, 0.1);
+  }
+
+  @media (hover: hover) {
+    .article-index-link:hover .kb-reading-panel__label {
+      color: var(--color-king-accent-light);
+    }
+
+    .article-index-link:hover .kb-reading-panel__tag {
+      border-color: rgba(166, 124, 78, 0.55);
+      color: var(--color-king-accent-light);
+    }
+  }
+
+  .article-index-link:focus-visible {
+    outline: 2px solid var(--color-king-accent-light);
+    outline-offset: 2px;
+  }
+
+  @media (max-width: 63.99rem) {
+    .article-index-column {
+      order: -1;
+    }
+
+    .article-index-panel {
+      border: 0;
+      border-radius: 0;
+      box-shadow: none;
+    }
+
+    .article-index-panel::after {
+      content: none;
+    }
+
+    .article-index-disclosure[open] .article-index-sticky {
+      padding: 0 var(--kb-space-4) var(--kb-space-4);
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .article-index-column {
+      position: relative;
+      align-self: stretch;
+      order: 2;
+    }
+
+    .article-index-disclosure {
+      height: 100%;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      overflow: visible;
+    }
+
+    .article-index-disclosure__summary {
+      display: none;
+    }
+
+    .article-index-disclosure > .article-index-sticky {
+      display: block;
+    }
+
+    .article-index-sticky {
+      position: sticky;
+      top: 7rem;
+      width: 100%;
+      max-height: calc(100dvh - 7rem - var(--kb-space-4));
+    }
+
+    .article-index-panel {
+      max-height: inherit;
+      border-radius: var(--kb-card-radius);
+      overflow: auto;
+      overscroll-behavior: contain;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .article-index-disclosure__chevron,
+    .article-index-link {
+      transition: none;
+    }
+  }
+</style>

@@ -1,0 +1,390 @@
+---
+import Icon from '../../ui/Icon.astro';
+import Tag from '../../ui/Tag.astro';
+import type { FAQItem as FAQItemData } from './types';
+
+interface Props {
+  item: FAQItemData;
+  index: number;
+  sectionId: string;
+  groupName: string;
+  tone: 'dark' | 'light';
+}
+
+const { item, index, sectionId, groupName, tone } = Astro.props;
+const number = String(index + 1).padStart(2, '0');
+const isSteel = index % 3 === 2;
+const delayClass = `animate-delay-${(index % 5) + 1}`;
+---
+
+<details
+  id={`${sectionId}-item-${index + 1}`}
+  class:list={[
+    'faq-card group',
+    `faq-card--${tone}`,
+    isSteel ? 'kb-card-steel' : 'kb-card',
+    'animate-on-scroll',
+    delayClass,
+  ]}
+  name={groupName}
+  data-faq-item
+  data-category={item.category}
+>
+  <summary class="faq-summary" data-faq-summary>
+    <span class="faq-card-corner kb-corner-bracket kb-corner-bracket-tl" aria-hidden="true"></span>
+    <span class="faq-card-corner kb-corner-bracket kb-corner-bracket-tr" aria-hidden="true"></span>
+
+    <div class="faq-summary-main">
+      <div class="faq-summary-meta">
+        <span class="faq-summary-num" aria-hidden="true">{number}</span>
+        <span class="faq-summary-icon" aria-hidden="true">
+          <Icon name={item.icon} class="w-5 h-5" />
+        </span>
+        <Tag variant={isSteel ? 'brass' : 'accent'} size="sm">
+          {item.category}
+        </Tag>
+      </div>
+      <h3 class="faq-summary-q" data-faq-question>{item.question}</h3>
+    </div>
+
+    <span class="faq-summary-toggle" aria-hidden="true">
+      <span class="faq-summary-toggle-line faq-summary-toggle-h"></span>
+      <span class="faq-summary-toggle-line faq-summary-toggle-v"></span>
+    </span>
+  </summary>
+
+  <div class="faq-answer-wrap">
+    <div class="faq-answer">
+      <div class="faq-answer-rule" aria-hidden="true"></div>
+      <p class="faq-answer-text" data-faq-answer>{item.answer}</p>
+    </div>
+  </div>
+
+  <span class="faq-card-corner kb-corner-bracket kb-corner-bracket-bl" aria-hidden="true"></span>
+  <span class="faq-card-corner kb-corner-bracket kb-corner-bracket-br" aria-hidden="true"></span>
+</details>
+
+<style>
+  .faq-card {
+    position: relative;
+    overflow: hidden;
+    transition:
+      border-color var(--kb-dur-med) var(--kb-ease-out),
+      background-color var(--kb-dur-fast) var(--kb-ease-out),
+      box-shadow var(--kb-dur-med) var(--kb-ease-out),
+      transform var(--kb-dur-med) var(--kb-ease-out),
+      opacity var(--kb-dur-med) var(--kb-ease-out);
+  }
+
+  .faq-card[hidden] {
+    display: none;
+  }
+
+  .faq-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 3px;
+    height: 100%;
+    background: var(--color-king-accent);
+    transform: scaleY(0);
+    transform-origin: top;
+    transition: transform var(--kb-dur-med) var(--kb-ease-out);
+    z-index: 3;
+    opacity: 0.7;
+  }
+
+  .kb-card-steel.faq-card::before {
+    background: var(--color-king-accent-light);
+  }
+
+  .faq-card[open]::before {
+    transform: scaleY(1);
+  }
+
+  .faq-summary {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: var(--kb-space-4);
+    align-items: start;
+    width: 100%;
+    padding: clamp(1.25rem, 3vw, 1.75rem);
+    padding-left: clamp(1.5rem, 3.5vw, 2rem);
+    text-align: left;
+    cursor: pointer;
+    list-style: none;
+    border-radius: var(--kb-radius-sm);
+    transition:
+      background-color var(--kb-dur-fast) var(--kb-ease-out),
+      box-shadow var(--kb-dur-fast) var(--kb-ease-out);
+  }
+
+  .faq-summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .faq-summary::marker {
+    content: '';
+  }
+
+  .faq-summary:focus-visible {
+    outline: 2px solid var(--color-king-accent);
+    outline-offset: -2px;
+  }
+
+  .faq-card--dark .faq-summary:focus-visible {
+    outline-color: var(--color-king-accent-light);
+  }
+
+  .faq-card[open] {
+    background-color: color-mix(in srgb, var(--kb-surface-light) 96%, var(--color-king-accent) 4%);
+  }
+
+  .kb-card-steel.faq-card[open] {
+    background-color: color-mix(in srgb, var(--kb-surface-steel) 92%, var(--color-king-accent-light) 8%);
+  }
+
+  .faq-card[open] .faq-summary {
+    background-color: transparent;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .faq-card:not([open]) .faq-summary:hover {
+      background-color: rgba(138, 90, 43, 0.035);
+    }
+
+    .kb-card-steel.faq-card:not([open]) .faq-summary:hover {
+      background-color: rgba(255, 255, 255, 0.04);
+    }
+
+    .faq-card[open] .faq-summary:hover {
+      background-color: transparent;
+    }
+  }
+
+  .faq-summary-main {
+    grid-column: 1 / 2;
+    min-width: 0;
+  }
+
+  .faq-summary-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--kb-space-3);
+    margin-bottom: var(--kb-space-3);
+  }
+
+  .faq-summary-num {
+    font-family: var(--font-display);
+    font-size: clamp(1.5rem, 2.5vw, 2rem);
+    font-weight: var(--kb-w-heading-light);
+    line-height: 1;
+    color: var(--color-king-accent);
+    opacity: 0.35;
+  }
+
+  .kb-card-steel .faq-summary-num {
+    color: var(--color-king-accent-light);
+    opacity: 0.45;
+  }
+
+  .faq-summary-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: var(--kb-radius-xs);
+    background: rgba(138, 90, 43, 0.07);
+    color: var(--color-king-accent);
+    border: 1px solid rgba(138, 90, 43, 0.14);
+    transition:
+      background-color var(--kb-dur-med) var(--kb-ease-out),
+      border-color var(--kb-dur-med) var(--kb-ease-out),
+      transform var(--kb-dur-med) var(--kb-ease-out);
+  }
+
+  .kb-card-steel .faq-summary-icon {
+    background: rgba(183, 138, 79, 0.1);
+    color: var(--color-king-accent-light);
+    border-color: rgba(183, 138, 79, 0.2);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .faq-card:hover .faq-summary-icon {
+      transform: scale(1.08) rotate(-4deg);
+      background: rgba(138, 90, 43, 0.11);
+      border-color: rgba(138, 90, 43, 0.25);
+    }
+
+    .kb-card-steel.faq-card:hover .faq-summary-icon {
+      background: rgba(183, 138, 79, 0.14);
+      border-color: rgba(183, 138, 79, 0.35);
+    }
+  }
+
+  .faq-summary-q {
+    font-family: var(--font-display);
+    font-size: var(--kb-text-h4);
+    font-weight: var(--kb-w-medium);
+    line-height: 1.25;
+    padding-right: var(--kb-space-4);
+  }
+
+  .kb-card-steel .faq-summary-q {
+    color: rgba(255, 255, 255, 0.94);
+  }
+
+  .faq-summary-toggle {
+    grid-column: 2 / 3;
+    grid-row: 1 / 2;
+    position: relative;
+    width: 1.75rem;
+    height: 1.75rem;
+    margin-top: 0.2rem;
+    border-radius: var(--kb-radius-xs);
+    border: 1px solid var(--kb-stroke-dark);
+    background: var(--kb-surface-light-strong);
+    transition:
+      border-color var(--kb-dur-med) var(--kb-ease-out),
+      background-color var(--kb-dur-med) var(--kb-ease-out),
+      transform var(--kb-dur-med) var(--kb-ease-out);
+  }
+
+  .kb-card-steel .faq-summary-toggle {
+    border-color: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .faq-summary-toggle-line {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    display: block;
+    width: 0.65rem;
+    height: 2px;
+    border-radius: 1px;
+    background: currentColor;
+    transform: translate(-50%, -50%);
+    transition: transform var(--kb-dur-med) var(--kb-ease-out);
+  }
+
+  .faq-summary-toggle-v {
+    transform: translate(-50%, -50%) rotate(90deg);
+  }
+
+  .faq-card[open] .faq-summary-toggle-v {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+
+  .faq-card[open] .faq-summary-toggle {
+    border-color: rgba(138, 90, 43, 0.35);
+    background: rgba(138, 90, 43, 0.08);
+  }
+
+  .kb-card-steel.faq-card[open] .faq-summary-toggle {
+    border-color: rgba(183, 138, 79, 0.35);
+    background: rgba(183, 138, 79, 0.1);
+  }
+
+  .faq-answer-wrap {
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
+    transition:
+      grid-template-rows var(--kb-dur-slow) var(--kb-ease-out),
+      opacity var(--kb-dur-slow) var(--kb-ease-out);
+  }
+
+  .faq-card[open] .faq-answer-wrap {
+    grid-template-rows: 1fr;
+    opacity: 1;
+  }
+
+  .faq-answer {
+    overflow: hidden;
+    padding: 0 clamp(1.5rem, 3.5vw, 2rem) clamp(1.5rem, 3vw, 2rem);
+  }
+
+  .faq-answer-rule {
+    width: 3rem;
+    height: 1px;
+    margin-bottom: var(--kb-space-4);
+    background: linear-gradient(90deg, var(--color-king-accent), transparent);
+    opacity: 0.5;
+  }
+
+  .kb-card-steel .faq-answer-rule {
+    background: linear-gradient(90deg, var(--color-king-accent-light), transparent);
+  }
+
+  .faq-answer-text {
+    max-width: 60ch;
+    color: var(--color-king-muted);
+    font-size: var(--kb-text-body);
+    line-height: 1.8;
+  }
+
+  .kb-card-steel .faq-answer-text {
+    color: rgba(255, 255, 255, 0.6);
+  }
+
+  .faq-card-corner {
+    position: absolute;
+    width: 0.625rem;
+    height: 0.625rem;
+    pointer-events: none;
+    transition: border-color var(--kb-dur-med) var(--kb-ease-out);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .faq-card:hover {
+      transform: translateY(-2px);
+    }
+
+    .faq-card[open] {
+      border-color: rgba(138, 90, 43, 0.28);
+      box-shadow:
+        var(--kb-shadow-md),
+        0 0 0 1px rgba(138, 90, 43, 0.06);
+    }
+
+    .kb-card-steel.faq-card[open] {
+      border-color: rgba(183, 138, 79, 0.35);
+      box-shadow:
+        var(--kb-shadow-steel-soft),
+        0 0 0 1px rgba(183, 138, 79, 0.12);
+    }
+  }
+
+  @media (max-width: 47.99rem) {
+    .faq-summary {
+      grid-template-columns: 1fr;
+    }
+
+    .faq-summary-toggle {
+      grid-column: 1 / -1;
+      grid-row: auto;
+      justify-self: start;
+      margin-top: var(--kb-space-3);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .faq-card,
+    .faq-card::before,
+    .faq-summary-toggle,
+    .faq-summary-toggle-line,
+    .faq-card-corner,
+    .faq-answer-wrap,
+    .faq-summary-icon {
+      transition: none !important;
+    }
+
+    .faq-card::before {
+      transform: scaleY(1);
+    }
+  }
+</style>

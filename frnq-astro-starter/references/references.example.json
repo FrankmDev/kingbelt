@@ -1,8 +1,0 @@
-[
-  {
-    "file": "hero-reference.webp",
-    "useFor": ["composition", "image-treatment"],
-    "doNotUseFor": ["colors", "branding"],
-    "notes": ""
-  }
-]

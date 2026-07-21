@@ -1,0 +1,649 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+import Button from '../../ui/Button.astro';
+import Eyebrow from '../../ui/Eyebrow.astro';
+import FormField from '../../ui/FormField.astro';
+import Icon from '../../ui/Icon.astro';
+import FAQItem from './FAQItem.astro';
+import type { FAQCTA, FAQItem as FAQItemData } from './types';
+
+interface Props extends HTMLAttributes<'section'> {
+  items: readonly FAQItemData[];
+  eyebrow?: string;
+  title?: string;
+  description?: string;
+  tone?: 'dark' | 'light';
+  class?: string;
+  cta?: FAQCTA;
+  stickySidebar?: boolean;
+}
+
+const {
+  items,
+  eyebrow,
+  title,
+  description,
+  tone = 'light',
+  class: className = '',
+  cta,
+  stickySidebar = true,
+  ...rest
+} = Astro.props;
+
+const faqSeed = `${title ?? 'preguntas'}|${items.map((item) => item.question).join('|')}`;
+let faqHash = 2166136261;
+for (let index = 0; index < faqSeed.length; index += 1) {
+  faqHash ^= faqSeed.charCodeAt(index);
+  faqHash = Math.imul(faqHash, 16777619);
+}
+const sectionId = `faq-${(faqHash >>> 0).toString(36)}`;
+const titleId = `${sectionId}-title`;
+const listId = `${sectionId}-list`;
+const searchId = `${sectionId}-search`;
+const groupName = `${sectionId}-group`;
+
+const categories = Array.from(new Set(items.map((item) => item.category)));
+const counts = items.reduce<Record<string, number>>((accumulator, item) => {
+  accumulator[item.category] = (accumulator[item.category] ?? 0) + 1;
+  return accumulator;
+}, {});
+---
+
+<section
+  {...rest}
+  class:list={['faq-section', `faq-section--${tone}`, className]}
+  data-faq-section={sectionId}
+  aria-labelledby={title ? titleId : undefined}
+  aria-label={title ? undefined : 'Preguntas frecuentes'}
+>
+  <div class="faq-shell kb-shell-wide">
+    <slot name="header" />
+
+    <div class="faq-layout">
+      <aside
+        class:list={['faq-sidebar animate-on-scroll', !stickySidebar && 'faq-sidebar--static']}
+        aria-label="Panel de preguntas"
+      >
+        <slot name="sidebar">
+          <div class="faq-sidebar-inner kb-panel">
+            <span class="faq-sidebar-rule" aria-hidden="true"></span>
+
+            {(eyebrow || title || description) && (
+              <header class="faq-sidebar-header">
+                {eyebrow && (
+                  <Eyebrow lined accent class="faq-header-eyebrow">
+                    {eyebrow}
+                  </Eyebrow>
+                )}
+                {title && <h2 id={titleId} class="faq-title">{title}</h2>}
+                {description && <p class="faq-description">{description}</p>}
+              </header>
+            )}
+
+            <div class="faq-search">
+              <FormField label="Buscar" for={searchId} icon="search">
+                <input
+                  id={searchId}
+                  class="kb-input faq-search-input"
+                  type="search"
+                  placeholder="¿Qué duda tienes?"
+                  autocomplete="off"
+                  aria-controls={listId}
+                  data-faq-search
+                />
+              </FormField>
+            </div>
+
+            <div class="faq-filters">
+              <span class="faq-sidebar-label kb-micro-label">Filtrar por tema</span>
+              <div class="faq-filter-list" role="group" aria-label="Categorías de preguntas">
+                <button
+                  class="faq-filter-btn"
+                  type="button"
+                  data-faq-filter="all"
+                  data-active="true"
+                  aria-pressed="true"
+                >
+                  Todas
+                  <span class="faq-filter-count">{items.length}</span>
+                </button>
+                {categories.map((category) => (
+                  <button
+                    class="faq-filter-btn"
+                    type="button"
+                    data-faq-filter={category}
+                    data-active="false"
+                    aria-pressed="false"
+                  >
+                    {category}
+                    <span class="faq-filter-count">{counts[category]}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div class="faq-controls">
+              <button
+                class="faq-control-btn"
+                type="button"
+                data-faq-action="expand"
+                aria-label="Expandir todas las respuestas"
+              >
+                <Icon name="chevron-right" class="w-3 h-3" />
+                <span>Expandir todo</span>
+              </button>
+              <button
+                class="faq-control-btn"
+                type="button"
+                data-faq-action="collapse"
+                aria-label="Contraer todas las respuestas"
+              >
+                <Icon name="chevron-right" class="w-3 h-3" />
+                <span>Contraer todo</span>
+              </button>
+            </div>
+
+            <div class="faq-support">
+              <span class="faq-sidebar-label kb-micro-label">Soporte</span>
+              <div class="faq-support-card">
+                <span class="faq-support-icon" aria-hidden="true">
+                  <Icon name="clock" class="w-4 h-4" />
+                </span>
+                <span class="faq-support-text">Respuesta en menos de 24h laborables.</span>
+              </div>
+            </div>
+
+            <div class="faq-counter" aria-live="polite" aria-atomic="true">
+              <span class="faq-counter-value" data-faq-counter-value>{items.length}</span>
+              <span class="faq-counter-label" data-faq-counter-label>preguntas</span>
+            </div>
+          </div>
+        </slot>
+      </aside>
+
+      <div class="faq-list" id={listId} role="region" aria-label="Listado de preguntas">
+        {items.map((item, index) => (
+          <FAQItem
+            item={item}
+            index={index}
+            sectionId={sectionId}
+            groupName={groupName}
+            tone={tone}
+          />
+        ))}
+      </div>
+    </div>
+
+    {cta && (
+      <div class="faq-cta animate-on-scroll">
+        <div class="faq-cta-inner kb-card-steel">
+          <div class="faq-cta-copy">
+            <h3 class="faq-cta-title">{cta.title}</h3>
+            <p class="faq-cta-description">{cta.description}</p>
+          </div>
+          <Button href={cta.buttonHref} variant="surfaceOutline" size="md">
+            {cta.buttonLabel}
+            <Icon name="arrow-right" />
+          </Button>
+        </div>
+      </div>
+    )}
+  </div>
+</section>
+
+<style>
+  .faq-section {
+    position: relative;
+    padding-block: var(--kb-space-section-lg);
+    overflow: hidden;
+  }
+
+  .faq-section--light {
+    background-color: var(--color-king-bg);
+    color: var(--color-king-text);
+  }
+
+  .faq-section--light::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.35;
+    background-image:
+      linear-gradient(90deg, rgba(138, 90, 43, 0.03) 0, rgba(138, 90, 43, 0.03) 1px, transparent 1px),
+      linear-gradient(rgba(26, 26, 26, 0.012) 1px, transparent 1px);
+    background-size: 10rem 100%, 100% 5rem;
+  }
+
+  .faq-section--dark {
+    background-color: var(--color-king-asphalt);
+    color: rgba(255, 255, 255, 0.92);
+  }
+
+  .faq-section--dark::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.08;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 300 300' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='asphalt'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23asphalt)'/%3E%3C/svg%3E");
+    background-size: 300px 300px;
+  }
+
+  .faq-sidebar-header {
+    position: relative;
+    margin-bottom: var(--kb-space-2);
+  }
+
+  .faq-sidebar-header .faq-header-eyebrow {
+    margin-bottom: var(--kb-space-5);
+  }
+
+  .faq-sidebar-header .faq-title {
+    margin-bottom: var(--kb-space-5);
+    font-size: var(--kb-text-h3);
+  }
+
+  .faq-sidebar-header .faq-description {
+    color: var(--color-king-muted);
+    font-size: var(--kb-text-body);
+    line-height: 1.75;
+    max-width: none;
+  }
+
+  .faq-section--dark .faq-sidebar-header .faq-description {
+    color: rgba(255, 255, 255, 0.58);
+  }
+
+  .faq-layout {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: clamp(2rem, 5vw, 4rem);
+    align-items: start;
+  }
+
+  .faq-sidebar {
+    position: relative;
+  }
+
+  .faq-sidebar-inner {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: var(--kb-space-7);
+    padding: var(--kb-space-7);
+    background: var(--kb-surface-light-strong);
+    border: 1px solid var(--kb-stroke-dark);
+    border-radius: var(--kb-panel-radius);
+    box-shadow: var(--kb-shadow-sm);
+  }
+
+  .faq-sidebar-rule {
+    position: absolute;
+    top: var(--kb-space-7);
+    bottom: var(--kb-space-7);
+    left: 0;
+    width: 3px;
+    border-radius: 0 2px 2px 0;
+    background: linear-gradient(180deg, transparent, var(--color-king-accent) 15%, var(--color-king-accent) 85%, transparent);
+    opacity: 0.65;
+    z-index: 3;
+    pointer-events: none;
+  }
+
+  .faq-section--dark .faq-sidebar-inner {
+    border-color: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .faq-section--dark .faq-sidebar-inner::after {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+
+  .faq-section--dark .faq-sidebar-rule {
+    background: linear-gradient(180deg, transparent, var(--color-king-accent-light) 15%, var(--color-king-accent-light) 85%, transparent);
+    opacity: 0.6;
+  }
+
+  .faq-search :global(.kb-label) {
+    font-size: var(--kb-text-2xs);
+  }
+
+  .faq-search :global(.kb-input) {
+    padding-left: 2.75rem;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%238a5a2b' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.3-4.3'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: 0.875rem 50%;
+    background-size: 1.125rem 1.125rem;
+  }
+
+  .faq-section--dark .faq-search :global(.kb-input) {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.92);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23a67c4e' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.3-4.3'/%3E%3C/svg%3E");
+  }
+
+  .faq-section--dark .faq-search :global(.kb-input)::placeholder {
+    color: rgba(255, 255, 255, 0.35);
+  }
+
+  .faq-support {
+    display: flex;
+    flex-direction: column;
+    gap: var(--kb-space-3);
+  }
+
+  .faq-support-card {
+    display: flex;
+    align-items: center;
+    gap: var(--kb-space-3);
+    padding: var(--kb-space-4);
+    border: 1px solid var(--kb-stroke-dark);
+    border-radius: var(--kb-radius-sm);
+    background: var(--kb-surface-light);
+    transition:
+      border-color var(--kb-dur-fast) var(--kb-ease-out),
+      background-color var(--kb-dur-fast) var(--kb-ease-out);
+  }
+
+  .faq-section--dark .faq-support-card {
+    border-color: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .faq-support-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 2rem;
+    height: 2rem;
+    border-radius: var(--kb-radius-xs);
+    background: rgba(138, 90, 43, 0.08);
+    color: var(--color-king-accent);
+    border: 1px solid rgba(138, 90, 43, 0.14);
+  }
+
+  .faq-section--dark .faq-support-icon {
+    background: rgba(183, 138, 79, 0.1);
+    color: var(--color-king-accent-light);
+    border-color: rgba(183, 138, 79, 0.2);
+  }
+
+  .faq-support-text {
+    font-size: var(--kb-text-xs);
+    line-height: 1.5;
+    color: var(--color-king-muted);
+  }
+
+  .faq-section--dark .faq-support-text {
+    color: rgba(255, 255, 255, 0.55);
+  }
+
+  .faq-sidebar-label {
+    display: block;
+    margin-bottom: var(--kb-space-3);
+    color: var(--color-king-steel);
+  }
+
+  .faq-section--dark .faq-sidebar-label {
+    color: rgba(255, 255, 255, 0.42);
+  }
+
+  .faq-filter-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--kb-space-2);
+  }
+
+  .faq-filter-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.4rem 0.625rem;
+    border: 1px solid var(--kb-stroke-dark);
+    border-radius: var(--kb-radius-xs);
+    background: transparent;
+    color: var(--color-king-muted);
+    font-family: var(--font-sans);
+    font-size: var(--kb-text-2xs);
+    font-weight: var(--kb-label-weight);
+    letter-spacing: var(--kb-micro-tracking);
+    text-transform: uppercase;
+    line-height: 1;
+    cursor: pointer;
+    transition:
+      border-color var(--kb-dur-fast) var(--kb-ease-out),
+      background-color var(--kb-dur-fast) var(--kb-ease-out),
+      color var(--kb-dur-fast) var(--kb-ease-out),
+      transform var(--kb-dur-fast) var(--kb-ease-out);
+  }
+
+  .faq-section--dark .faq-filter-btn {
+    border-color: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.55);
+  }
+
+  .faq-filter-btn:hover,
+  .faq-filter-btn:focus-visible {
+    border-color: var(--kb-stroke-accent);
+    color: var(--color-king-accent);
+    transform: translateY(-1px);
+  }
+
+  .faq-section--dark .faq-filter-btn:hover,
+  .faq-section--dark .faq-filter-btn:focus-visible {
+    border-color: rgba(183, 138, 79, 0.35);
+    color: var(--color-king-accent-light);
+  }
+
+  .faq-filter-btn[data-active='true'] {
+    border-color: var(--kb-stroke-accent);
+    background: rgba(138, 90, 43, 0.08);
+    color: var(--color-king-accent);
+  }
+
+  .faq-section--dark .faq-filter-btn[data-active='true'] {
+    border-color: rgba(183, 138, 79, 0.35);
+    background: rgba(183, 138, 79, 0.1);
+    color: var(--color-king-accent-light);
+  }
+
+  .faq-filter-count {
+    font-variant-numeric: tabular-nums;
+    opacity: 0.7;
+  }
+
+  .faq-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--kb-space-2);
+    padding-top: var(--kb-space-2);
+    border-top: 1px solid var(--kb-stroke-hairline);
+  }
+
+  .faq-section--dark .faq-controls {
+    border-color: rgba(255, 255, 255, 0.06);
+  }
+
+  .faq-control-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.4rem 0.625rem;
+    border: 1px solid transparent;
+    border-radius: var(--kb-radius-xs);
+    background: transparent;
+    color: var(--color-king-steel);
+    font-family: var(--font-sans);
+    font-size: var(--kb-text-2xs);
+    font-weight: var(--kb-label-weight);
+    letter-spacing: var(--kb-micro-tracking);
+    text-transform: uppercase;
+    line-height: 1;
+    cursor: pointer;
+    transition:
+      color var(--kb-dur-fast) var(--kb-ease-out),
+      background-color var(--kb-dur-fast) var(--kb-ease-out);
+  }
+
+  .faq-section--dark .faq-control-btn {
+    color: rgba(255, 255, 255, 0.42);
+  }
+
+  .faq-control-btn:hover,
+  .faq-control-btn:focus-visible {
+    color: var(--color-king-accent);
+    background: rgba(138, 90, 43, 0.05);
+  }
+
+  .faq-section--dark .faq-control-btn:hover,
+  .faq-section--dark .faq-control-btn:focus-visible {
+    color: var(--color-king-accent-light);
+    background: rgba(183, 138, 79, 0.08);
+  }
+
+  .faq-control-btn :global(svg) {
+    transition: transform var(--kb-dur-fast) var(--kb-ease-out);
+  }
+
+  .faq-control-btn:hover :global(svg) {
+    transform: translateX(2px);
+  }
+
+  .faq-counter {
+    display: flex;
+    align-items: baseline;
+    gap: var(--kb-space-2);
+    padding-top: var(--kb-space-4);
+    border-top: 1px solid var(--kb-stroke-hairline);
+  }
+
+  .faq-section--dark .faq-counter {
+    border-color: rgba(255, 255, 255, 0.06);
+  }
+
+  .faq-counter-value {
+    font-family: var(--font-display);
+    font-size: 1.75rem;
+    font-weight: var(--kb-w-heading-hero);
+    line-height: 1;
+    color: var(--color-king-accent);
+  }
+
+  .faq-section--dark .faq-counter-value {
+    color: var(--color-king-accent-light);
+  }
+
+  .faq-counter-label {
+    font-size: var(--kb-text-xs);
+    color: var(--color-king-muted);
+    text-transform: lowercase;
+  }
+
+  .faq-section--dark .faq-counter-label {
+    color: rgba(255, 255, 255, 0.45);
+  }
+
+  .faq-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--kb-space-4);
+  }
+
+  .faq-cta {
+    margin-top: clamp(3rem, 6vw, 5rem);
+  }
+
+  .faq-cta-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--kb-space-6);
+    padding: clamp(1.75rem, 4vw, 3rem);
+  }
+
+  .faq-cta-title {
+    font-size: var(--kb-text-h3);
+    color: rgba(255, 255, 255, 0.96);
+    margin-bottom: var(--kb-space-3);
+  }
+
+  .faq-cta-description {
+    max-width: 48ch;
+    color: rgba(255, 255, 255, 0.55);
+    margin: 0;
+  }
+
+  @media (min-width: 48rem) {
+    .faq-cta-inner {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .faq-layout {
+      grid-template-columns: minmax(22rem, 0.42fr) minmax(0, 0.58fr);
+      gap: clamp(3rem, 5vw, 5rem);
+    }
+
+    .faq-sidebar {
+      position: sticky;
+      top: 7rem;
+    }
+
+    .faq-sidebar--static {
+      position: relative;
+      top: auto;
+      align-self: stretch;
+    }
+
+    .faq-sidebar-inner {
+      padding: var(--kb-space-8);
+    }
+
+    .faq-sidebar-rule {
+      top: var(--kb-space-8);
+      bottom: var(--kb-space-8);
+    }
+  }
+
+  @media (min-width: 80rem) {
+    .faq-layout {
+      grid-template-columns: minmax(24rem, 0.4fr) minmax(0, 0.6fr);
+      gap: clamp(4rem, 6vw, 6rem);
+    }
+  }
+
+  @media (max-width: 47.99rem) {
+    .faq-cta-inner :global(.kb-btn) {
+      width: 100%;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .faq-filter-btn,
+    .faq-control-btn,
+    .faq-control-btn :global(svg) {
+      transition: none !important;
+    }
+  }
+</style>
+
+<script>
+  import { initFAQ } from '../../../scripts/faq';
+
+  const cleanups = Array.from(document.querySelectorAll<HTMLElement>('[data-faq-section]'))
+    .map((root) => initFAQ(root));
+
+  document.addEventListener(
+    'astro:before-swap',
+    () => cleanups.forEach((cleanup) => cleanup()),
+    { once: true }
+  );
+</script>

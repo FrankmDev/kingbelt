@@ -1,0 +1,126 @@
+---
+import type { NavItem } from '../../data/navigation';
+
+interface Props {
+  links: readonly NavItem[];
+}
+
+const { links } = Astro.props;
+---
+
+<nav
+  id="mobile-menu"
+  class="fixed inset-0 z-40 flex flex-col justify-center lg:hidden"
+  aria-label="Navegación móvil"
+  aria-hidden="true"
+  data-open="false"
+  inert
+>
+  <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(138,106,61,0.08),transparent_50%)]"></div>
+  <div class="mobile-nav-texture pointer-events-none absolute inset-0 opacity-[0.025]"></div>
+
+  <div class="absolute left-6 top-6 h-6 w-6 border-l border-t border-white/[0.05]"></div>
+  <div class="absolute right-6 top-6 h-6 w-6 border-r border-t border-white/[0.05]"></div>
+  <div class="absolute bottom-6 left-6 h-6 w-6 border-b border-l border-white/[0.05]"></div>
+  <div class="absolute bottom-6 right-6 h-6 w-6 border-b border-r border-white/[0.05]"></div>
+
+  <div class="relative flex h-full flex-col items-center justify-center px-6">
+    <div class="mobile-nav-eyebrow absolute top-24 left-1/2 flex -translate-x-1/2 items-center gap-3">
+      <span class="h-px w-8 bg-white/[0.06]"></span>
+      <span class="text-[var(--kb-text-eyebrow)] font-medium uppercase tracking-[0.28em] text-white/[0.12]">Navegación</span>
+      <span class="h-px w-8 bg-white/[0.06]"></span>
+    </div>
+
+    <div class="flex flex-col items-center gap-2">
+      {links.map((link, index) => (
+        <a
+          href={link.href}
+          class="mobile-nav-link group relative flex items-center gap-5 text-white/70 transition-[color,opacity,transform] duration-[var(--kb-dur-med)] hover:text-king-accent"
+          data-mobile-nav-link
+        >
+          <span class="font-mono text-[var(--kb-text-eyebrow)] tabular-nums text-white/15 transition-colors duration-[var(--kb-dur-fast)] group-hover:text-king-accent/40">0{index + 1}</span>
+          <span class="font-serif text-[clamp(1.75rem,8vw,2.75rem)] tracking-[0.02em] transition-transform duration-[var(--kb-dur-med)] group-hover:translate-x-1">{link.label}</span>
+        </a>
+      ))}
+    </div>
+
+    <div class="mobile-nav-divider my-8 h-px w-16 bg-white/[0.06]"></div>
+
+    <a
+      href="/carrito"
+      class="mobile-nav-cta kb-action-label group inline-flex items-center gap-3 border border-white/15 px-5 py-3 text-white/60 transition-[background-color,border-color,color,opacity,transform] duration-[var(--kb-dur-med)] hover:border-king-accent hover:bg-king-accent/10 hover:text-white"
+      data-cart-drawer-open
+      data-cart-count-wrapper
+      aria-label="Carrito vacío"
+    >
+      <span class="h-1.5 w-1.5 rounded-full bg-king-accent/40 transition-colors duration-[var(--kb-dur-fast)] group-hover:bg-king-accent"></span>
+      Carrito <span data-cart-count class="tabular-nums" aria-hidden="true"></span>
+    </a>
+
+    <a
+      href="/contacto"
+      class="mobile-nav-cta kb-action-label group mt-3 inline-flex items-center gap-3 border border-white/15 px-5 py-3 text-white/60 transition-[background-color,border-color,color,opacity,transform] duration-[var(--kb-dur-med)] hover:border-king-accent hover:bg-king-accent/10 hover:text-white"
+    >
+      <span class="h-1.5 w-1.5 rounded-full bg-king-accent/40 transition-colors duration-[var(--kb-dur-fast)] group-hover:bg-king-accent"></span>
+      Escribir
+    </a>
+  </div>
+</nav>
+
+<style>
+  #mobile-menu {
+    background: var(--color-king-oil);
+    transform: translateY(-100%);
+    pointer-events: none;
+    transition: transform 800ms var(--kb-ease-out);
+  }
+
+  #mobile-menu[data-open='true'] {
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  .mobile-nav-texture {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    background-size: 200px 200px;
+  }
+
+  .mobile-nav-link,
+  .mobile-nav-divider,
+  .mobile-nav-cta,
+  .mobile-nav-eyebrow {
+    opacity: 0;
+    transform: translateY(24px);
+    transition:
+      opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+      transform 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+      color 0.4s ease,
+      border-color 0.4s ease,
+      background-color 0.4s ease;
+  }
+
+  #mobile-menu[data-open='true'] .mobile-nav-link,
+  #mobile-menu[data-open='true'] .mobile-nav-divider,
+  #mobile-menu[data-open='true'] .mobile-nav-cta,
+  #mobile-menu[data-open='true'] .mobile-nav-eyebrow {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  #mobile-menu[data-open='true'] .mobile-nav-eyebrow { transition-delay: 0.2s; }
+  #mobile-menu[data-open='true'] .mobile-nav-link:nth-child(1) { transition-delay: 0.28s; }
+  #mobile-menu[data-open='true'] .mobile-nav-link:nth-child(2) { transition-delay: 0.36s; }
+  #mobile-menu[data-open='true'] .mobile-nav-link:nth-child(3) { transition-delay: 0.44s; }
+  #mobile-menu[data-open='true'] .mobile-nav-divider { transition-delay: 0.52s; }
+  #mobile-menu[data-open='true'] .mobile-nav-cta { transition-delay: 0.6s; }
+
+  @media (prefers-reduced-motion: reduce) {
+    #mobile-menu,
+    .mobile-nav-link,
+    .mobile-nav-divider,
+    .mobile-nav-cta,
+    .mobile-nav-eyebrow {
+      transition: none !important;
+    }
+  }
+</style>

@@ -1,8 +1,9 @@
 ---
 import SectionHeader from '../../common/SectionHeader.astro';
-import FAQ from '../../ui/FAQ.astro';
+import FAQ from '../../common/faq/FAQ.astro';
 import MediaFrame from '../../ui/MediaFrame.astro';
-import type { FAQItem, FAQSidebar } from '../../../data/contact';
+import type { FAQItem } from '../../common/faq/types';
+import type { FAQSidebar } from '../../../data/contact';
 
 interface Props {
   items: readonly FAQItem[];
@@ -14,7 +15,7 @@ const { items, sidebar } = Astro.props;
 
 <FAQ
   class="contact-faq section-spacing-chapter"
-  items={[...items]}
+  items={items}
   tone="light"
   stickySidebar={false}
 >

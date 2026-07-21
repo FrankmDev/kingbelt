@@ -1,5 +1,6 @@
 import { site } from './site';
 import type { IconName } from '../components/ui/icon-paths';
+import type { FAQItem } from '../components/common/faq/types';
 
 export interface ContactChannel {
   label: string;
@@ -8,13 +9,6 @@ export interface ContactChannel {
   href: string;
   icon: IconName;
   meta?: string;
-}
-
-export interface FAQItem {
-  question: string;
-  answer: string;
-  category: string;
-  icon: IconName;
 }
 
 export interface PurchaseInfoItem {

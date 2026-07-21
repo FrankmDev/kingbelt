@@ -8,9 +8,9 @@
   "scripts": {
     "dev": "astro dev",
     "check": "astro check",
-    "typecheck": "astro check",
     "test": "bun test",
-    "build": "astro check && astro build",
+    "build": "astro build",
+    "validate": "bun run check && bun run test && bun run build",
     "preview": "astro preview",
     "astro": "astro"
   },

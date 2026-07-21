@@ -19,7 +19,7 @@ Usa Astro y HTML nativo para contenido y UI estática. Añade JavaScript cliente
 src/
   components/
     layout/       # cabecera, pie y estructura global
-    common/       # infraestructura editorial compartida
+    common/       # infraestructura editorial compartida; FAQ vive en common/faq
     ui/           # primitivas visuales reutilizables
     museum/       # documentación ejecutable del sistema visual
     blog/         # composición específica del dominio editorial
@@ -36,7 +36,7 @@ src/
     dom/          # utilidades cliente compartidas (scroll y estados de botón)
   layouts/
   pages/          # rutas; coordinan datos y componentes
-  scripts/        # inicialización cliente global (p. ej. carrito)
+  scripts/        # controladores cliente procesados por Astro
   styles/
     global.css    # tokens, base y patrones compartidos
     cart.css      # excepción de dominio del carrito
@@ -63,6 +63,12 @@ Extrae un componente cuando al menos una condición sea cierta:
 
 No extraigas wrappers triviales que solo oculten dos clases ni crees variantes casi idénticas. Prefiere props y slots pequeños, explícitos y tipados.
 
+### Componentes editoriales complejos
+
+- `common/faq/FAQ.astro` coordina layout, slots, filtros y CTA; `FAQItem.astro` posee el contrato y los estilos de cada `details/summary`. Los tipos compartidos viven junto a ambos.
+- `blog/ArticleReadingSection.astro` coordina cabecera y composición; `ArticleBody.astro` renderiza capítulos y pie editorial; `ArticleIndex.astro` contiene disclosure, navegación y sticky.
+- `layout/Header.astro` y `layout/FooterSection.astro` siguen siendo los layouts públicos. `MobileNavigation.astro` encapsula únicamente el panel móvil.
+
 ## Patrones Astro
 
 - Define `interface Props` y usa `Astro.props`; evita `any` y casts amplios.
@@ -74,6 +80,8 @@ No extraigas wrappers triviales que solo oculten dos clases ni crees variantes c
 - Usa bucles para estructuras realmente repetidas y con claves/contenido homogéneo; no fuerces abstracciones que hagan ilegible una composición editorial singular.
 - Importa recursos procesables desde `src/` cuando necesiten optimización. Reserva `public/` para archivos que deban servirse sin transformación.
 - Conserva HTML semántico, una jerarquía de headings correcta y comportamiento nativo antes de recrearlo con scripts.
+
+`Button.astro` mantiene una unión entre enlace y botón basada en `HTMLAttributes<'a'>` y `HTMLAttributes<'button'>`; reenvía atributos nativos y reserva `href`, `target`, `rel`, `type` y `disabled` para impedir combinaciones incoherentes. `FormField.astro` no modifica el control slotted: el consumidor debe compartir el `id` indicado por `for`, enlazar los IDs de ayuda/error mediante `aria-describedby` y añadir `aria-invalid="true"` cuando exista error.
 
 ## Datos y futura integración
 
@@ -137,6 +145,7 @@ Promueve un patrón a global o a componente cuando se repita con la misma intenc
 - CSS para hover, focus, transiciones y revelados simples.
 - Reutiliza el patrón compartido de reveal antes de crear otro `IntersectionObserver`.
 - Si un script es local, limítalo mediante un `data-*` raíz y evita consultas globales que dupliquen listeners al reutilizar componentes.
+- Los controladores `faq.ts`, `article-index.ts`, `header.ts` y `footer.ts` exportan una inicialización idempotente por raíz. Los componentes los importan desde scripts Astro procesados; cada controlador devuelve su limpieza.
 - Usa GSAP solo para secuencias, timelines o coordinación avanzada; registra y limpia instancias cuando el ciclo de navegación lo requiera.
 - Todo efecto debe tener estado inicial seguro, fallback sin JavaScript y soporte para `prefers-reduced-motion`.
 - Anima `transform` y `opacity` siempre que sea posible; evita animar propiedades que provoquen layout continuo.
@@ -152,7 +161,7 @@ Promueve un patrón a global o a componente cuando se repita con la misma intenc
 
 ## Validación
 
-Según el cambio:
+Según el cambio, `bun run validate` agrupa sin duplicar:
 
 1. `bun run check` para tipos y diagnósticos Astro.
 2. `bun run test` para contratos de comercio y persistencia.
@@ -161,3 +170,5 @@ Según el cambio:
 5. Comprobación de overflow, focus, reduced motion, estados hover/active/disabled y contenido largo cuando apliquen.
 
 No declares completada una tarea si el check relevante falla por tus cambios. Distingue claramente errores previos del proyecto.
+
+`.github/workflows/quality.yml` ejecuta esos tres pasos con Bun fijado en cada push a `main` y pull request.

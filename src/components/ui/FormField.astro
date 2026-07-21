@@ -8,6 +8,8 @@ interface Props extends HTMLAttributes<'div'> {
   for: string;
   help?: string;
   error?: string;
+  helpId?: string;
+  errorId?: string;
   required?: boolean;
   icon?: IconName;
 }
@@ -17,16 +19,22 @@ const {
   for: forId,
   help,
   error,
+  helpId,
+  errorId: configuredErrorId,
   required = false,
   icon,
   class: className,
   ...rest
 } = Astro.props;
 
-const descriptionId = help ? `${forId}-help` : undefined;
-const errorId = error ? `${forId}-error` : undefined;
+const descriptionId = help ? (helpId ?? `${forId}-help`) : undefined;
+const errorId = error ? (configuredErrorId ?? `${forId}-error`) : undefined;
 ---
 
+<!--
+  Convención del slot: el control usa id={for}; si hay ayuda o error, enlaza el ID
+  renderizado con aria-describedby. Con error, añade también aria-invalid="true".
+-->
 <div class:list={['form-field group kb-rounded-sm', className]} {...rest}>
   <label class="kb-label" for={forId}>
     {icon && <Icon name={icon} class="w-3 h-3 text-king-accent" />}
@@ -46,7 +54,7 @@ const errorId = error ? `${forId}-error` : undefined;
   )}
 
   {error && (
-    <p id={errorId} class="form-field-message form-field-error" role="alert" aria-live="polite">
+    <p id={errorId} class="form-field-message form-field-error" role="alert">
       <Icon name="x" class="w-3 h-3 shrink-0" />
       {error}
     </p>

@@ -2,6 +2,7 @@
 import { mainNav } from '../../data/navigation';
 import CartDrawer from '../cart/CartDrawer.astro';
 import CartTrigger from '../cart/CartTrigger.astro';
+import MobileNavigation from './MobileNavigation.astro';
 
 interface Props {
   initialTheme?: 'dark' | 'light';
@@ -20,10 +21,12 @@ const links = mainNav;
 
 <header
   id="site-header"
+  data-site-header
   data-theme={initialTheme}
   data-initial-theme={initialTheme}
   data-scrolled-theme={scrolledTheme}
   data-scrolled="false"
+  data-menu-open="false"
   data-compact-threshold={compactThreshold}
   class="fixed left-0 right-0 top-0 z-50 px-3 pt-3 md:px-5 md:pt-4"
 >
@@ -60,14 +63,15 @@ const links = mainNav;
         <CartTrigger />
         <button
           id="menu-toggle"
+          data-menu-toggle
           class="relative -mr-2 flex h-11 w-11 flex-col items-end justify-center gap-[6px] p-2"
           aria-label="Abrir menú"
           aria-controls="mobile-menu"
           aria-expanded="false"
           type="button"
         >
-          <span class="menu-line menu-line-1 block h-[1.5px]" style="width: 1.5rem;"></span>
-          <span class="menu-line menu-line-2 block h-[1.5px]" style="width: 0.9rem;"></span>
+          <span class="menu-line menu-line-1 block h-[1.5px]"></span>
+          <span class="menu-line menu-line-2 block h-[1.5px]"></span>
         </button>
       </div>
     </nav>
@@ -79,67 +83,7 @@ const links = mainNav;
   </div>
 </header>
 
-<nav
-  id="mobile-menu"
-  class="fixed inset-0 z-40 flex flex-col justify-center lg:hidden"
-  aria-label="Navegación móvil"
-  aria-hidden="true"
-  inert
->
-  {/* Ambient surface details */}
-  <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(138,106,61,0.08),transparent_50%)]"></div>
-  <div class="pointer-events-none absolute inset-0 opacity-[0.025]" style="background-image: url('data:image/svg+xml,%3Csvg viewBox=\'0 0 512 512\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.8\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noise)\'/%3E%3C/svg%3E'); background-size: 200px 200px;"></div>
-
-  <div class="absolute left-6 top-6 h-6 w-6 border-l border-t border-white/[0.05]"></div>
-  <div class="absolute right-6 top-6 h-6 w-6 border-r border-t border-white/[0.05]"></div>
-  <div class="absolute bottom-6 left-6 h-6 w-6 border-b border-l border-white/[0.05]"></div>
-  <div class="absolute bottom-6 right-6 h-6 w-6 border-b border-r border-white/[0.05]"></div>
-
-  <div class="relative flex h-full flex-col items-center justify-center px-6">
-    {/* Eyebrow label */}
-    <div class="mobile-nav-eyebrow absolute top-24 left-1/2 flex -translate-x-1/2 items-center gap-3">
-      <span class="h-px w-8 bg-white/[0.06]"></span>
-      <span class="text-[var(--kb-text-eyebrow)] font-medium uppercase tracking-[0.28em] text-white/[0.12]">Navegación</span>
-      <span class="h-px w-8 bg-white/[0.06]"></span>
-    </div>
-
-    {/* Links */}
-    <div class="flex flex-col items-center gap-2">
-      {links.map((l, i) => (
-        <a
-          href={l.href}
-          class="mobile-nav-link group relative flex items-center gap-5 text-white/70 transition-[color,opacity,transform] duration-[var(--kb-dur-med)] hover:text-king-accent"
-        >
-          <span class="font-mono text-[var(--kb-text-eyebrow)] tabular-nums text-white/15 transition-colors duration-[var(--kb-dur-fast)] group-hover:text-king-accent/40">0{i + 1}</span>
-          <span class="font-serif text-[clamp(1.75rem,8vw,2.75rem)] tracking-[0.02em] transition-transform duration-[var(--kb-dur-med)] group-hover:translate-x-1">{l.label}</span>
-        </a>
-      ))}
-    </div>
-
-    {/* Divider */}
-    <div class="mobile-nav-divider my-8 h-px w-16 bg-white/[0.06]"></div>
-
-    {/* CTA */}
-    <a
-      href="/carrito"
-      class="mobile-nav-cta kb-action-label group inline-flex items-center gap-3 border border-white/15 px-5 py-3 text-white/60 transition-[background-color,border-color,color,opacity,transform] duration-[var(--kb-dur-med)] hover:border-king-accent hover:bg-king-accent/10 hover:text-white"
-      data-cart-drawer-open
-      data-cart-count-wrapper
-      aria-label="Carrito vacío"
-    >
-      <span class="h-1.5 w-1.5 rounded-full bg-king-accent/40 transition-colors duration-[var(--kb-dur-fast)] group-hover:bg-king-accent"></span>
-      Carrito <span data-cart-count class="tabular-nums" aria-hidden="true"></span>
-    </a>
-
-    <a
-      href="/contacto"
-      class="mobile-nav-cta kb-action-label group mt-3 inline-flex items-center gap-3 border border-white/15 px-5 py-3 text-white/60 transition-[background-color,border-color,color,opacity,transform] duration-[var(--kb-dur-med)] hover:border-king-accent hover:bg-king-accent/10 hover:text-white"
-    >
-      <span class="h-1.5 w-1.5 rounded-full bg-king-accent/40 transition-colors duration-[var(--kb-dur-fast)] group-hover:bg-king-accent"></span>
-      Escribir
-    </a>
-  </div>
-</nav>
+<MobileNavigation links={links} />
 
 <CartDrawer />
 
@@ -150,12 +94,6 @@ const links = mainNav;
       transform 700ms cubic-bezier(0.22, 1, 0.36, 1),
       color 500ms ease,
       opacity 500ms ease;
-  }
-
-  #mobile-menu {
-    background: var(--color-king-oil);
-    transform: translateY(-100%);
-    transition: transform 800ms var(--kb-ease-out);
   }
 
   .header-shell {
@@ -252,6 +190,23 @@ const links = mainNav;
       transform 500ms ease,
       width 500ms ease,
       background-color 400ms ease;
+  }
+
+  .menu-line-1 {
+    width: 1.5rem;
+  }
+
+  .menu-line-2 {
+    width: 0.9rem;
+  }
+
+  #site-header[data-menu-open='true'] .menu-line-1 {
+    transform: translateY(3.75px) rotate(45deg);
+  }
+
+  #site-header[data-menu-open='true'] .menu-line-2 {
+    width: 1.5rem;
+    transform: translateY(-2.25px) rotate(-45deg);
   }
 
   .header-stitch {
@@ -365,141 +320,32 @@ const links = mainNav;
     transform: translateY(-0.02rem);
   }
 
-  #mobile-menu {
-    pointer-events: none;
+  @media (prefers-reduced-motion: reduce) {
+    #site-header,
+    .header-shell,
+    .header-tier-2,
+    .header-wordmark,
+    .header-logo-rule,
+    .header-link,
+    #header-cta,
+    .menu-line,
+    .header-progress-bar {
+      transition: none !important;
+    }
   }
-
-  #mobile-menu.is-open {
-    transform: translateY(0) !important;
-    pointer-events: auto;
-  }
-
-  .mobile-nav-link,
-  .mobile-nav-divider,
-  .mobile-nav-cta,
-  .mobile-nav-eyebrow {
-    opacity: 0;
-    transform: translateY(24px);
-    transition:
-      opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
-      transform 0.6s cubic-bezier(0.22, 1, 0.36, 1),
-      color 0.4s ease,
-      border-color 0.4s ease,
-      background-color 0.4s ease;
-  }
-
-  #mobile-menu.is-open .mobile-nav-link,
-  #mobile-menu.is-open .mobile-nav-divider,
-  #mobile-menu.is-open .mobile-nav-cta,
-  #mobile-menu.is-open .mobile-nav-eyebrow {
-    opacity: 1;
-    transform: translateY(0);
-  }
-
-  #mobile-menu.is-open .mobile-nav-eyebrow { transition-delay: 0.2s; }
-  #mobile-menu.is-open .mobile-nav-link:nth-child(1) { transition-delay: 0.28s; }
-  #mobile-menu.is-open .mobile-nav-link:nth-child(2) { transition-delay: 0.36s; }
-  #mobile-menu.is-open .mobile-nav-link:nth-child(3) { transition-delay: 0.44s; }
-  #mobile-menu.is-open .mobile-nav-divider { transition-delay: 0.52s; }
-  #mobile-menu.is-open .mobile-nav-cta { transition-delay: 0.6s; }
 </style>
 
 <script>
-  import { CART_DRAWER_OPEN_EVENT } from '../../lib/commerce/cart-client';
-  import { lockBodyScroll, unlockBodyScroll } from '../../lib/dom/scroll-lock';
+  import { initHeader } from '../../scripts/header';
 
-  const header = document.getElementById('site-header');
-  const menuToggle = document.getElementById('menu-toggle');
-  const mobileMenu = document.getElementById('mobile-menu');
-  const mobileLinks = document.querySelectorAll('.mobile-nav-link');
-  let isMenuOpen = false;
+  const cleanups = Array.from(document.querySelectorAll<HTMLElement>('[data-site-header]'))
+    .map((root) => initHeader(root));
 
-  function closeMenu({ restoreFocus = true } = {}) {
-    if (!isMenuOpen) return;
-    isMenuOpen = false;
-    menuToggle?.setAttribute('aria-expanded', 'false');
-    menuToggle?.setAttribute('aria-label', 'Abrir menú');
-    mobileMenu?.setAttribute('aria-hidden', 'true');
-    mobileMenu?.setAttribute('inert', '');
-    mobileMenu?.classList.remove('is-open');
-    menuToggle?.querySelector('.menu-line-1')?.classList.remove('rotate-45', 'translate-y-[3.75px]');
-    menuToggle?.querySelector('.menu-line-2')?.classList.remove('-rotate-45', '-translate-y-[2.25px]', 'w-6');
-    unlockBodyScroll('mobile-navigation');
-    if (restoreFocus) menuToggle?.focus();
-  }
-
-  function updateHeader() {
-    if (!header) return;
-
-    const initial = header.getAttribute('data-initial-theme') || 'dark';
-    const scrolledTheme = header.getAttribute('data-scrolled-theme') || 'light';
-    const threshold = Number(header.getAttribute('data-compact-threshold') || '72');
-    const scrollY = window.scrollY;
-    const progress = Math.min(scrollY / 180, 1);
-    const scrolled = scrollY > threshold;
-
-    header.style.setProperty('--scroll-progress', progress.toFixed(3));
-    header.setAttribute('data-theme', scrolled ? scrolledTheme : initial);
-    header.setAttribute('data-scrolled', String(scrolled));
-  }
-
-  window.addEventListener('scroll', updateHeader, { passive: true });
-  window.addEventListener('resize', () => {
-    updateHeader();
-    if (window.innerWidth >= 1024) closeMenu({ restoreFocus: false });
-  }, { passive: true });
-  updateHeader();
-
-  menuToggle?.addEventListener('click', () => {
-    if (!isMenuOpen) {
-      isMenuOpen = true;
-      menuToggle.setAttribute('aria-expanded', 'true');
-      menuToggle.setAttribute('aria-label', 'Cerrar menú');
-      mobileMenu?.setAttribute('aria-hidden', 'false');
-      mobileMenu?.removeAttribute('inert');
-      mobileMenu?.classList.add('is-open');
-      menuToggle.querySelector('.menu-line-1')?.classList.add('rotate-45', 'translate-y-[3.75px]');
-      menuToggle.querySelector('.menu-line-2')?.classList.add('-rotate-45', '-translate-y-[2.25px]', 'w-6');
-      lockBodyScroll('mobile-navigation');
-      const firstLink = mobileMenu?.querySelector<HTMLElement>('.mobile-nav-link');
-      setTimeout(() => firstLink?.focus(), 400);
-    } else {
-      closeMenu();
-    }
-  });
-
-  mobileLinks.forEach((link) => {
-    link.addEventListener('click', () => {
-      if (isMenuOpen) menuToggle?.click();
-    });
-  });
-
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && isMenuOpen) {
-      closeMenu();
-    }
-
-    if (e.key === 'Tab' && isMenuOpen && mobileMenu) {
-      const focusable = Array.from(
-        mobileMenu.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])')
-      );
-      if (!focusable.length) return;
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-
-      if (e.shiftKey && document.activeElement === first) {
-        e.preventDefault();
-        last.focus();
-      } else if (!e.shiftKey && document.activeElement === last) {
-        e.preventDefault();
-        first.focus();
-      }
-    }
-  });
-
-  document.addEventListener(CART_DRAWER_OPEN_EVENT, () => {
-    closeMenu({ restoreFocus: false });
-  });
+  document.addEventListener(
+    'astro:before-swap',
+    () => cleanups.forEach((cleanup) => cleanup()),
+    { once: true }
+  );
 </script>
 
 <script>

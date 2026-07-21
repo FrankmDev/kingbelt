@@ -1,33 +1,32 @@
 ---
-interface BaseProps {
+import type { HTMLAttributes } from 'astro/types';
+
+interface SharedProps {
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'surface' | 'surfaceOutline';
   size?: 'sm' | 'md' | 'lg';
   class?: string;
-  id?: string;
-  disabled?: boolean;
   loading?: boolean;
-  title?: string;
-  'aria-label'?: string;
-  'aria-describedby'?: string;
 }
 
-interface LinkProps extends BaseProps {
+type LinkProps = SharedProps &
+  Omit<HTMLAttributes<'a'>, 'class' | 'href' | 'target' | 'rel' | 'type' | 'disabled'> & {
   href: string;
-  target?: string;
-  rel?: string;
+  target?: HTMLAttributes<'a'>['target'];
+  rel?: HTMLAttributes<'a'>['rel'];
+  disabled?: boolean;
   type?: never;
   name?: never;
   form?: never;
-}
+};
 
-interface ButtonProps extends BaseProps {
-  href?: undefined;
+type ButtonProps = SharedProps &
+  Omit<HTMLAttributes<'button'>, 'class' | 'type' | 'disabled'> & {
+  href?: never;
   target?: never;
   rel?: never;
-  type?: 'button' | 'submit' | 'reset';
-  name?: string;
-  form?: string;
-}
+  type?: HTMLAttributes<'button'>['type'];
+  disabled?: boolean;
+};
 
 type Props = LinkProps | ButtonProps;
 
@@ -41,11 +40,12 @@ const {
   type = 'button',
   disabled = false,
   loading = false,
-  'aria-label': ariaLabel,
+  'aria-busy': ariaBusy,
+  'aria-disabled': ariaDisabled,
   ...rest
 } = Astro.props;
 
-const btnVariants: Record<NonNullable<BaseProps['variant']>, string> = {
+const btnVariants: Record<NonNullable<SharedProps['variant']>, string> = {
   primary: 'kb-btn-primary',
   secondary: 'kb-btn-secondary',
   outline: 'kb-btn-outline',
@@ -54,22 +54,28 @@ const btnVariants: Record<NonNullable<BaseProps['variant']>, string> = {
   surfaceOutline: 'kb-btn-surface-outline',
 };
 
-const btnSizes: Record<NonNullable<BaseProps['size']>, string> = {
+const btnSizes: Record<NonNullable<SharedProps['size']>, string> = {
   sm: 'kb-btn-sm',
   md: 'kb-btn-md',
   lg: 'kb-btn-lg',
 };
 
-const Element = href ? 'a' : 'button';
+const isLink = typeof href === 'string';
+const Element = isLink ? 'a' : 'button';
 const isInactive = disabled || loading;
-const safeRel = target === '_blank' && !rel ? 'noopener noreferrer' : rel;
+const relTokens = new Set((rel ?? '').split(/\s+/).filter(Boolean));
+if (target === '_blank') {
+  relTokens.add('noopener');
+  relTokens.add('noreferrer');
+}
+const safeRel = relTokens.size ? Array.from(relTokens).join(' ') : undefined;
 
-const elementProps = href
+const elementProps = isLink
   ? {
       href: isInactive ? undefined : href,
       target,
       rel: safeRel,
-      'aria-disabled': isInactive || undefined,
+      'aria-disabled': isInactive ? 'true' : ariaDisabled,
     }
   : {
       type,
@@ -87,10 +93,9 @@ const elementProps = href
     loading && 'kb-btn-loading',
     className,
   ]}
-  {...elementProps}
   {...rest}
-  aria-label={ariaLabel}
-  aria-busy={loading || undefined}
+  {...elementProps}
+  aria-busy={loading ? 'true' : ariaBusy}
 >
   <span class="kb-btn-text"><slot /></span>
   {loading && <span class="kb-btn-spinner" aria-hidden="true"></span>}

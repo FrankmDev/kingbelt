@@ -15,6 +15,7 @@ bun run dev
 bun run check
 bun run test
 bun run build
+bun run validate
 bun run preview
 ```
 
@@ -52,3 +53,5 @@ src/
 - Usa Bun exclusivamente; el lockfile válido es `bun.lock`.
 
 Lee `AGENTS.md` antes de modificar el proyecto y carga `docs/DESIGN.md`, `docs/ARCHITECTURE.md` o `docs/PROJECT.md` según el alcance.
+
+La validación continua vive en `.github/workflows/quality.yml` y ejecuta check, tests y build con Bun 1.3.10 en `main` y pull requests.

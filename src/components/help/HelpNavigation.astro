@@ -1,0 +1,94 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+import { helpNavItems } from '../../data/help';
+
+interface Props extends Omit<HTMLAttributes<'nav'>, 'class'> {
+  currentPath: string;
+  class?: string;
+}
+
+const { currentPath, class: className, ...rest } = Astro.props;
+
+const normalize = (path: string) => path.replace(/\/$/, '') || '/';
+const current = normalize(currentPath);
+---
+
+<nav {...rest} class:list={['help-nav', className]} aria-label="Secciones de ayuda">
+  <ul class="help-nav__list">
+    {helpNavItems.map((item) => {
+      const isActive = normalize(item.href.split('#')[0]) === current;
+      return (
+        <li>
+          <a
+            href={item.href}
+            class:list={['help-nav__link', isActive && 'help-nav__link--active']}
+            aria-current={isActive ? 'page' : undefined}
+          >
+            {item.label}
+          </a>
+        </li>
+      );
+    })}
+  </ul>
+</nav>
+
+<style>
+  .help-nav__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .help-nav__link {
+    display: block;
+    padding: 0.5rem 0.75rem;
+    font-size: var(--kb-text-xs);
+    font-weight: 500;
+    color: var(--color-king-muted);
+    text-decoration: none;
+    border-left: 2px solid transparent;
+    transition:
+      color var(--kb-dur-fast) var(--kb-ease-out),
+      border-color var(--kb-dur-fast) var(--kb-ease-out),
+      background-color var(--kb-dur-fast) var(--kb-ease-out);
+    border-radius: 0 var(--kb-radius-xs) var(--kb-radius-xs) 0;
+  }
+
+  .help-nav__link:hover {
+    color: var(--color-king-text);
+    background: var(--kb-surface-light);
+  }
+
+  .help-nav__link--active {
+    color: var(--color-king-accent);
+    border-left-color: var(--color-king-accent);
+    background: rgba(138, 90, 43, 0.06);
+  }
+
+  .help-nav__link:focus-visible {
+    outline: 2px solid var(--color-king-accent);
+    outline-offset: 2px;
+  }
+
+  @media (max-width: 63.99rem) {
+    .help-nav__list {
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .help-nav__link {
+      border-left: none;
+      border: 1px solid var(--kb-stroke-hairline);
+      border-radius: var(--kb-radius-pill);
+      padding: 0.4rem 0.85rem;
+    }
+
+    .help-nav__link--active {
+      border-color: var(--color-king-accent);
+    }
+  }
+</style>

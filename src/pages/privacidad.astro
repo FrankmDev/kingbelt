@@ -1,0 +1,72 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/layout/Header.astro';
+import FooterSection from '../components/layout/FooterSection.astro';
+import LegalPageLayout from '../components/legal/LegalPageLayout.astro';
+import LegalSection from '../components/legal/LegalSection.astro';
+import PrivacySummary from '../components/legal/PrivacySummary.astro';
+import Prose from '../components/ui/Prose.astro';
+import { getLegalRobots, legalDocuments } from '../data/legal';
+import { confirmed, businessFacts } from '../data/business';
+import { site } from '../data/site';
+
+const doc = legalDocuments.privacidad;
+const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href;
+const email = confirmed(businessFacts.email) ?? site.contact.email;
+const completedSectionIds = new Set([
+  'ejercicio-derechos',
+  'reclamacion-aepd',
+  'modificaciones',
+]);
+---
+
+<BaseLayout
+  title={doc.title}
+  description={doc.description}
+  canonicalURL={canonicalURL}
+  robots={getLegalRobots(doc)}
+>
+  <Header slot="header" initialTheme="light" scrolledTheme="light" compactThreshold={32} />
+
+  <LegalPageLayout
+    document={doc}
+    title="Política de privacidad"
+    description="Información sobre el tratamiento de datos personales."
+    breadcrumbs={[{ label: 'Privacidad' }]}
+  >
+    <PrivacySummary class="mb-10" />
+
+    <Prose variant="document">
+      {doc.sections.map((section) => (
+        <LegalSection
+          id={section.id}
+          title={section.title}
+          pending={!completedSectionIds.has(section.id)}
+        >
+          {section.id === 'ejercicio-derechos' && (
+            <p>
+              Puedes ejercer tus derechos enviando un correo a{' '}
+              <a href={`mailto:${email}`}>{email}</a> e indicando el derecho que deseas ejercer.
+              Si existen dudas razonables sobre la identidad de la persona solicitante, podrán pedirse
+              datos adicionales necesarios para confirmarla.
+            </p>
+          )}
+          {section.id === 'reclamacion-aepd' && (
+            <p>
+              Si consideras que el tratamiento de tus datos no se ajusta a la normativa, puedes presentar una reclamación
+              ante la Agencia Española de Protección de Datos (<a href="https://www.aepd.es" rel="noopener noreferrer" target="_blank">www.aepd.es</a>).
+            </p>
+          )}
+          {section.id === 'modificaciones' && (
+            <p>
+              Esta política puede actualizarse para reflejar cambios en los tratamientos o en la normativa aplicable.
+              La fecha de la última revisión se indicará en la cabecera del documento.
+            </p>
+          )}
+        </LegalSection>
+      ))}
+    </Prose>
+  </LegalPageLayout>
+
+  <FooterSection slot="footer" />
+</BaseLayout>

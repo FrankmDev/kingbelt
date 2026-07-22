@@ -1,0 +1,170 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/layout/Header.astro';
+import FooterSection from '../components/layout/FooterSection.astro';
+import LegalPageLayout from '../components/legal/LegalPageLayout.astro';
+import LegalSection from '../components/legal/LegalSection.astro';
+import Prose from '../components/ui/Prose.astro';
+import {
+  currentTechnologies,
+  externalResources,
+  getLegalRobots,
+  legalDocuments,
+} from '../data/legal';
+import { confirmed, businessFacts } from '../data/business';
+import { site } from '../data/site';
+
+const doc = legalDocuments.cookies;
+const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href;
+const email = confirmed(businessFacts.email) ?? site.contact.email;
+---
+
+<BaseLayout
+  title={doc.title}
+  description={doc.description}
+  canonicalURL={canonicalURL}
+  robots={getLegalRobots(doc)}
+>
+  <Header slot="header" initialTheme="light" scrolledTheme="light" compactThreshold={32} />
+
+  <LegalPageLayout
+    document={doc}
+    title="Política de cookies y tecnologías"
+    description="Información sobre el almacenamiento local y recursos externos utilizados actualmente."
+    breadcrumbs={[{ label: 'Cookies' }]}
+  >
+    <Prose variant="document">
+      <LegalSection id="que-son" title="Qué son las cookies y el almacenamiento local">
+        <p>
+          Las <strong>cookies</strong> son pequeños archivos de texto que un sitio web puede almacenar en tu navegador.
+          El <strong>almacenamiento local</strong> (<code>localStorage</code> y <code>sessionStorage</code>) es una tecnología
+          del navegador distinta de las cookies: no se envía automáticamente al servidor en cada petición.
+        </p>
+        <p>
+          Actualmente, KingBelt no utiliza cookies de analítica, publicidad ni marketing. Esta política describe
+          únicamente las tecnologías demostrables en el código del sitio.
+        </p>
+      </LegalSection>
+
+      <LegalSection id="tecnologias-actuales" title="Tecnologías utilizadas actualmente">
+        {currentTechnologies.length > 0 ? (
+          <div class="cookies-table-wrap">
+            <table class="cookies-table">
+              <caption class="sr-only">Tecnologías de almacenamiento local en KingBelt</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Nombre</th>
+                  <th scope="col">Tipo</th>
+                  <th scope="col">Finalidad</th>
+                  <th scope="col">Duración</th>
+                  <th scope="col">Proveedor</th>
+                </tr>
+              </thead>
+              <tbody>
+                {currentTechnologies.map((tech) => (
+                  <tr>
+                    <th scope="row">{tech.name}</th>
+                    <td>{tech.type}</td>
+                    <td>{tech.purpose}</td>
+                    <td>{tech.duration}</td>
+                    <td>{tech.provider}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p>No se han detectado tecnologías de almacenamiento en el sitio.</p>
+        )}
+        <p>
+          El carrito de demostración local conserva identificadores de producto, color, talla y cantidad.
+          No almacena precios ni datos de pago.
+        </p>
+      </LegalSection>
+
+      <LegalSection id="recursos-externos" title="Recursos externos">
+        <p>
+          El sitio carga tipografías desde servicios externos. Estos recursos pueden generar peticiones a dominios de terceros:
+        </p>
+        <ul>
+          {externalResources.map((resource) => (
+            <li>
+              <strong>{resource.name}</strong> ({resource.domains.join(', ')}): {resource.purpose}{' '}
+              {resource.cookieNote}
+            </li>
+          ))}
+        </ul>
+      </LegalSection>
+
+      <LegalSection id="gestion" title="Cómo gestionar las preferencias">
+        <p>
+          Puedes eliminar el almacenamiento local desde la configuración de tu navegador.
+          Al borrar los datos del sitio, se vaciará el carrito guardado.
+        </p>
+        <p>
+          No existe actualmente un banner de consentimiento porque no se utilizan cookies no esenciales.
+          Si en el futuro se incorporan analítica, marketing o servicios de terceros que requieran consentimiento,
+          se implementará el mecanismo correspondiente y se actualizará esta política.
+        </p>
+      </LegalSection>
+
+      <LegalSection id="cambios-futuros" title="Cambios previstos">
+        <p>
+          Cuando se integren Shopify, pasarela de pago, transportistas, email marketing o analítica,
+          esta política deberá revisarse para documentar las cookies y tecnologías que incorporen.
+        </p>
+      </LegalSection>
+
+      <LegalSection id="contacto" title="Contacto">
+        <p>
+          Para consultas sobre esta política, escríbenos a{' '}
+          <a href={`mailto:${email}`}>{email}</a>.
+        </p>
+      </LegalSection>
+    </Prose>
+  </LegalPageLayout>
+
+  <FooterSection slot="footer" />
+</BaseLayout>
+
+<style>
+  .cookies-table-wrap {
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    margin: 1rem 0;
+    border: 1px solid var(--kb-stroke-hairline);
+    border-radius: var(--kb-radius-xs);
+  }
+
+  .cookies-table {
+    width: 100%;
+    min-width: 36rem;
+    border-collapse: collapse;
+    font-size: var(--kb-text-2xs);
+  }
+
+  .cookies-table th,
+  .cookies-table td {
+    padding: 0.75rem 0.85rem;
+    text-align: left;
+    border-bottom: 1px solid var(--kb-stroke-hairline);
+    vertical-align: top;
+  }
+
+  .cookies-table thead th {
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-king-muted);
+    background: var(--kb-surface-light);
+  }
+
+  .cookies-table tbody th {
+    font-weight: 600;
+    color: var(--color-king-text);
+  }
+
+  .cookies-table tbody td {
+    color: var(--color-king-muted);
+  }
+</style>

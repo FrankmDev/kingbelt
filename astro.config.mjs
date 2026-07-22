@@ -1,6 +1,8 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import tailwindcss from '@tailwindcss/vite';
+import sitemap from '@astrojs/sitemap';
+import { isSitemapExcluded } from './src/data/legal.ts';
 
 // https://astro.build/config
 export default defineConfig({
@@ -8,8 +10,16 @@ export default defineConfig({
   compressHTML: true,
   // KingBelt uses file-based static routes and does not opt into advanced routing.
   fetchFile: null,
+  site: 'https://kingbelt.com',
+  integrations: [
+    sitemap({
+      filter: (page) => {
+        const pathname = new URL(page).pathname;
+        return !isSitemapExcluded(pathname);
+      },
+    }),
+  ],
   vite: {
     plugins: [tailwindcss()],
   },
-  site: 'https://kingbelt.com',
 });

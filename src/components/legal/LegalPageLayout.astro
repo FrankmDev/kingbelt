@@ -1,0 +1,276 @@
+---
+import Breadcrumbs from '../ui/Breadcrumbs.astro';
+import LegalNavigation from './LegalNavigation.astro';
+import LegalStatusNotice from './LegalStatusNotice.astro';
+import type { LegalDocument } from '../../data/legal';
+
+interface Props {
+  document: LegalDocument;
+  title: string;
+  description?: string;
+  breadcrumbs: { label: string; href?: string }[];
+  showLegalNav?: boolean;
+  showContactCta?: boolean;
+}
+
+const {
+  document,
+  title,
+  description,
+  breadcrumbs,
+  showLegalNav = true,
+  showContactCta = true,
+} = Astro.props;
+
+const { status, updatedAt, version, sections } = document;
+---
+
+<div class="legal-page">
+  <header class="legal-page__header kb-shell-wide">
+    <Breadcrumbs items={breadcrumbs} class="mb-5" />
+    <div class="legal-page__meta-row">
+      <h1 class="legal-page__title">{title}</h1>
+      {(version || updatedAt) && (
+        <p class="legal-page__version kb-meta-label">
+          {version && <span>v{version}</span>}
+          {version && updatedAt && <span aria-hidden="true"> · </span>}
+          {updatedAt && <span>Actualizado: {updatedAt}</span>}
+        </p>
+      )}
+    </div>
+    {description && <p class="legal-page__desc">{description}</p>}
+    {status !== 'published' && (
+      <LegalStatusNotice class="legal-page__notice" status={status} />
+    )}
+  </header>
+
+  <div class="legal-page__body kb-shell-wide">
+    {sections.length > 0 && (
+      <aside class="legal-page__toc" aria-label="Navegación del documento">
+        <details class="legal-page__toc-disclosure">
+          <summary class="legal-page__toc-summary kb-action-label">
+            Índice del documento
+          </summary>
+          <div class="legal-page__toc-panel">
+            <nav aria-label="Índice del documento">
+              <p class="legal-page__toc-label kb-action-label">En este documento</p>
+              <ol class="legal-page__toc-list">
+                {sections.map((section) => (
+                  <li>
+                    <a href={`#${section.id}`} class="legal-page__toc-link">
+                      {section.title}
+                    </a>
+                  </li>
+                ))}
+              </ol>
+            </nav>
+            {showLegalNav && (
+              <div class="legal-page__legal-nav">
+                <p class="legal-page__toc-label kb-action-label">Documentos legales</p>
+                <LegalNavigation currentPath={Astro.url.pathname} />
+              </div>
+            )}
+          </div>
+        </details>
+      </aside>
+    )}
+
+    <article class="legal-page__content">
+      <slot />
+    </article>
+  </div>
+
+  {showContactCta && (
+    <footer class="legal-page__footer kb-shell-wide">
+      <p class="legal-page__footer-text">
+        Para consultas sobre este documento, escríbenos a{' '}
+        <a href="/contacto">contacto</a>.
+      </p>
+    </footer>
+  )}
+</div>
+
+<style>
+  .legal-page {
+    padding-top: clamp(6.5rem, 9vw, 8rem);
+    padding-bottom: var(--kb-space-section);
+  }
+
+  .legal-page__header {
+    margin-bottom: clamp(2rem, 4vw, 3rem);
+    max-width: var(--kb-shell-copy);
+  }
+
+  .legal-page__meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem 1.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .legal-page__title {
+    font-family: var(--font-display);
+    font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+    font-weight: var(--kb-w-heading-strong);
+    line-height: 1.12;
+    color: var(--color-king-text);
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  .legal-page__version {
+    margin: 0;
+    color: var(--color-king-muted);
+    white-space: nowrap;
+  }
+
+  .legal-page__desc {
+    font-size: var(--kb-text-body);
+    line-height: 1.65;
+    color: var(--color-king-muted);
+    margin: 0;
+    max-width: 58ch;
+  }
+
+  .legal-page__notice {
+    margin-top: 1.25rem;
+  }
+
+  .legal-page__body {
+    display: grid;
+    gap: clamp(2rem, 4vw, 3rem);
+  }
+
+  .legal-page__toc-disclosure {
+    border-block: 1px solid var(--kb-stroke-hairline);
+  }
+
+  .legal-page__toc-summary {
+    min-height: 2.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--kb-space-3);
+    color: var(--color-king-text);
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .legal-page__toc-summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .legal-page__toc-summary::after {
+    content: '+';
+    color: var(--color-king-accent);
+    font-size: var(--kb-text-body);
+    font-weight: 400;
+  }
+
+  .legal-page__toc-disclosure[open] .legal-page__toc-summary::after {
+    content: '−';
+  }
+
+  .legal-page__toc-summary:focus-visible {
+    outline: 2px solid var(--color-king-accent);
+    outline-offset: 2px;
+  }
+
+  .legal-page__toc-panel {
+    padding-block: var(--kb-space-4) var(--kb-space-5);
+  }
+
+  @media (min-width: 64rem) {
+    .legal-page__body {
+      grid-template-columns: minmax(12rem, 15rem) minmax(0, 1fr);
+      align-items: start;
+    }
+
+    .legal-page__toc {
+      position: sticky;
+      top: 6rem;
+    }
+
+    .legal-page__toc-disclosure {
+      border: 0;
+    }
+
+    .legal-page__toc-summary {
+      display: none;
+    }
+
+    .legal-page__toc-disclosure:not([open]) > .legal-page__toc-panel {
+      display: block;
+    }
+
+    .legal-page__toc-panel {
+      padding: 0;
+    }
+  }
+
+  .legal-page__toc-label {
+    margin: 0 0 0.75rem;
+    color: var(--color-king-muted);
+  }
+
+  .legal-page__toc-list {
+    list-style: none;
+    margin: 0 0 2rem;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .legal-page__toc-link {
+    display: block;
+    padding: 0.35rem 0;
+    font-size: var(--kb-text-2xs);
+    line-height: 1.45;
+    color: var(--color-king-muted);
+    text-decoration: none;
+    border-left: 2px solid transparent;
+    padding-left: 0.65rem;
+    transition:
+      color var(--kb-dur-fast) var(--kb-ease-out),
+      border-color var(--kb-dur-fast) var(--kb-ease-out);
+  }
+
+  .legal-page__toc-link:hover {
+    color: var(--color-king-text);
+    border-left-color: var(--color-king-accent);
+  }
+
+  .legal-page__toc-link:focus-visible {
+    outline: 2px solid var(--color-king-accent);
+    outline-offset: 2px;
+  }
+
+  .legal-page__content {
+    min-width: 0;
+  }
+
+  .legal-page__footer {
+    margin-top: clamp(2rem, 4vw, 3rem);
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--kb-stroke-hairline);
+  }
+
+  .legal-page__footer-text {
+    font-size: var(--kb-text-xs);
+    color: var(--color-king-muted);
+    margin: 0;
+  }
+
+  .legal-page__footer-text a {
+    color: var(--color-king-accent);
+    font-weight: 500;
+    text-decoration: none;
+  }
+
+  .legal-page__footer-text a:hover {
+    text-decoration: underline;
+  }
+</style>

@@ -1,0 +1,117 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/layout/Header.astro';
+import FooterSection from '../components/layout/FooterSection.astro';
+import HelpPageLayout from '../components/help/HelpPageLayout.astro';
+import HelpCard from '../components/help/HelpCard.astro';
+import SectionHeader from '../components/common/SectionHeader.astro';
+import Prose from '../components/ui/Prose.astro';
+import { helpNavItems, helpMeta } from '../data/help';
+
+const { title, description } = helpMeta.ayuda;
+const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href;
+
+const primaryItems = helpNavItems.filter((item) => item.priority === 'primary');
+const secondaryItems = helpNavItems.filter((item) => item.priority === 'secondary');
+---
+
+<BaseLayout title={title} description={description} canonicalURL={canonicalURL}>
+  <Header slot="header" initialTheme="light" scrolledTheme="light" compactThreshold={32} />
+
+  <HelpPageLayout
+    title="Centro de ayuda"
+    description="Información útil antes y después de comprar: tallaje, cuidados, envíos y atención."
+    breadcrumbs={[{ label: 'Ayuda' }]}
+    showNav={false}
+  >
+    <div class="help-hub">
+      <section class="help-hub__primary" aria-labelledby="help-primary-title">
+        <h2 id="help-primary-title" class="sr-only">Accesos principales</h2>
+        <div class="help-hub__primary-grid">
+          {primaryItems.map((item) => (
+            <HelpCard
+              title={item.label}
+              description={item.description}
+              href={item.href}
+              priority="primary"
+              icon={item.icon}
+            />
+          ))}
+        </div>
+      </section>
+
+      <section class="help-hub__secondary" aria-labelledby="help-secondary-title">
+        <SectionHeader
+          eyebrow="También puede interesarte"
+          titleId="help-secondary-title"
+          align="left"
+          tone="light"
+          density="compact"
+        >
+          <Fragment slot="title">Otros recursos</Fragment>
+        </SectionHeader>
+        <div class="help-hub__secondary-grid">
+          {secondaryItems.map((item) => (
+            <HelpCard
+              title={item.label}
+              description={item.description}
+              href={item.href}
+              priority="secondary"
+              icon={item.icon}
+            />
+          ))}
+        </div>
+      </section>
+
+      <section class="help-hub__guide" aria-labelledby="help-guide-title">
+        <Prose>
+          <h2 id="help-guide-title">Qué encontrarás aquí</h2>
+          <p>
+            Esta sección reúne la información operativa de KingBelt: cómo elegir talla, cuidar las piezas,
+            entender envíos y devoluciones cuando estén confirmados, y resolver dudas habituales.
+          </p>
+          <p>
+            <strong>Antes de comprar</strong>, consulta la guía de tallas y las fichas de producto.
+            <strong> Después de comprar</strong>, podrás revisar políticas de envío y atención cuando estén publicadas.
+          </p>
+          <p>
+            Si tu consulta es concreta — modelo, medida o pedido — escríbenos desde la página de contacto.
+          </p>
+        </Prose>
+      </section>
+    </div>
+  </HelpPageLayout>
+
+  <FooterSection slot="footer" />
+</BaseLayout>
+
+<style>
+  .help-hub {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(2.5rem, 5vw, 4rem);
+  }
+
+  .help-hub__primary-grid {
+    display: grid;
+    gap: 1rem;
+  }
+
+  @media (min-width: 48rem) {
+    .help-hub__primary-grid {
+      grid-template-columns: 1.15fr 1fr;
+      gap: 1.25rem;
+    }
+  }
+
+  .help-hub__secondary-grid {
+    display: grid;
+    gap: 0.85rem;
+  }
+
+  @media (min-width: 40rem) {
+    .help-hub__secondary-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+</style>

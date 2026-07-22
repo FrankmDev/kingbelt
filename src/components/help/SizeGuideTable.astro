@@ -1,0 +1,117 @@
+---
+import Panel from '../ui/Panel.astro';
+
+export interface SizeRow {
+  size: string;
+  waistCm?: string;
+  beltLengthCm?: string;
+  notes?: string;
+}
+
+interface Props {
+  rows?: readonly SizeRow[];
+  caption?: string;
+}
+
+const { rows = [], caption = 'Equivalencias de tallaje KingBelt' } = Astro.props;
+const hasData = rows.length > 0;
+---
+
+<div class="size-table">
+  {hasData ? (
+    <div class="size-table__wrap">
+      <table class="size-table__table">
+        <caption class="sr-only">{caption}</caption>
+        <thead>
+          <tr>
+            <th scope="col">Talla</th>
+            <th scope="col">Cintura (cm)</th>
+            <th scope="col">Longitud (cm)</th>
+            <th scope="col">Notas</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr>
+              <th scope="row">{row.size}</th>
+              <td>{row.waistCm ?? '—'}</td>
+              <td>{row.beltLengthCm ?? '—'}</td>
+              <td>{row.notes ?? '—'}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  ) : (
+    <Panel padding="lg" class="size-table__pending">
+      <h3 class="size-table__pending-title">Equivalencias por modelo</h3>
+      <p class="size-table__pending-text">
+        Las tablas de tallaje se publicarán para cada referencia cuando las medidas estén confirmadas.
+        Mientras tanto, utiliza los métodos de medición de esta guía y consulta la ficha del producto o escríbenos antes de comprar.
+      </p>
+    </Panel>
+  )}
+</div>
+
+<style>
+  .size-table__wrap {
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    border: 1px solid var(--kb-stroke-hairline);
+    border-radius: var(--kb-panel-radius);
+  }
+
+  .size-table__table {
+    width: 100%;
+    min-width: 32rem;
+    border-collapse: collapse;
+    font-size: var(--kb-text-xs);
+  }
+
+  .size-table__table th,
+  .size-table__table td {
+    padding: 0.85rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--kb-stroke-hairline);
+  }
+
+  .size-table__table thead th {
+    font-size: var(--kb-text-2xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--color-king-muted);
+    background: var(--kb-surface-light);
+  }
+
+  .size-table__table tbody th {
+    font-weight: 600;
+    color: var(--color-king-text);
+    background: var(--color-king-surface);
+  }
+
+  .size-table__table tbody td {
+    color: var(--color-king-muted);
+  }
+
+  .size-table__table tbody tr:last-child th,
+  .size-table__table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  .size-table__pending-title {
+    font-family: var(--font-display);
+    font-size: clamp(1.1rem, 2vw, 1.25rem);
+    font-weight: var(--kb-w-medium);
+    color: var(--color-king-text);
+    margin: 0 0 0.75rem;
+  }
+
+  .size-table__pending-text {
+    font-size: var(--kb-text-xs);
+    line-height: 1.65;
+    color: var(--color-king-muted);
+    margin: 0;
+    max-width: 58ch;
+  }
+</style>

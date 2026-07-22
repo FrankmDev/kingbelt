@@ -5,9 +5,11 @@ import {
   footerContact,
   footerHelpNav,
   footerHighlights,
+  footerLegalNav,
   footerNav,
   socialLinks,
 } from '../../data/navigation';
+import { confirmed, businessFacts } from '../../data/business';
 import { site } from '../../data/site';
 
 interface Props {
@@ -16,6 +18,9 @@ interface Props {
 }
 
 const { class: className = '', connected = false } = Astro.props;
+
+const madeInSpain = confirmed(businessFacts.madeInSpain);
+const highlights = footerHighlights;
 ---
 
 <footer
@@ -76,9 +81,9 @@ const { class: className = '', connected = false } = Astro.props;
         </div>
       </div>
 
-      <div class="footer-grid mb-7 grid grid-cols-2 gap-x-6 gap-y-8 md:mb-8 md:grid-cols-12 md:gap-x-8 md:gap-y-0">
+      <div class="footer-grid mb-7 grid grid-cols-2 gap-x-6 gap-y-8 md:mb-8 md:grid-cols-6 md:gap-x-8 lg:grid-cols-12 lg:gap-y-0">
 
-        <div class="footer-brand-col col-span-2 md:col-span-4">
+        <div class="footer-brand-col col-span-2 md:order-1 md:col-span-3">
           <a href="/" class="group mb-3 inline-flex items-center gap-2.5">
             <span class="font-display text-[1.2rem] tracking-[0.18em] uppercase text-king-text md:text-[1.35rem]">
               {site.name}
@@ -86,11 +91,11 @@ const { class: className = '', connected = false } = Astro.props;
             <span class="hidden h-px w-8 bg-king-accent/25 transition-[background-color,width] duration-[var(--kb-dur-med)] group-hover:w-12 group-hover:bg-king-accent/50 md:block"></span>
           </a>
           <p class="mb-4 max-w-xs text-[var(--kb-text-xs)] font-light leading-[1.7] text-king-muted/80">
-            Accesorios de cuero para el día a día, hechos en España. Para los que se mueven diferente.
+            Accesorios de cuero para el día a día. Para los que se mueven diferente.
           </p>
 
           <div class="mb-4 flex flex-wrap items-center gap-3">
-            <span class="kb-badge-accent">Hecho en España</span>
+            {madeInSpain && <span class="kb-badge-accent">Hecho en {madeInSpain}</span>}
             <div class="flex items-center gap-2.5">
               {socialLinks.map((s) => (
                 <a
@@ -108,7 +113,7 @@ const { class: className = '', connected = false } = Astro.props;
           </div>
         </div>
 
-        <div class="footer-nav-col md:col-span-2 md:col-start-6">
+        <div class="footer-nav-col md:order-3 md:col-span-2 lg:order-2">
           <h4 class="footer-col-title mb-3 flex items-center gap-2.5 text-king-text">
             <span class="footer-col-mark h-px w-4 bg-king-accent/45" aria-hidden="true"></span>
             <span class="kb-action-label">Navegación</span>
@@ -128,12 +133,12 @@ const { class: className = '', connected = false } = Astro.props;
           </nav>
         </div>
 
-        <div class="footer-help-col md:col-span-2">
+        <div class="footer-help-col md:order-4 md:col-span-2 lg:order-3">
           <h4 class="footer-col-title mb-3 flex items-center gap-2.5 text-king-text">
             <span class="footer-col-mark h-px w-4 bg-king-accent/45" aria-hidden="true"></span>
             <span class="kb-action-label">Ayuda</span>
           </h4>
-          <nav class="flex flex-col gap-1.5" aria-label="Ayuda y legal">
+          <nav class="flex flex-col gap-1.5" aria-label="Ayuda">
             {footerHelpNav.map((item, index) => (
               <a
                 href={item.href}
@@ -148,7 +153,27 @@ const { class: className = '', connected = false } = Astro.props;
           </nav>
         </div>
 
-        <div class="footer-contact-col md:col-span-3">
+        <div class="footer-legal-col md:order-5 md:col-span-2 lg:order-4">
+          <h4 class="footer-col-title mb-3 flex items-center gap-2.5 text-king-text">
+            <span class="footer-col-mark h-px w-4 bg-king-accent/45" aria-hidden="true"></span>
+            <span class="kb-action-label">Legal</span>
+          </h4>
+          <nav class="flex flex-col gap-1.5" aria-label="Legal">
+            {footerLegalNav.map((item, index) => (
+              <a
+                href={item.href}
+                class="footer-link group relative inline-flex items-center gap-3 py-0.5 text-[var(--kb-text-xs)] font-light text-king-muted/80 transition-[color,transform] duration-[var(--kb-dur-med)] hover:text-king-text"
+              >
+                <span class="footer-link-index font-mono text-[0.62rem] tabular-nums tracking-[0.08em] text-king-accent/35 transition-colors duration-[var(--kb-dur-med)] group-hover:text-king-accent/70">
+                  {String(index + 1).padStart(2, '0')}
+                </span>
+                <span class="footer-link-label">{item.label}</span>
+              </a>
+            ))}
+          </nav>
+        </div>
+
+        <div class="footer-contact-col md:order-2 md:col-span-3 lg:order-5">
           <h4 class="footer-col-title mb-3 flex items-center gap-2.5 text-king-text">
             <span class="footer-col-mark h-px w-4 bg-king-accent/45" aria-hidden="true"></span>
             <span class="kb-action-label">Contacto</span>
@@ -178,16 +203,18 @@ const { class: className = '', connected = false } = Astro.props;
         </div>
       </div>
 
-      <ul class="footer-meta-strip mb-7 flex flex-wrap gap-2 md:mb-8" aria-label="Información de compra">
-        {footerHighlights.map((item) => (
-          <li>
-            <span class="kb-tag-accent footer-meta-tag inline-flex items-center gap-2">
-              <span class="h-1 w-1 rotate-45 bg-king-accent/70" aria-hidden="true"></span>
-              {item}
-            </span>
-          </li>
-        ))}
-      </ul>
+      {highlights.length > 0 && (
+        <ul class="footer-meta-strip mb-7 flex flex-wrap gap-2 md:mb-8" aria-label="Información de compra">
+          {highlights.map((item) => (
+            <li>
+              <span class="kb-tag-accent footer-meta-tag inline-flex items-center gap-2">
+                <span class="h-1 w-1 rotate-45 bg-king-accent/70" aria-hidden="true"></span>
+                {item}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
 
       <div class="footer-bottom-bar relative flex flex-col items-center gap-4 border-t border-king-border/25 pt-5 md:flex-row md:justify-between">
         <div class="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 md:justify-start">
@@ -212,7 +239,7 @@ const { class: className = '', connected = false } = Astro.props;
 
         <div class="flex items-center gap-4">
           <p class="hidden text-[var(--kb-text-2xs)] font-light tracking-[0.06em] text-king-muted/70 sm:block">
-            Asfalto, cuero y carácter desde España.
+            Asfalto, cuero y carácter.
           </p>
           <button
             type="button"

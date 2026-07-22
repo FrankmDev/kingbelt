@@ -1,0 +1,54 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/layout/Header.astro';
+import FooterSection from '../components/layout/FooterSection.astro';
+import HelpPageLayout from '../components/help/HelpPageLayout.astro';
+import LegalStatusNotice from '../components/legal/LegalStatusNotice.astro';
+import LegalSection from '../components/legal/LegalSection.astro';
+import Prose from '../components/ui/Prose.astro';
+import { getLegalRobots, legalDocuments } from '../data/legal';
+import { confirmed, businessFacts } from '../data/business';
+import { site } from '../data/site';
+
+const doc = legalDocuments.envios;
+const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href;
+const email = confirmed(businessFacts.email) ?? site.contact.email;
+---
+
+<BaseLayout
+  title={doc.title}
+  description={doc.description}
+  canonicalURL={canonicalURL}
+  robots={getLegalRobots(doc)}
+>
+  <Header slot="header" initialTheme="light" scrolledTheme="light" compactThreshold={32} />
+
+  <HelpPageLayout
+    title="Envíos y devoluciones"
+    description="Política de envío, cambios y devoluciones. Pendiente de validación por la empresa."
+    breadcrumbs={[{ label: 'Ayuda', href: '/ayuda' }, { label: 'Envíos y devoluciones' }]}
+    cta={true}
+  >
+    <LegalStatusNotice class="mb-8" status={doc.status} />
+
+    <Prose variant="document">
+      {doc.sections.map((section) => (
+        <LegalSection
+          id={section.id}
+          title={section.title}
+          pending={section.id !== 'contacto'}
+        >
+          {section.id === 'contacto' && (
+            <p>
+              Para consultas sobre envíos o devoluciones, escríbenos a{' '}
+              <a href={`mailto:${email}`}>{email}</a> o visita la página de{' '}
+              <a href="/contacto">contacto</a>.
+            </p>
+          )}
+        </LegalSection>
+      ))}
+    </Prose>
+  </HelpPageLayout>
+
+  <FooterSection slot="footer" />
+</BaseLayout>

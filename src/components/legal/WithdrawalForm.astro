@@ -1,0 +1,75 @@
+---
+import Panel from '../ui/Panel.astro';
+---
+
+<Panel padding="lg" variant="steel" class="withdrawal-form">
+  <p class="withdrawal-form__badge kb-meta-label">Vista interna · No operativa</p>
+  <h2 class="withdrawal-form__title">Formulario de desistimiento</h2>
+  <p class="withdrawal-form__text">
+    Este mecanismo quedará disponible cuando el ecommerce esté operativo y exista una implementación
+    completa de recepción y confirmación. No es posible enviar solicitudes desde esta vista.
+  </p>
+  <div class="withdrawal-form__preview" aria-hidden="true">
+    <p class="withdrawal-form__preview-label">Campos previstos (no editables)</p>
+    <ul class="withdrawal-form__fields">
+      <li>Número de pedido</li>
+      <li>Fecha del pedido</li>
+      <li>Nombre y apellidos</li>
+      <li>Email de contacto</li>
+      <li>Declaración de desistimiento</li>
+      <li>Fecha de la solicitud</li>
+    </ul>
+  </div>
+</Panel>
+
+<style>
+  .withdrawal-form__badge {
+    margin: 0 0 0.75rem;
+    color: rgba(255, 255, 255, 0.55);
+  }
+
+  .withdrawal-form__title {
+    font-family: var(--font-display);
+    font-size: clamp(1.25rem, 2vw, 1.5rem);
+    font-weight: var(--kb-w-medium);
+    color: rgba(255, 255, 255, 0.95);
+    margin: 0 0 0.75rem;
+  }
+
+  .withdrawal-form__text {
+    font-size: var(--kb-text-xs);
+    line-height: 1.65;
+    color: rgba(255, 255, 255, 0.72);
+    margin: 0 0 1.5rem;
+    max-width: 52ch;
+  }
+
+  .withdrawal-form__preview {
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .withdrawal-form__preview-label {
+    font-size: var(--kb-text-2xs);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: rgba(255, 255, 255, 0.45);
+    margin: 0 0 0.75rem;
+  }
+
+  .withdrawal-form__fields {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 0.5rem;
+  }
+
+  .withdrawal-form__fields li {
+    font-size: var(--kb-text-2xs);
+    color: rgba(255, 255, 255, 0.4);
+    padding: 0.5rem 0.75rem;
+    border: 1px dashed rgba(255, 255, 255, 0.15);
+    border-radius: var(--kb-radius-xs);
+  }
+</style>

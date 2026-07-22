@@ -1,0 +1,42 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+import type { DocumentStatus } from '../../data/legal';
+
+interface Props extends Omit<HTMLAttributes<'aside'>, 'class'> {
+  class?: string;
+  status?: Exclude<DocumentStatus, 'published'>;
+}
+
+const { class: className, status = 'draft', ...rest } = Astro.props;
+const isInactive = status === 'inactive';
+---
+
+<aside {...rest} class:list={['legal-notice', className]} role="note">
+  <p class="legal-notice__text">
+    <strong>{isInactive ? 'Mecanismo no operativo.' : 'Documento pendiente de validación.'}</strong>{' '}
+    {isInactive
+      ? 'Esta vista sirve únicamente para revisión interna y no permite presentar solicitudes.'
+      : 'El contenido está en revisión interna, no constituye asesoramiento legal y debe ser aprobado por un profesional antes del lanzamiento.'}
+  </p>
+</aside>
+
+<style>
+  .legal-notice {
+    padding: 0.85rem 1rem;
+    border-radius: var(--kb-radius-xs);
+    border: 1px solid rgba(138, 90, 43, 0.25);
+    background: rgba(138, 90, 43, 0.06);
+  }
+
+  .legal-notice__text {
+    margin: 0;
+    font-size: var(--kb-text-2xs);
+    line-height: 1.6;
+    color: var(--color-king-muted);
+  }
+
+  .legal-notice__text strong {
+    color: var(--color-king-text);
+    font-weight: 600;
+  }
+</style>

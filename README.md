@@ -35,8 +35,13 @@ src/
 │   │   └── contact/         Secciones de contacto
 │   ├── product/             Dominio de producto
 │   ├── collection/          Dominio de catálogo
-│   └── cart/                Interfaz del carrito local
+│   ├── cart/                Interfaz del carrito local
+│   ├── help/                Centro de ayuda
+│   └── legal/               Documentos legales y desistimiento
 ├── data/                    Contenido y configuración tipada
+│   ├── business.ts          Hechos empresariales (confirmed/pending)
+│   ├── help.ts              Ayuda y guías
+│   └── legal.ts             Legal, cookies y sitemap
 ├── layouts/                 Documento y metadata global
 ├── lib/                     Dominio, proveedores y utilidades
 ├── pages/                   Rutas y orquestación
@@ -53,5 +58,21 @@ src/
 - Usa Bun exclusivamente; el lockfile válido es `bun.lock`.
 
 Lee `AGENTS.md` antes de modificar el proyecto y carga `docs/DESIGN.md`, `docs/ARCHITECTURE.md` o `docs/PROJECT.md` según el alcance.
+
+## Rutas de ayuda y legal
+
+| Ruta | Estado |
+|------|--------|
+| `/ayuda` | Publicada |
+| `/guia-de-tallas` | Publicada (tabla pendiente de datos) |
+| `/cuidados` | Publicada |
+| `/envios-y-devoluciones` | Borrador |
+| `/aviso-legal` | Borrador |
+| `/privacidad` | Borrador |
+| `/cookies` | Borrador |
+| `/condiciones` | Borrador |
+| `/desistimiento` | Inactivo (revisión interna) |
+
+Detalle de activación: `docs/BUSINESS_AND_LEGAL_REQUIREMENTS.md`.
 
 La validación continua vive en `.github/workflows/quality.yml` y ejecuta check, tests y build con Bun 1.3.10 en `main` y pull requests.

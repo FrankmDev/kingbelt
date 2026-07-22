@@ -1,0 +1,94 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/layout/Header.astro';
+import FooterSection from '../components/layout/FooterSection.astro';
+import HelpPageLayout from '../components/help/HelpPageLayout.astro';
+import Prose from '../components/ui/Prose.astro';
+import Panel from '../components/ui/Panel.astro';
+import { careSections, helpMeta } from '../data/help';
+
+const { title, description } = helpMeta.care;
+const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href;
+---
+
+<BaseLayout title={title} description={description} canonicalURL={canonicalURL}>
+  <Header slot="header" initialTheme="light" scrolledTheme="light" compactThreshold={32} />
+
+  <HelpPageLayout
+    title="Cuidados del cuero"
+    description="Recomendaciones generales para conservar cinturones y herrajes. Las instrucciones específicas se publicarán por producto."
+    breadcrumbs={[{ label: 'Ayuda', href: '/ayuda' }, { label: 'Cuidados' }]}
+  >
+    <Prose>
+      <p>
+        Estas recomendaciones son de carácter general. La composición del material, el curtido, los tratamientos
+        y la durabilidad concreta de cada pieza se indicarán en la ficha del producto cuando estén confirmados.
+      </p>
+    </Prose>
+
+    <div class="care-sections">
+      {careSections.map((section) => (
+        <section id={section.id} class="care-section" aria-labelledby={`care-${section.id}`}>
+          <h2 id={`care-${section.id}`} class="care-section__title">{section.title}</h2>
+          <p class="care-section__text">{section.content}</p>
+        </section>
+      ))}
+    </div>
+
+    <Panel padding="md" class="care-note">
+      <p class="care-note__label kb-meta-label">Instrucciones por producto</p>
+      <p class="care-note__text">
+        Cuando un modelo requiera cuidados específicos —productos compatibles, impermeabilidad o reparación—,
+        la información aparecerá en su ficha. Hasta entonces, aplica solo las recomendaciones generales de esta guía.
+      </p>
+    </Panel>
+  </HelpPageLayout>
+
+  <FooterSection slot="footer" />
+</BaseLayout>
+
+<style>
+  .care-sections {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(1.75rem, 3vw, 2.5rem);
+    margin-top: 2rem;
+  }
+
+  .care-section {
+    scroll-margin-top: 7rem;
+  }
+
+  .care-section__title {
+    font-family: var(--font-display);
+    font-size: clamp(1.15rem, 2vw, 1.35rem);
+    font-weight: var(--kb-w-medium);
+    color: var(--color-king-text);
+    margin: 0 0 0.65rem;
+  }
+
+  .care-section__text {
+    font-size: var(--kb-text-xs);
+    line-height: 1.7;
+    color: var(--color-king-muted);
+    margin: 0;
+    max-width: 62ch;
+  }
+
+  .care-note {
+    margin-top: 2rem;
+  }
+
+  .care-note__label {
+    margin: 0 0 0.5rem;
+    color: var(--color-king-accent);
+  }
+
+  .care-note__text {
+    font-size: var(--kb-text-xs);
+    line-height: 1.65;
+    color: var(--color-king-muted);
+    margin: 0;
+    max-width: 58ch;
+  }
+</style>

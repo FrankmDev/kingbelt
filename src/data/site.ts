@@ -1,7 +1,8 @@
 export const site = {
   name: 'KingBelt',
+  tagline: 'Accesorios de cuero para hombre',
   description:
-    'Accesorios de cuero para hombre, hechos en España. Piezas con carácter, pensadas para la ruta y el uso diario.',
+    'Accesorios de cuero para hombre con carácter. Piezas pensadas para la ruta y el uso diario.',
   contact: {
     email: 'hola@kingbelt.com',
   },

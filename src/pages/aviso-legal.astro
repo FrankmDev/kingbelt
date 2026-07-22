@@ -1,0 +1,83 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/layout/Header.astro';
+import FooterSection from '../components/layout/FooterSection.astro';
+import LegalPageLayout from '../components/legal/LegalPageLayout.astro';
+import LegalSection from '../components/legal/LegalSection.astro';
+import Prose from '../components/ui/Prose.astro';
+import { getLegalRobots, legalDocuments } from '../data/legal';
+import { confirmed, businessFacts } from '../data/business';
+import { site } from '../data/site';
+
+const doc = legalDocuments.avisoLegal;
+const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href;
+const email = confirmed(businessFacts.email) ?? site.contact.email;
+const tradeName = confirmed(businessFacts.tradeName);
+const completedSectionIds = new Set([
+  ...(tradeName ? ['titular'] : []),
+  'contacto',
+  'condiciones-uso',
+  'propiedad-intelectual',
+  'enlaces-externos',
+  'responsabilidad',
+]);
+---
+
+<BaseLayout
+  title={doc.title}
+  description={doc.description}
+  canonicalURL={canonicalURL}
+  robots={getLegalRobots(doc)}
+>
+  <Header slot="header" initialTheme="light" scrolledTheme="light" compactThreshold={32} />
+
+  <LegalPageLayout
+    document={doc}
+    title="Aviso legal"
+    description="Información legal del titular del sitio web."
+    breadcrumbs={[{ label: 'Aviso legal' }]}
+  >
+    <Prose variant="document">
+      {doc.sections.map((section) => (
+        <LegalSection
+          id={section.id}
+          title={section.title}
+          pending={!completedSectionIds.has(section.id)}
+        >
+          {section.id === 'titular' && tradeName && <p>Marca comercial: {tradeName}.</p>}
+          {section.id === 'contacto' && (
+            <p>
+              Email de contacto: <a href={`mailto:${email}`}>{email}</a>.
+            </p>
+          )}
+          {section.id === 'condiciones-uso' && (
+            <p>
+              El acceso y uso de este sitio web implica la aceptación de las condiciones aquí descritas.
+              El contenido tiene carácter informativo y puede modificarse sin previo aviso mientras el sitio esté en fase de preparación.
+            </p>
+          )}
+          {section.id === 'propiedad-intelectual' && (
+            <p>
+              Los contenidos de este sitio —textos, imágenes, diseño y código— están protegidos por la legislación
+              de propiedad intelectual e industrial. Queda prohibida su reproducción sin autorización expresa del titular.
+            </p>
+          )}
+          {section.id === 'enlaces-externos' && (
+            <p>
+              Este sitio puede incluir enlaces a sitios de terceros. KingBelt no se responsabiliza del contenido
+              ni de las políticas de privacidad de dichos sitios.
+            </p>
+          )}
+          {section.id === 'responsabilidad' && (
+            <p>
+              KingBelt no garantiza la disponibilidad continua del sitio ni la ausencia de errores en su contenido
+              mientras se encuentre en fase de desarrollo o revisión.
+            </p>
+          )}
+        </LegalSection>
+      ))}
+    </Prose>
+  </LegalPageLayout>
+
+  <FooterSection slot="footer" />
+</BaseLayout>

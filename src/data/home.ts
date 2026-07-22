@@ -1,10 +1,14 @@
+import { confirmed, businessFacts } from './business';
+
+const madeInSpain = confirmed(businessFacts.madeInSpain);
+
 export const hero = {
   brand: 'KingBelt',
-  badge: 'Hecho en España',
+  badge: madeInSpain ?? 'Cuero · Herraje · Proporción',
   meta: 'Cuero · Herraje · Proporción',
   titleLines: [
     { text: 'Cinturones de cuero', variant: 'plain' as const },
-    { text: 'hechos en España.', variant: 'em' as const },
+    { text: 'con criterio.', variant: 'em' as const },
   ],
   description: 'Proporción clara y acabado verificable para el uso diario.',
   index: '01',
@@ -15,7 +19,7 @@ export const hero = {
 export const brandStatement = {
   index: '02',
   eyebrow: 'Sobre KingBelt',
-  meta: 'Marca · España',
+  meta: 'Marca · Producto',
   lede: 'Una marca que empieza por el producto y avanza con criterio, no con ruido de escaparate.',
   title: 'Accesorios masculinos con criterio, <em>no con etiqueta.</em>',
   titleLines: [
@@ -24,14 +28,14 @@ export const brandStatement = {
     { text: 'no con etiqueta.', variant: 'em' as const },
   ],
   quote: {
-    eyebrow: 'Origen',
-    ref: 'España · Producción local',
+    eyebrow: 'Criterio',
+    ref: 'Producto · Material',
     lines: [
-      { text: 'Hecho en España.', variant: 'plain' as const },
+      { text: 'Piezas con intención.', variant: 'plain' as const },
       { text: 'Cuero y herraje con criterio, no con etiqueta.', variant: 'em' as const },
     ],
-    proofs: ['Producción nacional', 'Materiales con cuerpo', 'Acabado verificable'] as const,
-    note: 'Origen claro. Calidad que se nota al usarlo.',
+    proofs: ['Selección cuidada', 'Materiales con cuerpo', 'Acabado verificable'] as const,
+    note: 'Producto claro. Calidad que se nota al usarlo.',
   },
   paragraphs: [
     'KingBelt selecciona piezas con carácter pensadas para integrarse en el día a día: proporción contenida, materiales con presencia y un acabado que no pide protagonismo en exceso.',
@@ -50,8 +54,8 @@ export const brandStatement = {
     },
     {
       number: '03',
-      label: 'Origen',
-      text: 'Piezas pensadas y producidas en España, con trazabilidad clara.',
+      label: 'Criterio',
+      text: 'Piezas seleccionadas con atención al material, al ajuste y al uso real.',
     },
   ] as const,
   tags: ['Cuero', 'Proporción', 'Uso diario'] as const,
@@ -141,7 +145,7 @@ export const trustSection = {
   items: [
     {
       title: 'Ayuda para elegir',
-      text: 'Consulta medida, ancho y combinación desde Contacto o Instagram antes de decidir.',
+      text: 'Consulta la guía de tallas, el centro de ayuda o escríbenos antes de decidir.',
     },
     {
       title: 'Información de producto',
@@ -149,7 +153,7 @@ export const trustSection = {
     },
     {
       title: 'Atención directa',
-      text: 'Escríbenos con tu duda concreta. Respondemos por email o Instagram, sin formularios intermedios innecesarios.',
+      text: 'Escríbenos con tu duda concreta por email o Instagram.',
     },
   ],
 } as const;

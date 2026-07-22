@@ -14,6 +14,7 @@ const { items, sidebar } = Astro.props;
 ---
 
 <FAQ
+  id="preguntas-frecuentes"
   class="contact-faq section-spacing-chapter"
   items={items}
   tone="light"
@@ -22,7 +23,7 @@ const { items, sidebar } = Astro.props;
   <SectionHeader
     slot="header"
     eyebrow="Preguntas frecuentes"
-    body="Respuestas rápidas a las dudas más comunes. Si no encuentras lo que buscas, escríbenos y te respondemos en menos de 24 horas laborables."
+    body="Respuestas a dudas habituales. Si no encuentras lo que buscas, escríbenos desde la página de contacto."
     align="center"
     tone="light"
     class="contact-faq-header mb-12 md:mb-16"

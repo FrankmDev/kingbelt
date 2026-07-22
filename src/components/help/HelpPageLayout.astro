@@ -1,0 +1,129 @@
+---
+import Breadcrumbs from '../ui/Breadcrumbs.astro';
+import HelpNavigation from './HelpNavigation.astro';
+import CTABox from '../ui/CTABox.astro';
+
+interface Props {
+  title: string;
+  description?: string;
+  eyebrow?: string;
+  breadcrumbs: { label: string; href?: string }[];
+  showNav?: boolean;
+  cta?: boolean;
+}
+
+const {
+  title,
+  description,
+  eyebrow = 'Ayuda',
+  breadcrumbs,
+  showNav = true,
+  cta = true,
+} = Astro.props;
+
+const currentPath = Astro.url.pathname;
+---
+
+<div class="help-page">
+  <header class="help-page__header kb-shell-wide">
+    <Breadcrumbs items={breadcrumbs} class="mb-5" />
+    {eyebrow && <p class="help-page__eyebrow kb-eyebrow">{eyebrow}</p>}
+    <h1 class="help-page__title">{title}</h1>
+    {description && <p class="help-page__desc">{description}</p>}
+  </header>
+
+  <div class="help-page__body kb-shell-wide">
+    {showNav && (
+      <aside class="help-page__aside" aria-label="Navegación de ayuda">
+        <HelpNavigation currentPath={currentPath} />
+      </aside>
+    )}
+
+    <div class="help-page__main">
+      <slot />
+    </div>
+  </div>
+
+  {cta && (
+    <section class="help-page__cta kb-shell-wide" aria-label="Contacto">
+      <CTABox
+        eyebrow="¿Necesitas más ayuda?"
+        title="Escríbenos con tu consulta"
+        description="Cuanto más concreto sea el contexto — modelo, medida o duda — más fácil será orientar la respuesta."
+        buttonLabel="Ir a contacto"
+        buttonHref="/contacto"
+        buttonVariant="secondary"
+        backgroundImage="/images/blog/cinturon-marron.jpg"
+        backgroundAlt=""
+        backgroundPosition="center 40%"
+        class="help-page__cta-box"
+      />
+    </section>
+  )}
+</div>
+
+<style>
+  .help-page {
+    padding-top: clamp(6.5rem, 9vw, 8rem);
+    padding-bottom: var(--kb-space-section);
+  }
+
+  .help-page__header {
+    margin-bottom: clamp(2rem, 4vw, 3rem);
+    max-width: var(--kb-shell-copy);
+  }
+
+  .help-page__eyebrow {
+    margin-bottom: 0.75rem;
+  }
+
+  .help-page__title {
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 4.5vw, 3rem);
+    font-weight: var(--kb-w-heading-strong);
+    line-height: 1.08;
+    letter-spacing: var(--kb-title-tracking);
+    color: var(--color-king-text);
+    text-wrap: balance;
+    margin: 0 0 1rem;
+  }
+
+  .help-page__desc {
+    font-size: var(--kb-text-body-lg);
+    line-height: 1.65;
+    color: var(--color-king-muted);
+    max-width: 52ch;
+    margin: 0;
+    text-wrap: pretty;
+  }
+
+  .help-page__body {
+    display: grid;
+    gap: clamp(2rem, 4vw, 3rem);
+    margin-bottom: clamp(2.5rem, 5vw, 4rem);
+  }
+
+  @media (min-width: 64rem) {
+    .help-page__body {
+      grid-template-columns: minmax(12rem, 14rem) minmax(0, 1fr);
+      align-items: start;
+    }
+
+    .help-page__aside {
+      position: sticky;
+      top: 6rem;
+    }
+  }
+
+  .help-page__main {
+    min-width: 0;
+  }
+
+  .help-page__cta {
+    margin-top: clamp(1rem, 2vw, 2rem);
+  }
+
+  .help-page__cta-box:global(.cta-box) {
+    min-height: clamp(16rem, 32vw, 22rem);
+  }
+</style>

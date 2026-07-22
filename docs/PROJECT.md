@@ -30,16 +30,17 @@ Base editorial consolidada:
 - Inicio.
 - Sobre KingBelt.
 - Blog y artículos.
+- Centro de ayuda (`/ayuda`), guía de tallas, cuidados.
 - Contacto y preguntas frecuentes.
+- Documentos legales provisionales (borrador, no indexables).
 - Sistema visual y componentes compartidos.
 
 Evolución ecommerce:
 
 - Colecciones y búsqueda/exploración de catálogo.
 - Ficha de producto y variantes.
-- Guías de talla, materiales y cuidados.
 - Carrito y conexión con checkout.
-- Páginas de ayuda, envíos, devoluciones, privacidad y condiciones.
+- Activación de envíos/devoluciones, condiciones definitivas y desistimiento electrónico.
 
 Esta lista define preparación arquitectónica, no autorización para implementar cada funcionalidad.
 
@@ -70,3 +71,5 @@ No adelantes una fase salvo petición explícita. La implementación local exist
 ## Decisiones no confirmadas
 
 No inventes precios, políticas comerciales, plazos, garantías, origen de fabricación, sostenibilidad, certificaciones, disponibilidad ni promesas de atención. Usa datos existentes o solicita confirmación cuando una decisión afecte al negocio o al contenido público.
+
+Los hechos empresariales viven en `src/data/business.ts` con estado `confirmed` | `pending` | `not-applicable`. Los pendientes no se renderizan. Consulta `docs/BUSINESS_AND_LEGAL_REQUIREMENTS.md` para la checklist de activación.

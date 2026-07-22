@@ -1,0 +1,114 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+import { privacyFirstLayer } from '../../data/legal';
+import { confirmed, businessFacts } from '../../data/business';
+import { site } from '../../data/site';
+
+interface Props extends Omit<HTMLAttributes<'aside'>, 'class'> {
+  class?: string;
+  compact?: boolean;
+}
+
+const { class: className, compact = false, ...rest } = Astro.props;
+const layer = privacyFirstLayer();
+const email = confirmed(businessFacts.email) ?? site.contact.email;
+const pendingValue = 'Pendiente de confirmación antes de publicar esta política.';
+---
+
+<aside
+  {...rest}
+  class:list={['privacy-summary', compact && 'privacy-summary--compact', className]}
+  aria-label="Resumen de privacidad"
+>
+  <h2 class="privacy-summary__title">Información básica sobre privacidad</h2>
+  <dl class="privacy-summary__list">
+    <div class="privacy-summary__item">
+      <dt>Responsable</dt>
+      <dd>{layer.controller ?? pendingValue}</dd>
+    </div>
+    <div class="privacy-summary__item">
+      <dt>Finalidad</dt>
+      <dd>{layer.purpose ?? pendingValue}</dd>
+    </div>
+    <div class="privacy-summary__item">
+      <dt>Legitimación</dt>
+      <dd>{layer.legalBasis ?? pendingValue}</dd>
+    </div>
+    {layer.recipients && (
+      <div class="privacy-summary__item">
+        <dt>Destinatarios</dt>
+        <dd>{layer.recipients}</dd>
+      </div>
+    )}
+    <div class="privacy-summary__item">
+      <dt>Derechos</dt>
+      <dd>{layer.rights}</dd>
+    </div>
+    <div class="privacy-summary__item">
+      <dt>Información adicional</dt>
+      <dd>
+        <a href="/privacidad">Política de privacidad completa</a>
+        {' · '}
+        <a href={`mailto:${email}`}>Contacto</a>
+      </dd>
+    </div>
+  </dl>
+</aside>
+
+<style>
+  .privacy-summary {
+    padding: 1.25rem 1.5rem;
+    border-radius: var(--kb-radius-sm);
+    border: 1px solid var(--kb-stroke-hairline);
+    background: var(--kb-surface-light);
+  }
+
+  .privacy-summary--compact {
+    padding: 1rem 1.15rem;
+  }
+
+  .privacy-summary__title {
+    font-family: var(--font-display);
+    font-size: clamp(1rem, 1.8vw, 1.15rem);
+    font-weight: var(--kb-w-medium);
+    color: var(--color-king-text);
+    margin: 0 0 1rem;
+  }
+
+  .privacy-summary__list {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+  }
+
+  .privacy-summary__item {
+    margin: 0;
+  }
+
+  .privacy-summary__item dt {
+    font-size: var(--kb-text-2xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-king-muted);
+    margin-bottom: 0.25rem;
+  }
+
+  .privacy-summary__item dd {
+    margin: 0;
+    font-size: var(--kb-text-2xs);
+    line-height: 1.6;
+    color: var(--color-king-text);
+  }
+
+  .privacy-summary__item a {
+    color: var(--color-king-accent);
+    text-decoration: none;
+    font-weight: 500;
+  }
+
+  .privacy-summary__item a:hover {
+    text-decoration: underline;
+  }
+</style>

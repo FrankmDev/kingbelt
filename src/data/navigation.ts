@@ -1,5 +1,8 @@
 import { site } from './site';
 import type { IconName } from '../components/ui/icon-paths';
+import { legalFooterNav } from './legal';
+import { helpFooterNav } from './help';
+import { publicHighlights } from './business';
 
 export interface NavItem {
   label: string;
@@ -13,28 +16,23 @@ export interface ChannelLink extends NavItem {
 export const mainNav: NavItem[] = [
   { label: 'La marca', href: '/sobre' },
   { label: 'Revista', href: '/blog' },
-  { label: 'Atención', href: '/#atencion' },
+  { label: 'Atención', href: '/ayuda' },
   { label: 'Contacto', href: '/contacto' },
 ];
 
 export const footerNav: NavItem[] = [
   { label: 'La marca', href: '/sobre' },
   { label: 'Revista', href: '/blog' },
-  { label: 'Atención', href: '/#atencion' },
+  { label: 'Atención', href: '/ayuda' },
   { label: 'Colección', href: '/coleccion' },
   { label: 'Contacto', href: '/contacto' },
 ];
 
-export const footerHelpNav: NavItem[] = [
-  { label: 'Preguntas frecuentes', href: '/contacto' },
-  { label: 'Privacidad', href: '/privacidad' },
-];
+export const footerHelpNav: NavItem[] = [...helpFooterNav];
 
-export const footerHighlights = [
-  'Hecho en España',
-  'Envío 24–72h península',
-  'Embalaje incluido',
-] as const;
+export const footerLegalNav: NavItem[] = [...legalFooterNav];
+
+export const footerHighlights = publicHighlights();
 
 export const footerContact = [
   {

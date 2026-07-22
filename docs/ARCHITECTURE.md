@@ -30,7 +30,12 @@ src/
     product/      # ficha de producto: galería y compra
     collection/   # catálogo de categoría: grid, tarjetas y filtros
     cart/         # cajón (drawer) y disparador del carrito local
+    help/         # layouts y componentes del centro de ayuda
+    legal/        # layouts, avisos y formulario de desistimiento (inactivo)
   data/           # contenido/configuración local tipada
+    business.ts   # contrato BusinessFact (confirmed/pending)
+    help.ts       # navegación y contenido de ayuda
+    legal.ts      # documentos legales, sitemap y cookies
   lib/
     commerce/     # dominio neutral, proveedor activo y adaptador local
     dom/          # utilidades cliente compartidas (scroll y estados de botón)
@@ -156,6 +161,10 @@ Promueve un patrón a global o a componente cuando se repita con la misma intenc
 - Botón para acciones; enlace para navegación. No simules interacción con `div`.
 - Imágenes con dimensiones para evitar CLS, `alt` contextual y lazy loading salvo contenido crítico/hero.
 - Un H1 por página, `title`, description, canonical y schema cuando corresponda.
+- `BaseLayout` acepta `robots`, `ogImageAlt` (vía `imageAlt`), `publishedAt` y `updatedAt`.
+- Sitemap: `@astrojs/sitemap` con filtro en `isSitemapExcluded()` (`src/data/legal.ts`).
+- `robots.txt`: endpoint estático en `src/pages/robots.txt.ts`.
+- Documentos legales en `draft` usan `noindex,follow` y quedan fuera del sitemap hasta publicación.
 - No añadas dependencias, hydration o JavaScript para resolver algo que Astro/CSS/HTML ya cubre.
 - Evita trabajo duplicado en cliente y assets desproporcionados para su tamaño visible.
 

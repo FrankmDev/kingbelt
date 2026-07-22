@@ -48,7 +48,7 @@ interface ContactData {
     eyebrow: string;
     title: string;
     description: string;
-    badge: { label: string };
+    badge: { label: string } | undefined;
     cta: { label: string; href: string };
     image: {
       src: string;
@@ -84,7 +84,6 @@ export const contactData = {
       description: 'Para consultas de producto, pedidos y atención general.',
       href: `mailto:${site.contact.email}`,
       icon: 'mail',
-      meta: 'Respuesta en 24h',
     },
     {
       label: 'Instagram',
@@ -105,88 +104,83 @@ export const contactData = {
 
   faqs: [
     {
-      question: '¿Dónde fabricáis los cinturones?',
+      question: '¿Cómo elijo la talla correcta?',
       answer:
-        'Todas las piezas se diseñan y se terminan en España, trabajando con curtidurías y talleres locales. La piel es de origen europeo y la herrajería se funde en pequeñas series para mantener el control de calidad.',
-      category: 'Hecho en España',
-      icon: 'hammer',
+        'Consulta nuestra guía de tallas para conocer los métodos de medición. La equivalencia depende del modelo: revisa la ficha del producto o escríbenos con tu medida antes de comprar.',
+      category: 'Tallaje',
+      icon: 'ruler',
     },
     {
-      question: '¿Cuánto tarda en llegar mi pedido?',
+      question: '¿Dónde puedo ver información de envío?',
       answer:
-        'Para envíos peninsulares, el plazo estimado es de 24 a 72 horas laborables. Baleares, Canarias y envíos internacionales pueden ampliarse entre 3 y 7 días laborables. Siempre recibirás un enlace de seguimiento en cuanto el paquete salga de nuestro taller.',
+        'Las políticas de envío se publicarán en la página de envíos y devoluciones cuando estén confirmadas. Mientras tanto, escríbenos si tienes una consulta concreta.',
       category: 'Envío',
       icon: 'truck',
     },
     {
-      question: '¿Qué pasa si la talla no me conviene?',
+      question: '¿Qué hago si la talla no me conviene?',
       answer:
-        'Puedes consultar nuestra guía de tallas antes de comprar. Si una vez recibido el cinturón necesitas un cambio, dispones de 14 días naturales desde la entrega. El producto debe estar sin usar y en su embalaje original.',
+        'La política de cambios y devoluciones se publicará cuando esté confirmada. Consulta la guía de tallas antes de comprar y escríbenos si necesitas orientación.',
       category: 'Cambios',
-      icon: 'ruler',
-    },
-    {
-      question: '¿Incluye caja de regalo?',
-      answer:
-        'Sí. Cada cinturón viaja en una caja de cartón rígido forrada interiormente, pensada para proteger la pieza y para abrirse como si fuera un regalo. Además incluye una bolsa de algodón para guardarlo.',
-      category: 'Embalaje',
-      icon: 'gift',
+      icon: 'rotate-ccw',
     },
     {
       question: '¿Cómo debo cuidar el cuero?',
       answer:
-        'Evita el contacto prolongado con el agua y los productos químicos. Para mantener el brillo, limpia con un paño seco y aplica una ligera capa de crema hidratante para cuero de vez en cuando. Con el uso, la piel ganará un tono único propio.',
+        'En la guía de cuidados encontrarás recomendaciones generales. Las instrucciones específicas por material se indicarán en cada ficha de producto cuando estén disponibles.',
       category: 'Cuidado',
       icon: 'shield-check',
+    },
+    {
+      question: '¿Cómo puedo contactar con KingBelt?',
+      answer:
+        'Por email o Instagram. Indica el modelo, la medida o el contexto de tu consulta para que podamos orientarte con más precisión.',
+      category: 'Atención',
+      icon: 'mail',
     },
   ] satisfies FAQItem[],
 
   faqSidebar: {
     image: '/image.jpg',
     imageAlt: 'Detalle de un cinturón KingBelt sobre superficie de trabajo',
-    caption: 'Cada pieza se revisa a mano antes de salir del taller.',
-    label: 'Taller',
+    caption: 'Cada pieza se revisa con atención antes de salir.',
+    label: 'Producto',
   },
 
   purchaseInfo: {
     eyebrow: 'Tu compra',
-    title: 'Todo claro, desde el pedido.',
+    title: 'Información clara, desde el pedido.',
     description:
-      'Embalaje, envío y cambios resueltos con el mismo criterio que aplicamos al producto: directo, sin letra pequeña.',
-    badge: {
-      label: 'Hecho en España',
-    },
+      'Envío, embalaje y cambios se detallarán cuando las políticas estén confirmadas. Mientras tanto, consulta el centro de ayuda o escríbenos.',
+    badge: undefined,
     cta: {
-      label: 'Ver la colección',
-      href: '/coleccion',
+      label: 'Centro de ayuda',
+      href: '/ayuda',
     },
     image: {
       src: '/image.jpg',
-      alt: 'Caja de regalo KingBelt con cinturón de cuero en bolsa de algodón',
-      label: 'Embalaje',
-      caption: 'Cada pieza viaja protegida y lista para abrirse.',
+      alt: 'Detalle de cinturón de cuero KingBelt',
+      label: 'Producto',
+      caption: 'Información de compra disponible en el centro de ayuda.',
     },
     items: [
       {
-        title: 'Preparado para llegar bien',
-        description: 'Protegemos cada pieza y la enviamos en su caja con bolsa de algodón.',
-        label: 'Embalaje',
-        meta: 'Caja incluida',
-        icon: 'package',
+        title: 'Guía de tallas',
+        description: 'Métodos de medición y equivalencias por modelo cuando estén publicadas.',
+        label: 'Tallaje',
+        icon: 'ruler',
       },
       {
-        title: 'Envío con seguimiento',
-        description: 'Recibirás un enlace para consultar el estado de tu pedido en tiempo real.',
+        title: 'Envíos y devoluciones',
+        description: 'Políticas de envío y cambios pendientes de validación por la empresa.',
         label: 'Envío',
-        meta: '24–72h península',
         icon: 'truck',
       },
       {
-        title: 'Cambios sencillos',
-        description: 'Dispones de 14 días naturales para solicitar un cambio de talla sin complicaciones.',
-        label: 'Cambios',
-        meta: '14 días',
-        icon: 'ruler',
+        title: 'Atención directa',
+        description: 'Escríbenos con tu consulta concreta por email o Instagram.',
+        label: 'Contacto',
+        icon: 'mail',
       },
     ] satisfies PurchaseInfoItem[],
   },

@@ -3,16 +3,23 @@ import SectionHeaderHome from './SectionHeaderHome.astro';
 import Badge from '../../ui/Badge.astro';
 import Button from '../../ui/Button.astro';
 import Icon from '../../ui/Icon.astro';
-import { featuredProducts, formatPrice } from '../../../data/catalog';
 import { featuredSection } from '../../../data/home';
+import { formatMoney } from '../../../lib/commerce/money';
+import type { CommerceProductSummary } from '../../../lib/commerce/types';
+
+interface Props {
+  products: CommerceProductSummary[];
+}
+
+const { products } = Astro.props;
 ---
 
 <section
   id="seleccion"
-  class="home-featured section-spacing section-spacing-chapter"
+  class="home-featured section-spacing"
   aria-labelledby="home-featured-title"
 >
-  <div class="kb-shell-wide section-stack-lg">
+  <div class="kb-shell-wide">
     <div class="home-featured__head">
       <SectionHeaderHome
         index={featuredSection.index}
@@ -39,23 +46,27 @@ import { featuredSection } from '../../../data/home';
     </div>
 
     <ul class="home-featured__grid">
-      {featuredProducts.map((product, index) => {
-        const priceLabel = formatPrice(product.price, product.currency);
-        const ref = product.id.toUpperCase();
+      {products.map((product, index) => {
+        const priceLabel = product.priceRange.min.amountMinor === product.priceRange.max.amountMinor
+          ? formatMoney(product.priceRange.min)
+          : `Desde ${formatMoney(product.priceRange.min)}`;
+        const colorLabel = product.colors.length === 1 ? product.colors[0].value : `${product.colors.length} colores`;
 
         return (
           <li class="home-featured__item">
             <article class="home-featured__card kb-rise-sm">
               <div class="home-featured__media">
-                <img
-                  src={product.image}
-                  alt={product.imageAlt}
-                  width="480"
-                  height="600"
-                  loading="lazy"
-                  decoding="async"
-                  style={`object-position: ${product.imagePosition ?? 'center'}`}
-                />
+                {product.primaryImage ? (
+                  <img
+                    src={product.primaryImage.url}
+                    alt={product.primaryImage.altText}
+                    width={product.primaryImage.width ?? 480}
+                    height={product.primaryImage.height ?? 600}
+                    loading="lazy"
+                    decoding="async"
+                    style={`object-position: ${product.primaryImage.position ?? 'center'}`}
+                  />
+                ) : <span class="home-featured__placeholder" aria-hidden="true" />}
 
                 <div class="home-featured__tags">
                   {product.badge ? (
@@ -73,24 +84,24 @@ import { featuredSection } from '../../../data/home';
 
               <div class="home-featured__info">
                 <p class="home-featured__meta kb-meta-label text-king-muted">
-                  {product.category} · {product.color}
+                  {product.primaryCollection.title} · {colorLabel}
                 </p>
-                <h3 class="home-featured__name font-display">{product.name}</h3>
-                <p class="home-featured__excerpt text-king-muted">{product.excerpt}</p>
+                <h3 class="home-featured__name font-display">{product.title}</h3>
+                <p class="home-featured__excerpt text-king-muted">{product.shortDescription}</p>
 
                 <div class="home-featured__stitch kb-stitch-line" aria-hidden="true" />
 
                 <div class="home-featured__foot">
                   <span class="home-featured__price">{priceLabel}</span>
-                  <span class="home-featured__ref kb-code-label text-king-muted">{ref}</span>
+                  <span class="home-featured__ref kb-code-label text-king-muted">{product.reference}</span>
                 </div>
 
                 <Button
-                  href={product.href}
+                  href={`/productos/${product.handle}`}
                   variant="outline"
                   size="sm"
                   class="home-featured__action"
-                  aria-label={`Ver producto: ${product.name}`}
+                  aria-label={`Ver producto: ${product.title}`}
                 >
                   Ver
                   <Icon
@@ -112,6 +123,11 @@ import { featuredSection } from '../../../data/home';
     display: grid;
     gap: var(--kb-space-6);
     align-items: end;
+    margin-bottom: var(--kb-space-gap-lg);
+  }
+
+  .home-featured__header:global(.section-header-home) {
+    margin-bottom: 0;
   }
 
   .home-featured__header:global(.section-header-home) .shh-body {
@@ -178,6 +194,13 @@ import { featuredSection } from '../../../data/home';
     transform: translateZ(0);
     transition: transform var(--kb-dur-slow) var(--kb-ease-soft);
     will-change: transform;
+  }
+
+  .home-featured__placeholder {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: var(--color-king-bone);
   }
 
   .home-featured__tags {

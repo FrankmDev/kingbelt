@@ -1,11 +1,15 @@
 ---
 import CollectionFilters from './CollectionFilters.astro';
 import ProductCard from './ProductCard.astro';
-import type { CollectionFacets, CollectionProduct, ProductCategory } from '../../data/catalog';
+import type {
+  CollectionFacets,
+  CommerceCollection,
+  CommerceProductSummary,
+} from '../../lib/commerce/types';
 
 interface Props {
-  category: ProductCategory;
-  products: CollectionProduct[];
+  category: CommerceCollection;
+  products: CommerceProductSummary[];
   facets: CollectionFacets;
   class?: string;
 }
@@ -18,38 +22,55 @@ const countLabel = `${products.length} ${products.length === 1 ? 'referencia' : 
 <section
   id="productos"
   class:list={['collection-catalog', className]}
-  aria-label={`Productos de la categoría ${category.name}`}
+  aria-label={`Productos de la categoría ${category.title}`}
+  data-collection-catalog
 >
   <div class="collection-catalog__layout kb-shell-wide">
     <aside class="collection-catalog__aside" aria-label="Filtros de catálogo">
-      <CollectionFilters facets={facets} idPrefix={`filters-${category.slug}`} />
+      <CollectionFilters facets={facets} idPrefix={`filters-${category.handle}`} />
     </aside>
 
     <div class="collection-catalog__results">
       <header class="collection-catalog__toolbar">
         <div class="collection-catalog__toolbar-main">
           <p class="collection-catalog__folio kb-code-label text-king-muted">Catálogo</p>
-          <p class="collection-catalog__heading font-display">{countLabel}</p>
+          <p class="collection-catalog__heading font-display" data-results-count role="status" aria-live="polite">{countLabel}</p>
         </div>
         <p class="collection-catalog__scope text-king-muted">
-          Selección de {category.name.toLowerCase()} con material, color y precio visibles en cada referencia.
+          Selección de {category.title.toLowerCase()} con material, color y precio visibles en cada referencia.
         </p>
       </header>
 
       <ul class="collection-catalog__grid">
         {products.map((product, index) => (
-          <li class="collection-catalog__item">
+          <li
+            class="collection-catalog__item"
+            data-collection-product
+            data-filter-type={product.productType}
+            data-filter-colors={JSON.stringify(product.colors.map((color) => color.value))}
+            data-filter-price-min={product.priceRange.min.amountMinor}
+            data-filter-price-max={product.priceRange.max.amountMinor}
+          >
             <ProductCard
               product={product}
               index={index}
-              meta={`${product.subcategory} · ${product.color}`}
+              meta={`${product.productType} · ${product.colors.length === 1 ? product.colors[0].value : `${product.colors.length} colores`}`}
             />
           </li>
         ))}
       </ul>
+      <div class="collection-catalog__empty" data-results-empty hidden>
+        <p class="font-display">No hay referencias con estos filtros.</p>
+        <p class="text-king-muted">Restablece los filtros para volver a ver la colección completa.</p>
+      </div>
     </div>
   </div>
 </section>
+
+<script>
+  import { initCollectionCatalogs } from '../../scripts/collection-filters';
+  initCollectionCatalogs();
+</script>
 
 <style>
   .collection-catalog {
@@ -127,6 +148,23 @@ const countLabel = `${products.length} ${products.length === 1 ? 'referencia' : 
 
   .collection-catalog__item {
     min-width: 0;
+  }
+
+  .collection-catalog__item[hidden] {
+    display: none;
+  }
+
+  .collection-catalog__empty {
+    padding: var(--kb-space-8) 0;
+    border-top: 1px solid var(--kb-stroke-hairline);
+  }
+
+  .collection-catalog__empty p {
+    margin: 0;
+  }
+
+  .collection-catalog__empty p + p {
+    margin-top: var(--kb-space-2);
   }
 
   @media (min-width: 40rem) {

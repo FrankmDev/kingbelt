@@ -1,19 +1,35 @@
-import type { ProductDetail } from '../../data/catalog';
-import type { CartProduct } from './types';
-import { moneyFromMajor } from './money';
+import type {
+  CartProduct,
+  CommerceProduct,
+  CommerceProductSummary,
+  ProductVariant,
+} from './types';
 
-export const toCartProduct = (product: ProductDetail): CartProduct => ({
+export const toProductSummary = (product: CommerceProduct): CommerceProductSummary => ({
   id: product.id,
-  slug: product.slug,
-  name: product.name,
-  category: product.category,
-  reference: product.id.toUpperCase(),
-  unitPrice: moneyFromMajor(product.price, product.currency),
-  sizeUnit: 'cm',
-  image: {
-    src: product.image,
-    alt: product.imageAlt,
-    position: product.imagePosition,
-  },
-  href: product.href,
+  handle: product.handle,
+  title: product.title,
+  reference: product.reference,
+  primaryCollection: product.primaryCollection,
+  productType: product.productType,
+  primaryImage: product.primaryImage,
+  shortDescription: product.shortDescription,
+  priceRange: product.priceRange,
+  availableForSale: product.availableForSale,
+  colors: product.colors,
+  badge: product.badge,
+});
+
+export const toCartProduct = (
+  product: CommerceProduct,
+  variant: ProductVariant
+): CartProduct => ({
+  id: product.id,
+  handle: product.handle,
+  title: product.title,
+  collection: product.primaryCollection.title,
+  reference: product.reference,
+  unitPrice: variant.price,
+  image: variant.image ?? product.primaryImage,
+  href: `/productos/${product.handle}`,
 });

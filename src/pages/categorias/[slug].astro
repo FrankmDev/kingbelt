@@ -4,43 +4,40 @@ import CollectionCatalog from '../../components/collection/CollectionCatalog.ast
 import FooterSection from '../../components/layout/FooterSection.astro';
 import Header from '../../components/layout/Header.astro';
 import Breadcrumbs from '../../components/ui/Breadcrumbs.astro';
-import {
-  getCollectionFacets,
-  getCollectionProducts,
-  productCategories,
-  type ProductCategory,
-} from '../../data/catalog';
 import { site } from '../../data/site';
+import { catalogProvider } from '../../lib/commerce/catalog-provider';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 
-export const getStaticPaths = (() =>
-  productCategories.map((category) => ({
-    params: { slug: category.slug },
-    props: { category },
-  }))) satisfies GetStaticPaths;
+export const getStaticPaths = (async () => {
+  const handles = await catalogProvider.getCollectionHandles();
+  return handles.map((handle) => ({ params: { slug: handle }, props: { handle } }));
+}) satisfies GetStaticPaths;
 
 interface Props {
-  category: ProductCategory;
+  handle: string;
 }
 
-const { category } = Astro.props;
-const products = getCollectionProducts(category.slug);
-const facets = getCollectionFacets(products);
+const { handle } = Astro.props;
+const collectionPage = await catalogProvider.getCollectionByHandle(handle);
+if (!collectionPage) throw new Error(`Colección no encontrada: ${handle}`);
+const { collection: category, products, facets } = collectionPage;
+const categories = await catalogProvider.getCollections();
 const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href;
 
 const collectionSchema = {
   '@context': 'https://schema.org',
   '@type': 'CollectionPage',
-  name: `${category.name} — Colección ${site.name}`,
+  name: `${category.title} — Colección ${site.name}`,
   description: category.description,
   url: canonicalURL,
 };
 ---
 
 <BaseLayout
-  title={`${category.name} — Colección KingBelt`}
+  title={`${category.title} — Colección KingBelt`}
   description={category.description}
-  image={category.image}
+  image={category.image?.url}
+  imageAlt={category.image?.altText}
   canonicalURL={canonicalURL}
   schema={collectionSchema}
 >
@@ -49,14 +46,14 @@ const collectionSchema = {
   <section class="collection-head" aria-labelledby="collection-title">
     <div class="collection-head__inner kb-shell-wide">
       <Breadcrumbs
-        items={[{ label: 'Colección', href: '/#coleccion' }, { label: category.name }]}
+        items={[{ label: 'Colección', href: '/#coleccion' }, { label: category.title }]}
       />
 
       <div class="collection-head__grid">
         <div class="collection-head__title-block">
           <p class="collection-head__eyebrow kb-eyebrow text-king-accent">Colección KingBelt</p>
           <h1 id="collection-title" class="collection-head__title font-display">
-            {category.name}
+            {category.title}
           </h1>
         </div>
 
@@ -65,17 +62,17 @@ const collectionSchema = {
 
           <nav class="collection-head__nav" aria-label="Todas las categorías">
             <ul class="collection-head__nav-list">
-              {productCategories.map((item) => (
+              {categories.map((item) => (
                 <li class="collection-head__nav-item">
                   <a
-                    href={item.href}
+                    href={`/categorias/${item.handle}`}
                     class:list={[
                       'collection-head__nav-link kb-meta-label',
-                      item.slug === category.slug && 'is-current',
+                      item.handle === category.handle && 'is-current',
                     ]}
-                    aria-current={item.slug === category.slug ? 'page' : undefined}
+                    aria-current={item.handle === category.handle ? 'page' : undefined}
                   >
-                    {item.name}
+                    {item.title}
                   </a>
                 </li>
               ))}

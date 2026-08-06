@@ -1,8 +1,5 @@
 import { createLocalCommerceProvider } from './local-provider';
 import type { CommerceProvider } from './types';
 
-/**
- * Punto único de sustitución. Shopify deberá implementar CommerceProvider y
- * comunicarse con una frontera servidor segura cuando requiera credenciales.
- */
+/** Frontera activa del carrito, independiente del proveedor de catálogo. */
 export const commerceProvider: CommerceProvider = createLocalCommerceProvider();

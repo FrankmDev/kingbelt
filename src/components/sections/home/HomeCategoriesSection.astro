@@ -1,28 +1,33 @@
 ---
 import SectionHeaderHome from './SectionHeaderHome.astro';
 import Badge from '../../ui/Badge.astro';
-import { productCategories } from '../../../data/catalog';
 import { categoriesSection } from '../../../data/home';
+import type { CommerceCollection } from '../../../lib/commerce/types';
 
-const featured = productCategories.find((category) => category.featured) ?? productCategories[0];
-const secondary = productCategories.filter((category) => category.id !== featured.id);
+interface Props {
+  categories: CommerceCollection[];
+}
 
-const cards = [
-  { category: featured, index: 1, placement: 'hero' as const },
+const { categories } = Astro.props;
+const featured = categories.find((category) => category.featured) ?? categories[0];
+const secondary = categories.filter((category) => category.id !== featured?.id);
+
+const cards = featured ? [
+  { category: featured, index: 1, featured: true },
   ...secondary.map((category, index) => ({
     category,
     index: index + 2,
-    placement: index === 0 ? ('top' as const) : ('bottom' as const),
+    featured: false,
   })),
-];
+] : [];
 ---
 
 <section
   id="coleccion"
-  class="home-categories section-spacing section-spacing-chapter"
+  class="home-categories section-spacing"
   aria-labelledby="home-categories-title"
 >
-  <div class="kb-shell-wide section-stack-lg">
+  <div class="kb-shell-wide">
     <SectionHeaderHome
       index={categoriesSection.index}
       eyebrow={categoriesSection.eyebrow}
@@ -36,35 +41,34 @@ const cards = [
       </Fragment>
     </SectionHeaderHome>
 
-    <div class="home-categories__grid">
-      {cards.map(({ category, index, placement }) => (
+    <div class="home-categories__grid" style={`--secondary-count: ${Math.max(secondary.length, 1)}`}>
+      {cards.map(({ category, index, featured: isFeatured }) => (
         <a
-          href={category.href}
+          href={`/categorias/${category.handle}`}
           class:list={[
             'home-categories__card',
-            placement === 'hero' && 'home-categories__card--hero',
-            placement === 'top' && 'home-categories__card--top',
-            placement === 'bottom' && 'home-categories__card--bottom',
+            isFeatured && 'home-categories__card--hero',
+            !isFeatured && 'home-categories__card--secondary',
           ]}
-          aria-label={`Explorar categoría ${category.name}`}
+          aria-label={`Explorar categoría ${category.title}`}
         >
           <div class="home-categories__media-wrap">
-            <img
-              src={category.image}
-              alt={category.imageAlt}
-              width={placement === 'hero' ? 1200 : 960}
-              height={placement === 'hero' ? 1600 : 720}
+            {category.image && <img
+              src={category.image.url}
+              alt={category.image.altText}
+              width={category.image.width ?? (isFeatured ? 1200 : 960)}
+              height={category.image.height ?? (isFeatured ? 1600 : 720)}
               loading="lazy"
               decoding="async"
               class="home-categories__media"
-              style={`object-position: ${category.imagePosition ?? 'center'}`}
-            />
+              style={`object-position: ${category.image.position ?? 'center'}`}
+            />}
           </div>
 
           <div
             class:list={[
               'home-categories__shade',
-              placement === 'hero' && 'home-categories__shade--hero',
+              isFeatured && 'home-categories__shade--hero',
             ]}
             aria-hidden="true"
           ></div>
@@ -73,7 +77,7 @@ const cards = [
           <div
             class:list={[
               'home-categories__top',
-              placement === 'hero' && 'home-categories__top--hero',
+              isFeatured && 'home-categories__top--hero',
             ]}
           >
             <div class="home-categories__badges">
@@ -91,13 +95,13 @@ const cards = [
           <div
             class:list={[
               'home-categories__caption',
-              placement === 'hero' && 'home-categories__caption--hero',
+              isFeatured && 'home-categories__caption--hero',
             ]}
           >
             <span
               class:list={[
                 'home-categories__folio',
-                placement !== 'hero' && 'home-categories__folio--compact',
+                !isFeatured && 'home-categories__folio--compact',
               ]}
               aria-hidden="true"
             >
@@ -108,17 +112,17 @@ const cards = [
               <h3
                 class:list={[
                   'home-categories__title',
-                  placement !== 'hero' && 'home-categories__title--compact',
+                  !isFeatured && 'home-categories__title--compact',
                 ]}
               >
-                {category.name}
+                {category.title}
               </h3>
 
               {category.tagline && (
                 <p
                   class:list={[
                     'home-categories__tagline',
-                    placement !== 'hero' && 'home-categories__tagline--compact',
+                    !isFeatured && 'home-categories__tagline--compact',
                   ]}
                 >
                   {category.tagline}
@@ -451,7 +455,7 @@ const cards = [
   @media (min-width: 64rem) {
     .home-categories__grid {
       grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
-      grid-template-rows: repeat(2, minmax(0, 1fr));
+      grid-template-rows: repeat(var(--secondary-count), minmax(10rem, 1fr));
       gap: var(--kb-space-3);
       min-height: clamp(34rem, 42vw, 40rem);
     }
@@ -462,15 +466,8 @@ const cards = [
       min-height: 0;
     }
 
-    .home-categories__card--top {
+    .home-categories__card--secondary {
       grid-column: 2;
-      grid-row: 1;
-      min-height: 0;
-    }
-
-    .home-categories__card--bottom {
-      grid-column: 2;
-      grid-row: 2;
       min-height: 0;
     }
 

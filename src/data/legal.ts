@@ -228,9 +228,9 @@ export interface CookieTechnology {
 /** Solo tecnologías actualmente demostrables en el código. */
 export const currentTechnologies: CookieTechnology[] = [
   {
-    name: 'kingbelt-cart-v3',
+    name: 'kingbelt-cart-v4',
     type: 'localStorage',
-    purpose: 'Conservar las líneas del carrito local (identificador de producto, color, talla y cantidad) entre visitas.',
+    purpose: 'Conservar las líneas del carrito local (identificador de variante y cantidad) entre visitas.',
     duration: 'Hasta que el usuario borre los datos del sitio o se migre a una versión posterior.',
     provider: 'KingBelt (primera parte)',
   },

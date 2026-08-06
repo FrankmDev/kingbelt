@@ -4,7 +4,7 @@ import CTABox from '../../ui/CTABox.astro';
 import { closingCta } from '../../../data/home';
 ---
 
-<section class="home-closing section-spacing-tight section-spacing-close" aria-label="Llamada a la acción">
+<section class="home-closing section-spacing section-spacing-close" aria-label="Llamada a la acción">
   <div class="cta-section-inner kb-shell-wide">
     <CTABox
       eyebrow={closingCta.eyebrow}
@@ -36,3 +36,9 @@ import { closingCta } from '../../../data/home';
     </CTABox>
   </div>
 </section>
+
+<style>
+  .home-closing :global(.section-header-home) {
+    margin-bottom: 0;
+  }
+</style>

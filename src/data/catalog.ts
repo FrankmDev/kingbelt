@@ -1,200 +1,65 @@
-/** Datos provisionales de catálogo — sustituir por capa de comercio / Shopify. */
+/** Fixtures locales de la demo. Solo el proveedor local debe importar este módulo. */
+import { moneyFromMajor } from '../lib/commerce/money';
+import { calculatePriceRange } from '../lib/commerce/product-variants';
+import type {
+  CommerceCollection,
+  CommerceProduct,
+  ProductImage,
+  ProductOptionValue,
+  ProductVariant,
+} from '../lib/commerce/types';
 
-export interface ProductCategory {
-  id: string;
-  name: string;
-  slug: string;
-  image: string;
-  imageAlt: string;
-  imagePosition?: string;
-  /** Ruta de la página de categoría. */
-  href: string;
-  /** Descripción breve provisional para la cabecera de la página de categoría. */
-  description: string;
-  featured?: boolean;
-  badge?: string;
-  tagline?: string;
-}
+const image = (
+  url: string,
+  altText: string,
+  position: string,
+  width = 960,
+  height = 1200
+): ProductImage => ({ url, altText, position, width, height, placeholder: true });
 
-export interface ProductPreview {
-  id: string;
-  name: string;
-  slug: string;
-  category: string;
-  color: string;
-  price: number;
-  currency: 'EUR';
-  image: string;
-  imageAlt: string;
-  imagePosition?: string;
-  badge?: string;
-  /** Descripción breve provisional para cards de selección. */
-  excerpt: string;
-  /** Ruta de la ficha de producto (PDP). */
-  href: string;
-}
-
-/** Ruta de la ficha de producto (PDP). */
-export const getProductHref = (slug: string) => `/productos/${slug}`;
-
-export const productCategories: ProductCategory[] = [
+export const localCollections: CommerceCollection[] = [
   {
-    id: 'vestir',
-    name: 'Vestir',
-    slug: 'vestir',
-    image: '/images/blog/cinturon-negro.jpg',
-    imageAlt: 'Cinturón negro de vestir sobre fondo neutro',
-    imagePosition: 'center 62%',
-    href: '/categorias/vestir',
-    description:
-      'Cinturones de silueta limpia para conjuntos formales: piel lisa, hebillas discretas y proporción contenida.',
+    id: 'local:collection:vestir',
+    handle: 'vestir',
+    title: 'Vestir',
+    image: image('/images/blog/cinturon-negro.jpg', 'Cinturón negro de vestir sobre fondo neutro', 'center 62%'),
+    description: 'Cinturones de silueta limpia para conjuntos formales: piel lisa, hebillas discretas y proporción contenida.',
     featured: true,
     badge: 'Principal',
     tagline: 'Silueta limpia para conjunto formal',
   },
   {
-    id: 'casual',
-    name: 'Casual',
-    slug: 'casual',
-    image: '/images/blog/cinturon-marron.jpg',
-    imageAlt: 'Cinturón marrón para uso diario',
-    imagePosition: 'center 55%',
-    href: '/categorias/casual',
-    description:
-      'Cinturones de uso diario con proporción contenida: cueros con carácter, trenzados y detalles discretos.',
+    id: 'local:collection:casual',
+    handle: 'casual',
+    title: 'Casual',
+    image: image('/images/blog/cinturon-marron.jpg', 'Cinturón marrón para uso diario', 'center 55%'),
+    description: 'Cinturones de uso diario con proporción contenida: cueros con carácter, trenzados y detalles discretos.',
     tagline: 'Proporción para el día a día',
   },
   {
-    id: 'sport',
-    name: 'Sport',
-    slug: 'sport',
-    image: '/image.jpg',
-    imageAlt: 'Selección de cinturones con acabado resistente',
-    imagePosition: 'center 42%',
-    href: '/categorias/sport',
-    description:
-      'Cinturones de acabado resistente con herrajes de carácter industrial, pensados para aguantar el ritmo.',
+    id: 'local:collection:sport',
+    handle: 'sport',
+    title: 'Sport',
+    image: image('/image.jpg', 'Selección de cinturones con acabado resistente', 'center 42%'),
+    description: 'Cinturones de acabado resistente con herrajes de carácter industrial, pensados para aguantar el ritmo.',
     tagline: 'Acabado resistente con carácter',
   },
 ];
 
-export const featuredProducts: ProductPreview[] = [
-  {
-    id: 'kb-001',
-    name: 'Cinturón Atlas',
-    slug: 'cinturon-atlas',
-    category: 'Vestir',
-    color: 'Negro',
-    price: 89,
-    currency: 'EUR',
-    image: '/images/blog/cinturon-negro.jpg',
-    imageAlt: 'Cinturón Atlas negro con hebilla metálica',
-    imagePosition: 'center 65%',
-    badge: 'Top ventas',
-    excerpt: 'Cuero negro de silueta limpia para vestir.',
-    href: getProductHref('cinturon-atlas'),
-  },
-  {
-    id: 'kb-002',
-    name: 'Cinturón Ruta',
-    slug: 'cinturon-ruta',
-    category: 'Casual',
-    color: 'Marrón',
-    price: 79,
-    currency: 'EUR',
-    image: '/images/blog/cinturon-marron.jpg',
-    imageAlt: 'Cinturón Ruta marrón con textura de cuero',
-    imagePosition: 'center 50%',
-    badge: 'Nuevo',
-    excerpt: 'Marrón de uso diario, proporción contenida.',
-    href: getProductHref('cinturon-ruta'),
-  },
-  {
-    id: 'kb-003',
-    name: 'Cinturón Garaje',
-    slug: 'cinturon-garaje',
-    category: 'Sport',
-    color: 'Negro / acero',
-    price: 85,
-    currency: 'EUR',
-    image: '/image.jpg',
-    imageAlt: 'Cinturón Garaje con herraje oscuro',
-    imagePosition: 'center 40%',
-    excerpt: 'Herraje de acero oscuro y acabado resistente.',
-    href: getProductHref('cinturon-garaje'),
-  },
-  {
-    id: 'kb-004',
-    name: 'Cinturón Bandera',
-    slug: 'cinturon-bandera',
-    category: 'Casual',
-    color: 'Marrón / detalle tricolor',
-    price: 95,
-    currency: 'EUR',
-    image: '/images/blog/cinturon-marron-oscuro.jpg',
-    imageAlt: 'Cinturón con detalle de bandera española',
-    imagePosition: 'center 58%',
-    badge: 'Edición',
-    excerpt: 'Cuero marrón con detalle tricolor discreto.',
-    href: getProductHref('cinturon-bandera'),
-  },
+interface ImagePoolEntry {
+  url: string;
+  altBase: string;
+  position: string;
+}
+
+const imagePool: ImagePoolEntry[] = [
+  { url: '/images/blog/cinturon-negro.jpg', altBase: 'sobre fondo neutro', position: 'center 65%' },
+  { url: '/images/blog/cinturon-marron.jpg', altBase: 'con textura de cuero', position: 'center 50%' },
+  { url: '/images/blog/cinturon-marron-oscuro.jpg', altBase: 'en cuero marrón oscuro', position: 'center 58%' },
+  { url: '/image.jpg', altBase: 'con herraje metálico', position: 'center 40%' },
 ];
 
-export const formatPrice = (price: number, currency: ProductPreview['currency'] = 'EUR') =>
-  new Intl.NumberFormat('es-ES', {
-    style: 'currency',
-    currency,
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(price);
-
-/* ------------------------------------------------------------------------ */
-/* Productos de colección (placeholder — fase 2 demo local)                  */
-/* ------------------------------------------------------------------------ */
-
-export interface CollectionProduct extends ProductPreview {
-  /** Subcategoría provisional usada como faceta de filtrado. */
-  subcategory: string;
-}
-
-/* ------------------------------------------------------------------------ */
-/* Ficha de producto (placeholder — fase 2 demo local)                        */
-/* ------------------------------------------------------------------------ */
-
-export interface ProductGalleryImage {
-  src: string;
-  alt: string;
-  position?: string;
-}
-
-export interface ProductColorOption {
-  name: string;
-  /** Muestra CSS del color (hex o degradado para colorways dobles). */
-  swatch: string;
-}
-
-export interface ProductSpec {
-  label: string;
-  value: string;
-}
-
-export interface ProductDetail extends CollectionProduct {
-  /** Galería provisional de 3 vistas derivada del pool de imágenes. */
-  gallery: ProductGalleryImage[];
-  /** Tallas en cm, placeholder común a la selección de cinturones. */
-  sizes: string[];
-  /** Color propio + alternativos provisionales. */
-  colorOptions: ProductColorOption[];
-  /** Ficha técnica breve; solo afirmaciones ya públicas en la web. */
-  specs: ProductSpec[];
-  /** Descripción de ficha derivada del excerpt y de copy ya público. */
-  description: string;
-}
-
-/** Tallas de cinturón en cm — placeholder común de la demo local. */
-export const productSizes = ['85', '90', '95', '100', '105'];
-
-const colorSwatches: Record<string, string> = {
+const swatches: Record<string, string> = {
   Negro: '#1c1a18',
   Marrón: '#6d4a2f',
   'Marrón oscuro': '#46301f',
@@ -202,63 +67,39 @@ const colorSwatches: Record<string, string> = {
   'Negro / marrón': 'linear-gradient(135deg, #1c1a18 50%, #6d4a2f 50%)',
   'Marrón / negro': 'linear-gradient(135deg, #6d4a2f 50%, #1c1a18 50%)',
   'Negro / acero': 'linear-gradient(135deg, #1c1a18 50%, #7b7d78 50%)',
+  'Marrón / detalle tricolor': 'linear-gradient(135deg, #6d4a2f 0 68%, #aa151b 68% 78%, #f1bf00 78% 90%, #aa151b 90%)',
 };
 
-/** Colorways base usados como alternativas provisionales de color. */
 const baseColorways = ['Negro', 'Marrón', 'Coñac'];
+const sizes = ['85', '90', '95', '100', '105'];
 
-const buildColorOptions = (color: string): ProductColorOption[] =>
-  [color, ...baseColorways.filter((base) => base !== color)]
+const slugify = (value: string): string =>
+  value
+    .toLocaleLowerCase('es')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
+
+const colorValues = (primary: string): ProductOptionValue[] =>
+  [primary, ...baseColorways.filter((color) => color !== primary)]
     .slice(0, 3)
-    .map((name) => ({ name, swatch: colorSwatches[name] ?? '#6d4a2f' }));
+    .map((value) => ({ value, swatch: swatches[value] ?? '#6d4a2f' }));
 
-const galleryViewLabels = ['Vista principal', 'Detalle de textura', 'Vista de conjunto'];
-
-const buildGallery = (name: string, color: string, poolIndex: number): ProductGalleryImage[] =>
-  galleryViewLabels.map((viewLabel, offset) => {
-    const entry = collectionImagePool[(poolIndex + offset) % collectionImagePool.length];
-
-    return {
-      src: entry.image,
-      alt: `${viewLabel} del cinturón ${name} en color ${color.toLowerCase()} ${entry.imageAltBase}`,
-      position: entry.imagePosition,
-    };
+const galleryLabels = ['Vista principal', 'Detalle de textura', 'Vista de conjunto'];
+const buildGallery = (title: string, color: string, poolIndex: number): ProductImage[] =>
+  galleryLabels.map((label, offset) => {
+    const entry = imagePool[(poolIndex + offset) % imagePool.length];
+    return image(
+      entry.url,
+      `${label} del cinturón ${title} en color ${color.toLocaleLowerCase('es')} ${entry.altBase}`,
+      entry.position
+    );
   });
 
-interface CollectionImagePoolEntry {
-  image: string;
-  imageAltBase: string;
-  imagePosition: string;
-}
+type ProductSeed = [name: string, productType: string, color: string, price: number, excerpt: string];
 
-/** [nombre, subcategoría, color, precio, descripción breve] */
-type CollectionProductSeed = [string, string, string, number, string];
-
-/** Pool de imágenes reutilizado mientras no exista fotografía de producto real. */
-const collectionImagePool: CollectionImagePoolEntry[] = [
-  {
-    image: '/images/blog/cinturon-negro.jpg',
-    imageAltBase: 'sobre fondo neutro',
-    imagePosition: 'center 65%',
-  },
-  {
-    image: '/images/blog/cinturon-marron.jpg',
-    imageAltBase: 'con textura de cuero',
-    imagePosition: 'center 50%',
-  },
-  {
-    image: '/images/blog/cinturon-marron-oscuro.jpg',
-    imageAltBase: 'en cuero marrón oscuro',
-    imagePosition: 'center 58%',
-  },
-  {
-    image: '/image.jpg',
-    imageAltBase: 'con herraje metálico',
-    imagePosition: 'center 40%',
-  },
-];
-
-const collectionSeeds: Record<string, CollectionProductSeed[]> = {
+const seeds: Record<string, ProductSeed[]> = {
   vestir: [
     ['Atlas', 'Piel lisa', 'Negro', 89, 'Cuero negro de silueta limpia para vestir.'],
     ['Meridian', 'Piel lisa', 'Marrón oscuro', 85, 'Marrón oscuro de grano fino y hebilla discreta.'],
@@ -303,123 +144,104 @@ const collectionSeeds: Record<string, CollectionProductSeed[]> = {
   ],
 };
 
-const slugify = (value: string) =>
-  value
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '');
-
-const buildCollectionProducts = (
-  category: ProductCategory,
-  seeds: CollectionProductSeed[]
-): ProductDetail[] =>
-  seeds.map(([name, subcategory, color, price, excerpt], index) => {
-    const poolEntry = collectionImagePool[index % collectionImagePool.length];
-    const slug = `cinturon-${slugify(name)}`;
-    const id = `kb-${category.slug}-${String(index + 1).padStart(3, '0')}`;
-
-    return {
-      id,
-      name: `Cinturón ${name}`,
-      slug,
-      category: category.name,
-      subcategory,
-      color,
-      price,
-      currency: 'EUR',
-      image: poolEntry.image,
-      imageAlt: `Cinturón ${name} en color ${color.toLowerCase()} ${poolEntry.imageAltBase}`,
-      imagePosition: poolEntry.imagePosition,
-      badge: index === 0 ? 'Top ventas' : index === 1 ? 'Nuevo' : undefined,
-      excerpt,
-      href: getProductHref(slug),
-      gallery: buildGallery(name, color, index),
-      sizes: productSizes,
-      colorOptions: buildColorOptions(color),
-      specs: [
-        { label: 'Referencia', value: id.toUpperCase() },
-        { label: 'Acabado', value: subcategory },
-        { label: 'Color', value: color },
-        { label: 'Material', value: 'Piel de origen europeo' },
-        { label: 'Origen', value: 'Diseñado y terminado en España' },
-      ],
-      description: `${excerpt} Pieza de la selección ${category.name.toLowerCase()}, diseñada y terminada en España y revisada a mano antes de salir del taller.`,
-    };
-  });
-
-/** Productos placeholder por categoría — sustituir por la capa de comercio. */
-export const collectionProductsByCategory: Record<string, ProductDetail[]> = Object.fromEntries(
-  productCategories.map((category) => [
-    category.slug,
-    buildCollectionProducts(category, collectionSeeds[category.slug] ?? []),
-  ])
-);
-
-export const getCollectionProducts = (categorySlug: string): ProductDetail[] =>
-  collectionProductsByCategory[categorySlug] ?? [];
-
-/** Todas las fichas de producto de la demo local. */
-export const getAllProductDetails = (): ProductDetail[] =>
-  Object.values(collectionProductsByCategory).flat();
-
-/** Ficha de producto por slug. */
-export const getProductBySlug = (slug: string): ProductDetail | undefined =>
-  getAllProductDetails().find((product) => product.slug === slug);
-
-/** Categoría a la que pertenece una ficha (por nombre de categoría del producto). */
-export const getProductCategory = (product: ProductDetail): ProductCategory | undefined =>
-  productCategories.find((category) => category.name === product.category);
-
-/** Selección de la misma categoría, excluyendo el propio producto. */
-export const getRelatedProducts = (product: ProductDetail, count = 4): ProductDetail[] => {
-  const category = getProductCategory(product);
-  if (!category) return [];
-
-  return getCollectionProducts(category.slug)
-    .filter((item) => item.slug !== product.slug)
-    .slice(0, count);
+const badges: Record<string, string> = {
+  'cinturon-atlas': 'Top ventas',
+  'cinturon-ruta': 'Nuevo',
+  'cinturon-garaje': 'Top ventas',
+  'cinturon-bandera': 'Edición',
+  'cinturon-meridian': 'Nuevo',
+  'cinturon-circuito': 'Nuevo',
 };
 
-/* ------------------------------------------------------------------------ */
-/* Facetas de filtrado (derivadas de los productos de cada categoría)        */
-/* ------------------------------------------------------------------------ */
+const buildVariants = (
+  reference: string,
+  handle: string,
+  options: ProductOptionValue[],
+  price: number,
+  primaryImage: ProductImage
+): ProductVariant[] =>
+  options.flatMap((color) =>
+    sizes
+      .filter((size) => !(handle === 'cinturon-circuito' && size === '100'))
+      .map((size) => {
+        const unavailable = handle === 'cinturon-huella';
+        const soldOut = handle === 'cinturon-garaje';
+        const quantityAvailable = unavailable ? undefined : soldOut ? 0 : handle === 'cinturon-bandera' ? 2 : 10;
+        const suffix = `${slugify(color.value).toUpperCase()}-${size}`;
+        return {
+          id: `local:variant:${reference.toLocaleLowerCase('es')}:${slugify(color.value)}:${size}`,
+          sku: `${reference}-${suffix}`,
+          title: `${color.value} / ${size}`,
+          selectedOptions: [
+            { name: 'Color', value: color.value },
+            { name: 'Talla', value: size },
+          ],
+          price: moneyFromMajor(price),
+          availableForSale: !unavailable && !soldOut,
+          quantityAvailable,
+          currentlyNotInStock: false,
+          image: primaryImage,
+        };
+      })
+  );
 
-export interface CollectionFacetValue {
-  value: string;
-  count: number;
-}
+const buildProducts = (): CommerceProduct[] =>
+  localCollections.flatMap((collection) =>
+    (seeds[collection.handle] ?? []).map(([name, productType, color, price, shortDescription], index) => {
+      const reference = `KB-${collection.handle.toUpperCase()}-${String(index + 1).padStart(3, '0')}`;
+      const handle = `cinturon-${slugify(name)}`;
+      const colors = colorValues(color);
+      const gallery = buildGallery(name, color, index);
+      const primaryImage = gallery[0];
+      const variants = buildVariants(reference, handle, colors, price, primaryImage);
+      const collectionReference = { id: collection.id, handle: collection.handle, title: collection.title };
+      const description = `${shortDescription} Pieza de la selección ${collection.title.toLocaleLowerCase('es')}, diseñada y terminada en España y revisada a mano antes de salir del taller.`;
 
-export interface CollectionPriceRange {
-  id: string;
-  label: string;
-}
+      return {
+        id: `local:product:${collection.handle}:${String(index + 1).padStart(3, '0')}`,
+        handle,
+        title: `Cinturón ${name}`,
+        reference,
+        description,
+        shortDescription,
+        vendor: 'KingBelt',
+        productType,
+        primaryCollection: collectionReference,
+        collections: [collectionReference],
+        options: [
+          { id: `${handle}-color`, name: 'Color', values: colors },
+          { id: `${handle}-size`, name: 'Talla', values: sizes.map((value) => ({ value })) },
+        ],
+        variants,
+        primaryImage,
+        gallery,
+        specifications: [
+          { label: 'Referencia', value: reference },
+          { label: 'Acabado', value: productType },
+          { label: 'Color', value: color },
+          { label: 'Material', value: 'Piel de origen europeo' },
+          { label: 'Origen', value: 'Diseñado y terminado en España' },
+        ],
+        priceRange: calculatePriceRange(variants),
+        availableForSale: variants.some((variant) => variant.availableForSale),
+        colors,
+        badge: badges[handle],
+        seo: { title: `Cinturón ${name} — KingBelt`, description: shortDescription },
+      };
+    })
+  );
 
-export interface CollectionFacets {
-  subcategories: CollectionFacetValue[];
-  colors: CollectionFacetValue[];
-  priceRanges: CollectionPriceRange[];
-}
+export const localProducts: CommerceProduct[] = buildProducts();
 
-/** Rangos de precio provisionales para el panel de filtros. */
-export const collectionPriceRanges: CollectionPriceRange[] = [
-  { id: 'lt-80', label: 'Menos de 80 €' },
-  { id: '80-90', label: '80 € – 90 €' },
-  { id: 'gt-90', label: 'Más de 90 €' },
-];
-
-const countFacetValues = (values: string[]): CollectionFacetValue[] => {
-  const counts = new Map<string, number>();
-  values.forEach((value) => counts.set(value, (counts.get(value) ?? 0) + 1));
-
-  return [...counts.entries()]
-    .map(([value, count]) => ({ value, count }))
-    .sort((a, b) => b.count - a.count || a.value.localeCompare(b.value, 'es'));
-};
-
-export const getCollectionFacets = (products: CollectionProduct[]): CollectionFacets => ({
-  subcategories: countFacetValues(products.map((product) => product.subcategory)),
-  colors: countFacetValues(products.map((product) => product.color)),
-  priceRanges: collectionPriceRanges,
+localCollections.forEach((collection) => {
+  collection.productHandles = localProducts
+    .filter((product) => product.collections.some((item) => item.id === collection.id))
+    .map((product) => product.handle);
 });
+
+export const localFeaturedProductHandles = [
+  'cinturon-atlas',
+  'cinturon-ruta',
+  'cinturon-garaje',
+  'cinturon-bandera',
+] as const;

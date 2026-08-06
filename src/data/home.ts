@@ -17,7 +17,7 @@ export const hero = {
 } as const;
 
 export const brandStatement = {
-  index: '02',
+  index: '04',
   eyebrow: 'Sobre KingBelt',
   meta: 'Marca · Producto',
   lede: 'Una marca que empieza por el producto y avanza con criterio, no con ruido de escaparate.',
@@ -70,17 +70,17 @@ export const brandStatement = {
 export const categoriesSection = {
   index: '03',
   eyebrow: 'Colección',
-  title: 'Tres líneas, <em>un mismo criterio.</em>',
+  title: 'Líneas distintas, <em>un mismo criterio.</em>',
   body: 'Entrada al catálogo por uso y estilo. Cada categoría agrupa piezas con la misma lógica de proporción y acabado.',
-  meta: '3 categorías',
+  meta: 'Catálogo por categorías',
 } as const;
 
 export const featuredSection = {
-  index: '04',
+  index: '02',
   eyebrow: 'Destacados',
-  title: 'Las cuatro <em>más pedidas.</em>',
+  title: 'Una selección <em>con criterio.</em>',
   body: 'Referencias destacadas de la colección. Imagen, categoría, descripción breve y precio — sin ruido comercial de más.',
-  meta: '4 destacados',
+  meta: 'Selección destacada',
   cta: { label: 'Ver colección', href: '#coleccion' },
 } as const;
 

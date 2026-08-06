@@ -1,55 +1,190 @@
-/** Modelo de dominio neutral. Ningún tipo de esta capa depende de Shopify. */
+/** Dominio de comercio neutral. Ningún tipo de esta capa depende de Shopify. */
 
 export type CurrencyCode = 'EUR';
 
-/**
- * El importe se guarda en la unidad mínima para evitar errores de coma flotante.
- * Un adaptador de Shopify debe convertir su decimal a este formato en el borde.
- */
+/** Los importes se guardan siempre en unidades mínimas. */
 export interface Money {
   amountMinor: number;
   currency: CurrencyCode;
 }
 
-export interface CommerceImage {
-  src: string;
-  alt: string;
+export interface PriceRange {
+  min: Money;
+  max: Money;
+}
+
+export interface ProductImage {
+  url: string;
+  altText: string;
+  width?: number;
+  height?: number;
   position?: string;
+  /** Permite conservar medios provisionales aprobados sin tratarlos como datos finales. */
+  placeholder?: boolean;
 }
 
-/** Instantánea pública y normalizada que necesita la UI del carrito. */
-export interface CartProduct {
+export interface ProductMediaGroup {
+  optionName: string;
+  optionValue: string;
+  images: ProductImage[];
+}
+
+export interface ProductOptionValue {
+  value: string;
+  /** Muestra visual proporcionada por el origen; nunca se infiere en la UI. */
+  swatch?: string;
+}
+
+export interface ProductOption {
   id: string;
-  slug: string;
   name: string;
-  category: string;
-  reference: string;
-  unitPrice: Money;
-  sizeUnit?: string;
-  image?: CommerceImage;
-  href: string;
+  values: ProductOptionValue[];
 }
 
-export interface LocalCatalogProduct {
-  product: CartProduct;
-  colors: readonly string[];
-  sizes: readonly string[];
+export interface SelectedOption {
+  name: string;
+  value: string;
+}
+
+export interface ProductWeight {
+  value: number;
+  unit: 'g' | 'kg';
+}
+
+export interface ProductVariant {
+  id: string;
+  sku: string;
+  title?: string;
+  selectedOptions: SelectedOption[];
+  price: Money;
+  compareAtPrice?: Money;
+  availableForSale: boolean;
+  quantityAvailable?: number;
+  currentlyNotInStock?: boolean;
+  image?: ProductImage;
+  weight?: ProductWeight;
+}
+
+export interface SEOData {
+  title?: string;
+  description?: string;
+}
+
+export interface ProductSpecification {
+  label: string;
+  value: string;
+}
+
+export interface CommerceCollection {
+  id: string;
+  handle: string;
+  title: string;
+  description: string;
+  image?: ProductImage;
+  featured?: boolean;
+  badge?: string;
+  tagline?: string;
+  /** Relación opcional útil para validar imports antes de construir el proveedor. */
+  productHandles?: string[];
+}
+
+export interface ProductCollectionReference {
+  id: string;
+  handle: string;
+  title: string;
+}
+
+export interface CommerceProductSummary {
+  id: string;
+  handle: string;
+  title: string;
+  reference: string;
+  primaryCollection: ProductCollectionReference;
+  productType: string;
+  primaryImage?: ProductImage;
+  shortDescription: string;
+  priceRange: PriceRange;
+  availableForSale: boolean;
+  colors: ProductOptionValue[];
+  badge?: string;
+}
+
+export interface CommerceProduct extends CommerceProductSummary {
+  description: string;
+  vendor: string;
+  collections: ProductCollectionReference[];
+  options: ProductOption[];
+  variants: ProductVariant[];
+  gallery: ProductImage[];
+  mediaGroups?: ProductMediaGroup[];
+  specifications: ProductSpecification[];
+  seo: SEOData;
+}
+
+export interface CollectionFacetValue {
+  value: string;
+  count: number;
+  swatch?: string;
+}
+
+export interface CollectionPriceRange {
+  id: string;
+  label: string;
+}
+
+export interface CollectionFacets {
+  productTypes: CollectionFacetValue[];
+  colors: CollectionFacetValue[];
+  priceRanges: CollectionPriceRange[];
+  availability?: CollectionFacetValue[];
+}
+
+export interface CommerceCollectionPage {
+  collection: CommerceCollection;
+  products: CommerceProductSummary[];
+  facets: CollectionFacets;
+}
+
+export interface CatalogProvider {
+  getCollections(): Promise<CommerceCollection[]>;
+  getCollectionByHandle(handle: string): Promise<CommerceCollectionPage | undefined>;
+  getProductHandles(): Promise<string[]>;
+  getCollectionHandles(): Promise<string[]>;
+  getProductByHandle(handle: string): Promise<CommerceProduct | undefined>;
+  getFeaturedProducts(limit: number): Promise<CommerceProductSummary[]>;
+  getRelatedProducts(
+    product: CommerceProduct,
+    limit: number
+  ): Promise<CommerceProductSummary[]>;
 }
 
 export type AvailabilityStatus = 'available' | 'out_of_stock' | 'unavailable' | 'limited';
 
 export interface LineAvailability {
   status: AvailabilityStatus;
+  /** 99 es el límite de la demo cuando el proveedor no comunica stock. */
   maxQuantity: number;
+  quantityKnown: boolean;
   message?: string;
+}
+
+/** Instantánea resuelta por el proveedor para presentar una línea. */
+export interface CartProduct {
+  id: string;
+  handle: string;
+  title: string;
+  collection: string;
+  reference: string;
+  unitPrice: Money;
+  image?: ProductImage;
+  href: string;
 }
 
 export interface CartLine {
   id: string;
-  productId: string;
+  variantId: string;
   product: CartProduct;
-  color: string;
-  size: string;
+  selectedOptions: SelectedOption[];
   quantity: number;
   availability: LineAvailability;
   lineTotal: Money;
@@ -79,12 +214,11 @@ export interface Cart {
   status: CartStatus;
   canCheckout: boolean;
   globalError?: string;
+  globalNotice?: string;
 }
 
 export interface AddToCartInput {
-  productId: string;
-  color: string;
-  size: string;
+  variantId: string;
   quantity: number;
 }
 
@@ -99,7 +233,7 @@ export type CartOperationErrorCode =
 export interface CartOperationMessage {
   code: CartOperationErrorCode | 'quantity_adjusted' | 'product_removed';
   message: string;
-  field?: 'color' | 'size' | 'quantity';
+  field?: 'variant' | 'quantity';
 }
 
 export interface CartOperationResult {
@@ -114,17 +248,12 @@ export type CheckoutStatus = 'idle' | 'preparing' | 'unavailable' | 'error';
 
 export interface CheckoutResult {
   status: CheckoutStatus;
-  /** URL externa ya obtenida por el proveedor. La UI vuelve a validarla antes de navegar. */
   url?: string;
-  /** Hosts exactos permitidos para la redirección. Nunca incluir patrones amplios. */
   allowedHosts?: readonly string[];
   message?: string;
 }
 
-/**
- * Único contrato que consume el estado cliente. La integración Shopify futura
- * sustituirá la implementación, no los componentes ni las operaciones de UI.
- */
+/** El carrito y el catálogo mantienen fronteras sustituibles independientes. */
 export interface CommerceProvider {
   initialize(): Promise<Cart>;
   addItem(input: AddToCartInput): Promise<CartOperationResult>;

@@ -1,8 +1,8 @@
 ---
-import type { ProductGalleryImage } from '../../data/catalog';
+import type { ProductImage } from '../../lib/commerce/types';
 
 interface Props {
-  images: ProductGalleryImage[];
+  images: ProductImage[];
   /** Prefijo único para name/ids del grupo de radios (p. ej. slug del producto). */
   idPrefix: string;
   class?: string;
@@ -17,26 +17,30 @@ const groupName = `gallery-${idPrefix}`;
   {images.map((_, index) => (
     <input
       type="radio"
-      class:list={['product-gallery__input', `product-gallery__input--${index + 1}`, 'sr-only']}
+      class="product-gallery__input sr-only"
       id={`${groupName}-${index + 1}`}
       name={groupName}
       checked={index === 0}
       aria-label={`Ver imagen ${index + 1} de ${images.length}`}
+      data-gallery-choice
+      data-gallery-image-url={images[index].url}
     />
   ))}
 
   <div class="product-gallery__stage">
     {images.map((image, index) => (
       <img
-        src={image.src}
-        alt={image.alt}
-        width="960"
-        height="1200"
-        class:list={['product-gallery__slide', `product-gallery__slide--${index + 1}`]}
+        src={image.url}
+        alt={image.altText}
+        width={image.width ?? 960}
+        height={image.height ?? 1200}
+        class="product-gallery__slide"
         loading={index === 0 ? 'eager' : 'lazy'}
         fetchpriority={index === 0 ? 'high' : undefined}
         decoding="async"
         style={`object-position: ${image.position ?? 'center'}`}
+        data-gallery-slide
+        hidden={index !== 0}
       />
     ))}
   </div>
@@ -44,14 +48,16 @@ const groupName = `gallery-${idPrefix}`;
   <div class="product-gallery__thumbs">
     {images.map((image, index) => (
       <label
-        class:list={['product-gallery__thumb', `product-gallery__thumb--${index + 1}`]}
+        class="product-gallery__thumb"
         for={`${groupName}-${index + 1}`}
+        data-gallery-thumb
+        data-selected={index === 0 ? 'true' : undefined}
       >
         <img
-          src={image.src}
+          src={image.url}
           alt=""
-          width="240"
-          height="300"
+          width={image.width ?? 240}
+          height={image.height ?? 300}
           loading="lazy"
           decoding="async"
           aria-hidden="true"
@@ -61,6 +67,11 @@ const groupName = `gallery-${idPrefix}`;
     ))}
   </div>
 </div>
+
+<script>
+  import { initProductGalleries } from '../../scripts/product-gallery';
+  initProductGalleries();
+</script>
 
 <style>
   .product-gallery {
@@ -92,17 +103,20 @@ const groupName = `gallery-${idPrefix}`;
     transition: opacity var(--kb-dur-med) var(--kb-ease-out);
   }
 
-  .product-gallery__input--1:checked ~ .product-gallery__stage .product-gallery__slide--1,
-  .product-gallery__input--2:checked ~ .product-gallery__stage .product-gallery__slide--2,
-  .product-gallery__input--3:checked ~ .product-gallery__stage .product-gallery__slide--3 {
+  .product-gallery__slide:not([hidden]) {
     opacity: 1;
+  }
+
+  .product-gallery__slide[hidden] {
+    display: block;
+    visibility: hidden;
   }
 
   /* ---------- Miniaturas 3×1 ---------- */
 
   .product-gallery__thumbs {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(5rem, 25%), 1fr));
     gap: var(--kb-space-3);
   }
 
@@ -129,22 +143,16 @@ const groupName = `gallery-${idPrefix}`;
     transition: opacity var(--kb-dur-fast) var(--kb-ease-out);
   }
 
-  .product-gallery__input--1:checked ~ .product-gallery__thumbs .product-gallery__thumb--1,
-  .product-gallery__input--2:checked ~ .product-gallery__thumbs .product-gallery__thumb--2,
-  .product-gallery__input--3:checked ~ .product-gallery__thumbs .product-gallery__thumb--3 {
+  .product-gallery__thumb[data-selected='true'] {
     border-color: var(--color-king-accent);
     box-shadow: inset 0 0 0 1px var(--color-king-accent);
   }
 
-  .product-gallery__input--1:checked ~ .product-gallery__thumbs .product-gallery__thumb--1 img,
-  .product-gallery__input--2:checked ~ .product-gallery__thumbs .product-gallery__thumb--2 img,
-  .product-gallery__input--3:checked ~ .product-gallery__thumbs .product-gallery__thumb--3 img {
+  .product-gallery__thumb[data-selected='true'] img {
     opacity: 1;
   }
 
-  .product-gallery__input--1:focus-visible ~ .product-gallery__thumbs .product-gallery__thumb--1,
-  .product-gallery__input--2:focus-visible ~ .product-gallery__thumbs .product-gallery__thumb--2,
-  .product-gallery__input--3:focus-visible ~ .product-gallery__thumbs .product-gallery__thumb--3 {
+  .product-gallery:has(.product-gallery__input:focus-visible) .product-gallery__thumb[data-selected='true'] {
     outline: 2px solid var(--color-king-accent);
     outline-offset: 3px;
   }

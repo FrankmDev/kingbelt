@@ -9,10 +9,10 @@ const cardVariants = ['default', 'steel', 'default'] as const;
 
 <section
   id="atencion"
-  class="home-trust section-spacing section-spacing-tight"
+  class="home-trust section-spacing"
   aria-labelledby="home-trust-title"
 >
-  <div class="kb-shell-wide section-stack-lg">
+  <div class="kb-shell-wide">
     <SectionHeaderHome
       index={trustSection.index}
       eyebrow={trustSection.eyebrow}
@@ -70,6 +70,7 @@ const cardVariants = ['default', 'steel', 'default'] as const;
   .home-trust__action {
     display: flex;
     justify-content: flex-start;
+    margin-top: var(--kb-space-gap-lg);
   }
 
   @media (min-width: 48rem) {

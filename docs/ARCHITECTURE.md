@@ -90,16 +90,14 @@ No extraigas wrappers triviales que solo oculten dos clases ni crees variantes c
 
 ## Datos y futura integración
 
-Flujo previsto:
+Flujos previstos:
 
 ```txt
-pages / components
-  → cart-client.ts (estado observable de UI)
-  → provider.ts (selección de implementación)
-  → local-provider.ts ahora / adaptador Shopify después
+pages / components → catalog-provider.ts → local-catalog.ts ahora / adaptador Shopify después
+cart-client.ts     → provider.ts         → local-provider.ts ahora / adaptador Shopify después
 ```
 
-`src/lib/commerce/provider.ts` es el punto único de sustitución. Los componentes consumen el contrato `CommerceProvider` de `types.ts`; no importan tipos, respuestas ni clientes de Shopify. El proveedor local resuelve siempre producto, precio, URL, imagen y stock desde el catálogo tipado. `localStorage` conserva únicamente identificadores de producto, color, talla y cantidad bajo un esquema versionado y limitado; nunca es autoridad para precio, disponibilidad ni checkout.
+Catálogo y carrito tienen fronteras distintas y reducidas. Las páginas consumen `CatalogProvider`; el estado cliente consume `CommerceProvider`. Los componentes importan únicamente el dominio neutral de `types.ts`, nunca fixtures, respuestas ni clientes de Shopify. El proveedor local resuelve producto, variante, precio, URL, imagen y stock desde el catálogo tipado. `localStorage` conserva solo ID de variante y cantidad bajo un esquema versionado y limitado; nunca es autoridad para precio, disponibilidad ni checkout.
 
 Al conectar Shopify:
 

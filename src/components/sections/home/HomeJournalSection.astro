@@ -16,7 +16,7 @@ const [lead, ...secondary] = posts;
 ---
 
 <div id="revista" class="home-journal">
-  <section class="home-journal__intro section-spacing section-spacing-chapter" aria-labelledby="home-journal-title">
+  <section class="home-journal__intro section-spacing" aria-labelledby="home-journal-title">
     <div class="kb-shell-wide">
       <div class="home-journal__head">
         <SectionHeaderHome
@@ -62,13 +62,17 @@ const [lead, ...secondary] = posts;
 <style>
   .home-journal__intro {
     background: var(--color-king-bg);
-    padding-bottom: clamp(1.5rem, 3vw, 2.5rem);
   }
 
   .home-journal__head {
     display: grid;
     gap: var(--kb-space-6);
     align-items: end;
+    margin-bottom: var(--kb-space-gap-lg);
+  }
+
+  .home-journal__header:global(.section-header-home) {
+    margin-bottom: 0;
   }
 
   .home-journal__header:global(.section-header-home) .shh-body {

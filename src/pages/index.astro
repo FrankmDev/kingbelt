@@ -13,10 +13,13 @@ import HomeTrustSection from '../components/sections/home/HomeTrustSection.astro
 import HomeClosingCta from '../components/sections/home/HomeClosingCta.astro';
 import { blogPosts } from '../data/blog';
 import { site } from '../data/site';
+import { catalogProvider } from '../lib/commerce/catalog-provider';
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href;
 const featuredPost = blogPosts.find((post) => post.status === 'featured') ?? blogPosts[0];
 const journalPosts = [featuredPost, blogPosts[1], blogPosts[2]].filter(Boolean);
+const featuredProducts = await catalogProvider.getFeaturedProducts(4);
+const productCategories = await catalogProvider.getCollections();
 
 const homeSchema = {
   '@context': 'https://schema.org',
@@ -43,9 +46,9 @@ const homeSchema = {
   <Header slot="header" initialTheme="dark" scrolledTheme="light" compactThreshold={48} />
 
   <HeroHome />
+  <HomeFeaturedProducts products={featuredProducts} />
+  <HomeCategoriesSection categories={productCategories} />
   <HomeBrandStatement />
-  <HomeCategoriesSection />
-  <HomeFeaturedProducts />
   <HomeProductStandards />
   <HomeStyleBanner />
   <HomeJournalSection posts={journalPosts} />

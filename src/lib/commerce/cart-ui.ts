@@ -146,12 +146,12 @@ const createQuantitySelector = (
   const label = document.createElement('span');
   label.id = labelId;
   label.className = 'sr-only';
-  label.textContent = `Cantidad de ${line.product.name}`;
+  label.textContent = `Cantidad de ${line.product.title}`;
 
   const decrease = document.createElement('button');
   decrease.type = 'button';
   decrease.className = 'qty-selector__btn';
-  decrease.setAttribute('aria-label', `Reducir cantidad de ${line.product.name}`);
+  decrease.setAttribute('aria-label', `Reducir cantidad de ${line.product.title}`);
   decrease.setAttribute('data-qty-decrease', line.id);
   decrease.disabled = disabled || line.quantity <= 1;
   const decreaseGlyph = document.createElement('span');
@@ -178,7 +178,7 @@ const createQuantitySelector = (
   const increase = document.createElement('button');
   increase.type = 'button';
   increase.className = 'qty-selector__btn';
-  increase.setAttribute('aria-label', `Aumentar cantidad de ${line.product.name}`);
+  increase.setAttribute('aria-label', `Aumentar cantidad de ${line.product.title}`);
   increase.setAttribute('data-qty-increase', line.id);
   increase.disabled = disabled || line.quantity >= line.availability.maxQuantity;
   const increaseGlyph = document.createElement('span');
@@ -215,16 +215,16 @@ const createLineElement = (
   const media = document.createElement('div');
   media.className = 'cart-line__media';
 
-  const safeImageSrc = line.product.image?.src
-    ? getSafeImageSrc(line.product.image.src)
+  const safeImageSrc = line.product.image?.url
+    ? getSafeImageSrc(line.product.image.url)
     : null;
 
   if (line.product.image && safeImageSrc) {
     const image = document.createElement('img');
     image.src = safeImageSrc;
-    image.alt = line.product.image.alt;
-    image.width = 120;
-    image.height = 150;
+    image.alt = line.product.image.altText;
+    image.width = line.product.image.width ?? 120;
+    image.height = line.product.image.height ?? 150;
     image.loading = 'lazy';
     image.decoding = 'async';
     if (line.product.image.position) image.style.objectPosition = line.product.image.position;
@@ -246,14 +246,14 @@ const createLineElement = (
   title.className = 'cart-line__title';
   const titleLink = document.createElement('a');
   titleLink.href = getSafeProductHref(line.product.href);
-  titleLink.textContent = line.product.name;
+  titleLink.textContent = line.product.title;
   title.append(titleLink);
 
   const removeButton = document.createElement('button');
   removeButton.type = 'button';
   removeButton.className = 'cart-line__remove';
   removeButton.setAttribute('data-cart-remove', line.id);
-  removeButton.setAttribute('aria-label', `Eliminar ${line.product.name} del carrito`);
+  removeButton.setAttribute('aria-label', `Eliminar ${line.product.title} del carrito`);
   removeButton.disabled = updating;
   removeButton.append(createRemoveIcon());
 
@@ -355,6 +355,8 @@ const renderStatus = (selector: string, cart: Cart) => {
 
   if (cart.globalError) {
     setStatusMessage(target, cart.globalError, false, true);
+  } else if (cart.globalNotice) {
+    setStatusMessage(target, cart.globalNotice, true);
   } else if (cart.status === 'recovering') {
     setStatusMessage(target, 'Recuperando carrito…');
   } else if (cart.status === 'updating') {

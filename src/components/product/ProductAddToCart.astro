@@ -2,90 +2,94 @@
 import Button from '../ui/Button.astro';
 import FormField from '../ui/FormField.astro';
 import Icon from '../ui/Icon.astro';
-import type { ProductColorOption, ProductDetail } from '../../data/catalog';
-import { formatPrice } from '../../data/catalog';
+import { formatMoney } from '../../lib/commerce/money';
+import { getFirstAvailableVariant, getMaxSelectableQuantity } from '../../lib/commerce/product-variants';
+import type { CommerceProduct } from '../../lib/commerce/types';
 
 interface Props {
-  product: ProductDetail;
-  purchasable?: boolean;
+  product: CommerceProduct;
 }
 
-const { product, purchasable = true } = Astro.props;
-const formId = `add-to-cart-${product.slug}`;
-const colorGroup = `color-${product.slug}`;
-const sizeGroup = `size-${product.slug}`;
-const colorErrorId = `${formId}-color-error`;
-const sizeErrorId = `${formId}-size-error`;
+const { product } = Astro.props;
+const formId = `add-to-cart-${product.handle}`;
 const quantityErrorId = `${formId}-quantity-error`;
 const feedbackId = `${formId}-feedback`;
+const initialVariant = getFirstAvailableVariant(product) ?? product.variants[0];
+const purchasable = Boolean(initialVariant?.availableForSale);
+const initialMax = getMaxSelectableQuantity(initialVariant);
+const optionKey = (value: string) => value.toLocaleLowerCase('es').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-');
+const initialValue = (name: string) => initialVariant?.selectedOptions.find((option) => option.name === name)?.value;
+const publicVariants = product.variants.map((variant) => ({
+  id: variant.id,
+  selectedOptions: variant.selectedOptions,
+  availableForSale: variant.availableForSale,
+  quantityAvailable: variant.quantityAvailable,
+  price: variant.price,
+  compareAtPrice: variant.compareAtPrice,
+  image: variant.image,
+}));
+const variantsJson = JSON.stringify({ options: product.options, variants: publicVariants })
+  .replace(/&/g, '\\u0026')
+  .replace(/</g, '\\u003c')
+  .replace(/>/g, '\\u003e')
+  .replace(/\u2028/g, '\\u2028')
+  .replace(/\u2029/g, '\\u2029');
 ---
 
 <form
   id={formId}
   class="product-buy"
   data-product-add-form
-  data-product-id={product.id}
   aria-describedby={feedbackId}
   novalidate
 >
-  <p class="product-buy__price font-display" aria-live="polite">
-    {formatPrice(product.price, product.currency)}
-  </p>
+  <div class="product-buy__price-row" aria-live="polite">
+    <p class="product-buy__price font-display" data-product-price>
+      {initialVariant ? formatMoney(initialVariant.price) : formatMoney(product.priceRange.min)}
+    </p>
+    <p class="product-buy__compare" data-product-compare hidden={!initialVariant?.compareAtPrice}>
+      {initialVariant?.compareAtPrice ? formatMoney(initialVariant.compareAtPrice) : ''}
+    </p>
+  </div>
 
-  <fieldset
-    class="product-buy__fieldset"
-    aria-describedby={colorErrorId}
-    disabled={!purchasable}
-  >
-    <legend class="product-buy__legend kb-label">Color</legend>
-    <div class="product-buy__swatches" role="radiogroup" aria-label="Seleccionar color">
-      {product.colorOptions.map((option: ProductColorOption) => (
-        <label class="product-buy__swatch" title={option.name}>
-          <input
-            type="radio"
-            name={colorGroup}
-            value={option.name}
-            class="sr-only"
-            data-product-color
-            required
-          />
-          <span
-            class="product-buy__swatch-chip"
-            style={`background: ${option.swatch}`}
-            aria-hidden="true"
-          />
-          <span class="product-buy__swatch-label kb-meta-label">{option.name}</span>
-        </label>
-      ))}
-    </div>
-    <p id={colorErrorId} class="product-buy__field-error" data-error-for="color" role="alert" hidden></p>
-  </fieldset>
+  {product.options.map((option) => {
+    const key = optionKey(option.name);
+    const errorId = `${formId}-${key}-error`;
+    const isColor = option.name.toLocaleLowerCase('es') === 'color';
+    const isSize = option.name.toLocaleLowerCase('es') === 'talla';
+    return (
+      <fieldset class="product-buy__fieldset" aria-describedby={errorId} data-product-option-group={option.name}>
+        <legend class="product-buy__legend kb-label">{isSize ? 'Talla (cm)' : option.name}</legend>
+        <div class={isColor ? 'product-buy__swatches' : 'product-buy__sizes'} role="radiogroup" aria-label={`Seleccionar ${option.name.toLocaleLowerCase('es')}`}>
+          {option.values.map((value) => (
+            <label class={isColor ? 'product-buy__swatch' : 'product-buy__size'} title={isColor ? value.value : undefined}>
+              <input
+                type="radio"
+                name={`${formId}-option-${key}`}
+                value={value.value}
+                class="sr-only"
+                data-product-option
+                data-option-name={option.name}
+                checked={initialValue(option.name) === value.value}
+                required
+              />
+              {isColor ? (
+                <>
+                  <span class="product-buy__swatch-chip" style={`background: ${value.swatch ?? 'transparent'}`} aria-hidden="true" />
+                  <span class="product-buy__swatch-label kb-meta-label">{value.value}</span>
+                </>
+              ) : (
+                <span class="product-buy__size-chip kb-meta-label">{value.value}</span>
+              )}
+            </label>
+          ))}
+        </div>
+        <p id={errorId} class="product-buy__field-error" data-error-for-option={option.name} role="alert" hidden></p>
+      </fieldset>
+    );
+  })}
 
-  <fieldset
-    class="product-buy__fieldset"
-    aria-describedby={sizeErrorId}
-    disabled={!purchasable}
-  >
-    <legend class="product-buy__legend kb-label">Talla (cm)</legend>
-    <div class="product-buy__sizes" role="radiogroup" aria-label="Seleccionar talla">
-      {product.sizes.map((size) => (
-        <label class="product-buy__size">
-          <input
-            type="radio"
-            name={sizeGroup}
-            value={size}
-            class="sr-only"
-            data-product-size
-            required
-          />
-          <span class="product-buy__size-chip kb-meta-label">{size}</span>
-        </label>
-      ))}
-    </div>
-    <p id={sizeErrorId} class="product-buy__field-error" data-error-for="size" role="alert" hidden></p>
-  </fieldset>
-
-  <FormField label="Cantidad" for={`qty-${product.slug}`} required>
+  <FormField label="Cantidad" for={`qty-${product.handle}`} required>
     <div class="product-buy__qty">
       <button
         type="button"
@@ -97,13 +101,13 @@ const feedbackId = `${formId}-feedback`;
         <Icon name="minus" class="h-3.5 w-3.5" />
       </button>
       <input
-        id={`qty-${product.slug}`}
+        id={`qty-${product.handle}`}
         type="number"
         class="kb-input product-buy__qty-input"
         name="quantity"
         value="1"
         min="1"
-        max="10"
+        max={Math.max(1, initialMax)}
         inputmode="numeric"
         data-product-quantity
         aria-describedby={quantityErrorId}
@@ -132,7 +136,7 @@ const feedbackId = `${formId}-feedback`;
       data-product-submit
       disabled={!purchasable}
     >
-      {purchasable ? 'Añadir al carrito' : 'Agotado'}
+      <span data-product-submit-label>{purchasable ? 'Añadir al carrito' : 'Agotado'}</span>
     </Button>
     <div class="product-buy__drawer-wrap" data-product-drawer-wrap hidden>
       <Button
@@ -154,6 +158,8 @@ const feedbackId = `${formId}-feedback`;
     aria-live="polite"
     hidden={purchasable}
   >{purchasable ? '' : 'Este producto no está disponible actualmente.'}</p>
+
+  <script is:inline type="application/json" data-product-variants set:html={variantsJson}></script>
 </form>
 
 <script>
@@ -175,6 +181,21 @@ const feedbackId = `${formId}-feedback`;
     line-height: 1;
     font-variant-numeric: tabular-nums;
     color: var(--color-king-text);
+  }
+
+  .product-buy__price-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--kb-space-3);
+  }
+
+  .product-buy__compare {
+    margin: 0;
+    font-size: var(--kb-text-sm);
+    color: var(--color-king-muted);
+    text-decoration: line-through;
+    font-variant-numeric: tabular-nums;
   }
 
   .product-buy__fieldset {
@@ -226,6 +247,11 @@ const feedbackId = `${formId}-feedback`;
   .product-buy__swatch input:disabled + .product-buy__swatch-chip,
   .product-buy__size input:disabled + .product-buy__size-chip {
     opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  .product-buy__swatch[data-impossible],
+  .product-buy__size[data-impossible] {
     cursor: not-allowed;
   }
 

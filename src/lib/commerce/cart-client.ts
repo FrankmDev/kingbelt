@@ -139,7 +139,9 @@ export const getLineError = (cart: Cart, lineId: string) =>
   cart.lineErrors.find((error) => error.lineId === lineId);
 
 export const formatLineMeta = (line: CartLine) =>
-  `${line.color} · Talla ${line.size}${line.product.sizeUnit ? ` ${line.product.sizeUnit}` : ''}`;
+  line.selectedOptions
+    .map((option) => `${option.name}: ${option.value}${option.name === 'Talla' ? ' cm' : ''}`)
+    .join(' · ');
 
 export { formatMoney };
 export type { CartDrawerEventDetail };

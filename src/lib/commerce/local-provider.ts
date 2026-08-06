@@ -40,7 +40,7 @@ export const createLocalCommerceProvider = (
       if (!storage) return cart;
 
       const persisted = readPersistedCart(storage);
-      cart = restoreCart(persisted.lines);
+      cart = restoreCart(persisted.lines, persisted.discardedCount);
 
       if (persisted.source === 'invalid') {
         cart = {

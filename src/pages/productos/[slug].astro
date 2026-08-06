@@ -6,66 +6,41 @@ import Header from '../../components/layout/Header.astro';
 import ProductAddToCart from '../../components/product/ProductAddToCart.astro';
 import ProductGallery from '../../components/product/ProductGallery.astro';
 import Breadcrumbs from '../../components/ui/Breadcrumbs.astro';
-import {
-  getAllProductDetails,
-  getProductCategory,
-  getRelatedProducts,
-  type ProductDetail,
-} from '../../data/catalog';
 import { site } from '../../data/site';
-import { isProductPurchasable } from '../../lib/commerce/inventory';
+import { catalogProvider } from '../../lib/commerce/catalog-provider';
+import { createProductStructuredData } from '../../lib/commerce/product-schema';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 
-export const getStaticPaths = (() =>
-  getAllProductDetails().map((product) => ({
-    params: { slug: product.slug },
-    props: { product },
-  }))) satisfies GetStaticPaths;
+export const getStaticPaths = (async () => {
+  const handles = await catalogProvider.getProductHandles();
+  return handles.map((handle) => ({ params: { slug: handle }, props: { handle } }));
+}) satisfies GetStaticPaths;
 
 interface Props {
-  product: ProductDetail;
+  handle: string;
 }
 
-const { product } = Astro.props;
-const category = getProductCategory(product);
-const related = getRelatedProducts(product, 4);
+const { handle } = Astro.props;
+const product = await catalogProvider.getProductByHandle(handle);
+if (!product) throw new Error(`Producto no encontrado: ${handle}`);
+const category = product.primaryCollection;
+const related = await catalogProvider.getRelatedProducts(product, 4);
 const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href;
-const purchasable = isProductPurchasable(
-  product.id,
-  product.colorOptions.map((option) => option.name),
-  product.sizes
-);
 
 const breadcrumbs = [
   { label: 'Colección', href: '/#coleccion' },
-  ...(category ? [{ label: category.name, href: category.href }] : []),
-  { label: product.name },
+  { label: category.title, href: `/categorias/${category.handle}` },
+  { label: product.title },
 ];
 
-const productSchema = {
-  '@context': 'https://schema.org',
-  '@type': 'Product',
-  name: product.name,
-  description: product.description,
-  image: new URL(product.image, Astro.site ?? Astro.url.origin).href,
-  sku: product.id.toUpperCase(),
-  brand: { '@type': 'Brand', name: site.name },
-  offers: {
-    '@type': 'Offer',
-    price: product.price,
-    priceCurrency: product.currency,
-    availability: purchasable
-      ? 'https://schema.org/InStock'
-      : 'https://schema.org/OutOfStock',
-    url: canonicalURL,
-  },
-};
+const productSchema = createProductStructuredData(product, canonicalURL, site.name);
 ---
 
 <BaseLayout
-  title={`${product.name} — KingBelt`}
-  description={product.excerpt}
-  image={product.image}
+  title={product.seo.title ?? `${product.title} — KingBelt`}
+  description={product.seo.description ?? product.shortDescription}
+  image={product.primaryImage?.url}
+  imageAlt={product.primaryImage?.altText}
   canonicalURL={canonicalURL}
   schema={productSchema}
 >
@@ -78,23 +53,23 @@ const productSchema = {
 
     <div class="pdp__main kb-shell-wide">
       <div class="pdp__gallery">
-        <ProductGallery images={product.gallery} idPrefix={product.slug} />
+        <ProductGallery images={product.gallery} idPrefix={product.handle} />
       </div>
 
       <div class="pdp__buy">
         <header class="pdp__title-block">
           <p class="pdp__eyebrow kb-eyebrow text-king-accent">
-            {product.category} · {product.subcategory}
+            {product.primaryCollection.title} · {product.productType}
           </p>
-          <h1 class="pdp__title font-display">{product.name}</h1>
-          <p class="pdp__ref kb-code-label text-king-muted">{product.id.toUpperCase()}</p>
-          <p class="pdp__excerpt text-king-muted">{product.excerpt}</p>
+          <h1 class="pdp__title font-display">{product.title}</h1>
+          <p class="pdp__ref kb-code-label text-king-muted">{product.reference}</p>
+          <p class="pdp__excerpt text-king-muted">{product.shortDescription}</p>
         </header>
 
-        <ProductAddToCart product={product} purchasable={purchasable} />
+        <ProductAddToCart product={product} />
 
         <dl class="pdp__specs">
-          {product.specs.map((spec) => (
+          {product.specifications.map((spec) => (
             <div class="pdp__spec">
               <dt class="pdp__spec-label kb-meta-label text-king-muted">{spec.label}</dt>
               <dd class="pdp__spec-value">{spec.value}</dd>
@@ -113,12 +88,10 @@ const productSchema = {
       <section class="pdp__related" aria-labelledby="pdp-related-title">
         <div class="pdp__related-inner kb-shell-wide">
           <div class="pdp__related-head">
-            <h2 id="pdp-related-title" class="pdp__section-title font-display">También en {product.category}</h2>
-            {category && (
-              <a href={category.href} class="pdp__related-link kb-meta-label text-king-accent">
-                Ver categoría
-              </a>
-            )}
+            <h2 id="pdp-related-title" class="pdp__section-title font-display">También en {category.title}</h2>
+            <a href={`/categorias/${category.handle}`} class="pdp__related-link kb-meta-label text-king-accent">
+              Ver categoría
+            </a>
           </div>
 
           <div class="pdp__related-grid">

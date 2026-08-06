@@ -1,156 +1,241 @@
 import { setButtonPending } from '../dom/button-state';
 import { addProductToCart, openCartDrawer } from './cart-client';
+import { formatMoney } from './money';
+import {
+  getCompatibleOptionValues,
+  getMaxSelectableQuantity,
+  getVariantBySelectedOptions,
+  reconcileSelectedOptions,
+} from './product-variants';
+import type {
+  Money,
+  ProductImage,
+  ProductOption,
+  ProductVariant,
+  SelectedOption,
+} from './types';
 
-type FieldName = 'color' | 'size' | 'quantity';
+interface PublicVariant {
+  id: string;
+  selectedOptions: SelectedOption[];
+  availableForSale: boolean;
+  quantityAvailable?: number;
+  price: Money;
+  compareAtPrice?: Money;
+  image?: ProductImage;
+}
 
-const fieldSelectors: Record<FieldName, string> = {
-  color: '[data-product-color]',
-  size: '[data-product-size]',
-  quantity: '[data-product-quantity]',
+interface VariantPayload {
+  options: ProductOption[];
+  variants: PublicVariant[];
+}
+
+const parsePayload = (form: HTMLFormElement): VariantPayload | null => {
+  const script = form.querySelector<HTMLScriptElement>('[data-product-variants]');
+  if (!script?.textContent || script.textContent.length > 500_000) return null;
+  try {
+    const value: unknown = JSON.parse(script.textContent);
+    if (!value || typeof value !== 'object') return null;
+    const payload = value as Partial<VariantPayload>;
+    if (!Array.isArray(payload.options) || !Array.isArray(payload.variants)) return null;
+    return payload as VariantPayload;
+  } catch {
+    return null;
+  }
 };
 
 const bindProductAddForm = (form: HTMLFormElement): void => {
   if (form.dataset.cartBound === 'true') return;
-
-  const productId = form.dataset.productId?.trim();
+  const payload = parsePayload(form);
   const submitBtn = form.querySelector<HTMLButtonElement>('[data-product-submit]');
+  const submitLabel = form.querySelector<HTMLElement>('[data-product-submit-label]');
   const drawerWrap = form.querySelector<HTMLElement>('[data-product-drawer-wrap]');
   const feedback = form.querySelector<HTMLElement>('[data-product-feedback]');
+  const price = form.querySelector<HTMLElement>('[data-product-price]');
+  const compare = form.querySelector<HTMLElement>('[data-product-compare]');
   const qtyInput = form.querySelector<HTMLInputElement>('[data-product-quantity]');
   const decreaseBtn = form.querySelector<HTMLButtonElement>('[data-product-qty-decrease]');
   const increaseBtn = form.querySelector<HTMLButtonElement>('[data-product-qty-increase]');
-  const initiallyDisabled = submitBtn?.disabled ?? false;
-  let submitting = false;
-
-  if (!productId || !submitBtn || !qtyInput) return;
+  const optionInputs = [...form.querySelectorAll<HTMLInputElement>('[data-product-option]')];
+  if (!payload || !submitBtn || !qtyInput || !optionInputs.length) return;
   form.dataset.cartBound = 'true';
+  let submitting = false;
+  let selectedVariant: PublicVariant | undefined;
 
-  const setFieldError = (field: FieldName, message?: string) => {
-    const node = form.querySelector<HTMLElement>(`[data-error-for="${field}"]`);
-    const inputs = form.querySelectorAll<HTMLInputElement>(fieldSelectors[field]);
-    if (!node) return;
-
-    inputs.forEach((input) => {
+  const setOptionError = (optionName: string, message?: string) => {
+    const node = [...form.querySelectorAll<HTMLElement>('[data-error-for-option]')]
+      .find((item) => item.dataset.errorForOption === optionName);
+    optionInputs.filter((input) => input.dataset.optionName === optionName).forEach((input) => {
       input.toggleAttribute('aria-invalid', Boolean(message));
-      if (message) input.setAttribute('aria-errormessage', node.id);
+      if (message && node) input.setAttribute('aria-errormessage', node.id);
       else input.removeAttribute('aria-errormessage');
     });
+    if (node) {
+      node.textContent = message ?? '';
+      node.hidden = !message;
+    }
+  };
 
-    node.textContent = message ?? '';
-    node.toggleAttribute('hidden', !message);
+  const setQuantityError = (message?: string) => {
+    const node = form.querySelector<HTMLElement>('[data-error-for="quantity"]');
+    qtyInput.toggleAttribute('aria-invalid', Boolean(message));
+    if (message && node) qtyInput.setAttribute('aria-errormessage', node.id);
+    else qtyInput.removeAttribute('aria-errormessage');
+    if (node) {
+      node.textContent = message ?? '';
+      node.hidden = !message;
+    }
   };
 
   const clearErrors = () => {
-    (Object.keys(fieldSelectors) as FieldName[]).forEach((field) => setFieldError(field));
+    payload.options.forEach((option) => setOptionError(option.name));
+    setQuantityError();
   };
 
   const setFeedback = (message: string, isError = false) => {
     if (!feedback) return;
     feedback.textContent = message;
     feedback.classList.toggle('is-error', isError);
-    feedback.toggleAttribute('hidden', !message);
+    feedback.hidden = !message;
   };
 
-  const getSelected = (selector: string) =>
-    form.querySelector<HTMLInputElement>(`${selector}:checked`)?.value.trim() ?? '';
+  const getSelection = (): SelectedOption[] => payload.options.flatMap((option) => {
+    const input = optionInputs.find((candidate) => candidate.dataset.optionName === option.name && candidate.checked);
+    return input ? [{ name: option.name, value: input.value }] : [];
+  });
+
+  const syncVariantImage = (variant: PublicVariant | undefined) => {
+    if (!variant?.image?.url) return;
+    const page = form.closest<HTMLElement>('[data-product-page]') ?? document.body;
+    const choice = [...page.querySelectorAll<HTMLInputElement>('[data-gallery-image-url]')]
+      .find((input) => input.dataset.galleryImageUrl === variant.image?.url);
+    if (choice && !choice.checked) {
+      choice.checked = true;
+      choice.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+  };
 
   const syncQuantityControls = () => {
-    if (initiallyDisabled) {
-      qtyInput.disabled = true;
-      decreaseBtn?.setAttribute('disabled', '');
-      increaseBtn?.setAttribute('disabled', '');
-      return;
+    const max = getMaxSelectableQuantity(selectedVariant as ProductVariant | undefined);
+    qtyInput.max = String(Math.max(1, max));
+    if (qtyInput.valueAsNumber > max && max > 0) qtyInput.value = String(max);
+    const current = Number.isInteger(qtyInput.valueAsNumber) ? qtyInput.valueAsNumber : 1;
+    const disabled = submitting || !selectedVariant?.availableForSale;
+    qtyInput.disabled = disabled;
+    decreaseBtn?.toggleAttribute('disabled', disabled || current <= 1);
+    increaseBtn?.toggleAttribute('disabled', disabled || current >= max);
+  };
+
+  const syncSelection = (changedOptionName?: string) => {
+    let selection = getSelection();
+    if (changedOptionName) {
+      selection = reconcileSelectedOptions(payload, selection, changedOptionName);
+      optionInputs.forEach((input) => {
+        if (input.dataset.optionName !== changedOptionName && input.checked) {
+          input.checked = selection.some((selected) =>
+            selected.name === input.dataset.optionName && selected.value === input.value
+          );
+        }
+      });
     }
 
-    const value = qtyInput.valueAsNumber;
-    const min = Number(qtyInput.min) || 1;
-    const max = Number(qtyInput.max) || 99;
-    const validValue = Number.isInteger(value) ? value : min;
+    selection = getSelection();
+    optionInputs.forEach((input) => {
+      const optionName = input.dataset.optionName ?? '';
+      const optionIndex = payload.options.findIndex((option) => option.name === optionName);
+      const upstreamSelection = selection.filter((selected) =>
+        payload.options.findIndex((option) => option.name === selected.name) < optionIndex
+      );
+      const compatible = getCompatibleOptionValues(payload, upstreamSelection, optionName).includes(input.value);
+      input.disabled = submitting || !compatible;
+      input.closest('label')?.toggleAttribute('data-impossible', !compatible);
+    });
 
-    decreaseBtn?.toggleAttribute('disabled', submitting || validValue <= min);
-    increaseBtn?.toggleAttribute('disabled', submitting || validValue >= max);
+    selectedVariant = getVariantBySelectedOptions(payload, selection) as PublicVariant | undefined;
+    const complete = selection.length === payload.options.length;
+    if (selectedVariant) {
+      if (price) price.textContent = formatMoney(selectedVariant.price);
+      if (compare) {
+        compare.textContent = selectedVariant.compareAtPrice ? formatMoney(selectedVariant.compareAtPrice) : '';
+        compare.hidden = !selectedVariant.compareAtPrice;
+      }
+      syncVariantImage(selectedVariant);
+    }
+
+    submitBtn.disabled = submitting || !selectedVariant?.availableForSale;
+    if (submitLabel) {
+      submitLabel.textContent = !complete
+        ? 'Elige las opciones'
+        : selectedVariant?.availableForSale
+          ? 'Añadir al carrito'
+          : selectedVariant
+            ? 'Agotado'
+            : 'Combinación no disponible';
+    }
+    syncQuantityControls();
   };
 
   const setSubmitting = (active: boolean) => {
     submitting = active;
     setButtonPending(submitBtn, active);
-    if (!active) submitBtn.disabled = initiallyDisabled;
-    qtyInput.disabled = active;
-    form.querySelectorAll<HTMLInputElement>('[data-product-color], [data-product-size]')
-      .forEach((input) => {
-        input.disabled = active || input.dataset.initiallyDisabled === 'true';
-      });
-    syncQuantityControls();
+    syncSelection();
   };
 
-  form.querySelectorAll<HTMLInputElement>('[data-product-color], [data-product-size]')
-    .forEach((input) => {
-      input.dataset.initiallyDisabled = String(input.disabled);
-      input.addEventListener('change', () => {
-        const field: FieldName = input.hasAttribute('data-product-color') ? 'color' : 'size';
-        setFieldError(field);
-        setFeedback('');
-      });
-    });
+  optionInputs.forEach((input) => input.addEventListener('change', () => {
+    const optionName = input.dataset.optionName ?? '';
+    setOptionError(optionName);
+    setFeedback('');
+    syncSelection(optionName);
+  }));
 
   decreaseBtn?.addEventListener('click', () => {
-    const current = qtyInput.valueAsNumber || 1;
-    qtyInput.value = String(Math.max(1, current - 1));
-    setFieldError('quantity');
+    qtyInput.value = String(Math.max(1, (qtyInput.valueAsNumber || 1) - 1));
+    setQuantityError();
     syncQuantityControls();
   });
-
   increaseBtn?.addEventListener('click', () => {
-    const current = qtyInput.valueAsNumber || 1;
     const max = Number(qtyInput.max) || 99;
-    qtyInput.value = String(Math.min(max, current + 1));
-    setFieldError('quantity');
+    qtyInput.value = String(Math.min(max, (qtyInput.valueAsNumber || 1) + 1));
+    setQuantityError();
     syncQuantityControls();
   });
-
   qtyInput.addEventListener('input', () => {
-    setFieldError('quantity');
+    setQuantityError();
     setFeedback('');
     syncQuantityControls();
   });
 
-  drawerWrap
-    ?.querySelector<HTMLButtonElement>('[data-product-open-drawer]')
+  drawerWrap?.querySelector<HTMLButtonElement>('[data-product-open-drawer]')
     ?.addEventListener('click', (event) => openCartDrawer(event.currentTarget as HTMLButtonElement));
 
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
-    if (submitting || initiallyDisabled) return;
-
+    if (submitting) return;
     clearErrors();
     setFeedback('');
-
-    const color = getSelected('[data-product-color]');
-    const size = getSelected('[data-product-size]');
+    const selection = getSelection();
+    payload.options.forEach((option) => {
+      if (!selection.some((selected) => selected.name === option.name)) {
+        setOptionError(option.name, `Selecciona ${option.name.toLocaleLowerCase('es')}.`);
+      }
+    });
     const quantity = qtyInput.valueAsNumber;
-
-    if (!color) setFieldError('color', 'Selecciona un color.');
-    if (!size) setFieldError('size', 'Selecciona una talla.');
-    if (!Number.isInteger(quantity) || quantity < 1 || quantity > 99) {
-      setFieldError('quantity', 'La cantidad debe estar entre 1 y 99.');
+    if (!Number.isInteger(quantity) || quantity < 1 || quantity > Number(qtyInput.max)) {
+      setQuantityError(`La cantidad debe estar entre 1 y ${qtyInput.max}.`);
     }
-
-    if (!color || !size || !Number.isInteger(quantity) || quantity < 1 || quantity > 99) {
-      setFeedback('Revisa las opciones antes de añadir el producto.', true);
+    if (!selectedVariant || !selectedVariant.availableForSale || !Number.isInteger(quantity) || quantity < 1 || quantity > Number(qtyInput.max)) {
+      setFeedback(selectedVariant ? 'La variante seleccionada está agotada.' : 'Revisa las opciones antes de añadir el producto.', true);
       return;
     }
 
     setSubmitting(true);
-
     try {
-      const result = await addProductToCart({ productId, color, size, quantity });
-
+      const result = await addProductToCart({ variantId: selectedVariant.id, quantity });
       if (!result.success && result.error) {
-        if (result.error.field) setFieldError(result.error.field, result.error.message);
+        if (result.error.field === 'quantity') setQuantityError(result.error.message);
         setFeedback(result.error.message, true);
         return;
       }
-
       setFeedback('Producto añadido al carrito.');
       drawerWrap?.removeAttribute('hidden');
       openCartDrawer(submitBtn);
@@ -159,11 +244,9 @@ const bindProductAddForm = (form: HTMLFormElement): void => {
     }
   });
 
-  syncQuantityControls();
+  syncSelection();
 };
 
 export const initProductAddForms = (): void => {
-  document
-    .querySelectorAll<HTMLFormElement>('[data-product-add-form]')
-    .forEach(bindProductAddForm);
+  document.querySelectorAll<HTMLFormElement>('[data-product-add-form]').forEach(bindProductAddForm);
 };

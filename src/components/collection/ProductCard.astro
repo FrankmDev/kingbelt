@@ -1,10 +1,11 @@
 ---
 import Badge from '../ui/Badge.astro';
 import Icon from '../ui/Icon.astro';
-import { formatPrice, type ProductPreview } from '../../data/catalog';
+import { formatMoney } from '../../lib/commerce/money';
+import type { CommerceProductSummary } from '../../lib/commerce/types';
 
 interface Props {
-  product: ProductPreview;
+  product: CommerceProductSummary;
   /** Posición en el grid; alimenta el folio numérico. */
   index: number;
   /** Metadata bajo la imagen; por defecto `categoría · color`. */
@@ -14,31 +15,40 @@ interface Props {
 
 const { product, index, meta, class: className } = Astro.props;
 
-const priceLabel = formatPrice(product.price, product.currency);
-const ref = product.id.toUpperCase();
-const metaLabel = meta ?? `${product.category} · ${product.color}`;
+const hasPriceRange = product.priceRange.min.amountMinor !== product.priceRange.max.amountMinor;
+const priceLabel = hasPriceRange
+  ? `Desde ${formatMoney(product.priceRange.min)}`
+  : formatMoney(product.priceRange.min);
+const colorLabel = product.colors.length === 1
+  ? product.colors[0].value
+  : `${product.colors.length} colores`;
+const metaLabel = meta ?? `${product.primaryCollection.title} · ${colorLabel}`;
 const folio = String(index + 1).padStart(2, '0');
 ---
 
 <a
-  href={product.href}
-  class:list={['product-card kb-rise-sm', className]}
-  aria-label={`Ver ${product.name} — ${priceLabel}`}
+  href={`/productos/${product.handle}`}
+  class:list={['product-card kb-rise-sm', !product.availableForSale && 'is-unavailable', className]}
+  aria-label={`Ver ${product.title} — ${priceLabel}`}
 >
   <div class="product-card__media">
-    <img
-      src={product.image}
-      alt={product.imageAlt}
-      width="480"
-      height="600"
-      loading="lazy"
-      decoding="async"
-      style={`object-position: ${product.imagePosition ?? 'center'}`}
-    />
+    {product.primaryImage ? (
+      <img
+        src={product.primaryImage.url}
+        alt={product.primaryImage.altText}
+        width={product.primaryImage.width ?? 480}
+        height={product.primaryImage.height ?? 600}
+        loading="lazy"
+        decoding="async"
+        style={`object-position: ${product.primaryImage.position ?? 'center'}`}
+      />
+    ) : (
+      <span class="product-card__placeholder" aria-hidden="true" />
+    )}
 
     <div class="product-card__tags">
-      {product.badge ? (
-        <Badge variant="steel">{product.badge}</Badge>
+      {product.badge || !product.availableForSale ? (
+        <Badge variant="steel">{product.availableForSale ? product.badge : 'Agotado'}</Badge>
       ) : (
         <span aria-hidden="true" />
       )}
@@ -57,14 +67,14 @@ const folio = String(index + 1).padStart(2, '0');
 
   <div class="product-card__info">
     <p class="product-card__meta kb-meta-label text-king-muted">{metaLabel}</p>
-    <h3 class="product-card__name font-display">{product.name}</h3>
-    <p class="product-card__excerpt text-king-muted">{product.excerpt}</p>
+    <h3 class="product-card__name font-display">{product.title}</h3>
+    <p class="product-card__excerpt text-king-muted">{product.shortDescription}</p>
 
     <div class="product-card__stitch kb-stitch-line" aria-hidden="true" />
 
     <div class="product-card__foot">
       <span class="product-card__price font-display">{priceLabel}</span>
-      <span class="product-card__ref kb-code-label text-king-muted">{ref}</span>
+      <span class="product-card__ref kb-code-label text-king-muted">{product.reference}</span>
     </div>
   </div>
 </a>
@@ -115,6 +125,17 @@ const folio = String(index + 1).padStart(2, '0');
     transform: translateZ(0);
     transition: transform var(--kb-dur-slow) var(--kb-ease-soft);
     will-change: transform;
+  }
+
+  .product-card__placeholder {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: var(--color-king-bone);
+  }
+
+  .product-card.is-unavailable .product-card__media img {
+    opacity: 0.72;
   }
 
   .product-card__tags {

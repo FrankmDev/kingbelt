@@ -1,6 +1,6 @@
 ---
 import Icon from '../ui/Icon.astro';
-import type { CollectionFacets } from '../../data/catalog';
+import type { CollectionFacets } from '../../lib/commerce/types';
 
 interface Props {
   facets: CollectionFacets;
@@ -12,40 +12,11 @@ interface Props {
 const { facets, idPrefix, class: className } = Astro.props;
 
 const filterGroups = [
-  { id: 'sub', index: '01', title: 'Subcategoría', kind: 'checkbox' as const, items: facets.subcategories },
+  { id: 'type', index: '01', title: 'Subcategoría', kind: 'checkbox' as const, items: facets.productTypes },
   { id: 'color', index: '02', title: 'Color', kind: 'color' as const, items: facets.colors },
   { id: 'price', index: '03', title: 'Precio', kind: 'radio' as const, items: facets.priceRanges },
 ];
 
-const colorTokens: Record<string, string> = {
-  negro: '#1a1917',
-  marrón: '#6d4a35',
-  marron: '#6d4a35',
-  coñac: '#9a6432',
-  conac: '#9a6432',
-  acero: '#8a8d92',
-};
-
-const resolveColorToken = (fragment: string) => {
-  const key = fragment
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '');
-
-  const match = Object.entries(colorTokens).find(([token]) => key.includes(token));
-  return match?.[1] ?? '#c8c4bc';
-};
-
-const getSwatchStyle = (color: string) => {
-  const parts = color.split('/').map((part) => part.trim()).filter(Boolean);
-
-  if (parts.length > 1) {
-    const [first, second] = parts;
-    return `background: linear-gradient(135deg, ${resolveColorToken(first)} 0 50%, ${resolveColorToken(second)} 50% 100%);`;
-  }
-
-  return `background: ${resolveColorToken(color)};`;
-};
 ---
 
 <details class:list={['collection-filters', className]} data-collection-filters open>
@@ -135,7 +106,7 @@ const getSwatchStyle = (color: string) => {
                         <input
                           type="checkbox"
                           id={inputId}
-                          name={group.id === 'sub' ? 'subcategoria' : 'color'}
+                          name={group.id === 'type' ? 'tipo' : 'color'}
                           value={facetValue}
                           class="collection-filters__input"
                         />
@@ -143,7 +114,7 @@ const getSwatchStyle = (color: string) => {
                           {group.kind === 'color' ? (
                             <span
                               class="collection-filters__marker collection-filters__marker--swatch"
-                              style={getSwatchStyle(facetValue)}
+                              style={`background: ${facet.swatch ?? 'transparent'}`}
                               aria-hidden="true"
                             />
                           ) : (
@@ -179,56 +150,6 @@ const getSwatchStyle = (color: string) => {
     </form>
   </div>
 </details>
-
-<script>
-  const filterPanels = document.querySelectorAll<HTMLDetailsElement>('[data-collection-filters]');
-
-  if (filterPanels.length) {
-    const desktopQuery = window.matchMedia('(min-width: 64rem)');
-
-    const syncDisclosure = () => {
-      filterPanels.forEach((panel) => {
-        panel.open = desktopQuery.matches;
-
-        panel.querySelectorAll<HTMLDetailsElement>('[data-filter-group]').forEach((group) => {
-          group.open = desktopQuery.matches;
-        });
-      });
-    };
-
-    syncDisclosure();
-    desktopQuery.addEventListener('change', syncDisclosure);
-  }
-
-  document.querySelectorAll<HTMLFormElement>('[data-collection-filters-form]').forEach((form) => {
-    const badge = form.querySelector<HTMLElement>('[data-active-count]');
-    const resetButton = form.querySelector<HTMLButtonElement>('[data-reset-filters]');
-
-    const updateActiveCount = () => {
-      const active = form.querySelectorAll<HTMLInputElement>('input:checked').length;
-
-      if (badge) {
-        badge.textContent = String(active);
-        badge.hidden = active === 0;
-        badge.setAttribute(
-          'aria-label',
-          active === 1 ? '1 filtro activo' : `${active} filtros activos`
-        );
-      }
-
-      if (resetButton) {
-        resetButton.hidden = active === 0;
-      }
-    };
-
-    form.addEventListener('change', updateActiveCount);
-    form.addEventListener('reset', () => {
-      window.requestAnimationFrame(updateActiveCount);
-    });
-
-    updateActiveCount();
-  });
-</script>
 
 <style>
   .collection-filters {

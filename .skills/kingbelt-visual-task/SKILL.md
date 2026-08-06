@@ -31,7 +31,7 @@ Clasificar internamente la tarea para decidir cuánto inspeccionar, comunicar y 
 
 Leer archivos completos cuando sea necesario para entender un contrato, la cascade, scripts o consumidores y evitar regresiones. Para búsquedas iniciales, localizar primero símbolos y patrones relevantes con las herramientas disponibles.
 
-Usar `style-museum` para descubrir APIs y variantes existentes, nunca como plantilla compositiva. Consultar Contacto u otra página aprobada solo cuando su función, ritmo o problema sean comparables. En páginas y flujos importantes, contrastar más de una referencia si ayuda a distinguir sistema compartido de decisiones locales.
+Usar Contacto u otra página aprobada, junto con las primitivas en `src/components/ui/`, para descubrir APIs y variantes existentes; nunca como plantilla compositiva a clonar. En páginas y flujos importantes, contrastar más de una referencia si ayuda a distinguir sistema compartido de decisiones locales.
 
 ## 3. Actuar con autonomía responsable
 

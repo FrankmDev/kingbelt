@@ -1,19 +1,24 @@
 ---
-import SectionHeader from '../common/SectionHeader.astro';
+import SectionHeader from '@components/ui/SectionHeader.astro';
 import BlogCard from '../ui/BlogCard.astro';
-import type { BlogPost } from '../../data/blog';
+import type { BlogPost } from '@content/blog';
 
 interface Props {
   posts: BlogPost[];
   showHeader?: boolean;
+  embedded?: boolean;
   class?: string;
 }
 
-const { posts, showHeader = true, class: className = '' } = Astro.props;
+const { posts, showHeader = true, embedded = false, class: className = '' } = Astro.props;
 ---
 
 <section
-  class:list={['blog-latest section-spacing section-spacing-chapter', className]}
+  class:list={[
+    'blog-latest',
+    !embedded && 'section-spacing section-spacing-chapter',
+    className,
+  ]}
   aria-labelledby={showHeader ? 'blog-latest-title' : undefined}
   {...(!showHeader && { 'aria-label': 'Más lecturas de la revista' })}
 >

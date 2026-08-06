@@ -1,14 +1,15 @@
 ---
-import SectionHeaderHome from './SectionHeaderHome.astro';
+import HomeSectionHead from './HomeSectionHead.astro';
 import Badge from '../../ui/Badge.astro';
 import Button from '../../ui/Button.astro';
 import Icon from '../../ui/Icon.astro';
-import { featuredSection } from '../../../data/home';
-import { formatMoney } from '../../../lib/commerce/money';
-import type { CommerceProductSummary } from '../../../lib/commerce/types';
+import { featuredSection } from '@content/home';
+import { formatMoney } from '@commerce/domain/money';
+import type { ProductSummary } from '@commerce/domain/catalog';
+import { buildCardSource } from '@shared/image-source';
 
 interface Props {
-  products: CommerceProductSummary[];
+  products: ProductSummary[];
 }
 
 const { products } = Astro.props;
@@ -20,21 +21,18 @@ const { products } = Astro.props;
   aria-labelledby="home-featured-title"
 >
   <div class="kb-shell-wide">
-    <div class="home-featured__head">
-      <SectionHeaderHome
-        index={featuredSection.index}
-        eyebrow={featuredSection.eyebrow}
-        body={featuredSection.body}
-        meta={featuredSection.meta}
-        titleId="home-featured-title"
-        class="home-featured__header"
-      >
-        <Fragment slot="title">
-          <span set:html={featuredSection.title} />
-        </Fragment>
-      </SectionHeaderHome>
+    <HomeSectionHead
+      index={featuredSection.index}
+      eyebrow={featuredSection.eyebrow}
+      body={featuredSection.body}
+      meta={featuredSection.meta}
+      titleId="home-featured-title"
+    >
+      <Fragment slot="title">
+        <span set:html={featuredSection.title} />
+      </Fragment>
 
-      <div class="home-featured__cta">
+      <Fragment slot="action">
         <Button href={featuredSection.cta.href} variant="outline" size="md">
           {featuredSection.cta.label}
           <Icon
@@ -42,26 +40,31 @@ const { products } = Astro.props;
             class="h-3.5 w-3.5 transition-transform duration-[var(--kb-dur-fast)] group-hover:translate-x-1"
           />
         </Button>
-      </div>
-    </div>
+      </Fragment>
+    </HomeSectionHead>
 
     <ul class="home-featured__grid">
       {products.map((product, index) => {
         const priceLabel = product.priceRange.min.amountMinor === product.priceRange.max.amountMinor
           ? formatMoney(product.priceRange.min)
           : `Desde ${formatMoney(product.priceRange.min)}`;
-        const colorLabel = product.colors.length === 1 ? product.colors[0].value : `${product.colors.length} colores`;
+        const colorLabel = product.colors.length === 1 ? product.colors[0].label : `${product.colors.length} colores`;
+        const primarySource = product.primaryImage
+          ? buildCardSource(product.primaryImage.url, '(min-width: 64rem) 25vw, (min-width: 40rem) 50vw, 100vw')
+          : null;
 
         return (
           <li class="home-featured__item">
             <article class="home-featured__card kb-rise-sm">
               <div class="home-featured__media">
-                {product.primaryImage ? (
+                {product.primaryImage && primarySource ? (
                   <img
-                    src={product.primaryImage.url}
+                    src={primarySource.src}
+                    srcset={primarySource.srcset}
+                    sizes={primarySource.sizes}
                     alt={product.primaryImage.altText}
-                    width={product.primaryImage.width ?? 480}
-                    height={product.primaryImage.height ?? 600}
+                    width={product.primaryImage.width}
+                    height={product.primaryImage.height}
                     loading="lazy"
                     decoding="async"
                     style={`object-position: ${product.primaryImage.position ?? 'center'}`}
@@ -87,7 +90,7 @@ const { products } = Astro.props;
                   {product.primaryCollection.title} · {colorLabel}
                 </p>
                 <h3 class="home-featured__name font-display">{product.title}</h3>
-                <p class="home-featured__excerpt text-king-muted">{product.shortDescription}</p>
+                <p class="home-featured__excerpt text-king-muted">{product.summary}</p>
 
                 <div class="home-featured__stitch kb-stitch-line" aria-hidden="true" />
 
@@ -119,27 +122,14 @@ const { products } = Astro.props;
 </section>
 
 <style>
-  .home-featured__head {
-    display: grid;
-    gap: var(--kb-space-6);
-    align-items: end;
-    margin-bottom: var(--kb-space-gap-lg);
+  .home-featured {
+    background: var(--color-king-bg);
   }
-
-  .home-featured__header:global(.section-header-home) {
-    margin-bottom: 0;
-  }
-
-  .home-featured__header:global(.section-header-home) .shh-body {
-    max-width: 44ch;
-  }
-
-  /* ---------- Grid de destacados ---------- */
 
   .home-featured__grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--kb-space-8) var(--kb-space-4);
+    gap: var(--kb-space-gap) var(--kb-space-4);
     margin: 0;
     padding: 0;
     list-style: none;
@@ -163,7 +153,7 @@ const { products } = Astro.props;
     overflow: hidden;
     aspect-ratio: 4 / 5;
     border: 1px solid var(--kb-stroke-hairline);
-    border-radius: var(--kb-radius-sm);
+    border-radius: var(--kb-card-radius);
     background: var(--color-king-bone);
     box-shadow: var(--kb-shadow-xs);
     transition:
@@ -256,10 +246,10 @@ const { products } = Astro.props;
 
   .home-featured__name {
     margin: 0 0 var(--kb-space-2);
-    font-size: clamp(1.125rem, 1rem + 0.6vw, 1.5rem);
+    font-size: var(--kb-text-h5);
     font-weight: var(--kb-w-heading-light);
-    line-height: 1.06;
-    letter-spacing: -0.018em;
+    line-height: 1.12;
+    letter-spacing: -0.012em;
     text-wrap: balance;
     color: var(--color-king-text);
     transition: color var(--kb-dur-med) var(--kb-ease-out);
@@ -303,30 +293,18 @@ const { products } = Astro.props;
 
   @media (min-width: 40rem) {
     .home-featured__grid {
-      gap: var(--kb-space-8) var(--kb-space-5);
+      gap: var(--kb-space-gap) var(--kb-space-5);
     }
 
     .home-featured__info {
-      padding-top: var(--kb-space-5);
-    }
-  }
-
-  @media (min-width: 48rem) {
-    .home-featured__head {
-      grid-template-columns: minmax(0, 1fr) auto;
-      gap: var(--kb-space-8);
-    }
-
-    .home-featured__cta {
-      justify-self: end;
-      padding-bottom: 0.35rem;
+      padding-top: var(--kb-space-4);
     }
   }
 
   @media (min-width: 64rem) {
     .home-featured__grid {
       grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: var(--kb-space-8) var(--kb-space-6);
+      gap: var(--kb-space-gap) var(--kb-space-5);
     }
   }
 

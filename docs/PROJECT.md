@@ -55,7 +55,7 @@ Mantén entidades de comercio genéricas:
 - `Collection`
 - `Money`
 - `Cart`
-- `CartItem`
+- `CartLine`
 
 No introduzcas modelos como `Belt` cuando una entidad genérica de comercio resuelva el caso. Los atributos particulares del cinturón pertenecen a opciones, metafields o datos de producto, no a una arquitectura cerrada.
 
@@ -72,4 +72,4 @@ No adelantes una fase salvo petición explícita. La implementación local exist
 
 No inventes precios, políticas comerciales, plazos, garantías, origen de fabricación, sostenibilidad, certificaciones, disponibilidad ni promesas de atención. Usa datos existentes o solicita confirmación cuando una decisión afecte al negocio o al contenido público.
 
-Los hechos empresariales viven en `src/data/business.ts` con estado `confirmed` | `pending` | `not-applicable`. Los pendientes no se renderizan. Consulta `docs/BUSINESS_AND_LEGAL_REQUIREMENTS.md` para la checklist de activación.
+Los hechos empresariales viven en `src/config/business.ts` con estado `confirmed` | `pending` | `not-applicable`. Los pendientes no se renderizan. Consulta `docs/BUSINESS_AND_LEGAL_REQUIREMENTS.md` para la checklist de activación.

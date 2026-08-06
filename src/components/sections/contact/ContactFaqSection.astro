@@ -1,9 +1,9 @@
 ---
-import SectionHeader from '../../common/SectionHeader.astro';
-import FAQ from '../../common/faq/FAQ.astro';
+import SectionHeader from '@components/ui/SectionHeader.astro';
+import FAQ from '@components/faq/FAQ.astro';
 import MediaFrame from '../../ui/MediaFrame.astro';
-import type { FAQItem } from '../../common/faq/types';
-import type { FAQSidebar } from '../../../data/contact';
+import type { FAQItem } from '@content/faq';
+import type { FAQSidebar } from '@content/contact';
 
 interface Props {
   items: readonly FAQItem[];

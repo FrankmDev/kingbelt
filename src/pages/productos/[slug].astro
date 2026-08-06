@@ -1,49 +1,55 @@
 ---
 import type { GetStaticPaths } from 'astro';
 import ProductCard from '../../components/collection/ProductCard.astro';
-import FooterSection from '../../components/layout/FooterSection.astro';
+import Footer from '../../components/layout/Footer.astro';
 import Header from '../../components/layout/Header.astro';
 import ProductAddToCart from '../../components/product/ProductAddToCart.astro';
 import ProductGallery from '../../components/product/ProductGallery.astro';
 import Breadcrumbs from '../../components/ui/Breadcrumbs.astro';
-import { site } from '../../data/site';
-import { catalogProvider } from '../../lib/commerce/catalog-provider';
-import { createProductStructuredData } from '../../lib/commerce/product-schema';
+import { site, siteUrl } from '@config/site';
+import { catalogProvider } from '@commerce/catalog';
+import { getRedirectedProductHandles } from '@commerce/application/product-redirects';
+import { resolveProductPageHead, type CommercePageHead } from '@commerce/application/seo';
+import type { Product } from '@commerce/domain/catalog';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 
 export const getStaticPaths = (async () => {
-  const handles = await catalogProvider.getProductHandles();
-  return handles.map((handle) => ({ params: { slug: handle }, props: { handle } }));
+  const redirectedHandles = getRedirectedProductHandles();
+  const handles = (await catalogProvider.getProductHandles())
+    .filter((handle) => !redirectedHandles.has(handle));
+
+  return Promise.all(handles.map(async (handle) => {
+    const product = await catalogProvider.getProductByHandle(handle);
+    if (!product) throw new Error(`Producto no encontrado: ${handle}`);
+    return {
+      params: { slug: handle },
+      props: {
+        product,
+        pageHead: resolveProductPageHead(product, site, siteUrl),
+      },
+    };
+  }));
 }) satisfies GetStaticPaths;
 
 interface Props {
-  handle: string;
+  product: Product;
+  pageHead: CommercePageHead;
 }
 
-const { handle } = Astro.props;
-const product = await catalogProvider.getProductByHandle(handle);
-if (!product) throw new Error(`Producto no encontrado: ${handle}`);
-const category = product.primaryCollection;
+const { product, pageHead } = Astro.props;
+const category = (await catalogProvider.getCollections())
+  .find((collection) => collection.id === product.primaryCollectionId);
+if (!category) throw new Error(`Colección principal no encontrada: ${product.primaryCollectionId}`);
 const related = await catalogProvider.getRelatedProducts(product, 4);
-const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href;
 
 const breadcrumbs = [
   { label: 'Colección', href: '/#coleccion' },
   { label: category.title, href: `/categorias/${category.handle}` },
   { label: product.title },
 ];
-
-const productSchema = createProductStructuredData(product, canonicalURL, site.name);
 ---
 
-<BaseLayout
-  title={product.seo.title ?? `${product.title} — KingBelt`}
-  description={product.seo.description ?? product.shortDescription}
-  image={product.primaryImage?.url}
-  imageAlt={product.primaryImage?.altText}
-  canonicalURL={canonicalURL}
-  schema={productSchema}
->
+<BaseLayout seo={pageHead.seo} schema={pageHead.schema}>
   <Header slot="header" initialTheme="light" scrolledTheme="light" compactThreshold={32} />
 
   <article class="pdp" data-product-page>
@@ -53,17 +59,17 @@ const productSchema = createProductStructuredData(product, canonicalURL, site.na
 
     <div class="pdp__main kb-shell-wide">
       <div class="pdp__gallery">
-        <ProductGallery images={product.gallery} idPrefix={product.handle} />
+        <ProductGallery images={product.images} mediaGroups={product.mediaGroups} idPrefix={product.handle} />
       </div>
 
       <div class="pdp__buy">
         <header class="pdp__title-block">
           <p class="pdp__eyebrow kb-eyebrow text-king-accent">
-            {product.primaryCollection.title} · {product.productType}
+            {category.title} · {product.productType}
           </p>
           <h1 class="pdp__title font-display">{product.title}</h1>
           <p class="pdp__ref kb-code-label text-king-muted">{product.reference}</p>
-          <p class="pdp__excerpt text-king-muted">{product.shortDescription}</p>
+          <p class="pdp__excerpt text-king-muted">{product.summary}</p>
         </header>
 
         <ProductAddToCart product={product} />
@@ -104,7 +110,7 @@ const productSchema = createProductStructuredData(product, canonicalURL, site.na
     )}
   </article>
 
-  <FooterSection slot="footer" connected />
+  <Footer slot="footer" connected />
 </BaseLayout>
 
 <style>

@@ -97,6 +97,7 @@ const elementProps = isLink
   {...elementProps}
   aria-busy={loading ? 'true' : ariaBusy}
 >
+  <span class="kb-btn-wash" aria-hidden="true"></span>
   <span class="kb-btn-text"><slot /></span>
   {loading && <span class="kb-btn-spinner" aria-hidden="true"></span>}
   <span class="kb-btn-rivet" aria-hidden="true"></span>

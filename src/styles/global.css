@@ -81,9 +81,6 @@
   --kb-shadow-float-dark:
     0 2px 4px rgba(0, 0, 0, 0.15), 0 12px 32px rgba(0, 0, 0, 0.25),
     0 20px 48px rgba(0, 0, 0, 0.2);
-  --kb-shadow-ring:
-    0 0 0 1px rgba(138, 90, 43, 0.12), 0 8px 22px rgba(11, 10, 8, 0.07);
-
   /* Default, neutral inset used by most surfaces (cards/panels) */
   --kb-shadow-inset-soft: inset 0 1px 0 rgba(255, 255, 255, 0.3);
   /* Inset glow used inside buttons */
@@ -1381,6 +1378,10 @@ a.kb-badge:focus-visible {
     ============================================================ */
 
 .kb-btn {
+  --kb-btn-wash: var(--color-king-accent);
+  --kb-btn-wash-mix: 100%;
+  --kb-btn-hover-lift: -2px;
+
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1390,6 +1391,7 @@ a.kb-badge:focus-visible {
   text-decoration: none;
   border-radius: var(--kb-btn-radius);
   position: relative;
+  overflow: hidden;
   cursor: pointer;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
@@ -1399,8 +1401,7 @@ a.kb-badge:focus-visible {
     border-color var(--kb-dur-med) var(--kb-ease-out),
     color var(--kb-dur-med) var(--kb-ease-out),
     box-shadow var(--kb-dur-med) var(--kb-ease-out),
-    transform 280ms var(--kb-ease-spring);
-  will-change: transform;
+    transform 320ms var(--kb-ease-spring);
 }
 
 /* Inner border — creates double-border leather effect */
@@ -1478,37 +1479,84 @@ a.kb-badge:focus-visible {
   }
 }
 
-/* --- Shine sweep — dramatic chrome gleam --- */
+/* --- Wash fill — hardware sweep behind content --- */
+
+.kb-btn-wash {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: var(--kb-btn-wash);
+  opacity: var(--kb-btn-wash-mix);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.52s cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+}
+
+.kb-btn-wash::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto auto 0;
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in srgb, var(--color-king-brass), transparent 18%) 24%,
+    color-mix(in srgb, var(--color-king-brass), transparent 8%) 76%,
+    transparent 100%
+  );
+  opacity: 0;
+  transition: opacity 0.35s var(--kb-ease-out) 0.08s;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .kb-btn:hover .kb-btn-wash {
+    transform: scaleX(1);
+  }
+
+  .kb-btn:hover .kb-btn-wash::after {
+    opacity: 0.72;
+  }
+}
+
+/* --- Shine sweep — warm gleam behind label --- */
 
 .kb-btn::before {
   content: "";
   position: absolute;
   top: 0;
-  left: -120%;
-  width: 70%;
+  left: -165%;
+  width: 58%;
   height: 100%;
   background: linear-gradient(
-    105deg,
-    transparent 20%,
-    rgba(255, 255, 255, 0.03) 38%,
-    rgba(255, 255, 255, 0.1) 50%,
-    rgba(255, 255, 255, 0.03) 62%,
-    transparent 80%
+    108deg,
+    transparent 26%,
+    color-mix(in srgb, var(--color-king-bone), transparent 92%) 42%,
+    color-mix(in srgb, var(--color-king-brass), transparent 78%) 50%,
+    color-mix(in srgb, var(--color-king-bone), transparent 92%) 58%,
+    transparent 74%
   );
-  transform: skewX(-15deg);
-  transition: left 0.7s var(--kb-ease-out);
+  transform: skewX(-18deg);
+  opacity: 0;
+  transition: left 0s linear;
   pointer-events: none;
-  z-index: 2;
+  z-index: 1;
 }
 
 @media (hover: hover) and (pointer: fine) {
   .kb-btn:hover::before {
-    left: 140%;
+    left: 165%;
+    opacity: 1;
+    transition:
+      left 0.62s cubic-bezier(0.22, 1, 0.36, 1) 0.08s,
+      opacity 0.12s var(--kb-ease-out) 0.08s;
   }
 }
 
 .kb-btn-ghost::before,
-.kb-btn-outline::before {
+.kb-btn-outline::before,
+.kb-btn-surface-outline::before {
   content: none;
 }
 
@@ -1520,12 +1568,24 @@ a.kb-badge:focus-visible {
   display: inline-flex;
   align-items: center;
   gap: inherit;
-  transition: transform 350ms var(--kb-ease-out);
+  transition:
+    transform 380ms cubic-bezier(0.22, 1, 0.36, 1),
+    letter-spacing 380ms var(--kb-ease-out),
+    color var(--kb-dur-med) var(--kb-ease-out);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .kb-btn:hover .kb-btn-text {
-    transform: translateX(1px);
+    transform: translateX(2px);
+    letter-spacing: 0.135em;
+  }
+
+  .kb-btn-sm:hover .kb-btn-text {
+    letter-spacing: 0.145em;
+  }
+
+  .kb-btn-lg:hover .kb-btn-text {
+    letter-spacing: 0.125em;
   }
 }
 
@@ -1592,12 +1652,12 @@ a.kb-badge:focus-visible {
 
 @media (hover: hover) and (pointer: fine) {
   .kb-btn:hover .kb-btn-rivet {
-    opacity: 0.85;
-    transform: translateY(-50%) scale(1.12);
+    opacity: 0.92;
+    transform: translateY(-50%) scale(1.15);
     box-shadow:
-      0 0 0 1px rgba(183, 138, 79, 0.38),
-      0 0 5px rgba(183, 138, 79, 0.28),
-      inset 0 -1px 1px rgba(0, 0, 0, 0.3);
+      0 0 0 1px rgba(183, 138, 79, 0.42),
+      0 0 8px rgba(183, 138, 79, 0.24),
+      inset 0 -1px 1px rgba(0, 0, 0, 0.28);
   }
 }
 
@@ -1610,6 +1670,9 @@ a.kb-badge:focus-visible {
 /* --- Variants --- */
 
 .kb-btn-primary {
+  --kb-btn-wash: var(--color-king-asphalt);
+  --kb-btn-wash-mix: 1;
+
   background-color: var(--color-king-rubber);
   background-image: linear-gradient(
     180deg,
@@ -1630,22 +1693,25 @@ a.kb-badge:focus-visible {
 
 @media (hover: hover) and (pointer: fine) {
   .kb-btn-primary:hover {
-    background-color: var(--color-king-asphalt);
-    border-color: rgba(32, 32, 30, 0.72);
+    border-color: rgba(32, 32, 30, 0.78);
     box-shadow:
       var(--kb-shadow-sm),
+      0 10px 24px rgba(13, 13, 12, 0.16),
       var(--kb-shadow-inset-glow),
-      inset 0 -1px 0 rgba(0, 0, 0, 0.18);
-    transform: translateY(-1px);
+      inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+    transform: translateY(var(--kb-btn-hover-lift));
   }
 
   .kb-btn-primary:hover::after {
-    border-color: rgba(183, 138, 79, 0.25);
+    border-color: rgba(183, 138, 79, 0.32);
     inset: 4px;
   }
 }
 
 .kb-btn-secondary {
+  --kb-btn-wash: var(--color-king-accent-deep);
+  --kb-btn-wash-mix: 1;
+
   background-color: var(--color-king-accent);
   background-image: linear-gradient(
     180deg,
@@ -1666,22 +1732,26 @@ a.kb-badge:focus-visible {
 
 @media (hover: hover) and (pointer: fine) {
   .kb-btn-secondary:hover {
-    background-color: var(--color-king-accent-deep);
-    border-color: rgba(62, 42, 29, 0.5);
+    border-color: rgba(62, 42, 29, 0.55);
     box-shadow:
       var(--kb-shadow-accent-soft),
+      0 12px 28px rgba(138, 90, 43, 0.18),
       var(--kb-shadow-inset-glow),
-      inset 0 -1px 0 rgba(62, 42, 29, 0.2);
-    transform: translateY(-1px);
+      inset 0 -1px 0 rgba(62, 42, 29, 0.22);
+    transform: translateY(var(--kb-btn-hover-lift));
   }
 
   .kb-btn-secondary:hover::after {
-    border-color: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.24);
     inset: 4px;
   }
 }
 
 .kb-btn-outline {
+  --kb-btn-wash: var(--color-king-text);
+  --kb-btn-wash-mix: 1;
+  --kb-btn-hover-lift: -1px;
+
   background-color: transparent;
   color: var(--color-king-text);
   border: 1px solid rgba(17, 16, 14, 0.2);
@@ -1693,20 +1763,25 @@ a.kb-badge:focus-visible {
 
 @media (hover: hover) and (pointer: fine) {
   .kb-btn-outline:hover {
-    background-color: var(--color-king-text);
     color: var(--color-king-surface);
     border-color: var(--color-king-text);
-    box-shadow: var(--kb-shadow-sm);
-    transform: translateY(-1px);
+    box-shadow:
+      var(--kb-shadow-sm),
+      0 8px 20px rgba(13, 13, 12, 0.1);
+    transform: translateY(var(--kb-btn-hover-lift));
   }
 
   .kb-btn-outline:hover::after {
-    border-color: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.14);
     inset: 4px;
   }
 }
 
 .kb-btn-ghost {
+  --kb-btn-wash: color-mix(in srgb, var(--color-king-accent), transparent 88%);
+  --kb-btn-wash-mix: 1;
+  --kb-btn-hover-lift: 0;
+
   background-color: transparent;
   color: var(--color-king-text);
   border: 1px solid transparent;
@@ -1715,7 +1790,9 @@ a.kb-badge:focus-visible {
 @media (hover: hover) and (pointer: fine) {
   .kb-btn-ghost:hover {
     color: var(--color-king-accent);
-    background-color: rgba(138, 90, 43, 0.04);
+    border-color: color-mix(in srgb, var(--color-king-accent), transparent 78%);
+    box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--color-king-accent), transparent 82%);
+    transform: translateY(var(--kb-btn-hover-lift));
   }
 }
 
@@ -1724,6 +1801,9 @@ a.kb-badge:focus-visible {
 }
 
 .kb-btn-surface {
+  --kb-btn-wash: var(--color-king-accent);
+  --kb-btn-wash-mix: 1;
+
   background-color: var(--color-king-surface);
   color: var(--color-king-text);
   border: 1px solid var(--kb-stroke-dark);
@@ -1736,25 +1816,26 @@ a.kb-badge:focus-visible {
 
 @media (hover: hover) and (pointer: fine) {
   .kb-btn-surface:hover {
-    background-color: var(--color-king-accent);
-    background-image: linear-gradient(
-      180deg,
-      rgba(255, 255, 255, 0.1) 0%,
-      transparent 48%
-    );
     color: var(--color-king-surface);
     border-color: var(--color-king-accent);
-    box-shadow: var(--kb-shadow-accent-soft), var(--kb-shadow-inset-glow);
-    transform: translateY(-1px);
+    box-shadow:
+      var(--kb-shadow-accent-soft),
+      0 10px 24px rgba(138, 90, 43, 0.16),
+      var(--kb-shadow-inset-glow);
+    transform: translateY(var(--kb-btn-hover-lift));
   }
 
   .kb-btn-surface:hover::after {
-    border-color: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.18);
     inset: 4px;
   }
 }
 
 .kb-btn-surface-outline {
+  --kb-btn-wash: var(--color-king-surface);
+  --kb-btn-wash-mix: 1;
+  --kb-btn-hover-lift: -2px;
+
   background-color: transparent;
   color: var(--color-king-surface);
   border: 1px solid rgba(248, 246, 241, 0.3);
@@ -1766,15 +1847,16 @@ a.kb-badge:focus-visible {
 
 @media (hover: hover) and (pointer: fine) {
   .kb-btn-surface-outline:hover {
-    background-color: var(--color-king-surface);
     color: var(--color-king-text);
-    border-color: rgba(248, 246, 241, 0.5);
-    box-shadow: var(--kb-shadow-md);
-    transform: translateY(-2px);
+    border-color: rgba(248, 246, 241, 0.58);
+    box-shadow:
+      var(--kb-shadow-md),
+      0 12px 28px rgba(13, 13, 12, 0.18);
+    transform: translateY(var(--kb-btn-hover-lift));
   }
 
   .kb-btn-surface-outline:hover::after {
-    border-color: rgba(17, 16, 14, 0.06);
+    border-color: rgba(17, 16, 14, 0.08);
     inset: 4px;
   }
 }
@@ -1783,7 +1865,7 @@ a.kb-badge:focus-visible {
 
 .kb-btn-text svg {
   flex-shrink: 0;
-  transition: transform 350ms var(--kb-ease-spring);
+  transition: transform 380ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .kb-btn-sm .kb-btn-text svg {
@@ -1803,7 +1885,7 @@ a.kb-badge:focus-visible {
 
 @media (hover: hover) and (pointer: fine) {
   .kb-btn:hover .kb-btn-text svg {
-    transform: translateX(3px);
+    transform: translateX(4px);
   }
 }
 
@@ -1829,6 +1911,10 @@ a.kb-badge:focus-visible {
   display: none;
 }
 
+.kb-btn-disabled .kb-btn-wash {
+  display: none;
+}
+
 .kb-btn-disabled .kb-btn-rivet {
   display: none;
 }
@@ -1844,6 +1930,10 @@ a.kb-badge:focus-visible {
 }
 
 .kb-btn-loading .kb-btn-rivet {
+  display: none;
+}
+
+.kb-btn-loading .kb-btn-wash {
   display: none;
 }
 
@@ -1866,6 +1956,76 @@ a.kb-badge:focus-visible {
 @keyframes kb-btn-spin {
   to {
     transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kb-btn,
+  .kb-btn-text,
+  .kb-btn-text svg,
+  .kb-btn-rivet,
+  .kb-btn-wash,
+  .kb-btn-wash::after {
+    transition-duration: 0.01ms !important;
+  }
+
+  .kb-btn::before {
+    display: none;
+  }
+
+  .kb-btn-wash {
+    transform: none !important;
+  }
+
+  .kb-btn:hover .kb-btn-wash::after,
+  .kb-btn-wash::after {
+    opacity: 0 !important;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .kb-btn-primary:hover,
+    .kb-btn-secondary:hover,
+    .kb-btn-outline:hover,
+    .kb-btn-surface:hover,
+    .kb-btn-surface-outline:hover {
+      transform: none;
+    }
+
+    .kb-btn-primary:hover {
+      background-color: var(--color-king-asphalt);
+    }
+
+    .kb-btn-secondary:hover {
+      background-color: var(--color-king-accent-deep);
+    }
+
+    .kb-btn-outline:hover {
+      background-color: var(--color-king-text);
+      color: var(--color-king-surface);
+    }
+
+    .kb-btn-ghost:hover {
+      background-color: color-mix(in srgb, var(--color-king-accent), transparent 92%);
+    }
+
+    .kb-btn-surface:hover {
+      background-color: var(--color-king-accent);
+      color: var(--color-king-surface);
+    }
+
+    .kb-btn-surface-outline:hover {
+      background-color: var(--color-king-surface);
+      color: var(--color-king-text);
+    }
+
+    .kb-btn:hover .kb-btn-text {
+      transform: none;
+      letter-spacing: inherit;
+    }
+
+    .kb-btn:hover .kb-btn-text svg {
+      transform: none;
+    }
   }
 }
 
@@ -1893,7 +2053,7 @@ a.kb-badge:focus-visible {
   color: rgba(17, 16, 14, 0.4);
 }
 
-.kb-input:focus {
+.kb-input:focus-visible {
   outline: none;
   border-color: var(--kb-stroke-accent);
   box-shadow:
@@ -1902,12 +2062,16 @@ a.kb-badge:focus-visible {
   background: var(--kb-surface-light-strong);
 }
 
+.kb-input:focus:not(:focus-visible) {
+  outline: none;
+}
+
 .kb-input[aria-invalid="true"] {
   border-color: rgba(220, 38, 38, 0.55);
   box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.08);
 }
 
-.kb-input:hover:not(:focus):not(:disabled) {
+.kb-input:hover:not(:focus-visible):not(:disabled) {
   border-color: rgba(138, 90, 43, 0.18);
 }
 
@@ -1959,34 +2123,52 @@ a.kb-badge:focus-visible {
    ANIMATIONS
    ============================================================ */
 
-/* Scroll-triggered fade/rise */
-.animate-on-scroll {
-  opacity: 0;
-  transform: translateY(24px) scale(0.98);
-  transition:
-    opacity 700ms cubic-bezier(0.16, 1, 0.3, 1),
-    transform 700ms cubic-bezier(0.16, 1, 0.3, 1);
+/* Scroll-triggered fade/rise — CSS nativo (sin IntersectionObserver). */
+@keyframes kb-scroll-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
-.animate-on-scroll.is-visible {
-  opacity: 1;
-  transform: translateY(0) scale(1);
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .animate-on-scroll,
+    [data-scroll-reveal-target] {
+      animation: kb-scroll-reveal linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 40%;
+    }
+
+    .animate-delay-1 {
+      animation-delay: 0.1s;
+    }
+    .animate-delay-2 {
+      animation-delay: 0.2s;
+    }
+    .animate-delay-3 {
+      animation-delay: 0.3s;
+    }
+    .animate-delay-4 {
+      animation-delay: 0.4s;
+    }
+    .animate-delay-5 {
+      animation-delay: 0.5s;
+    }
+  }
 }
 
-.animate-delay-1 {
-  transition-delay: 0.1s;
-}
-.animate-delay-2 {
-  transition-delay: 0.2s;
-}
-.animate-delay-3 {
-  transition-delay: 0.3s;
-}
-.animate-delay-4 {
-  transition-delay: 0.4s;
-}
-.animate-delay-5 {
-  transition-delay: 0.5s;
+@supports not (animation-timeline: view()) {
+  .animate-on-scroll,
+  [data-scroll-reveal-target] {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 /* Pulsing status dot — softer breathe */
@@ -2022,11 +2204,6 @@ a.kb-badge:focus-visible {
 
   .kb-pulse-dot {
     animation: none;
-  }
-
-  .animate-on-scroll {
-    opacity: 1;
-    transform: none;
   }
 }
 
@@ -2589,12 +2766,14 @@ a.kb-badge:focus-visible {
    ============================================================ */
 
 .kb-editorial-banner {
+  --kb-banner-inset: clamp(1.5rem, 4vw, 2.75rem);
+
   position: relative;
   isolation: isolate;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  min-height: clamp(26rem, 62vw, 40rem);
+  min-height: clamp(22rem, 52vw, 34rem);
   border-radius: var(--kb-radius-xl);
   overflow: hidden;
   box-shadow: var(--kb-shadow-float-dark);
@@ -2670,23 +2849,23 @@ a.kb-badge:focus-visible {
 }
 
 .kb-editorial-banner__corner.kb-corner-bracket-tl {
-  top: 1.1rem;
-  left: 1.1rem;
+  top: var(--kb-banner-inset);
+  left: var(--kb-banner-inset);
 }
 
 .kb-editorial-banner__corner.kb-corner-bracket-tr {
-  top: 1.1rem;
-  right: 1.1rem;
+  top: var(--kb-banner-inset);
+  right: var(--kb-banner-inset);
 }
 
 .kb-editorial-banner__corner.kb-corner-bracket-bl {
-  bottom: 1.1rem;
-  left: 1.1rem;
+  bottom: var(--kb-banner-inset);
+  left: var(--kb-banner-inset);
 }
 
 .kb-editorial-banner__corner.kb-corner-bracket-br {
-  right: 1.1rem;
-  bottom: 1.1rem;
+  right: var(--kb-banner-inset);
+  bottom: var(--kb-banner-inset);
 }
 
 .kb-editorial-banner__tracks {
@@ -2731,11 +2910,11 @@ a.kb-badge:focus-visible {
   z-index: 6;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: clamp(1.75rem, 4vw, 2.75rem);
+  gap: clamp(1.5rem, 3.5vw, 2.25rem);
   align-items: end;
   width: 100%;
   min-height: inherit;
-  padding: clamp(1.5rem, 4vw, 2.75rem);
+  padding: var(--kb-banner-inset);
 }
 
 .kb-editorial-banner__card {
@@ -2793,11 +2972,12 @@ a.kb-badge:focus-visible {
 .kb-editorial-banner__title {
   margin: 0;
   font-family: var(--font-display);
-  font-size: clamp(2rem, 4.2vw, 2.75rem);
+  font-size: var(--kb-text-h3);
   font-weight: var(--kb-w-heading-light);
-  line-height: 0.95;
-  letter-spacing: -0.02em;
-  color: var(--color-king-bone);
+  line-height: 1.08;
+  letter-spacing: -0.018em;
+  text-wrap: balance;
+  color: rgba(255, 250, 241, 0.97);
 }
 
 .kb-editorial-banner__breadcrumbs {
@@ -2843,15 +3023,15 @@ a.kb-badge:focus-visible {
 
 .kb-editorial-banner__quote {
   position: relative;
-  max-width: 24ch;
+  max-width: 26ch;
   padding-top: 0.35rem;
   font-family: var(--font-display);
-  font-size: clamp(1.625rem, 3.4vw, 2.5rem);
+  font-size: clamp(1.25rem, 2.2vw, 1.625rem);
   font-style: italic;
   font-weight: 400;
-  line-height: 1.18;
-  letter-spacing: -0.012em;
-  color: rgba(255, 250, 241, 0.96);
+  line-height: 1.28;
+  letter-spacing: -0.01em;
+  color: rgba(255, 250, 241, 0.92);
   text-wrap: balance;
 }
 
@@ -2892,8 +3072,8 @@ a.kb-badge:focus-visible {
 @media (min-width: 48rem) {
   .kb-editorial-banner__inner {
     grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
-    gap: clamp(2rem, 5vw, 3.5rem);
-    padding: clamp(2rem, 4.5vw, 3.25rem);
+    gap: clamp(1.5rem, 3.5vw, 2.5rem);
+    padding: var(--kb-banner-inset);
   }
 
   .kb-editorial-banner__quote {

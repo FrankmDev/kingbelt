@@ -1,10 +1,11 @@
 import { describe, expect, test } from 'bun:test';
 import {
   getLegalRobots,
-  isSitemapExcluded,
+  getLegalSitemapExcludedPaths,
   legalDocuments,
   legalNavItems,
-} from '../src/data/legal.ts';
+} from '../src/content/legal.ts';
+import { isSitemapExcluded } from '../src/config/sitemap.ts';
 
 describe('registro legal', () => {
   test('deriva navegación y robots desde el estado de cada documento', () => {
@@ -23,7 +24,6 @@ describe('registro legal', () => {
     for (const pathname of [
       '/404',
       '/carrito/',
-      '/style-museum',
       '/aviso-legal/',
       '/envios-y-devoluciones',
       '/desistimiento/',
@@ -33,6 +33,7 @@ describe('registro legal', () => {
 
     expect(isSitemapExcluded('/')).toBe(false);
     expect(isSitemapExcluded('/ayuda/')).toBe(false);
-    expect(isSitemapExcluded('/guia-de-tallas')).toBe(false);
+    expect(isSitemapExcluded('/guia-de-tallas')).toBe(true);
+    expect(getLegalSitemapExcludedPaths()).toContain('/desistimiento');
   });
 });

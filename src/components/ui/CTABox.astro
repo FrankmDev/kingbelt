@@ -102,9 +102,9 @@ const hasSecondaryAction = Boolean(secondaryButtonLabel && secondaryButtonHref);
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
-    min-height: clamp(22rem, 52vw, 36rem);
-    padding: clamp(1.75rem, 4vw, 3rem);
-    border-radius: var(--kb-panel-radius);
+    min-height: clamp(20rem, 48vw, 32rem);
+    padding: clamp(1.5rem, 4vw, 2.75rem);
+    border-radius: var(--kb-radius-xl);
     overflow: hidden;
     box-shadow: var(--kb-shadow-float-dark);
     transform: translateZ(0);
@@ -153,7 +153,7 @@ const hasSecondaryAction = Boolean(secondaryButtonLabel && secondaryButtonHref);
     z-index: 3;
     display: flex;
     flex-direction: column;
-    gap: var(--kb-space-6);
+    gap: var(--kb-space-5);
   }
 
   .cta-box__copy {
@@ -205,15 +205,11 @@ const hasSecondaryAction = Boolean(secondaryButtonLabel && secondaryButtonHref);
   }
 
   @media (min-width: 768px) {
-    .cta-box {
-      padding: clamp(2.5rem, 5vw, 4rem);
-    }
-
     .cta-box__inner {
       flex-direction: row;
       align-items: flex-end;
       justify-content: space-between;
-      gap: var(--kb-space-8);
+      gap: var(--kb-space-6);
     }
 
     .cta-box__action {

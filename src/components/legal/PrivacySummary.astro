@@ -1,8 +1,8 @@
 ---
 import type { HTMLAttributes } from 'astro/types';
-import { privacyFirstLayer } from '../../data/legal';
-import { confirmed, businessFacts } from '../../data/business';
-import { site } from '../../data/site';
+import { privacyFirstLayer } from '@content/legal';
+import { confirmed, businessFacts } from '@config/business';
+import { site } from '@config/site';
 
 interface Props extends Omit<HTMLAttributes<'aside'>, 'class'> {
   class?: string;

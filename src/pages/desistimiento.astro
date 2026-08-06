@@ -1,12 +1,12 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Header from '../components/layout/Header.astro';
-import FooterSection from '../components/layout/FooterSection.astro';
+import Footer from '../components/layout/Footer.astro';
 import LegalPageLayout from '../components/legal/LegalPageLayout.astro';
 import LegalSection from '../components/legal/LegalSection.astro';
 import WithdrawalForm from '../components/legal/WithdrawalForm.astro';
 import Prose from '../components/ui/Prose.astro';
-import { getLegalRobots, legalDocuments } from '../data/legal';
+import { getLegalRobots, legalDocuments } from '@content/legal';
 
 const doc = legalDocuments.desistimiento;
 const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href;
@@ -67,7 +67,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin)
     </div>
   </LegalPageLayout>
 
-  <FooterSection slot="footer" />
+  <Footer slot="footer" />
 </BaseLayout>
 
 <style>

@@ -29,8 +29,14 @@ async function createFooterMotion(root: HTMLElement): Promise<Cleanup> {
       .from(footerBottom.querySelector('.footer-brand-col'), { y: 18, opacity: 0, duration: 0.65 }, 0.3)
       .from(footerBottom.querySelector('.footer-nav-col'), { y: 18, opacity: 0, duration: 0.65 }, 0.38)
       .from(footerBottom.querySelector('.footer-help-col'), { y: 18, opacity: 0, duration: 0.65 }, 0.44)
-      .from(footerBottom.querySelector('.footer-contact-col'), { y: 18, opacity: 0, duration: 0.65 }, 0.5)
-      .from(footerBottom.querySelectorAll('.footer-meta-tag'), { y: 10, opacity: 0, duration: 0.45, stagger: 0.06 }, 0.58)
+      .from(footerBottom.querySelector('.footer-contact-col'), { y: 18, opacity: 0, duration: 0.65 }, 0.5);
+
+    const metaTags = footerBottom.querySelectorAll('.footer-meta-tag');
+    if (metaTags.length) {
+      timeline.from(metaTags, { y: 10, opacity: 0, duration: 0.45, stagger: 0.06 }, 0.58);
+    }
+
+    timeline
       .from(footerBottom.querySelector('.footer-giant'), { y: 36, opacity: 0, duration: 1.15 }, 0.52)
       .from(footerBottom.querySelector('.footer-bottom-bar'), { y: 10, opacity: 0, duration: 0.55 }, 0.72);
 

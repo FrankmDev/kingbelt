@@ -8,6 +8,8 @@ import Icon from '../ui/Icon.astro';
   data-cart-drawer-open
   data-cart-count-wrapper
   aria-label="Carrito vacío"
+  aria-controls="cart-drawer"
+  aria-expanded="false"
 >
   <Icon name="shopping-bag" class="cart-trigger__icon h-[1.125rem] w-[1.125rem]" strokeWidth={1.7} />
   <span class="cart-trigger__count" data-cart-count aria-hidden="true"></span>

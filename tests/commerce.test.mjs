@@ -1,18 +1,23 @@
 import { describe, expect, test } from 'bun:test';
-import { localCollections, localProducts } from '../src/data/catalog.ts';
-import { addToCart, emptyCart, restoreCart, updateLineQuantity } from '../src/lib/commerce/cart-operations.ts';
-import { filterProductSummaries, getCollectionFacets, normalizeFilterValue } from '../src/lib/commerce/catalog-filters.ts';
-import { validateCatalog } from '../src/lib/commerce/catalog-validator.ts';
-import { getSafeCheckoutUrl } from '../src/lib/commerce/checkout.ts';
-import { createLocalCatalogProvider } from '../src/lib/commerce/local-catalog.ts';
-import { createLocalCommerceProvider } from '../src/lib/commerce/local-provider.ts';
+import { demoCollections, demoProducts } from '../src/demo-catalog.ts';
+import { createCartService, emptyCart } from '../src/commerce/application/cart-service.ts';
+import { filterProductSummaries, getCollectionFacets, matchesCatalogSelection, matchesPriceRange, normalizeFilterValue, parseCatalogFilterParams, serializeCatalogFilterParams, toFilterableProduct, COLLECTION_PRICE_RANGES } from '../src/commerce/domain/catalog-filters.ts';
+import { assertValidCatalog, CatalogValidationError, validateCatalog } from '../src/commerce/application/catalog-validation.ts';
+import { getSafeCheckoutUrl } from '../src/commerce/application/checkout.ts';
+import {
+  createDemoCatalogAdapter,
+  demoCartCatalog,
+} from '../src/commerce/infrastructure/demo/demo-catalog-adapter.ts';
+import { createDemoCartAdapter } from '../src/commerce/infrastructure/demo/demo-cart-adapter.ts';
 import {
   LOCAL_CART_STORAGE_KEY,
   persistCart,
   readPersistedCart,
-} from '../src/lib/commerce/local-cart-storage.ts';
-import { moneyFromDecimal, moneyFromMajor } from '../src/lib/commerce/money.ts';
-import { toProductSummary } from '../src/lib/commerce/product-mapper.ts';
+} from '../src/commerce/infrastructure/demo/cart-storage.ts';
+import { getVariantAvailability } from '../src/commerce/domain/inventory.ts';
+import { moneyFromDecimal, moneyFromMajor, moneyToDecimal, multiplyMoney, sumMoney } from '../src/commerce/domain/money.ts';
+import { getVariantGallery, getVariantImage } from '../src/commerce/domain/product-media.ts';
+import { toCollectionReference, toProductSummary } from '../src/commerce/domain/product-mappers.ts';
 import {
   calculatePriceRange,
   getCompatibleOptionValues,
@@ -20,7 +25,9 @@ import {
   getMaxSelectableQuantity,
   getVariantBySelectedOptions,
   reconcileSelectedOptions,
-} from '../src/lib/commerce/product-variants.ts';
+} from '../src/commerce/domain/variants.ts';
+
+const { addToCart, restoreCart, updateLineQuantity } = createCartService(demoCartCatalog);
 
 class MemoryStorage {
   values = new Map();
@@ -29,69 +36,117 @@ class MemoryStorage {
   removeItem(key) { this.values.delete(key); }
 }
 
-const collectionRef = { id: 'collection:test', handle: 'test', title: 'Test' };
-const placeholderImage = {
-  url: '/image.jpg',
+const collection = {
+  id: 'collection:test',
+  handle: 'test',
+  title: 'Test',
+  description: 'Colección de prueba.',
+};
+const collectionRef = toCollectionReference(collection);
+const colorOptionId = 'option:color';
+const sizeOptionId = 'option:size';
+const colorId = (label) => `color:${label}`;
+const sizeId = (label) => `size:${label}`;
+
+const productImage = (id) => ({
+  id,
+  url: '/images/brand/cinturones-en-taller.jpg',
   altText: 'Imagen de prueba',
   width: 960,
   height: 1200,
-  placeholder: true,
-};
-
-const variant = (id, sku, color, size, price = 8900, availableForSale = true, quantityAvailable = 10) => ({
-  id,
-  sku,
-  selectedOptions: [{ name: 'Color', value: color }, { name: 'Talla', value: size }],
-  price: { amountMinor: price, currency: 'EUR' },
-  availableForSale,
-  ...(quantityAvailable === null ? {} : { quantityAvailable }),
-  image: placeholderImage,
 });
 
-const makeProduct = ({ id = 'product:test', handle = 'producto-test', reference = 'KB-TEST', variants, productType = 'Piel lisa' }) => {
-  const colors = [...new Set(variants.map((item) => item.selectedOptions.find((option) => option.name === 'Color').value))]
-    .map((value) => ({ value, swatch: '#111111' }));
-  const sizes = [...new Set(variants.map((item) => item.selectedOptions.find((option) => option.name === 'Talla').value))]
-    .map((value) => ({ value }));
+const variant = ({
+  id,
+  sku,
+  color,
+  size,
+  price = 8_900,
+  salesStatus = 'active',
+  quantity = 10,
+  inventoryPolicy = 'deny',
+  purchaseLimit,
+  compareAtPrice,
+  imageId = 'image:test',
+}) => ({
+  id,
+  sku,
+  optionValues: [
+    { optionId: colorOptionId, valueId: colorId(color) },
+    { optionId: sizeOptionId, valueId: sizeId(size) },
+  ],
+  price: { amountMinor: price, currency: 'EUR' },
+  ...(compareAtPrice ? { compareAtPrice: { amountMinor: compareAtPrice, currency: 'EUR' } } : {}),
+  salesStatus,
+  inventory: quantity === null ? { kind: 'unknown' } : { kind: 'known', quantity },
+  inventoryPolicy,
+  ...(purchaseLimit === undefined ? {} : { purchaseLimit }),
+  imageId,
+});
+
+const labelFromId = (valueId) => valueId.slice(valueId.indexOf(':') + 1);
+
+const makeProduct = ({
+  id = 'product:test',
+  handle = 'producto-test',
+  reference = 'KB-TEST',
+  variants,
+  productType = 'Piel lisa',
+  collectionId = collection.id,
+}) => {
+  const image = productImage(`${id}:image:primary`);
+  const normalizedVariants = variants.map((item) => ({ ...item, imageId: image.id }));
+  const colors = [...new Set(normalizedVariants.map((item) =>
+    labelFromId(item.optionValues.find((option) => option.optionId === colorOptionId).valueId)
+  ))].map((label) => ({ id: colorId(label), label, swatch: '#111111' }));
+  const sizes = [...new Set(normalizedVariants.map((item) =>
+    labelFromId(item.optionValues.find((option) => option.optionId === sizeOptionId).valueId)
+  ))].map((label) => ({ id: sizeId(label), label }));
   return {
     id,
     handle,
     title: 'Producto de prueba',
     reference,
     description: 'Descripción de prueba.',
-    shortDescription: 'Resumen de prueba.',
+    summary: 'Resumen de prueba.',
     vendor: 'KingBelt',
     productType,
-    primaryCollection: collectionRef,
-    collections: [collectionRef],
+    primaryCollectionId: collectionId,
+    collectionIds: [collectionId],
     options: [
-      { id: `${id}:color`, name: 'Color', values: colors },
-      { id: `${id}:size`, name: 'Talla', values: sizes },
+      { id: colorOptionId, name: 'Color', purpose: 'color', values: colors },
+      { id: sizeOptionId, name: 'Talla', purpose: 'size', values: sizes },
     ],
-    variants,
-    primaryImage: placeholderImage,
-    gallery: [placeholderImage],
+    variants: normalizedVariants,
+    images: [image],
+    primaryImageId: image.id,
+    mediaGroups: colors.map((color) => ({
+      id: `${id}:media:${color.id}`,
+      optionValueId: color.id,
+      imageIds: [image.id],
+    })),
     specifications: [],
-    priceRange: calculatePriceRange(variants),
-    availableForSale: variants.some((item) => item.availableForSale),
-    colors,
-    seo: {},
   };
 };
 
 const asymmetricProduct = makeProduct({
   variants: [
-    variant('variant:black-100', 'SKU-BLACK-100', 'Negro', '100', 8900, false, 0),
-    variant('variant:black-95', 'SKU-BLACK-95', 'Negro', '95', 8900, true, 3),
-    variant('variant:brown-95', 'SKU-BROWN-95', 'Marrón', '95', 9500, true, null),
+    variant({ id: 'variant:black-100', sku: 'SKU-BLACK-100', color: 'Negro', size: '100', salesStatus: 'active', quantity: 0 }),
+    variant({ id: 'variant:black-95', sku: 'SKU-BLACK-95', color: 'Negro', size: '95', quantity: 3 }),
+    variant({ id: 'variant:brown-95', sku: 'SKU-BROWN-95', color: 'Marrón', size: '95', price: 9_500, quantity: null }),
   ],
 });
 
-const findLocalVariant = (handle, color, size) => {
-  const product = localProducts.find((item) => item.handle === handle);
+const optionLabel = (product, variantValue, purpose) => {
+  const option = product.options.find((item) => item.purpose === purpose);
+  const selection = variantValue.optionValues.find((item) => item.optionId === option?.id);
+  return option?.values.find((item) => item.id === selection?.valueId)?.label;
+};
+
+const findDemoVariant = (handle, color, size) => {
+  const product = demoProducts.find((item) => item.handle === handle);
   return product?.variants.find((item) =>
-    item.selectedOptions.some((option) => option.name === 'Color' && option.value === color) &&
-    item.selectedOptions.some((option) => option.name === 'Talla' && option.value === size)
+    optionLabel(product, item, 'color') === color && optionLabel(product, item, 'size') === size
   );
 };
 
@@ -100,69 +155,132 @@ describe('dinero y precios', () => {
     expect(moneyFromMajor(10.01)).toEqual({ amountMinor: 1001, currency: 'EUR' });
     expect(moneyFromDecimal('10.01')).toEqual({ amountMinor: 1001, currency: 'EUR' });
     expect(moneyFromDecimal('10.1')).toEqual({ amountMinor: 1010, currency: 'EUR' });
+    expect(moneyFromDecimal('100', 'JPY')).toEqual({ amountMinor: 100, currency: 'JPY' });
+    expect(moneyFromDecimal('1.234', 'BHD')).toEqual({ amountMinor: 1_234, currency: 'BHD' });
+    expect(moneyToDecimal({ amountMinor: 1_234, currency: 'BHD' })).toBe('1.234');
     expect(() => moneyFromDecimal('10.001')).toThrow();
+    expect(() => moneyFromMajor(Number.MAX_SAFE_INTEGER)).toThrow();
+    expect(() => multiplyMoney({ amountMinor: Number.MAX_SAFE_INTEGER, currency: 'EUR' }, 2)).toThrow();
+    expect(() => sumMoney([
+      { amountMinor: Number.MAX_SAFE_INTEGER, currency: 'EUR' },
+      { amountMinor: 1, currency: 'EUR' },
+    ])).toThrow();
+    expect(() => sumMoney([
+      { amountMinor: 100, currency: 'EUR' },
+      { amountMinor: 100, currency: 'USD' },
+    ])).toThrow();
   });
 
-  test('calcula precio único y rango de variantes', () => {
-    const single = calculatePriceRange([
-      variant('v1', 'S1', 'Negro', '95'),
-      variant('v2', 'S2', 'Negro', '100'),
-    ]);
-    expect(single.min.amountMinor).toBe(8900);
-    expect(single.max.amountMinor).toBe(8900);
-    expect(asymmetricProduct.priceRange).toEqual({
-      min: { amountMinor: 8900, currency: 'EUR' },
-      max: { amountMinor: 9500, currency: 'EUR' },
+  test('calcula precios variables sin almacenar un rango redundante en Product', () => {
+    expect(calculatePriceRange(asymmetricProduct.variants)).toEqual({
+      min: { amountMinor: 8_900, currency: 'EUR' },
+      max: { amountMinor: 9_500, currency: 'EUR' },
     });
+    expect('priceRange' in asymmetricProduct).toBe(false);
+    expect(() => calculatePriceRange([
+      asymmetricProduct.variants[0],
+      { ...asymmetricProduct.variants[1], price: { amountMinor: 8_900, currency: 'USD' } },
+    ])).toThrow();
   });
 });
 
-describe('variantes reales', () => {
-  test('resuelve una combinación válida y rechaza una inexistente', () => {
+describe('variantes reales y opciones dispersas', () => {
+  test('resuelve una combinación declarada y no genera una inexistente', () => {
     expect(getVariantBySelectedOptions(asymmetricProduct, [
-      { name: 'Color', value: 'Negro' },
-      { name: 'Talla', value: '95' },
+      { optionId: colorOptionId, valueId: colorId('Negro') },
+      { optionId: sizeOptionId, valueId: sizeId('95') },
     ])?.id).toBe('variant:black-95');
     expect(getVariantBySelectedOptions(asymmetricProduct, [
-      { name: 'Color', value: 'Marrón' },
-      { name: 'Talla', value: '100' },
+      { optionId: colorOptionId, valueId: colorId('Marrón') },
+      { optionId: sizeOptionId, valueId: sizeId('100') },
     ])).toBeUndefined();
   });
 
-  test('distingue agotado de stock desconocido y calcula máximos', () => {
-    expect(getMaxSelectableQuantity(asymmetricProduct.variants[0])).toBe(0);
-    expect(asymmetricProduct.variants[0].availableForSale).toBe(false);
-    expect(getMaxSelectableQuantity(asymmetricProduct.variants[2])).toBe(99);
+  test('distingue combinación inexistente, agotada, stock desconocido y venta sin stock', () => {
+    const soldOut = asymmetricProduct.variants[0];
+    const unknown = asymmetricProduct.variants[2];
+    const backorder = {
+      ...soldOut,
+      id: 'variant:backorder',
+      sku: 'SKU-BACKORDER',
+      inventoryPolicy: 'continue',
+    };
+    expect(getVariantAvailability(soldOut)).toMatchObject({ status: 'out_of_stock', maxQuantity: 0, quantityKnown: true, backorder: false });
+    expect(getVariantAvailability(unknown)).toMatchObject({ status: 'available', maxQuantity: 99, quantityKnown: false });
+    expect(getVariantAvailability(backorder)).toMatchObject({ status: 'available', maxQuantity: 99, quantityKnown: true, backorder: true });
+    expect(getMaxSelectableQuantity(backorder)).toBe(99);
   });
 
-  test('elige la primera variante disponible', () => {
+  test('un cambio de color invalida una talla incompatible sin ocultar variantes agotadas', () => {
+    const reconciled = reconcileSelectedOptions(asymmetricProduct, [
+      { optionId: colorOptionId, valueId: colorId('Marrón') },
+      { optionId: sizeOptionId, valueId: sizeId('100') },
+    ], colorOptionId);
+    expect(reconciled).toEqual([{ optionId: colorOptionId, valueId: colorId('Marrón') }]);
+    expect(getCompatibleOptionValues(asymmetricProduct, reconciled, sizeOptionId)).toEqual([sizeId('95')]);
+    expect(getCompatibleOptionValues(asymmetricProduct, [
+      { optionId: colorOptionId, valueId: colorId('Negro') },
+    ], sizeOptionId)).toContain(sizeId('100'));
+  });
+
+  test('elige la primera variante realmente comprable', () => {
     expect(getFirstAvailableVariant(asymmetricProduct)?.id).toBe('variant:black-95');
   });
 
-  test('un cambio de color invalida una talla incompatible', () => {
-    const reconciled = reconcileSelectedOptions(asymmetricProduct, [
-      { name: 'Color', value: 'Marrón' },
-      { name: 'Talla', value: '100' },
-    ], 'Color');
-    expect(reconciled).toEqual([{ name: 'Color', value: 'Marrón' }]);
-    expect(getCompatibleOptionValues(asymmetricProduct, reconciled, 'Talla')).toEqual(['95']);
+  test('soporta un producto de variante única sin opciones visibles', () => {
+    const product = structuredClone(asymmetricProduct);
+    product.options = [];
+    product.mediaGroups = [];
+    product.variants = [{
+      ...product.variants[1],
+      id: 'variant:single',
+      sku: 'SKU-SINGLE',
+      optionValues: [],
+    }];
+    expect(getVariantBySelectedOptions(product, [])?.id).toBe('variant:single');
+    expect(validateCatalog([product], [collection])).toEqual([]);
   });
 });
 
-describe('carrito por identidad de variante', () => {
-  const atlasVariant = findLocalVariant('cinturon-atlas', 'Negro', '85');
-  const limitedVariant = findLocalVariant('cinturon-bandera', 'Marrón / detalle tricolor', '85');
-  const soldOutVariant = findLocalVariant('cinturon-garaje', 'Negro / acero', '85');
+describe('medios canónicos por color y variante', () => {
+  test('cada color demo resuelve su galería de tres imágenes sin duplicar objetos en variantes', () => {
+    const product = demoProducts.find((item) => item.handle === 'cinturon-atlas');
+    const black = findDemoVariant('cinturon-atlas', 'Negro', '85');
+    const brown = findDemoVariant('cinturon-atlas', 'Marrón', '85');
+    const blackGallery = getVariantGallery(product, black);
+    const brownGallery = getVariantGallery(product, brown);
+    expect(blackGallery).toHaveLength(3);
+    expect(brownGallery).toHaveLength(3);
+    expect(blackGallery[0].id).not.toBe(brownGallery[0].id);
+    expect(getVariantImage(product, black)?.id).toBe(black.imageId);
+    expect('image' in black).toBe(false);
+  });
 
-  test('rechaza IDs manipulados y variantes agotadas', () => {
+  test('una imagen específica de variante puede ser independiente de la galería de color', () => {
+    const product = structuredClone(asymmetricProduct);
+    const independent = productImage('image:variant-specific');
+    product.images.push(independent);
+    product.variants[0].imageId = independent.id;
+    expect(getVariantGallery(product, product.variants[0])[0].id).toBe(independent.id);
+    expect(validateCatalog([product], [collection])).toEqual([]);
+  });
+});
+
+describe('carrito por identidad exacta de variante', () => {
+  const atlasVariant = findDemoVariant('cinturon-atlas', 'Negro', '85');
+  const limitedVariant = findDemoVariant('cinturon-bandera', 'Marrón / detalle tricolor', '85');
+  const soldOutVariant = findDemoVariant('cinturon-garaje', 'Negro / acero', '85');
+
+  test('rechaza IDs manipulados y diferencia variante agotada de inexistente', () => {
     expect(addToCart(emptyCart(), { variantId: 'javascript:alert(1)', quantity: 1 }).error?.code).toBe('not_found');
     expect(addToCart(emptyCart(), { variantId: soldOutVariant.id, quantity: 1 }).error?.code).toBe('out_of_stock');
   });
 
-  test('resuelve la variante por ID y ajusta una cantidad al stock', () => {
+  test('resuelve variante y precio por ID y ajusta cantidad al inventario', () => {
     const added = addToCart(emptyCart(), { variantId: limitedVariant.id, quantity: 1 });
     expect(added.success).toBe(true);
     expect(added.cart.lines[0].variantId).toBe(limitedVariant.id);
+    expect(added.cart.lines[0].product.unitPrice).toEqual(limitedVariant.price);
     const updated = updateLineQuantity(added.cart, added.cart.lines[0].id, 3);
     expect(updated.success).toBe(true);
     expect(updated.adjustedQuantity).toBe(2);
@@ -176,7 +294,7 @@ describe('carrito por identidad de variante', () => {
 });
 
 describe('persistencia no autoritativa y migración', () => {
-  const atlasVariant = findLocalVariant('cinturon-atlas', 'Negro', '85');
+  const atlasVariant = findDemoVariant('cinturon-atlas', 'Negro', '85');
 
   test('persiste solo variantId y cantidad', () => {
     const storage = new MemoryStorage();
@@ -186,48 +304,44 @@ describe('persistencia no autoritativa y migración', () => {
     expect(raw).toContain(`"variantId":"${atlasVariant.id}"`);
     expect(raw).not.toContain('unitPrice');
     expect(raw).not.toContain('Cinturón Atlas');
-    expect(raw).not.toContain('color');
+    expect(raw).not.toContain('sku');
     expect(readPersistedCart(storage).source).toBe('current');
   });
 
-  test('migra productId + color + size sin confiar en datos guardados', async () => {
+  test('migra productId + color + size sin confiar en otros datos guardados', async () => {
     const storage = new MemoryStorage();
     storage.setItem('kingbelt-cart-v3', JSON.stringify({
       version: 3,
       lines: [{ productId: 'kb-vestir-001', color: 'Negro', size: '85', quantity: 1, price: 1 }],
     }));
-    const cart = await createLocalCommerceProvider({ storage }).initialize();
+    const cart = await createDemoCartAdapter({ storage }).initialize();
     expect(cart.lines[0].variantId).toBe(atlasVariant.id);
     expect(cart.lines[0].product.title).toBe('Cinturón Atlas');
-    expect(cart.lines[0].product.unitPrice.amountMinor).toBe(8900);
+    expect(cart.lines[0].product.unitPrice.amountMinor).toBe(8_900);
     expect(storage.getItem(LOCAL_CART_STORAGE_KEY)).toContain('variantId');
   });
 
-  test('descarta y notifica una línea antigua que no puede migrarse', async () => {
+  test('descarta líneas antiguas irresolubles y payloads inválidos', async () => {
     const storage = new MemoryStorage();
     storage.setItem('kingbelt-cart-v3', JSON.stringify({
       version: 3,
       lines: [{ productId: 'kb-vestir-001', color: 'Marrón inexistente', size: '85', quantity: 1 }],
     }));
-    const cart = await createLocalCommerceProvider({ storage }).initialize();
+    const cart = await createDemoCartAdapter({ storage }).initialize();
     expect(cart.lines).toHaveLength(0);
-    expect(cart.globalNotice).toContain('no pudo migrarse');
-  });
+    expect(cart.globalNotice).toContain('se ha retirado');
 
-  test('descarta payloads sobredimensionados o cantidades inválidas', () => {
-    const storage = new MemoryStorage();
     storage.setItem(LOCAL_CART_STORAGE_KEY, JSON.stringify({ version: 4, lines: [{ variantId: atlasVariant.id, quantity: 100 }] }));
-    expect(readPersistedCart(storage).source).toBe('current');
-    expect(readPersistedCart(storage).discardedCount).toBe(1);
+    expect(readPersistedCart(storage).source).toBe('invalid');
   });
 });
 
-describe('validación de catálogo', () => {
-  test('el catálogo local no tiene errores', () => {
-    expect(validateCatalog(localProducts, localCollections)).toEqual([]);
+describe('validación exhaustiva de catálogo', () => {
+  test('el catálogo local normalizado no tiene errores', () => {
+    expect(validateCatalog(demoProducts, demoCollections)).toEqual([]);
   });
 
-  test('detecta SKU, handle y combinación de opciones duplicados', () => {
+  test('detecta identidades, combinaciones, SKU y referencias duplicadas', () => {
     const duplicateCombination = {
       ...asymmetricProduct.variants[1],
       id: 'variant:duplicate-combination',
@@ -239,26 +353,76 @@ describe('validación de catálogo', () => {
       handle: 'producto-sku',
       reference: 'KB-SKU',
       variants: [
-        variant('variant:sku-a', 'SKU-DUP', 'Negro', '95'),
-        variant('variant:sku-b', 'SKU-DUP', 'Negro', '100'),
+        variant({ id: 'variant:sku-a', sku: 'SKU-DUP', color: 'Negro', size: '95' }),
+        variant({ id: 'variant:sku-b', sku: 'SKU-DUP', color: 'Negro', size: '100' }),
       ],
     });
     const duplicateHandle = makeProduct({
       id: 'product:handle-2',
       handle: productWithDuplicateSku.handle,
-      reference: 'KB-HANDLE-2',
-      variants: [variant('variant:handle', 'SKU-HANDLE', 'Negro', '95')],
+      reference: productWithDuplicateSku.reference,
+      variants: [variant({ id: 'variant:handle', sku: 'SKU-HANDLE', color: 'Negro', size: '95' })],
     });
-    const codes = validateCatalog([productWithCombination, productWithDuplicateSku, duplicateHandle], []).map((issue) => issue.code);
+    duplicateHandle.variants[0].id = duplicateHandle.id;
+    const codes = validateCatalog(
+      [productWithCombination, productWithDuplicateSku, duplicateHandle],
+      [collection]
+    ).map((entry) => entry.code);
     expect(codes).toContain('duplicate_option_combination');
     expect(codes).toContain('duplicate_sku');
     expect(codes).toContain('duplicate_product_handle');
+    expect(codes).toContain('duplicate_product_reference');
+    expect(codes).toContain('product_variant_identity_collision');
+  });
+
+  test('detecta opciones incompletas, medios rotos, inventario, precio, peso y moneda inválidos', () => {
+    const invalid = structuredClone(asymmetricProduct);
+    invalid.variants[0].optionValues.pop();
+    invalid.variants[0].imageId = 'image:missing';
+    invalid.variants[0].inventory.quantity = -1;
+    invalid.variants[0].purchaseLimit = 0;
+    invalid.variants[0].compareAtPrice = { amountMinor: 1, currency: 'USD' };
+    invalid.variants[0].weight = { value: 0, unit: 'stone' };
+    invalid.images[0].url = 'javascript:alert(1)';
+    invalid.images[0].width = -10;
+    invalid.mediaGroups[0].imageIds.push('image:missing');
+    invalid.collectionIds.push('collection:missing');
+    const codes = validateCatalog([invalid], [collection]).map((entry) => entry.code);
+    expect(codes).toEqual(expect.arrayContaining([
+      'incomplete_variant_options',
+      'variant_unknown_image',
+      'invalid_inventory_quantity',
+      'invalid_purchase_limit',
+      'unsupported_currency',
+      'compare_price_currency_mismatch',
+      'invalid_compare_price',
+      'invalid_weight',
+      'invalid_weight_unit',
+      'invalid_image_url',
+      'invalid_image_width',
+      'media_group_unknown_image',
+      'unknown_product_collection',
+    ]));
+    expect(() => assertValidCatalog([invalid], [collection])).toThrow(CatalogValidationError);
+  });
+
+  test('los campos SEO opcionales y una galería sin asociación tienen fallback predecible', () => {
+    const safe = structuredClone(asymmetricProduct);
+    delete safe.seo;
+    safe.mediaGroups = [];
+    safe.variants.forEach((item) => delete item.imageId);
+    expect(getVariantImage(safe, safe.variants[0])?.id).toBe(safe.primaryImageId);
+    expect(getVariantGallery(safe, safe.variants[0])).toEqual(safe.images);
+    expect(validateCatalog([safe], [collection])).toEqual([]);
   });
 });
 
-describe('filtros normalizados', () => {
-  test('filtra por tipo, color y rango y normaliza acentos/mayúsculas', () => {
-    const summaries = localProducts.map(toProductSummary);
+describe('filtros y proyecciones de grid', () => {
+  test('filtra datos normalizados y el resumen nunca incluye variantes', () => {
+    const collectionById = new Map(demoCollections.map((item) => [item.id, item]));
+    const summaries = demoProducts.map((product) =>
+      toProductSummary(product, toCollectionReference(collectionById.get(product.primaryCollectionId)))
+    );
     const result = filterProductSummaries(summaries, {
       productTypes: ['EDICION'],
       colors: ['MARRON / DETALLE TRICOLOR'],
@@ -267,14 +431,107 @@ describe('filtros normalizados', () => {
     expect(result.map((product) => product.handle)).toContain('cinturon-bandera');
     expect(normalizeFilterValue('  Coñac  ')).toBe('conac');
     expect(getCollectionFacets(result).colors.length).toBeGreaterThan(0);
+    expect(JSON.stringify(summaries)).not.toContain('"variants"');
+    expect(JSON.stringify(summaries)).not.toContain('"sku"');
   });
 });
 
+describe('filtros: rangos de precio sin solape', () => {
+  test('los límites de 80 € y 90 € son disjuntos y un precio cae en un único rango', () => {
+    expect(matchesPriceRange(7_999, 'lt-80')).toBe(true);
+    expect(matchesPriceRange(7_999, '80-90')).toBe(false);
+    expect(matchesPriceRange(8_000, 'lt-80')).toBe(false);
+    expect(matchesPriceRange(8_000, '80-90')).toBe(true);
+    expect(matchesPriceRange(8_000, 'gt-90')).toBe(false);
+    expect(matchesPriceRange(9_000, '80-90')).toBe(true);
+    expect(matchesPriceRange(9_000, 'gt-90')).toBe(false);
+    expect(matchesPriceRange(9_001, '80-90')).toBe(false);
+    expect(matchesPriceRange(9_001, 'gt-90')).toBe(true);
+    expect(matchesPriceRange(5_000)).toBe(true);
+    expect(matchesPriceRange(5_000, 'rango-inexistente')).toBe(true);
+  });
+
+  test('cada producto de la demo cae en exactamente un rango y los contadores suman el total', () => {
+    const collectionById = new Map(demoCollections.map((item) => [item.id, item]));
+    const summaries = demoProducts.map((product) =>
+      toProductSummary(product, toCollectionReference(collectionById.get(product.primaryCollectionId)))
+    );
+    const facetCounts = getCollectionFacets(summaries).priceRanges;
+    const counted = new Map(COLLECTION_PRICE_RANGES.map((range) => [range.id, 0]));
+    summaries.forEach((product) => {
+      const matches = COLLECTION_PRICE_RANGES.filter((range) =>
+        matchesPriceRange(product.priceRange.min.amountMinor, range.id)
+      );
+      expect(matches).toHaveLength(1);
+      counted.set(matches[0].id, counted.get(matches[0].id) + 1);
+    });
+    COLLECTION_PRICE_RANGES.forEach((range) => {
+      expect(facetCounts.find((item) => item.id === range.id)?.count).toBe(counted.get(range.id));
+    });
+    expect(facetCounts.reduce((sum, item) => sum + item.count, 0)).toBe(summaries.length);
+  });
+});
+
+describe('filtros: disponibilidad y selección por URL', () => {
+  const summariesOf = () => {
+    const collectionById = new Map(demoCollections.map((item) => [item.id, item]));
+    return demoProducts.map((product) =>
+      toProductSummary(product, toCollectionReference(collectionById.get(product.primaryCollectionId)))
+    );
+  };
+
+  test('el filtro de disponibilidad excluye agotados y no disponibles con el mismo predicado', () => {
+    const summaries = summariesOf();
+    const available = filterProductSummaries(summaries, { availableOnly: true });
+    expect(available.some((product) => product.handle === 'cinturon-garaje')).toBe(false);
+    expect(available.some((product) => product.handle === 'cinturon-huella')).toBe(false);
+    expect(available.some((product) => product.handle === 'cinturon-bandera')).toBe(true);
+    expect(getCollectionFacets(summaries).availability[0].count).toBe(available.length);
+    expect(getCollectionFacets(summaries).availability[0].value).toBe('Disponibles');
+  });
+
+  test('el predicado comparte el contrato mínimo que consume el navegador', () => {
+    const summary = summariesOf().find((product) => product.handle === 'cinturon-atlas');
+    const model = toFilterableProduct(summary);
+    expect(matchesCatalogSelection(model, { productTypes: ['piel lisa'] })).toBe(true);
+    expect(matchesCatalogSelection(model, { productTypes: ['trenzado'] })).toBe(false);
+    expect(matchesCatalogSelection(model, { colors: ['negro'] })).toBe(true);
+    expect(matchesCatalogSelection(model, { priceRange: '80-90' })).toBe(true);
+    expect(matchesCatalogSelection(model, { availableOnly: true })).toBe(true);
+  });
+
+  test('la selección viaja por la URL normalizada y vuelve intacta', () => {
+    const params = serializeCatalogFilterParams({
+      productTypes: ['Piel lisa'],
+      colors: ['Coñac', 'Negro'],
+      priceRange: '80-90',
+      availableOnly: true,
+    });
+    expect(params.toString()).toContain('tipo=piel+lisa');
+    expect(params.toString()).toContain('color=conac');
+    expect(params.toString()).toContain('disponible=1');
+    expect(parseCatalogFilterParams(params)).toEqual({
+      productTypes: ['piel lisa'],
+      colors: ['conac', 'negro'],
+      priceRange: '80-90',
+      availableOnly: true,
+    });
+    expect(serializeCatalogFilterParams({}).toString()).toBe('');
+    expect(serializeCatalogFilterParams({ productTypes: [], colors: [] }).toString()).toBe('');
+  });
+
+  test('un id de rango inválido en la URL se descarta como «sin filtro»', () => {
+    expect(parseCatalogFilterParams('?precio=gt-999&tipo=algo').priceRange).toBeUndefined();
+    expect(parseCatalogFilterParams('?precio=gt-999&tipo=algo').productTypes).toEqual(['algo']);
+  });
+});
+
+
 describe('redirección de checkout', () => {
   test('solo permite HTTPS y un host exacto declarado por el proveedor', () => {
-    expect(getSafeCheckoutUrl({ status: 'idle', url: 'https://checkout.example.com/cart/1', allowedHosts: ['checkout.example.com'] })?.hostname).toBe('checkout.example.com');
-    expect(getSafeCheckoutUrl({ status: 'idle', url: 'https://checkout.example.com.evil.test/cart/1', allowedHosts: ['checkout.example.com'] })).toBeNull();
-    expect(getSafeCheckoutUrl({ status: 'idle', url: 'http://checkout.example.com/cart/1', allowedHosts: ['checkout.example.com'] })).toBeNull();
+    expect(getSafeCheckoutUrl({ status: 'ready', url: 'https://checkout.example.com/cart/1', allowedHosts: ['checkout.example.com'] })?.hostname).toBe('checkout.example.com');
+    expect(getSafeCheckoutUrl({ status: 'ready', url: 'https://checkout.example.com.evil.test/cart/1', allowedHosts: ['checkout.example.com'] })).toBeNull();
+    expect(getSafeCheckoutUrl({ status: 'ready', url: 'http://checkout.example.com/cart/1', allowedHosts: ['checkout.example.com'] })).toBeNull();
   });
 });
 
@@ -284,8 +541,7 @@ const buildSyntheticCatalog = () => {
     handle: 'escala',
     title: 'Escala',
     description: 'Colección sintética no renderizada.',
-    image: placeholderImage,
-    productHandles: [],
+    image: productImage('collection:scale:image'),
   };
   let remainingGroupIndex = 0;
   const products = Array.from({ length: 70 }, (_, productIndex) => {
@@ -294,15 +550,14 @@ const buildSyntheticCatalog = () => {
     for (let colorIndex = 0; colorIndex < groupCount; colorIndex += 1) {
       const sizeCount = productIndex === 0 ? 19 : remainingGroupIndex++ < 149 ? 6 : 5;
       for (let sizeIndex = 0; sizeIndex < sizeCount; sizeIndex += 1) {
-        variants.push(variant(
-          `scale:variant:${productIndex}:${colorIndex}:${sizeIndex}`,
-          `SCALE-${productIndex}-${colorIndex}-${sizeIndex}`,
-          `Color ${colorIndex}`,
-          `Talla ${sizeIndex}`,
-          5000 + ((productIndex + colorIndex + sizeIndex) % 7) * 100,
-          true,
-          20
-        ));
+        variants.push(variant({
+          id: `scale:variant:${productIndex}:${colorIndex}:${sizeIndex}`,
+          sku: `SCALE-${productIndex}-${colorIndex}-${sizeIndex}`,
+          color: `Color ${colorIndex}`,
+          size: `Talla ${sizeIndex}`,
+          price: 5_000 + ((productIndex + colorIndex + sizeIndex) % 7) * 100,
+          quantity: 20,
+        }));
       }
     }
     const product = makeProduct({
@@ -311,45 +566,72 @@ const buildSyntheticCatalog = () => {
       reference: `SCALE-${productIndex}`,
       variants,
       productType: productIndex % 2 === 0 ? 'Tipo par' : 'Tipo impar',
+      collectionId: syntheticCollection.id,
     });
-    product.primaryCollection = { id: syntheticCollection.id, handle: syntheticCollection.handle, title: syntheticCollection.title };
-    product.collections = [product.primaryCollection];
-    syntheticCollection.productHandles.push(product.handle);
+    const colorValues = product.options.find((option) => option.purpose === 'color').values;
+    const images = colorValues.flatMap((color) => Array.from({ length: 3 }, (_, imageIndex) => ({
+      ...productImage(`${product.id}:image:${color.id}:${imageIndex}`),
+      altText: `${color.label}, vista ${imageIndex + 1}`,
+    })));
+    product.images = images;
+    product.primaryImageId = images[0].id;
+    product.mediaGroups = colorValues.map((color) => ({
+      id: `${product.id}:media:${color.id}`,
+      optionValueId: color.id,
+      imageIds: images.filter((image) => image.id.includes(`:image:${color.id}:`)).map((image) => image.id),
+    }));
+    product.variants = product.variants.map((item) => ({
+      ...item,
+      imageId: product.mediaGroups.find((group) =>
+        item.optionValues.some((selection) => selection.valueId === group.optionValueId)
+      ).imageIds[0],
+    }));
     return product;
   });
   return { products, collections: [syntheticCollection] };
 };
 
+describe('dimensiones de imagen obligatorias', () => {
+  test('todos los productos demo declaran width y height positivos para reservar layout', () => {
+    for (const product of demoProducts) {
+      for (const image of product.images) {
+        expect(image.width).toBeGreaterThan(0);
+        expect(image.height).toBeGreaterThan(0);
+      }
+    }
+  });
+});
+
 describe('catálogo sintético de escala prevista', () => {
-  test('opera con 70 productos, 272 grupos, 1.565 variantes y máximo 76', async () => {
+  test('opera con 70 productos, 272 colores, 816 imágenes y 1.565 variantes', async () => {
     const source = buildSyntheticCatalog();
     const variants = source.products.flatMap((product) => product.variants);
-    const colorGroups = new Set(variants.map((item) => {
-      const productId = item.id.split(':').slice(0, 4).join(':');
-      const color = item.selectedOptions.find((option) => option.name === 'Color').value;
-      return `${productId}|${color}`;
-    }));
+    const colorGroups = source.products.flatMap((product) => product.mediaGroups);
     expect(source.products).toHaveLength(70);
-    expect(colorGroups.size).toBe(272);
-    expect(variants).toHaveLength(1565);
+    expect(colorGroups).toHaveLength(272);
+    expect(source.products.flatMap((product) => product.images)).toHaveLength(816);
+    expect(variants).toHaveLength(1_565);
     expect(Math.max(...source.products.map((product) => product.variants.length))).toBe(76);
     expect(new Set(source.products.map((product) => product.id)).size).toBe(70);
-    expect(new Set(variants.map((item) => item.id)).size).toBe(1565);
-    expect(new Set(variants.map((item) => item.sku)).size).toBe(1565);
+    expect(new Set(variants.map((item) => item.id)).size).toBe(1_565);
+    expect(new Set(variants.map((item) => item.sku)).size).toBe(1_565);
     expect(validateCatalog(source.products, source.collections)).toEqual([]);
 
-    const provider = createLocalCatalogProvider({ products: source.products, collections: source.collections });
-    expect((await provider.getProductHandles())).toHaveLength(70);
+    const provider = createDemoCatalogAdapter(source);
+    expect(await provider.getProductHandles()).toHaveLength(70);
     const resolved = await provider.getProductByHandle('producto-escala-0');
     expect(resolved.variants).toHaveLength(76);
-    expect(getVariantBySelectedOptions(resolved, resolved.variants[0].selectedOptions)?.id).toBe(resolved.variants[0].id);
-    expect(getVariantBySelectedOptions(resolved, [{ name: 'Color', value: 'inexistente' }, { name: 'Talla', value: 'Talla 0' }])).toBeUndefined();
-    expect(resolved.priceRange.min.amountMinor).toBeLessThan(resolved.priceRange.max.amountMinor);
+    expect(getVariantBySelectedOptions(resolved, resolved.variants[0].optionValues)?.id).toBe(resolved.variants[0].id);
+    expect(getVariantBySelectedOptions(resolved, [
+      { optionId: colorOptionId, valueId: colorId('inexistente') },
+      { optionId: sizeOptionId, valueId: sizeId('Talla 0') },
+    ])).toBeUndefined();
+    expect(calculatePriceRange(resolved.variants).min.amountMinor).toBeLessThan(calculatePriceRange(resolved.variants).max.amountMinor);
 
     const page = await provider.getCollectionByHandle('escala');
     expect(page.products).toHaveLength(70);
     expect(page.products.every((summary) => !('variants' in summary))).toBe(true);
     expect(JSON.stringify(page.products)).not.toContain('"variants"');
-    expect(filterProductSummaries(page.products, { productTypes: ['tipo par'], colors: ['color 0'] }).length).toBe(35);
+    expect(filterProductSummaries(page.products, { productTypes: ['tipo par'], colors: ['color 0'] })).toHaveLength(35);
   });
 });

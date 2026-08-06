@@ -1,28 +1,36 @@
 ---
-import SectionHeader from '../common/SectionHeader.astro';
+import SectionHeader from '@components/ui/SectionHeader.astro';
 import ArticleMeta from '../ui/ArticleMeta.astro';
 import Button from '../ui/Button.astro';
 import Icon from '../ui/Icon.astro';
 import Panel from '../ui/Panel.astro';
-import type { BlogPost } from '../../data/blog';
+import type { BlogPost } from '@content/blog';
 
 interface Props {
   post: BlogPost;
   showHeader?: boolean;
   afterNav?: boolean;
+  embedded?: boolean;
   class?: string;
 }
 
-const { post, showHeader = true, afterNav = true, class: className = '' } = Astro.props;
+const {
+  post,
+  showHeader = true,
+  afterNav = true,
+  embedded = false,
+  class: className = '',
+} = Astro.props;
 const href = `/blog/${post.slug}`;
 ---
 
 <section
   id={showHeader ? 'articulo-destacado' : undefined}
   class:list={[
-    'blog-featured section-spacing',
-    afterNav && 'blog-featured--after-nav',
-    'blog-featured--chapter-end',
+    'blog-featured',
+    !embedded && 'section-spacing',
+    !embedded && afterNav && 'blog-featured--after-nav',
+    !embedded && 'blog-featured--chapter-end',
     className,
   ]}
   aria-labelledby={showHeader ? 'blog-featured-title' : undefined}

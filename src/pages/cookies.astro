@@ -1,7 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Header from '../components/layout/Header.astro';
-import FooterSection from '../components/layout/FooterSection.astro';
+import Footer from '../components/layout/Footer.astro';
 import LegalPageLayout from '../components/legal/LegalPageLayout.astro';
 import LegalSection from '../components/legal/LegalSection.astro';
 import Prose from '../components/ui/Prose.astro';
@@ -10,9 +10,9 @@ import {
   externalResources,
   getLegalRobots,
   legalDocuments,
-} from '../data/legal';
-import { confirmed, businessFacts } from '../data/business';
-import { site } from '../data/site';
+} from '@content/legal';
+import { confirmed, businessFacts } from '@config/business';
+import { site } from '@config/site';
 
 const doc = legalDocuments.cookies;
 const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href;
@@ -124,7 +124,7 @@ const email = confirmed(businessFacts.email) ?? site.contact.email;
     </Prose>
   </LegalPageLayout>
 
-  <FooterSection slot="footer" />
+  <Footer slot="footer" />
 </BaseLayout>
 
 <style>

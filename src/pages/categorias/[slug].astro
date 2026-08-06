@@ -1,46 +1,41 @@
 ---
 import type { GetStaticPaths } from 'astro';
 import CollectionCatalog from '../../components/collection/CollectionCatalog.astro';
-import FooterSection from '../../components/layout/FooterSection.astro';
+import Footer from '../../components/layout/Footer.astro';
 import Header from '../../components/layout/Header.astro';
 import Breadcrumbs from '../../components/ui/Breadcrumbs.astro';
-import { site } from '../../data/site';
-import { catalogProvider } from '../../lib/commerce/catalog-provider';
+import { site, siteUrl } from '@config/site';
+import { catalogProvider } from '@commerce/catalog';
+import { resolveCollectionPageHead, type CommercePageHead } from '@commerce/application/seo';
+import type { CollectionPage } from '@commerce/domain/catalog';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 
 export const getStaticPaths = (async () => {
   const handles = await catalogProvider.getCollectionHandles();
-  return handles.map((handle) => ({ params: { slug: handle }, props: { handle } }));
+  return Promise.all(handles.map(async (handle) => {
+    const collectionPage = await catalogProvider.getCollectionByHandle(handle);
+    if (!collectionPage) throw new Error(`Colección no encontrada: ${handle}`);
+    return {
+      params: { slug: handle },
+      props: {
+        collectionPage,
+        pageHead: resolveCollectionPageHead(collectionPage, site, siteUrl),
+      },
+    };
+  }));
 }) satisfies GetStaticPaths;
 
 interface Props {
-  handle: string;
+  collectionPage: CollectionPage;
+  pageHead: CommercePageHead;
 }
 
-const { handle } = Astro.props;
-const collectionPage = await catalogProvider.getCollectionByHandle(handle);
-if (!collectionPage) throw new Error(`Colección no encontrada: ${handle}`);
+const { collectionPage, pageHead } = Astro.props;
 const { collection: category, products, facets } = collectionPage;
 const categories = await catalogProvider.getCollections();
-const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href;
-
-const collectionSchema = {
-  '@context': 'https://schema.org',
-  '@type': 'CollectionPage',
-  name: `${category.title} — Colección ${site.name}`,
-  description: category.description,
-  url: canonicalURL,
-};
 ---
 
-<BaseLayout
-  title={`${category.title} — Colección KingBelt`}
-  description={category.description}
-  image={category.image?.url}
-  imageAlt={category.image?.altText}
-  canonicalURL={canonicalURL}
-  schema={collectionSchema}
->
+<BaseLayout seo={pageHead.seo} schema={pageHead.schema}>
   <Header slot="header" initialTheme="light" scrolledTheme="light" compactThreshold={32} />
 
   <section class="collection-head" aria-labelledby="collection-title">
@@ -85,7 +80,7 @@ const collectionSchema = {
 
   <CollectionCatalog category={category} products={products} facets={facets} />
 
-  <FooterSection slot="footer" connected />
+  <Footer slot="footer" connected />
 </BaseLayout>
 
 <style>

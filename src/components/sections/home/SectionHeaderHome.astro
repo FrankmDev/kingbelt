@@ -76,9 +76,9 @@ const hasEditorial = hasTitle || hasBody;
 
     display: flex;
     flex-direction: column;
-    gap: clamp(1.25rem, 2.8vw, 1.75rem);
+    gap: var(--kb-space-5);
     min-width: 0;
-    margin-bottom: var(--kb-space-gap-lg);
+    margin-bottom: var(--kb-space-gap);
     color: var(--shh-ink);
   }
 
@@ -137,17 +137,17 @@ const hasEditorial = hasTitle || hasBody;
 
   .shh-editorial {
     display: grid;
-    gap: clamp(0.85rem, 1.8vw, 1.15rem);
+    gap: var(--kb-space-4);
     min-width: 0;
   }
 
   .shh-title {
     margin: 0;
-    max-width: 22ch;
-    font-size: clamp(2rem, 4.2vw, 2.85rem);
+    max-width: 24ch;
+    font-size: var(--kb-text-h2);
     font-weight: var(--kb-w-heading-light);
-    line-height: 1.02;
-    letter-spacing: -0.024em;
+    line-height: 1.06;
+    letter-spacing: -0.02em;
     text-wrap: balance;
     color: var(--shh-ink);
   }
@@ -178,8 +178,8 @@ const hasEditorial = hasTitle || hasBody;
   }
 
   .section-header-home[data-density='compact'] .shh-title {
-    font-size: clamp(1.5rem, 2.8vw, 2rem);
-    max-width: 20ch;
+    font-size: clamp(1.5rem, 2.6vw, 1.875rem);
+    max-width: 22ch;
   }
 
   .section-header-home[data-density='compact'] .shh-body {

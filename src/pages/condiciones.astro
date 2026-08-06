@@ -1,13 +1,13 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Header from '../components/layout/Header.astro';
-import FooterSection from '../components/layout/FooterSection.astro';
+import Footer from '../components/layout/Footer.astro';
 import LegalPageLayout from '../components/legal/LegalPageLayout.astro';
 import LegalSection from '../components/legal/LegalSection.astro';
 import Prose from '../components/ui/Prose.astro';
-import { getLegalRobots, legalDocuments } from '../data/legal';
-import { confirmed, businessFacts } from '../data/business';
-import { site } from '../data/site';
+import { getLegalRobots, legalDocuments } from '@content/legal';
+import { confirmed, businessFacts } from '@config/business';
+import { site } from '@config/site';
 
 const doc = legalDocuments.condiciones;
 const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href;
@@ -80,5 +80,5 @@ const completedSectionIds = new Set([
     </Prose>
   </LegalPageLayout>
 
-  <FooterSection slot="footer" />
+  <Footer slot="footer" />
 </BaseLayout>

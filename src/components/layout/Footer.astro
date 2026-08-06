@@ -1,0 +1,502 @@
+---
+import Button from '../ui/Button.astro';
+import Icon from '../ui/Icon.astro';
+import {
+  footerContact,
+  footerHelpNav,
+  footerHighlights,
+  footerLegalNav,
+  footerNav,
+  socialLinks,
+} from '@config/navigation';
+import { confirmed, businessFacts } from '@config/business';
+import { site } from '@config/site';
+
+interface Props {
+  class?: string;
+  connected?: boolean;
+}
+
+const { class: className = '', connected = false } = Astro.props;
+
+const madeInSpain = confirmed(businessFacts.madeInSpain);
+const highlights = footerHighlights;
+---
+
+<footer
+  id="site-footer"
+  class:list={[
+    'site-footer sticky bottom-0 z-[var(--kb-z-base)] w-full max-w-full overflow-x-hidden',
+    connected && 'site-footer--connected',
+    className,
+  ]}
+  data-gsap-footer
+>
+  <div class="footer-shell relative overflow-hidden bg-king-bg" data-footer-bottom>
+    <div class="footer-accent-bar pointer-events-none absolute inset-x-0 top-0 z-20 h-px" aria-hidden="true"></div>
+
+    <div class="footer-bg pointer-events-none absolute inset-0"></div>
+    <div class="footer-vignette pointer-events-none absolute inset-0"></div>
+    <div class="footer-glow pointer-events-none absolute inset-0" aria-hidden="true"></div>
+
+    <span class="footer-corner footer-corner--tl pointer-events-none absolute left-4 top-4 z-10 hidden h-5 w-5 border-l border-t border-king-accent/15 md:block" aria-hidden="true"></span>
+    <span class="footer-corner footer-corner--tr pointer-events-none absolute right-4 top-4 z-10 hidden h-5 w-5 border-r border-t border-king-accent/15 md:block" aria-hidden="true"></span>
+
+    <div class="footer-inner kb-shell-wide relative z-10 pb-8 pt-10 md:pb-10 md:pt-12">
+
+      <div class="footer-top-rule mb-7 flex items-center md:mb-8">
+        <span class="h-px flex-1 bg-gradient-to-r from-transparent to-king-border/35"></span>
+        <span class="mx-4 flex items-center gap-2.5">
+          <span class="h-px w-5 bg-king-accent/30"></span>
+          <span class="footer-rule-diamond h-1.5 w-1.5 rotate-45 bg-king-accent/25"></span>
+          <span class="h-px w-5 bg-king-accent/30"></span>
+        </span>
+        <span class="h-px flex-1 bg-gradient-to-l from-transparent to-king-border/35"></span>
+      </div>
+
+      <div class="footer-cta mb-8 overflow-hidden rounded-[var(--kb-radius-sm)] border border-king-border/20 bg-king-graphite shadow-[var(--kb-shadow-inset-steel)] md:mb-9">
+        <div class="footer-cta-texture pointer-events-none absolute inset-0 opacity-[0.35]" aria-hidden="true"></div>
+        <div class="footer-cta-inner relative flex flex-col gap-4 px-5 py-4 md:flex-row md:items-center md:justify-between md:gap-6 md:px-6 md:py-4">
+          <div class="footer-cta-copy min-w-0">
+            <p class="footer-cta-eyebrow kb-eyebrow mb-2 text-white/45">
+              <span class="footer-cta-eyebrow-mark" aria-hidden="true"></span>
+              <span>Colección</span>
+            </p>
+            <p class="font-display text-[clamp(1.15rem,2.4vw,1.45rem)] leading-[1.15] tracking-[0.01em] text-white/92">
+              Cuero, hebilla y carácter para la ruta.
+            </p>
+          </div>
+          <div class="footer-cta-actions flex shrink-0 flex-wrap items-center gap-3">
+            <Button href="/#coleccion" variant="secondary" size="sm">
+              Ver colección
+            </Button>
+            <a
+              href="/contacto"
+              class="footer-cta-link kb-action-label group inline-flex items-center gap-2 text-white/55 transition-[color,transform] duration-[var(--kb-dur-med)] hover:text-king-accent-light"
+            >
+              <span class="h-1.5 w-1.5 rounded-full bg-king-accent/50 transition-[background-color,transform] duration-[var(--kb-dur-fast)] group-hover:scale-110 group-hover:bg-king-accent-light"></span>
+              Escribir
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-grid mb-7 grid grid-cols-2 gap-x-6 gap-y-8 md:mb-8 md:grid-cols-6 md:gap-x-8 lg:grid-cols-12 lg:gap-y-0">
+
+        <div class="footer-brand-col col-span-2 md:order-1 md:col-span-3">
+          <a href="/" class="group mb-3 inline-flex items-center gap-2.5">
+            <span class="font-display text-[1.2rem] tracking-[0.18em] uppercase text-king-text md:text-[1.35rem]">
+              {site.name}
+            </span>
+            <span class="hidden h-px w-8 bg-king-accent/25 transition-[background-color,width] duration-[var(--kb-dur-med)] group-hover:w-12 group-hover:bg-king-accent/50 md:block"></span>
+          </a>
+          <p class="mb-4 max-w-xs text-[var(--kb-text-xs)] font-light leading-[1.7] text-king-muted/80">
+            Accesorios de cuero para el día a día. Para los que se mueven diferente.
+          </p>
+
+          <div class="mb-4 flex flex-wrap items-center gap-3">
+            {madeInSpain && <span class="kb-badge-accent">Hecho en {madeInSpain}</span>}
+            <div class="flex items-center gap-2.5">
+              {socialLinks.map((s) => (
+                <a
+                  href={s.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="footer-social group relative flex h-9 w-9 items-center justify-center rounded-full border border-king-border/45 text-king-muted/75 transition-[border-color,box-shadow,color,transform] duration-[var(--kb-dur-med)] hover:border-king-accent/55 hover:text-king-accent"
+                  aria-label={s.label}
+                >
+                  <span class="absolute inset-0 rounded-full bg-king-accent/[0.06] opacity-0 transition-opacity duration-[var(--kb-dur-med)] group-hover:opacity-100"></span>
+                  <Icon name={s.icon} class="relative z-10 h-3.5 w-3.5" />
+                </a>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div class="footer-nav-col md:order-3 md:col-span-2 lg:order-2">
+          <h4 class="footer-col-title mb-3 flex items-center gap-2.5 text-king-text">
+            <span class="footer-col-mark h-px w-4 bg-king-accent/45" aria-hidden="true"></span>
+            <span class="kb-action-label">Navegación</span>
+          </h4>
+          <nav class="flex flex-col gap-1.5" aria-label="Navegación del sitio">
+            {footerNav.map((item, index) => (
+              <a
+                href={item.href}
+                class="footer-link group relative inline-flex items-center gap-3 py-0.5 text-[var(--kb-text-xs)] font-light text-king-muted/80 transition-[color,transform] duration-[var(--kb-dur-med)] hover:text-king-text"
+              >
+                <span class="footer-link-index font-mono text-[0.62rem] tabular-nums tracking-[0.08em] text-king-accent/35 transition-colors duration-[var(--kb-dur-med)] group-hover:text-king-accent/70">
+                  {String(index + 1).padStart(2, '0')}
+                </span>
+                <span class="footer-link-label">{item.label}</span>
+              </a>
+            ))}
+          </nav>
+        </div>
+
+        <div class="footer-help-col md:order-4 md:col-span-2 lg:order-3">
+          <h4 class="footer-col-title mb-3 flex items-center gap-2.5 text-king-text">
+            <span class="footer-col-mark h-px w-4 bg-king-accent/45" aria-hidden="true"></span>
+            <span class="kb-action-label">Ayuda</span>
+          </h4>
+          <nav class="flex flex-col gap-1.5" aria-label="Ayuda">
+            {footerHelpNav.map((item, index) => (
+              <a
+                href={item.href}
+                class="footer-link group relative inline-flex items-center gap-3 py-0.5 text-[var(--kb-text-xs)] font-light text-king-muted/80 transition-[color,transform] duration-[var(--kb-dur-med)] hover:text-king-text"
+              >
+                <span class="footer-link-index font-mono text-[0.62rem] tabular-nums tracking-[0.08em] text-king-accent/35 transition-colors duration-[var(--kb-dur-med)] group-hover:text-king-accent/70">
+                  {String(index + 1).padStart(2, '0')}
+                </span>
+                <span class="footer-link-label">{item.label}</span>
+              </a>
+            ))}
+          </nav>
+        </div>
+
+        <div class="footer-legal-col md:order-5 md:col-span-2 lg:order-4">
+          <h4 class="footer-col-title mb-3 flex items-center gap-2.5 text-king-text">
+            <span class="footer-col-mark h-px w-4 bg-king-accent/45" aria-hidden="true"></span>
+            <span class="kb-action-label">Legal</span>
+          </h4>
+          <nav class="flex flex-col gap-1.5" aria-label="Legal">
+            {footerLegalNav.map((item, index) => (
+              <a
+                href={item.href}
+                class="footer-link group relative inline-flex items-center gap-3 py-0.5 text-[var(--kb-text-xs)] font-light text-king-muted/80 transition-[color,transform] duration-[var(--kb-dur-med)] hover:text-king-text"
+              >
+                <span class="footer-link-index font-mono text-[0.62rem] tabular-nums tracking-[0.08em] text-king-accent/35 transition-colors duration-[var(--kb-dur-med)] group-hover:text-king-accent/70">
+                  {String(index + 1).padStart(2, '0')}
+                </span>
+                <span class="footer-link-label">{item.label}</span>
+              </a>
+            ))}
+          </nav>
+        </div>
+
+        <div class="footer-contact-col md:order-2 md:col-span-3 lg:order-5">
+          <h4 class="footer-col-title mb-3 flex items-center gap-2.5 text-king-text">
+            <span class="footer-col-mark h-px w-4 bg-king-accent/45" aria-hidden="true"></span>
+            <span class="kb-action-label">Contacto</span>
+          </h4>
+          <div class="flex flex-col gap-2">
+            {footerContact.map((item) => (
+              <a
+                href={item.href}
+                target={item.external ? '_blank' : undefined}
+                rel={item.external ? 'noopener noreferrer' : undefined}
+                class="footer-contact-card group flex items-center gap-3 rounded-[var(--kb-radius-xs)] border border-king-border/30 bg-king-surface/60 px-3 py-2.5 transition-[border-color,box-shadow,transform,background-color] duration-[var(--kb-dur-med)] hover:border-king-accent/35 hover:bg-king-surface hover:shadow-[0_10px_28px_rgba(138,90,43,0.07)]"
+              >
+                <span class="footer-contact-icon flex h-8 w-8 shrink-0 items-center justify-center rounded-[var(--kb-radius-xs)] border border-king-border/35 bg-king-bg text-king-muted/70 transition-[border-color,color,transform] duration-[var(--kb-dur-med)] group-hover:border-king-accent/40 group-hover:text-king-accent">
+                  <Icon name={item.icon} class="h-3.5 w-3.5" />
+                </span>
+                <span class="min-w-0">
+                  <span class="mb-0.5 block text-[var(--kb-text-2xs)] font-medium uppercase tracking-[0.14em] text-king-muted/60 transition-colors duration-[var(--kb-dur-med)] group-hover:text-king-accent">
+                    {item.label}
+                  </span>
+                  <span class="block truncate text-[var(--kb-text-xs)] font-light text-king-text/85 transition-colors duration-[var(--kb-dur-med)] group-hover:text-king-text">
+                    {item.value}
+                  </span>
+                </span>
+              </a>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {highlights.length > 0 && (
+        <ul class="footer-meta-strip mb-7 flex flex-wrap gap-2 md:mb-8" aria-label="Información de compra">
+          {highlights.map((item) => (
+            <li>
+              <span class="kb-tag-accent footer-meta-tag inline-flex items-center gap-2">
+                <span class="h-1 w-1 rotate-45 bg-king-accent/70" aria-hidden="true"></span>
+                {item}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <div class="footer-bottom-bar relative flex flex-col items-center gap-4 border-t border-king-border/25 pt-5 md:flex-row md:justify-between">
+        <div class="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 md:justify-start">
+          <span class="footer-dot-marker h-1.5 w-1.5 rotate-45 bg-king-accent/20"></span>
+          <p class="text-[var(--kb-text-2xs)] font-light tracking-[0.06em] text-king-muted/70">
+            &copy; {new Date().getFullYear()} {site.name}. Todos los derechos reservados.
+          </p>
+          <span class="hidden h-3 w-px bg-king-border/30 md:block" aria-hidden="true"></span>
+          <a
+            href="/privacidad"
+            class="footer-legal-link text-[var(--kb-text-2xs)] font-light tracking-[0.06em] text-king-muted/70 transition-colors duration-[var(--kb-dur-fast)] hover:text-king-accent"
+          >
+            Privacidad
+          </a>
+        </div>
+
+        <div class="footer-bar-separator hidden items-center gap-2.5 md:flex">
+          <span class="h-px w-6 bg-gradient-to-r from-transparent to-king-border/35"></span>
+          <span class="h-2 w-2 rotate-45 border border-king-accent/30"></span>
+          <span class="h-px w-6 bg-gradient-to-l from-transparent to-king-border/35"></span>
+        </div>
+
+        <div class="flex items-center gap-4">
+          <p class="hidden text-[var(--kb-text-2xs)] font-light tracking-[0.06em] text-king-muted/70 sm:block">
+            Asfalto, cuero y carácter.
+          </p>
+          <button
+            type="button"
+            data-footer-scroll-top
+            class="footer-scroll-top group inline-flex items-center gap-2 rounded-full border border-king-border/35 bg-king-surface/70 px-3 py-1.5 text-[var(--kb-text-2xs)] font-medium uppercase tracking-[0.14em] text-king-muted/80 transition-[border-color,box-shadow,color,transform,background-color] duration-[var(--kb-dur-med)] hover:border-king-accent/40 hover:bg-king-surface hover:text-king-accent"
+            aria-label="Volver arriba"
+            hidden
+          >
+            <span class="hidden sm:inline">Arriba</span>
+            <span class="flex h-5 w-5 items-center justify-center rounded-full border border-king-border/35 transition-[border-color,transform] duration-[var(--kb-dur-fast)] group-hover:border-king-accent/45 group-hover:-translate-y-0.5">
+              <Icon name="arrow-up" class="h-2.5 w-2.5 transition-transform duration-[var(--kb-dur-fast)] group-hover:-translate-y-0.5" strokeWidth={1.75} />
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="footer-giant-wrap relative mt-3 overflow-hidden text-center md:mt-4"
+    >
+      <span
+        class="footer-giant font-display pointer-events-none inline-block select-none uppercase leading-[0.6] tracking-[0.06em]"
+        aria-hidden="true"
+      >
+        KINGBELT
+      </span>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .footer-shell {
+    isolation: isolate;
+  }
+
+  .site-footer {
+    transform: translateZ(0);
+  }
+
+  .site-footer--connected .footer-inner {
+    padding-top: clamp(2rem, 3.5vw, 2.75rem);
+  }
+
+  .site-footer--connected .footer-giant-wrap {
+    margin-top: 0.125rem;
+  }
+
+  @media (min-width: 48rem) {
+    .site-footer--connected .footer-inner {
+      padding-top: clamp(2.25rem, 3.5vw, 3rem);
+    }
+  }
+
+  .footer-accent-bar {
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(138, 90, 43, 0.15) 18%,
+      var(--color-king-accent) 50%,
+      rgba(138, 90, 43, 0.15) 82%,
+      transparent 100%
+    );
+    box-shadow: 0 0 18px rgba(138, 90, 43, 0.18);
+  }
+
+  .footer-bg {
+    opacity: 0.34;
+    background-image:
+      linear-gradient(90deg, rgba(138, 90, 43, 0.045) 0, rgba(138, 90, 43, 0.045) 1px, transparent 1px),
+      linear-gradient(rgba(26, 26, 26, 0.012) 1px, transparent 1px);
+    background-size: 10rem 100%, 100% 3.5rem;
+    mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.55), transparent 96%);
+  }
+
+  .footer-vignette {
+    background: radial-gradient(ellipse 85% 70% at 50% 35%, transparent 0%, rgba(247, 243, 238, 0.45) 100%);
+  }
+
+  .footer-glow {
+    background:
+      radial-gradient(ellipse 55% 40% at 12% 18%, rgba(138, 90, 43, 0.07), transparent 70%),
+      radial-gradient(ellipse 45% 35% at 88% 22%, rgba(138, 90, 43, 0.05), transparent 72%);
+  }
+
+  .footer-corner {
+    transition: border-color var(--kb-dur-slow) var(--kb-ease-out);
+  }
+
+  .footer-shell:hover .footer-corner {
+    border-color: rgba(138, 90, 43, 0.28);
+  }
+
+  .footer-rule-diamond {
+    transition: transform 600ms var(--kb-ease-out), background-color 400ms ease;
+  }
+
+  .footer-top-rule:hover .footer-rule-diamond {
+    transform: rotate(45deg) scale(1.2);
+    background-color: rgba(138, 90, 43, 0.45);
+  }
+
+  .footer-cta {
+    position: relative;
+  }
+
+  .footer-cta-texture {
+    background-image:
+      linear-gradient(90deg, rgba(255, 255, 255, 0.03) 0, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    background-size: 4rem 100%, 100% 2.5rem;
+  }
+
+  .footer-cta-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+  }
+
+  .footer-cta-eyebrow-mark {
+    width: 0.35rem;
+    height: 0.35rem;
+    rotate: 45deg;
+    background: var(--color-king-accent-light);
+    box-shadow: 0 0 10px rgba(214, 177, 110, 0.35);
+  }
+
+  .footer-cta-link:hover {
+    transform: translateX(2px);
+  }
+
+  .footer-social {
+    position: relative;
+    transition:
+      border-color var(--kb-dur-med) var(--kb-ease-out),
+      box-shadow var(--kb-dur-med) var(--kb-ease-out),
+      color var(--kb-dur-med) var(--kb-ease-out),
+      transform var(--kb-dur-med) var(--kb-ease-out);
+  }
+
+  .footer-social:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 22px rgba(138, 90, 43, 0.12);
+  }
+
+  .footer-link {
+    position: relative;
+  }
+
+  .footer-link::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 1.45rem;
+    width: calc(100% - 1.45rem);
+    height: 1px;
+    background: var(--color-king-accent);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.45s cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  .footer-link:hover::after {
+    transform: scaleX(1);
+  }
+
+  .footer-link:hover {
+    transform: translateX(3px);
+  }
+
+  .footer-link:hover .footer-link-label {
+    color: var(--color-king-text);
+  }
+
+  .footer-contact-card:hover {
+    transform: translateY(-1px);
+  }
+
+  .footer-contact-card:hover .footer-contact-icon {
+    transform: scale(1.04);
+  }
+
+  .footer-meta-tag {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  }
+
+  .footer-giant {
+    font-size: 20vw;
+    font-weight: 300;
+    color: transparent;
+    background-image: linear-gradient(
+      180deg,
+      rgba(138, 90, 43, 0.14) 0%,
+      rgba(26, 26, 26, 0.055) 58%,
+      rgba(26, 26, 26, 0.02) 100%
+    );
+    background-clip: text;
+    -webkit-background-clip: text;
+    transform: translateY(1.25rem);
+    filter: drop-shadow(0 0 42px rgba(138, 90, 43, 0.08));
+  }
+
+  .footer-giant-wrap {
+    height: clamp(7rem, 16vw, 14rem);
+    mask-image: linear-gradient(to bottom, black 0%, black 72%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, black 0%, black 72%, transparent 100%);
+  }
+
+  .footer-dot-marker {
+    transition: transform 600ms var(--kb-ease-out, cubic-bezier(0.22, 1, 0.36, 1)),
+                background-color 400ms ease;
+  }
+
+  .footer-bottom-bar:hover .footer-dot-marker {
+    transform: rotate(45deg) scale(1.15);
+    background-color: rgba(138, 90, 43, 0.42);
+  }
+
+  .footer-bar-separator span:nth-child(2) {
+    transition: transform 600ms var(--kb-ease-out, cubic-bezier(0.22, 1, 0.36, 1));
+  }
+
+  .footer-bar-separator:hover span:nth-child(2) {
+    transform: rotate(45deg) scale(1.15);
+  }
+
+  .footer-scroll-top:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 24px rgba(138, 90, 43, 0.1);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .footer-link,
+    .footer-social,
+    .footer-contact-card,
+    .footer-scroll-top,
+    .footer-cta-link {
+      transition-duration: 0.01ms !important;
+    }
+
+    .footer-link:hover,
+    .footer-social:hover,
+    .footer-contact-card:hover,
+    .footer-scroll-top:hover {
+      transform: none;
+    }
+  }
+</style>
+
+<script>
+  import { initFooter } from '../../scripts/footer';
+
+  const cleanups = Array.from(document.querySelectorAll<HTMLElement>('[data-gsap-footer]'))
+    .map((root) => initFooter(root));
+
+  document.addEventListener(
+    'astro:before-swap',
+    () => cleanups.forEach((cleanup) => cleanup()),
+    { once: true }
+  );
+</script>

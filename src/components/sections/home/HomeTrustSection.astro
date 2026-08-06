@@ -2,9 +2,9 @@
 import SectionHeaderHome from './SectionHeaderHome.astro';
 import FeatureCard from '../../ui/FeatureCard.astro';
 import Button from '../../ui/Button.astro';
-import { trustSection } from '../../../data/home';
+import { trustSection } from '@content/home';
 
-const cardVariants = ['default', 'steel', 'default'] as const;
+const cardVariants = ['default', 'default', 'default'] as const;
 ---
 
 <section
@@ -50,10 +50,6 @@ const cardVariants = ['default', 'steel', 'default'] as const;
     background: var(--color-king-surface);
   }
 
-  .home-trust__header:global(.section-header-home) .shh-title {
-    max-width: 20ch;
-  }
-
   .home-trust__grid {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
@@ -70,13 +66,13 @@ const cardVariants = ['default', 'steel', 'default'] as const;
   .home-trust__action {
     display: flex;
     justify-content: flex-start;
-    margin-top: var(--kb-space-gap-lg);
+    margin-top: var(--kb-space-gap);
   }
 
   @media (min-width: 48rem) {
     .home-trust__grid {
       grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: var(--kb-space-gap-lg);
+      gap: var(--kb-space-gap);
       align-items: stretch;
     }
   }

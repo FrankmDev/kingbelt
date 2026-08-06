@@ -1,6 +1,6 @@
 ---
 import EditorialBanner from '../../ui/EditorialBanner.astro';
-import { styleBanner } from '../../../data/home';
+import { styleBanner } from '@content/home';
 ---
 
 <section class="home-style section-spacing" aria-labelledby="home-style-title">
@@ -26,6 +26,6 @@ import { styleBanner } from '../../../data/home';
   }
 
   .home-style__banner:global(.kb-editorial-banner) {
-    min-height: clamp(22rem, 56vw, 36rem);
+    min-height: clamp(20rem, 48vw, 32rem);
   }
 </style>

@@ -2,89 +2,104 @@
 import Button from '../ui/Button.astro';
 import FormField from '../ui/FormField.astro';
 import Icon from '../ui/Icon.astro';
-import { formatMoney } from '../../lib/commerce/money';
-import { getFirstAvailableVariant, getMaxSelectableQuantity } from '../../lib/commerce/product-variants';
-import type { CommerceProduct } from '../../lib/commerce/types';
+import { formatMoney } from '@commerce/domain/money';
+import { calculatePriceRange, getFirstAvailableVariant } from '@commerce/domain/variants';
+import { getVariantAvailability } from '@commerce/domain/inventory';
+import { toPublicBuyBoxVariant } from '@commerce/domain/product-mappers';
+import type { Product } from '@commerce/domain/catalog';
+import { serializeJsonForHtml } from '@shared/security/serialize-json-for-html';
 
 interface Props {
-  product: CommerceProduct;
+  product: Product;
 }
 
 const { product } = Astro.props;
 const formId = `add-to-cart-${product.handle}`;
 const quantityErrorId = `${formId}-quantity-error`;
 const feedbackId = `${formId}-feedback`;
+const availabilityId = `${formId}-availability`;
+const submitHintId = `${formId}-submit-hint`;
 const initialVariant = getFirstAvailableVariant(product) ?? product.variants[0];
-const purchasable = Boolean(initialVariant?.availableForSale);
-const initialMax = getMaxSelectableQuantity(initialVariant);
+const initialAvailability = initialVariant ? getVariantAvailability(initialVariant) : undefined;
+const publicInitial = initialVariant ? toPublicBuyBoxVariant(initialVariant) : undefined;
+const purchasable = initialAvailability?.purchasable ?? false;
+/** Tope HTML público: nunca el stock exacto cuando la política lo oculta. */
+const initialMax = publicInitial?.availability.maxQuantity ?? 0;
+const initialSubmitLabel = purchasable
+  ? 'Añadir al carrito'
+  : initialAvailability?.status === 'out_of_stock'
+    ? 'Agotado'
+    : 'No disponible';
+const priceRange = calculatePriceRange(product.variants);
 const optionKey = (value: string) => value.toLocaleLowerCase('es').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-');
-const initialValue = (name: string) => initialVariant?.selectedOptions.find((option) => option.name === name)?.value;
-const publicVariants = product.variants.map((variant) => ({
-  id: variant.id,
-  selectedOptions: variant.selectedOptions,
-  availableForSale: variant.availableForSale,
-  quantityAvailable: variant.quantityAvailable,
-  price: variant.price,
-  compareAtPrice: variant.compareAtPrice,
-  image: variant.image,
-}));
-const variantsJson = JSON.stringify({ options: product.options, variants: publicVariants })
-  .replace(/&/g, '\\u0026')
-  .replace(/</g, '\\u003c')
-  .replace(/>/g, '\\u003e')
-  .replace(/\u2028/g, '\\u2028')
-  .replace(/\u2029/g, '\\u2029');
+const initialValue = (optionId: string) => initialVariant?.optionValues.find((option) => option.optionId === optionId)?.valueId;
+const currency = initialVariant?.price.currency ?? product.variants[0]?.price.currency ?? 'EUR';
+const variantsJson = serializeJsonForHtml({
+  currency,
+  options: product.options,
+  variants: product.variants.map(toPublicBuyBoxVariant),
+});
 ---
 
 <form
   id={formId}
   class="product-buy"
   data-product-add-form
-  aria-describedby={feedbackId}
+  aria-describedby={`${availabilityId} ${feedbackId} ${submitHintId}`}
   novalidate
 >
-  <div class="product-buy__price-row" aria-live="polite">
+  <div class="product-buy__price-row">
     <p class="product-buy__price font-display" data-product-price>
-      {initialVariant ? formatMoney(initialVariant.price) : formatMoney(product.priceRange.min)}
+      {initialVariant ? formatMoney(initialVariant.price) : formatMoney(priceRange.min)}
     </p>
     <p class="product-buy__compare" data-product-compare hidden={!initialVariant?.compareAtPrice}>
       {initialVariant?.compareAtPrice ? formatMoney(initialVariant.compareAtPrice) : ''}
     </p>
   </div>
 
+  <p
+    id={availabilityId}
+    class="product-buy__availability kb-meta-label"
+    data-product-availability
+    data-availability-status={initialAvailability?.status}
+    role="status"
+    aria-live="polite"
+  >{initialAvailability?.message ?? 'Esta combinación no está disponible.'}</p>
+
   {product.options.map((option) => {
     const key = optionKey(option.name);
     const errorId = `${formId}-${key}-error`;
-    const isColor = option.name.toLocaleLowerCase('es') === 'color';
-    const isSize = option.name.toLocaleLowerCase('es') === 'talla';
+    const isColor = option.purpose === 'color';
+    const isSize = option.purpose === 'size';
     return (
-      <fieldset class="product-buy__fieldset" aria-describedby={errorId} data-product-option-group={option.name}>
+        <fieldset class="product-buy__fieldset" aria-describedby={errorId} data-product-option-group={option.id}>
         <legend class="product-buy__legend kb-label">{isSize ? 'Talla (cm)' : option.name}</legend>
-        <div class={isColor ? 'product-buy__swatches' : 'product-buy__sizes'} role="radiogroup" aria-label={`Seleccionar ${option.name.toLocaleLowerCase('es')}`}>
+        <div class={isColor ? 'product-buy__swatches' : 'product-buy__sizes'}>
           {option.values.map((value) => (
-            <label class={isColor ? 'product-buy__swatch' : 'product-buy__size'} title={isColor ? value.value : undefined}>
+            <label class={isColor ? 'product-buy__swatch' : 'product-buy__size'} title={isColor ? value.label : undefined}>
               <input
                 type="radio"
                 name={`${formId}-option-${key}`}
-                value={value.value}
+                value={value.id}
                 class="sr-only"
                 data-product-option
-                data-option-name={option.name}
-                checked={initialValue(option.name) === value.value}
+                data-option-id={option.id}
+                checked={initialValue(option.id) === value.id}
                 required
               />
               {isColor ? (
                 <>
                   <span class="product-buy__swatch-chip" style={`background: ${value.swatch ?? 'transparent'}`} aria-hidden="true" />
-                  <span class="product-buy__swatch-label kb-meta-label">{value.value}</span>
+                  <span class="product-buy__swatch-label kb-meta-label">{value.label}</span>
                 </>
               ) : (
-                <span class="product-buy__size-chip kb-meta-label">{value.value}</span>
+                <span class="product-buy__size-chip kb-meta-label">{value.label}</span>
               )}
+              <span class="sr-only" data-impossible-hint hidden>No compatible con la selección actual</span>
             </label>
           ))}
         </div>
-        <p id={errorId} class="product-buy__field-error" data-error-for-option={option.name} role="alert" hidden></p>
+        <p id={errorId} class="product-buy__field-error" data-error-for-option={option.id} role="alert" hidden></p>
       </fieldset>
     );
   })}
@@ -135,8 +150,9 @@ const variantsJson = JSON.stringify({ options: product.options, variants: public
       class="product-buy__submit"
       data-product-submit
       disabled={!purchasable}
+      aria-describedby={submitHintId}
     >
-      <span data-product-submit-label>{purchasable ? 'Añadir al carrito' : 'Agotado'}</span>
+      <span data-product-submit-label>{initialSubmitLabel}</span>
     </Button>
     <div class="product-buy__drawer-wrap" data-product-drawer-wrap hidden>
       <Button
@@ -151,19 +167,25 @@ const variantsJson = JSON.stringify({ options: product.options, variants: public
   </div>
 
   <p
+    id={submitHintId}
+    class="sr-only"
+    data-product-submit-hint
+  >{purchasable ? '' : initialSubmitLabel}</p>
+
+  <p
     id={feedbackId}
     class="product-buy__feedback"
     data-product-feedback
     role="status"
     aria-live="polite"
-    hidden={purchasable}
-  >{purchasable ? '' : 'Este producto no está disponible actualmente.'}</p>
+    hidden
+  ></p>
 
   <script is:inline type="application/json" data-product-variants set:html={variantsJson}></script>
 </form>
 
 <script>
-  import { initProductAddForms } from '../../lib/commerce/product-add-to-cart';
+  import { initProductAddForms } from '@scripts/commerce/product-add-to-cart';
   initProductAddForms();
 </script>
 
@@ -242,6 +264,12 @@ const variantsJson = JSON.stringify({ options: product.options, variants: public
   .product-buy__swatch input:focus-visible + .product-buy__swatch-chip {
     outline: 2px solid var(--color-king-accent);
     outline-offset: 3px;
+  }
+
+  .product-buy__swatch[data-impossible] .product-buy__swatch-chip,
+  .product-buy__size[data-impossible] .product-buy__size-chip {
+    text-decoration: line-through;
+    opacity: 0.45;
   }
 
   .product-buy__swatch input:disabled + .product-buy__swatch-chip,
@@ -369,6 +397,20 @@ const variantsJson = JSON.stringify({ options: product.options, variants: public
     font-size: var(--kb-text-sm);
     line-height: 1.5;
     color: var(--color-king-accent);
+  }
+
+  .product-buy__availability {
+    margin: calc(var(--kb-space-3) * -1) 0 0;
+    color: var(--color-king-muted);
+  }
+
+  .product-buy__availability[data-availability-status='limited'] {
+    color: var(--color-king-accent);
+  }
+
+  .product-buy__availability[data-availability-status='out_of_stock'],
+  .product-buy__availability[data-availability-status='unavailable'] {
+    color: var(--color-king-error);
   }
 
   .product-buy__feedback.is-error {

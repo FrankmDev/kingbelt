@@ -1,6 +1,6 @@
 ---
 import CartEmpty from '../components/cart/CartEmpty.astro';
-import FooterSection from '../components/layout/FooterSection.astro';
+import Footer from '../components/layout/Footer.astro';
 import Header from '../components/layout/Header.astro';
 import Breadcrumbs from '../components/ui/Breadcrumbs.astro';
 import Button from '../components/ui/Button.astro';
@@ -24,7 +24,7 @@ const cartSchema = {
   schema={cartSchema}
   robots="noindex,follow"
 >
-  <Header slot="header" initialTheme="light" scrolledTheme="light" compactThreshold={32} />
+  <Header slot="header" cartEager initialTheme="light" scrolledTheme="light" compactThreshold={32} />
 
   <div class="cart-page" data-cart-page>
     <div class="cart-page__head kb-shell-wide">
@@ -97,8 +97,14 @@ const cartSchema = {
     </div>
   </div>
 
-  <FooterSection slot="footer" connected />
+  <Footer slot="footer" connected />
 </BaseLayout>
+
+<script>
+  if (new URLSearchParams(location.search).has('kb_checkout')) {
+    void import('@scripts/commerce/checkout-return');
+  }
+</script>
 
 <style>
   .cart-page {

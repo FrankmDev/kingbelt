@@ -1,7 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Header from '../components/layout/Header.astro';
-import FooterSection from '../components/layout/FooterSection.astro';
+import Footer from '../components/layout/Footer.astro';
 import HeroHome from '../components/sections/home/HeroHome.astro';
 import HomeBrandStatement from '../components/sections/home/HomeBrandStatement.astro';
 import HomeCategoriesSection from '../components/sections/home/HomeCategoriesSection.astro';
@@ -11,9 +11,9 @@ import HomeStyleBanner from '../components/sections/home/HomeStyleBanner.astro';
 import HomeJournalSection from '../components/sections/home/HomeJournalSection.astro';
 import HomeTrustSection from '../components/sections/home/HomeTrustSection.astro';
 import HomeClosingCta from '../components/sections/home/HomeClosingCta.astro';
-import { blogPosts } from '../data/blog';
-import { site } from '../data/site';
-import { catalogProvider } from '../lib/commerce/catalog-provider';
+import { blogPosts } from '@content/blog';
+import { site } from '@config/site';
+import { catalogProvider } from '@commerce/catalog';
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href;
 const featuredPost = blogPosts.find((post) => post.status === 'featured') ?? blogPosts[0];
@@ -38,7 +38,7 @@ const homeSchema = {
 <BaseLayout
   title={`${site.name} — Cinturones de cuero con criterio`}
   description="KingBelt selecciona cinturones masculinos con criterio: cuero, herrajes y proporción pensados para el día a día. Explora categorías, selección y revista."
-  image="/image.jpg"
+  image="/images/brand/cinturones-en-taller.jpg"
   imageAlt="Cinturón de cuero KingBelt"
   canonicalURL={canonicalURL}
   schema={homeSchema}
@@ -55,5 +55,5 @@ const homeSchema = {
   <HomeTrustSection />
   <HomeClosingCta />
 
-  <FooterSection slot="footer" connected />
+  <Footer slot="footer" connected />
 </BaseLayout>

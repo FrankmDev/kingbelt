@@ -1,13 +1,13 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Header from '../components/layout/Header.astro';
-import FooterSection from '../components/layout/FooterSection.astro';
+import Footer from '../components/layout/Footer.astro';
 import HelpPageLayout from '../components/help/HelpPageLayout.astro';
 import SizeGuideSteps from '../components/help/SizeGuideSteps.astro';
 import SizeGuideTable from '../components/help/SizeGuideTable.astro';
 import BeltMeasurementDiagram from '../components/help/BeltMeasurementDiagram.astro';
-import SectionHeader from '../components/common/SectionHeader.astro';
-import FAQ from '../components/common/faq/FAQ.astro';
+import SectionHeader from '@components/ui/SectionHeader.astro';
+import FAQ from '@components/faq/FAQ.astro';
 import Prose from '../components/ui/Prose.astro';
 import Panel from '../components/ui/Panel.astro';
 import {
@@ -15,13 +15,19 @@ import {
   sizeGuideMethods,
   sizeGuideMistakes,
   sizeGuideFaqs,
-} from '../data/help';
+  getHelpRobots,
+} from '@content/help';
 
 const { title, description } = helpMeta.sizeGuide;
 const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href;
 ---
 
-<BaseLayout title={title} description={description} canonicalURL={canonicalURL}>
+<BaseLayout
+  title={title}
+  description={description}
+  canonicalURL={canonicalURL}
+  robots={getHelpRobots(helpMeta.sizeGuide)}
+>
   <Header slot="header" initialTheme="light" scrolledTheme="light" compactThreshold={32} />
 
   <HelpPageLayout
@@ -93,7 +99,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin)
     </div>
   </HelpPageLayout>
 
-  <FooterSection slot="footer" />
+  <Footer slot="footer" />
 </BaseLayout>
 
 <style>

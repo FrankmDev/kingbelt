@@ -1,37 +1,53 @@
 ---
 import '../styles/global.css';
-import '../styles/cart.css';
-import { site } from '../data/site';
-import ScrollReveal from '../components/common/ScrollReveal.astro';
+import { site } from '@config/site';
+import { serializeJsonForHtml } from '@shared/security/serialize-json-for-html';
+import type { PageSeo } from '@shared/seo/page-seo';
 
 interface Props {
+  seo?: PageSeo;
   title?: string;
   description?: string;
   image?: string;
   imageAlt?: string;
+  imageWidth?: number;
+  imageHeight?: number;
   canonicalURL?: string;
   schema?: object;
-  ogType?: 'website' | 'article';
+  ogType?: 'website' | 'article' | 'product';
   robots?: string;
   publishedAt?: string;
   updatedAt?: string;
 }
 
 const {
-  title = `${site.name} — ${site.tagline}`,
-  description = site.description,
-  image = '/favicon.svg',
-  imageAlt = site.name,
-  canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href,
+  seo,
+  title: titleProp,
+  description: descriptionProp,
+  image: imageProp,
+  imageAlt: imageAltProp,
+  imageWidth: imageWidthProp,
+  imageHeight: imageHeightProp,
+  canonicalURL: canonicalURLProp,
   schema,
-  ogType = 'website',
-  robots,
+  ogType: ogTypeProp,
+  robots: robotsProp,
   publishedAt,
   updatedAt,
 } = Astro.props;
 
-// Evita cerrar prematuramente el script si el contenido futuro procede de un CMS/Shopify.
-const schemaScript = schema ? JSON.stringify(schema).replace(/</g, '\\u003c') : null;
+const title = seo?.title ?? titleProp ?? `${site.name} — ${site.tagline}`;
+const description = seo?.description ?? descriptionProp ?? site.description;
+const canonicalURL = seo?.canonicalUrl ?? canonicalURLProp ??
+  new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href;
+const robots = seo?.robots ?? robotsProp;
+const ogType = seo?.ogType ?? ogTypeProp ?? 'website';
+const image = seo?.image?.url ?? imageProp ?? '/favicon.svg';
+const imageAlt = seo?.image?.altText ?? imageAltProp ?? site.name;
+const imageWidth = seo?.image?.width ?? imageWidthProp;
+const imageHeight = seo?.image?.height ?? imageHeightProp;
+
+const schemaScript = schema ? serializeJsonForHtml(schema) : null;
 const ogImageUrl = new URL(image, Astro.site || Astro.url).href;
 ---
 
@@ -53,13 +69,13 @@ const ogImageUrl = new URL(image, Astro.site || Astro.url).href;
     {/* Fonts: Satoshi (sans) + Bitter (slab serif) */}
     <link rel="preconnect" href="https://api.fontshare.com" crossorigin />
     <link
-      href="https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,600,700,900&display=swap"
+      href="https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,600&display=swap"
       rel="stylesheet"
     />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Bitter:ital,wght@0,100..900;1,100..900&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Bitter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap"
       rel="stylesheet"
     />
 
@@ -79,6 +95,8 @@ const ogImageUrl = new URL(image, Astro.site || Astro.url).href;
     <meta property="og:description" content={description} />
     <meta property="og:image" content={ogImageUrl} />
     <meta property="og:image:alt" content={imageAlt} />
+    {imageWidth && <meta property="og:image:width" content={String(imageWidth)} />}
+    {imageHeight && <meta property="og:image:height" content={String(imageHeight)} />}
     <meta property="og:locale" content="es_ES" />
     <meta property="og:site_name" content="KingBelt" />
 
@@ -105,12 +123,10 @@ const ogImageUrl = new URL(image, Astro.site || Astro.url).href;
     <slot name="header" />
     <main
       id="main"
-      data-scroll-reveal-root
       class="relative z-[var(--kb-z-content)] flex-1 w-full max-w-full overflow-x-clip bg-king-bg"
     >
       <slot />
     </main>
     <slot name="footer" />
-    <ScrollReveal />
   </body>
 </html>

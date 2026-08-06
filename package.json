@@ -2,6 +2,7 @@
   "name": "kingbelt",
   "type": "module",
   "version": "0.0.1",
+  "packageManager": "bun@1.3.14",
   "engines": {
     "node": ">=22.12.0"
   },
@@ -10,20 +11,30 @@
     "check": "astro check",
     "test": "bun test",
     "build": "astro build",
-    "validate": "bun run check && bun run test && bun run build",
-    "preview": "astro preview",
-    "astro": "astro"
+    "validate": "bun run security:scan && bun run check && bun run test && bun run build && bun run security:scan && bun run check:links && bun run check:perf",
+    "check:links": "node scripts/check-internal-links.mjs",
+    "check:perf": "node scripts/check-performance-budgets.mjs",
+    "security:scan": "node scripts/security-audit.mjs",
+    "security:scan:history": "node scripts/security-audit.mjs --history",
+    "audit:dependencies": "bun audit",
+    "preview": "astro preview"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.3",
-    "astro": "~7.1.3",
+    "astro": "^7.2.0",
     "gsap": "^3.15.0"
   },
   "devDependencies": {
-    "@astrojs/check": "^0.9.9",
-    "@tailwindcss/vite": "^4.3.0",
-    "tailwindcss": "^4.3.0",
+    "@astrojs/check": "^0.9.10",
+    "@tailwindcss/vite": "^4.3.3",
+    "tailwindcss": "^4.3.3",
     "typescript": "^6.0.3",
-    "vite": "^8.1.5"
+    "vite": "^8.2.0"
+  },
+  "overrides": {
+    "fast-uri": "3.1.5",
+    "sharp": "0.35.3",
+    "svgo": "4.0.2",
+    "yaml": "2.9.0"
   }
 }

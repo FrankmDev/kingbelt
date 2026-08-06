@@ -1,17 +1,9 @@
 ---
-import SectionHeader from '../../common/SectionHeader.astro';
+import SectionHeader from '@components/ui/SectionHeader.astro';
 import Button from '../../ui/Button.astro';
 import Icon from '../../ui/Icon.astro';
 import MediaFrame from '../../ui/MediaFrame.astro';
-import type { IconName } from '../../ui/icon-paths';
-
-interface PurchaseInfoItem {
-  title: string;
-  description: string;
-  label: string;
-  meta?: string;
-  icon: IconName;
-}
+import type { PurchaseInfoItem } from '@content/contact';
 
 interface BadgeData {
   label: string;

@@ -2,24 +2,35 @@
 import { defineConfig } from 'astro/config';
 import tailwindcss from '@tailwindcss/vite';
 import sitemap from '@astrojs/sitemap';
-import { isSitemapExcluded } from './src/data/legal.ts';
+import { siteUrl } from './src/config/site.ts';
+import { isSitemapExcluded } from './src/config/sitemap.ts';
+import { buildProductRedirectMap } from './src/commerce/application/product-redirects.ts';
+
+const productRedirects = buildProductRedirectMap();
 
 // https://astro.build/config
 export default defineConfig({
-  // Preserve Astro 6's HTML-aware whitespace while the approved UI is unchanged.
   compressHTML: true,
-  // KingBelt uses file-based static routes and does not opt into advanced routing.
   fetchFile: null,
-  site: 'https://kingbelt.com',
+  site: siteUrl,
+  // Sin astronauta/Dev Toolbar en desarrollo: menos ruido y superficie JS.
+  devToolbar: {
+    enabled: false,
+  },
+  // La CSP de despliegue usa `script-src 'self'`: no incrustar chunks ejecutables.
+  build: {
+    inlineStylesheets: 'never',
+  },
+  ...(Object.keys(productRedirects).length ? { redirects: productRedirects } : {}),
   integrations: [
     sitemap({
-      filter: (page) => {
-        const pathname = new URL(page).pathname;
-        return !isSitemapExcluded(pathname);
-      },
+      filter: (page) => !isSitemapExcluded(new URL(page).pathname),
     }),
   ],
   vite: {
+    build: {
+      assetsInlineLimit: 0,
+    },
     plugins: [tailwindcss()],
   },
 });

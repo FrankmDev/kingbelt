@@ -1,12 +1,12 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Header from '../components/layout/Header.astro';
-import FooterSection from '../components/layout/FooterSection.astro';
+import Footer from '../components/layout/Footer.astro';
 import HelpPageLayout from '../components/help/HelpPageLayout.astro';
 import HelpCard from '../components/help/HelpCard.astro';
-import SectionHeader from '../components/common/SectionHeader.astro';
+import SectionHeader from '@components/ui/SectionHeader.astro';
 import Prose from '../components/ui/Prose.astro';
-import { helpNavItems, helpMeta } from '../data/help';
+import { helpNavItems, helpMeta } from '@content/help';
 
 const { title, description } = helpMeta.ayuda;
 const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href;
@@ -82,7 +82,7 @@ const secondaryItems = helpNavItems.filter((item) => item.priority === 'secondar
     </div>
   </HelpPageLayout>
 
-  <FooterSection slot="footer" />
+  <Footer slot="footer" />
 </BaseLayout>
 
 <style>

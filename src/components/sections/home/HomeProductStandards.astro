@@ -1,7 +1,7 @@
 ---
 import SectionHeaderHome from './SectionHeaderHome.astro';
 import MediaFrame from '../../ui/MediaFrame.astro';
-import { standardsSection } from '../../../data/home';
+import { standardsSection } from '@content/home';
 
 const { panel, principles } = standardsSection;
 const layerCount = principles.length;
@@ -91,14 +91,10 @@ const layerCount = principles.length;
     background: var(--color-king-surface);
   }
 
-  .home-standards__header:global(.section-header-home) .shh-body {
-    max-width: 42ch;
-  }
-
   .home-standards__layout {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    gap: var(--kb-space-gap-lg);
+    gap: var(--kb-space-gap);
     align-items: start;
   }
 

@@ -1,10 +1,10 @@
 ---
-import SectionHeader from '../../common/SectionHeader.astro';
+import SectionHeader from '@components/ui/SectionHeader.astro';
 import Button from '../../ui/Button.astro';
 import ContactMethod from '../../ui/ContactMethod.astro';
 import FormField from '../../ui/FormField.astro';
 import Icon from '../../ui/Icon.astro';
-import type { ContactChannel, InquiryType } from '../../../data/contact';
+import type { ContactChannel, InquiryType } from '@content/contact';
 
 interface Props {
   channels: readonly ContactChannel[];
@@ -61,37 +61,52 @@ const { channels, inquiryTypes } = Astro.props;
         class="contact-form"
         action="/api/contacto"
         method="post"
+        accept-charset="UTF-8"
         aria-describedby="contact-form-note"
+        novalidate
       >
         <div class="contact-form-row">
           <FormField label="Nombre" for="contact-name" required>
             <input
               id="contact-name"
               class="kb-input"
-              name="name"
+              data-contact-field="name"
               type="text"
               autocomplete="name"
+              minlength="2"
+              maxlength="100"
+              aria-describedby="contact-name-error"
               required
             />
+            <p id="contact-name-error" class="contact-field-error" role="alert" hidden></p>
           </FormField>
 
           <FormField label="Email" for="contact-email" required>
             <input
               id="contact-email"
               class="kb-input"
-              name="email"
+              data-contact-field="email"
               type="email"
               autocomplete="email"
               inputmode="email"
               spellcheck="false"
+              maxlength="254"
+              aria-describedby="contact-email-error"
               required
             />
+            <p id="contact-email-error" class="contact-field-error" role="alert" hidden></p>
           </FormField>
         </div>
 
         <FormField label="Tipo de consulta" for="contact-subject" required>
           <div class="kb-select-wrap">
-            <select id="contact-subject" class="kb-input" name="subject" required>
+            <select
+              id="contact-subject"
+              class="kb-input"
+              data-contact-field="subject"
+              aria-describedby="contact-subject-error"
+              required
+            >
               <option value="" disabled selected>Selecciona una opción</option>
               {inquiryTypes.map((item) => <option value={item.value}>{item.label}</option>)}
             </select>
@@ -99,6 +114,7 @@ const { channels, inquiryTypes } = Astro.props;
               <Icon name="caret-down" />
             </span>
           </div>
+          <p id="contact-subject-error" class="contact-field-error" role="alert" hidden></p>
         </FormField>
 
         <FormField
@@ -110,12 +126,15 @@ const { channels, inquiryTypes } = Astro.props;
           <textarea
             id="contact-message"
             class="kb-input contact-textarea"
-            name="message"
+            data-contact-field="message"
             rows={6}
             autocomplete="off"
-            aria-describedby="contact-message-help"
+            minlength="10"
+            maxlength="5000"
+            aria-describedby="contact-message-help contact-message-error"
             required
           ></textarea>
+          <p id="contact-message-error" class="contact-field-error" role="alert" hidden></p>
         </FormField>
 
         <div class="contact-privacy">
@@ -123,8 +142,9 @@ const { channels, inquiryTypes } = Astro.props;
             <input
               id="contact-privacy"
               class="contact-privacy-input"
-              name="privacy"
+              data-contact-field="privacy"
               type="checkbox"
+              aria-describedby="contact-privacy-error"
               required
             />
             <span class="contact-privacy-text">
@@ -133,6 +153,7 @@ const { channels, inquiryTypes } = Astro.props;
               <span class="contact-privacy-required" aria-hidden="true">*</span>
             </span>
           </label>
+          <p id="contact-privacy-error" class="contact-field-error" role="alert" hidden></p>
         </div>
 
         <div class="contact-form-actions">
@@ -145,11 +166,16 @@ const { channels, inquiryTypes } = Astro.props;
           </p>
         </div>
 
-        <p id="contact-form-status" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></p>
+        <p id="contact-form-status" role="status" aria-live="polite" aria-atomic="true" tabindex="-1"></p>
       </form>
     </div>
   </div>
 </section>
+
+<script>
+  import { initContactForms } from '@scripts/contact-form';
+  initContactForms();
+</script>
 
 <style>
   .contact-main {
@@ -269,6 +295,24 @@ const { channels, inquiryTypes } = Astro.props;
     color: var(--color-king-muted);
     font-size: var(--kb-text-2xs);
     line-height: 1.6;
+  }
+
+  .contact-field-error {
+    margin: var(--kb-space-2) 0 0;
+    font-size: var(--kb-text-meta);
+    line-height: 1.5;
+    color: var(--color-king-error);
+  }
+
+  #contact-form-status {
+    margin: var(--kb-space-3) 0 0;
+    font-size: var(--kb-text-sm);
+    line-height: 1.5;
+    color: var(--color-king-muted);
+  }
+
+  #contact-form-status:not(:empty) {
+    color: var(--color-king-text);
   }
 
   @media (max-width: 63.99rem) {

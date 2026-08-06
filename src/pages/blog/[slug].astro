@@ -3,11 +3,11 @@ import type { GetStaticPaths } from 'astro';
 import ArticleReadingSection from '../../components/blog/ArticleReadingSection.astro';
 import ArticleRelatedSection from '../../components/blog/ArticleRelatedSection.astro';
 import BlogBrandCta from '../../components/blog/BlogBrandCta.astro';
-import FooterSection from '../../components/layout/FooterSection.astro';
+import Footer from '../../components/layout/Footer.astro';
 import Header from '../../components/layout/Header.astro';
 import PageHeader from '../../components/ui/PageHeader.astro';
-import { blogPage, blogPosts, type BlogPost } from '../../data/blog';
-import { site } from '../../data/site';
+import { blogPage, blogPosts, type BlogPost } from '@content/blog';
+import { site } from '@config/site';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 
 export const getStaticPaths = (() =>
@@ -85,5 +85,5 @@ const articleSchema = {
 
   <BlogBrandCta image={post.image} imagePosition={post.imagePosition} article />
 
-  <FooterSection slot="footer" connected />
+  <Footer slot="footer" connected />
 </BaseLayout>

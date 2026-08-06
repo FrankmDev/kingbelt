@@ -4,7 +4,7 @@
 
 ## Estado del sistema
 
-KingBelt utiliza un contrato tipado en `src/data/business.ts` para diferenciar información **confirmada** (`confirmed`), **pendiente** (`pending`) y **no aplicable** (`not-applicable`).
+KingBelt utiliza un contrato tipado en `src/config/business.ts` para diferenciar información **confirmada** (`confirmed`), **pendiente** (`pending`) y **no aplicable** (`not-applicable`).
 
 Los valores pendientes:
 - **no se renderizan** en contenido público;
@@ -69,12 +69,12 @@ Los valores pendientes:
 
 1. Completar los `businessFacts` requeridos para cada sección.
 2. Revisar y aprobar el texto con asesor legal.
-3. Cambiar `status: 'published'` en `src/data/legal.ts`.
+3. Cambiar `status: 'published'` en `src/content/legal.ts`.
 4. `robots` y el sitemap se actualizarán automáticamente a partir de ese estado.
 
 ### Ocultar borradores en navegación pública
 
-En `src/data/legal.ts`, establecer `showDraftLegalInNav = false`.
+En `src/content/legal.ts`, establecer `showDraftLegalInNav = false`.
 
 ## Mecanismo de desistimiento
 
@@ -94,11 +94,11 @@ En `src/data/legal.ts`, establecer `showDraftLegalInNav = false`.
 
 - Sitemap: `@astrojs/sitemap` → `/sitemap-index.xml`
 - Robots: `src/pages/robots.txt.ts`
-- Exclusiones: `/404`, `/carrito`, `/style-museum`, `/desistimiento`, documentos draft
+- Exclusiones: `/404`, `/carrito`, `/desistimiento`, documentos draft
 
 ## Cómo confirmar un dato
 
-En `src/data/business.ts`:
+En `src/config/business.ts`:
 
 ```typescript
 madeInSpain: {

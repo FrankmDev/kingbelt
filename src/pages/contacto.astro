@@ -1,6 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import FooterSection from '../components/layout/FooterSection.astro';
+import Footer from '../components/layout/Footer.astro';
 import Header from '../components/layout/Header.astro';
 import ContactCollectionCtaSection from '../components/sections/contact/ContactCollectionCtaSection.astro';
 import ContactEmailBanner from '../components/sections/contact/ContactEmailBanner.astro';
@@ -8,8 +8,8 @@ import ContactFaqSection from '../components/sections/contact/ContactFaqSection.
 import ContactFormSection from '../components/sections/contact/ContactFormSection.astro';
 import PurchaseInfo from '../components/sections/contact/PurchaseInfo.astro';
 import PageHeader from '../components/ui/PageHeader.astro';
-import { contactData } from '../data/contact';
-import { site } from '../data/site';
+import { contactData } from '@content/contact';
+import { site } from '@config/site';
 
 const contactTitle = 'Contacto — KingBelt';
 const contactDescription =
@@ -30,7 +30,7 @@ const contactSchema = {
       '@type': 'ContactPoint',
       contactType: 'Atención al cliente',
       email: site.contact.email,
-      url: site.urls.instagram,
+      url: site.social.instagram.href,
     },
   },
 };
@@ -74,5 +74,5 @@ const contactSchema = {
     ctaLabel={contactData.emailBanner.ctaLabel}
   />
 
-  <FooterSection slot="footer" connected />
+  <Footer slot="footer" connected />
 </BaseLayout>

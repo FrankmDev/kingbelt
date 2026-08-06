@@ -1,6 +1,6 @@
 ---
 import Icon from '../ui/Icon.astro';
-import type { CollectionFacets } from '../../lib/commerce/types';
+import type { CollectionFacets } from '@commerce/domain/catalog';
 
 interface Props {
   facets: CollectionFacets;
@@ -12,9 +12,10 @@ interface Props {
 const { facets, idPrefix, class: className } = Astro.props;
 
 const filterGroups = [
-  { id: 'type', index: '01', title: 'Subcategoría', kind: 'checkbox' as const, items: facets.productTypes },
-  { id: 'color', index: '02', title: 'Color', kind: 'color' as const, items: facets.colors },
-  { id: 'price', index: '03', title: 'Precio', kind: 'radio' as const, items: facets.priceRanges },
+  { id: 'type', index: '01', title: 'Subcategoría', kind: 'checkbox' as const, name: 'tipo', items: facets.productTypes },
+  { id: 'color', index: '02', title: 'Color', kind: 'color' as const, name: 'color', items: facets.colors },
+  { id: 'price', index: '03', title: 'Precio', kind: 'radio' as const, name: 'precio', items: facets.priceRanges },
+  { id: 'availability', index: '04', title: 'Disponibilidad', kind: 'checkbox' as const, name: 'disponible', items: facets.availability },
 ];
 
 ---
@@ -23,7 +24,7 @@ const filterGroups = [
   <summary class="collection-filters__summary">
     <span class="collection-filters__summary-copy">
       <span class="collection-filters__summary-label kb-meta-label">Filtros</span>
-      <span class="collection-filters__summary-hint text-king-muted">Subcategoría, color y precio</span>
+      <span class="collection-filters__summary-hint text-king-muted">Subcategoría, color, precio y disponibilidad</span>
     </span>
     <Icon name="caret-down" class="collection-filters__caret h-3.5 w-3.5" />
   </summary>
@@ -42,7 +43,7 @@ const filterGroups = [
         </span>
       </div>
       <p class="collection-filters__statement">
-        Tipo, color y rango de precio.
+        Tipo, color, precio y disponibilidad.
       </p>
     </header>
 
@@ -60,14 +61,16 @@ const filterGroups = [
                 <span class="collection-filters__group-title kb-meta-label">{group.title}</span>
                 <span class="collection-filters__group-meta text-king-muted">
                   {group.kind === 'radio'
-                    ? `${group.items.length} rangos`
-                    : `${group.items.length} opciones`}
+                    ? `${group.items.length} ${group.items.length === 1 ? 'rango' : 'rangos'}`
+                    : `${group.items.length} ${group.items.length === 1 ? 'opción' : 'opciones'}`}
                 </span>
               </span>
               <Icon name="caret-down" class="collection-filters__group-caret h-3 w-3" />
             </summary>
 
             <div class="collection-filters__group-body">
+              <fieldset class="collection-filters__fieldset">
+                <legend class="sr-only">{group.title}</legend>
               {group.kind === 'radio' ? (
                 <ul class="collection-filters__list collection-filters__list--price">
                   {facets.priceRanges.map((range, index) => {
@@ -84,6 +87,10 @@ const filterGroups = [
                         <label for={inputId} class="collection-filters__label">
                           <span class="collection-filters__marker collection-filters__marker--price" aria-hidden="true" />
                           <span class="collection-filters__text">{range.label}</span>
+                          <span class="collection-filters__count kb-code-label">
+                            <span aria-hidden="true">{range.count}</span>
+                            <span class="sr-only">{`, ${range.count} ${range.count === 1 ? 'producto' : 'productos'}`}</span>
+                          </span>
                         </label>
                       </li>
                     );
@@ -106,7 +113,7 @@ const filterGroups = [
                         <input
                           type="checkbox"
                           id={inputId}
-                          name={group.id === 'type' ? 'tipo' : 'color'}
+                          name={group.name}
                           value={facetValue}
                           class="collection-filters__input"
                         />
@@ -122,8 +129,9 @@ const filterGroups = [
                           )}
                           <span class="collection-filters__text">{facetValue}</span>
                           {facetCount !== null && (
-                            <span class="collection-filters__count kb-code-label" aria-hidden="true">
-                              {facetCount}
+                            <span class="collection-filters__count kb-code-label">
+                              <span aria-hidden="true">{facetCount}</span>
+                              <span class="sr-only">{`, ${facetCount} ${facetCount === 1 ? 'producto' : 'productos'}`}</span>
                             </span>
                           )}
                         </label>
@@ -132,6 +140,7 @@ const filterGroups = [
                   })}
                 </ul>
               )}
+              </fieldset>
             </div>
           </details>
         ))}
@@ -377,6 +386,13 @@ const filterGroups = [
     border-top: 1px solid var(--kb-stroke-hairline);
   }
 
+  .collection-filters__fieldset {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    min-width: 0;
+  }
+
   /* ---------- Opciones ---------- */
 
   .collection-filters__list {
@@ -523,7 +539,7 @@ const filterGroups = [
   }
 
   .collection-filters__list--price .collection-filters__label {
-    grid-template-columns: auto 1fr;
+    grid-template-columns: auto 1fr auto;
   }
 
   /* ---------- Footer ---------- */

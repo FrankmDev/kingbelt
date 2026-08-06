@@ -1,7 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Header from '../components/layout/Header.astro';
-import FooterSection from '../components/layout/FooterSection.astro';
+import Footer from '../components/layout/Footer.astro';
 import PageHeader from '../components/ui/PageHeader.astro';
 
 import BlogBrandCta from '../components/blog/BlogBrandCta.astro';
@@ -10,8 +10,8 @@ import EditorialSelectionSection from '../components/blog/EditorialSelectionSect
 import FeaturedArticleSection from '../components/blog/FeaturedArticleSection.astro';
 import LatestPostsSection from '../components/blog/LatestPostsSection.astro';
 
-import { blogCategories, blogPage, blogPosts, getBlogPostPath } from '../data/blog';
-import { site } from '../data/site';
+import { blogCategories, blogPage, blogPosts, getBlogPostPath } from '@content/blog';
+import { site } from '@config/site';
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href;
 const origin = Astro.site ?? Astro.url.origin;
@@ -70,7 +70,7 @@ const blogSchema = {
   <EditorialSelectionSection posts={selection} />
   <BlogBrandCta image={featured.image} imagePosition={featured.imagePosition} />
 
-  <FooterSection slot="footer" connected />
+  <Footer slot="footer" connected />
 </BaseLayout>
 
 <style>

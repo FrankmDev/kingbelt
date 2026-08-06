@@ -4,7 +4,7 @@ Lee este archivo para arquitectura de páginas, componentización, datos, estilo
 
 ## Stack y criterio base
 
-- Astro 7.1, Vite 8 y TypeScript estricto.
+- Astro 7.2, Vite 8 y TypeScript estricto.
 - Tailwind CSS 4 junto al sistema CSS propio.
 - Bun como único gestor de paquetes.
 - Renderizado estático por defecto.
@@ -17,11 +17,17 @@ Usa Astro y HTML nativo para contenido y UI estática. Añade JavaScript cliente
 
 ```txt
 src/
+  commerce/                 # comercio neutral y sustituible
+    domain/                 # entidades y reglas puras: catálogo, variantes, stock, dinero y carrito
+    application/            # puertos, casos de uso, validación y checkout
+    infrastructure/
+      demo/                 # adaptadores locales y persistencia de demostración
+    catalog.ts              # composición del proveedor de catálogo activo
+    cart.ts                 # composición del proveedor de carrito activo
   components/
     layout/       # cabecera, pie y estructura global
-    common/       # infraestructura editorial compartida; FAQ vive en common/faq
+    faq/          # presentación y comportamiento visual de preguntas frecuentes
     ui/           # primitivas visuales reutilizables
-    museum/       # documentación ejecutable del sistema visual
     blog/         # composición específica del dominio editorial
     sections/
       home/       # composición de portada
@@ -29,27 +35,27 @@ src/
       contact/    # composición de contacto
     product/      # ficha de producto: galería y compra
     collection/   # catálogo de categoría: grid, tarjetas y filtros
-    cart/         # cajón (drawer) y disparador del carrito local
+    cart/         # cajón (drawer) y disparador; solo presentación
     help/         # layouts y componentes del centro de ayuda
     legal/        # layouts, avisos y formulario de desistimiento (inactivo)
-  data/           # contenido/configuración local tipada
-    business.ts   # contrato BusinessFact (confirmed/pending)
-    help.ts       # navegación y contenido de ayuda
-    legal.ts      # documentos legales, sitemap y cookies
-  lib/
-    commerce/     # dominio neutral, proveedor activo y adaptador local
-    dom/          # utilidades cliente compartidas (scroll y estados de botón)
+  config/                   # configuración global y hechos empresariales
+  content/                  # datos editoriales tipados; no contiene integración
+  demo-catalog.ts           # catálogo ficticio, fuera de los contratos de producción
   layouts/
   pages/          # rutas; coordinan datos y componentes
-  scripts/        # controladores cliente procesados por Astro
+  scripts/                  # controladores cliente procesados por Astro
+    commerce/               # store, controlador y render de carrito, producto, galería y filtros
+  shared/
+    browser/                # utilidades DOM sin lógica comercial
   styles/
     global.css    # tokens, base y patrones compartidos
     cart.css      # excepción de dominio del carrito
+scripts/          # herramientas de build/validación, no se envían al navegador
 ```
 
 La estructura es una guía, no un motivo para crear carpetas vacías. Coloca cada pieza en el nivel más pequeño que refleje su responsabilidad real.
 
-`astro.config.mjs` mantiene `compressHTML: true` para conservar el tratamiento de espacios de Astro 6 y `fetchFile: null` para no activar Advanced Routing. El proyecto no usa adapter, SSR ni flags experimentales.
+`astro.config.mjs` mantiene `compressHTML: true` para reducir el HTML estático, `fetchFile: null` para no activar Advanced Routing y `devToolbar.enabled: false` para desactivar el astronauta/Dev Toolbar en desarrollo. El proyecto no usa adapter, SSR ni flags experimentales.
 
 ## Responsabilidades
 
@@ -57,7 +63,12 @@ La estructura es una guía, no un motivo para crear carpetas vacías. Coloca cad
 - **Layout:** estructura compartida del documento, metadata global y slots principales.
 - **Section:** bloque de página con propósito propio y posible reutilización.
 - **UI:** primitiva visual o interactiva independiente del contenido de una página.
-- **Data/lib:** contenido estable, tipos, transformaciones e integración externa.
+- **Domain:** modelos y reglas comerciales puras; no importa aplicación, infraestructura ni presentación.
+- **Application:** define puertos y coordina casos de uso; solo depende del dominio.
+- **Infrastructure:** implementa puertos y traduce un origen concreto al dominio. Nunca es importada por componentes.
+- **Composition root:** `commerce/catalog.ts` y `commerce/cart.ts` eligen adaptadores. Solo rutas y scripts de entrada consumen estas fronteras.
+- **Content/config:** contenido editorial y configuración estable, separados de fixtures y transformación comercial.
+- **Scripts:** comportamiento del navegador. Pueden consumir dominio, aplicación, composition roots y utilidades compartidas, no adaptadores concretos.
 
 Extrae un componente cuando al menos una condición sea cierta:
 
@@ -70,9 +81,9 @@ No extraigas wrappers triviales que solo oculten dos clases ni crees variantes c
 
 ### Componentes editoriales complejos
 
-- `common/faq/FAQ.astro` coordina layout, slots, filtros y CTA; `FAQItem.astro` posee el contrato y los estilos de cada `details/summary`. Los tipos compartidos viven junto a ambos.
+- `faq/FAQ.astro` coordina layout, slots, filtros y CTA; `FAQItem.astro` posee el contrato y los estilos de cada `details/summary`. El contrato editorial vive en `content/faq.ts`.
 - `blog/ArticleReadingSection.astro` coordina cabecera y composición; `ArticleBody.astro` renderiza capítulos y pie editorial; `ArticleIndex.astro` contiene disclosure, navegación y sticky.
-- `layout/Header.astro` y `layout/FooterSection.astro` siguen siendo los layouts públicos. `MobileNavigation.astro` encapsula únicamente el panel móvil.
+- `layout/Header.astro` y `layout/Footer.astro` siguen siendo los layouts públicos. `MobileNavigation.astro` encapsula únicamente el panel móvil.
 
 ## Patrones Astro
 
@@ -88,16 +99,53 @@ No extraigas wrappers triviales que solo oculten dos clases ni crees variantes c
 
 `Button.astro` mantiene una unión entre enlace y botón basada en `HTMLAttributes<'a'>` y `HTMLAttributes<'button'>`; reenvía atributos nativos y reserva `href`, `target`, `rel`, `type` y `disabled` para impedir combinaciones incoherentes. `FormField.astro` no modifica el control slotted: el consumidor debe compartir el `id` indicado por `for`, enlazar los IDs de ayuda/error mediante `aria-describedby` y añadir `aria-invalid="true"` cuando exista error.
 
-## Datos y futura integración
+## Comercio, datos y futura integración
 
-Flujos previstos:
+Flujos actuales:
 
 ```txt
-pages / components → catalog-provider.ts → local-catalog.ts ahora / adaptador Shopify después
-cart-client.ts     → provider.ts         → local-provider.ts ahora / adaptador Shopify después
+pages   → commerce/catalog.ts → CatalogProvider → adaptador demo
+scripts → commerce/cart.ts    → CartProvider    → adaptador demo
+components → commerce/domain/* (solo contratos y reglas neutrales)
 ```
 
-Catálogo y carrito tienen fronteras distintas y reducidas. Las páginas consumen `CatalogProvider`; el estado cliente consume `CommerceProvider`. Los componentes importan únicamente el dominio neutral de `types.ts`, nunca fixtures, respuestas ni clientes de Shopify. El proveedor local resuelve producto, variante, precio, URL, imagen y stock desde el catálogo tipado. `localStorage` conserva solo ID de variante y cantidad bajo un esquema versionado y limitado; nunca es autoridad para precio, disponibilidad ni checkout.
+Catálogo y carrito tienen puertos distintos: `CatalogProvider` para lectura durante el build y `CartProvider` para estado cliente y checkout. Los componentes importan únicamente contratos o reglas de `commerce/domain`; nunca composition roots, fixtures, respuestas ni clientes externos. `demo-catalog.ts` contiene datos ficticios y solo puede importarlo `commerce/infrastructure/demo`. `localStorage` conserva únicamente ID de variante y cantidad bajo un esquema versionado y limitado; nunca es autoridad para precio, disponibilidad ni checkout.
+
+El store cliente termina su inicialización antes de ejecutar comandos, serializa mutaciones distintas, deduplica envíos equivalentes y coalesce cambios de cantidad por línea. El adaptador demo relee y reconcilia la persistencia dentro de un bloqueo compartido entre pestañas cuando el navegador ofrece Web Locks; los eventos de `storage` actualizan el mismo store consumido por drawer y página. Cada reconciliación reconstruye título, imagen, precio, disponibilidad y stock desde el catálogo activo. Una excepción de almacenamiento degrada el carrito a memoria con aviso, sin reemplazar el último estado válido.
+
+Todo adaptador valida el catálogo normalizado antes de exponerlo. `assertValidCatalog()` falla con rutas y códigos concretos para identidades, relaciones, opciones, variantes, dinero, inventario, medios y colecciones; el adaptador demo ejecuta la misma frontera que deberá ejecutar el futuro adaptador real.
+
+`Product`, `ProductVariant`, `ProductOption`, `ProductImage`, `Collection`, `Money`, `Cart` y `CartLine` son nombres de dominio. Interfaces y tipos usan `PascalCase`; funciones, valores y archivos usan `camelCase` y `kebab-case`; una implementación externa termina en `-adapter.ts`. No se usan barrels `index.ts`: cada import declara su dependencia concreta.
+
+`Product` es el agregado canónico y no almacena precio mínimo/máximo, disponibilidad global, colores para grid, referencias expandidas de colección ni objetos de imagen dentro de variantes. Esos datos se derivan en `ProductSummary`, carrito y ficha mediante funciones puras. La pertenencia a colecciones vive solo en `Product.collectionIds`; `Collection` no mantiene una lista inversa de productos.
+
+Una variante selecciona IDs de valores de opción existentes. El inventario es una unión explícita `known` | `unknown`, separada de `inventoryPolicy` (`deny` | `continue`), `salesStatus` y el `purchaseLimit` opcional declarado por el origen. La disponibilidad se deriva exclusivamente con `getVariantAvailability()`: una variante agotada continúa existiendo, una combinación no declarada no produce variante, una variante eliminada deja de resolverse y la venta sin stock solo ocurre con política `continue`.
+
+El límite efectivo de una línea conserva su motivo: inventario, máximo comercial de variante o protección técnica del carrito. `src/commerce/domain/commerce-rules.ts` contiene el umbral y la política de exposición pendientes de confirmación, además de los límites técnicos que protegen inputs y persistencia. Ningún límite técnico se presenta como stock. Con la configuración conservadora actual se muestran estados —incluido «pocas unidades»—, pero no cifras exactas de inventario.
+
+La reconciliación vuelve a resolver cada línea desde el catálogo autoritativo. Si el stock conocido disminuye pero sigue siendo positivo, reduce la cantidad y deja un aviso no impeditivo; si llega a cero o la variante deja de estar disponible, conserva la línea con error para que la persona decida retirarla. Una variante que ya no existe se retira con aviso. Antes de checkout, el proveedor se refresca de nuevo: cualquier error de línea impide continuar, mientras que `inventoryPolicy: 'continue'` mantiene el checkout permitido.
+
+Las imágenes viven una sola vez en `Product.images`. `primaryImageId`, `ProductVariant.imageId` y los grupos por valor de opción solo contienen referencias; los resolutores aplican fallback seguro cuando una asociación opcional no está presente. Los grids reciben `ProductSummary` y nunca el array de variantes.
+
+### Filtros, selección y paginación de catálogo
+
+El filtrado vive en `commerce/domain/catalog-filters.ts` y lo comparten build y navegador: la selección (`CatalogFilterSelection`), el predicado `matchesCatalogSelection` sobre el contrato mínimo `CatalogFilterable` y la serialización URL (`parse/serializeCatalogFilterParams`) para que la selección sea enlazable y sobreviva a recargas y vuelta atrás. Ni componentes ni scripts reimplementan el matching: `collection-filters.ts` construye un `CatalogFilterable` por tarjeta una sola vez al vincular el catálogo y delega el resto al dominio.
+
+Los rangos de precio son declarativos y disjuntos (`COLLECTION_PRICE_RANGES`), con límite inferior incluido y superior excluido, y se evalúan sobre el precio de entrada (`priceRange.min`), el mismo que muestra la tarjeta. Por eso cada producto pertenece a un único rango y los contadores de las facets —calculados con ese mismo predicado— suman el total de la colección. El contador de una facet es potencial: los resultados de aplicar solo ese valor dentro de la colección, no el cruce con la selección activa.
+
+El controlador revela la primera página (por defecto 24) con «Mostrar más» y mantiene ocultas las tarjetas fuera de la ventana para aligerar el coste de render. El grid SSR conserva todas las tarjetas para SEO y funcionamiento sin JavaScript, con `content-visibility` para colecciones grandes. Al conectar Shopify, el adaptador traducirá `CatalogFilterSelection` a sus filtros y devolverá `CollectionPage` (productos y facets) ya filtrado y paginado; los componentes y su contrato no cambian.
+
+Los importes usan unidades mínimas y un código ISO 4217; las conversiones respetan la precisión de la moneda. El despliegue decide mediante validación qué monedas acepta (EUR en la demo), sin cerrar el contrato de dominio a esa moneda.
+
+Dirección permitida:
+
+```txt
+presentation (pages/components/scripts) → application → domain
+composition roots                       → infrastructure → application/domain
+infrastructure/demo                     → demo-catalog.ts
+```
+
+Dominio y aplicación nunca importan infraestructura. Componentes y scripts nunca importan un adaptador ni el catálogo demo. `tests/architecture.test.mjs` hace ejecutables estos límites.
 
 Al conectar Shopify:
 
@@ -107,12 +155,26 @@ Al conectar Shopify:
 - si la operación requiere un secreto, añade primero un adapter de despliegue y una frontera servidor; el build estático actual no puede custodiarlo;
 - devuelve la URL de checkout junto con una lista exacta de hosts permitidos; la UI exige HTTPS, sin credenciales embebidas ni hosts por sufijo;
 - considera todo precio, stock y cantidad enviados por el navegador datos no confiables y vuelve a validarlos antes de crear o actualizar el carrito remoto.
+  - trata como autoridad final la respuesta actual del carrito remoto —líneas, cantidades aceptadas, errores, avisos y URL de checkout—, no el snapshot de ficha, el estado cliente ni `localStorage`.
 
-La política de referrer se define en `BaseLayout.astro`. Cuando se conozca el hosting, configura allí —como cabeceras HTTP y no como una falsa garantía dentro del cliente— CSP, HSTS, `X-Content-Type-Options`, `Permissions-Policy` y la política de framing. La CSP debe inventariar primero los scripts y las fuentes externas reales del proyecto.
+Las fronteras por capacidad quedan así; el detalle operativo vive en `docs/SHOPIFY_READINESS.md` §17:
+
+| Capacidad | Puerta |
+| --- | --- |
+| Catálogo, colecciones, producto por handle, destacados, relacionados | `CatalogProvider` (build) |
+| Resolución de variantes | dentro del adaptador; mappers a `ProductVariant` |
+| Crear/recuperar carrito, mutar líneas, checkout | `CartProvider` (tiempo real) |
+| Cuenta de cliente futura | puerto propio en `application/`; sin implementar hasta que exista caso de uso real |
+
+El catálogo se lee entero durante el build con paginación interna por cursor (productos, variantes e imágenes); el carrito se consulta y muta solo en el navegador. El adaptador remoto normaliza dentro de `infrastructure/`, valida con `assertValidCatalog()` antes de exponer y nunca deja que una respuesta parcial o una caída del catálogo genere páginas corruptas: el build falla en vez de publicar a medias.
+
+La política de referrer se define en `BaseLayout.astro`; las cabeceras HTTP de Vercel viven en `vercel.json`: CSP, HSTS, `X-Content-Type-Options`, `Permissions-Policy` y política de framing. El build no incrusta módulos ejecutables para ser compatible con `script-src 'self'`. Cualquier servicio o CDN nuevo debe actualizar a la vez la allowlist pública, la directiva CSP mínima y las pruebas descritas en `docs/SECURITY.md`.
 
 Los scripts interactivos dentro de `src/` deben mantenerse procesados por Astro para obtener bundling, TypeScript y deduplicación. No uses `define:vars` en un script que importe módulos: pasa únicamente identificadores públicos mediante el HTML y resuélvelos contra el proveedor.
 
-Mantén contenido/configuración global en `src/data/` cuando evite duplicación y no mezcles transformación de datos con presentación.
+Mantén datos editoriales en `src/content/`, configuración en `src/config/` y datos ficticios en `src/demo-catalog.ts`. Ninguno sustituye contratos de producción ni debe contener transformación propia de un adaptador.
+
+No se crea una carpeta de autenticación hasta que exista un caso de uso real. Cuando se implemente, tendrá contratos propios en aplicación y adaptadores en infraestructura; los componentes consumirán un estado neutral, nunca SDKs del proveedor. El checkout ya tiene contrato y validación en `commerce/application/checkout.ts`, pero el adaptador demo continúa devolviendo `unavailable` y no simula pagos.
 
 ## CSS y sistema global
 
@@ -160,7 +222,7 @@ Promueve un patrón a global o a componente cuando se repita con la misma intenc
 - Imágenes con dimensiones para evitar CLS, `alt` contextual y lazy loading salvo contenido crítico/hero.
 - Un H1 por página, `title`, description, canonical y schema cuando corresponda.
 - `BaseLayout` acepta `robots`, `ogImageAlt` (vía `imageAlt`), `publishedAt` y `updatedAt`.
-- Sitemap: `@astrojs/sitemap` con filtro en `isSitemapExcluded()` (`src/data/legal.ts`).
+- Sitemap: `@astrojs/sitemap` con filtro en `isSitemapExcluded()` (`src/config/sitemap.ts`).
 - `robots.txt`: endpoint estático en `src/pages/robots.txt.ts`.
 - Documentos legales en `draft` usan `noindex,follow` y quedan fuera del sitemap hasta publicación.
 - No añadas dependencias, hydration o JavaScript para resolver algo que Astro/CSS/HTML ya cubre.
@@ -171,11 +233,12 @@ Promueve un patrón a global o a componente cuando se repita con la misma intenc
 Según el cambio, `bun run validate` agrupa sin duplicar:
 
 1. `bun run check` para tipos y diagnósticos Astro.
-2. `bun run test` para contratos de comercio y persistencia.
+2. `bun run test` para contratos de comercio, persistencia y límites entre capas.
 3. `bun run build` para cambios estructurales, rutas, datos o integración.
-4. Inspección visual de móvil y escritorio para UI.
-5. Comprobación de overflow, focus, reduced motion, estados hover/active/disabled y contenido largo cuando apliquen.
+4. `bun run check:links` para comprobar enlaces internos contra el `dist` generado.
+5. Inspección visual de móvil y escritorio para UI.
+6. Comprobación de overflow, focus, reduced motion, estados hover/active/disabled y contenido largo cuando apliquen.
 
 No declares completada una tarea si el check relevante falla por tus cambios. Distingue claramente errores previos del proyecto.
 
-`.github/workflows/quality.yml` ejecuta esos tres pasos con Bun fijado en cada push a `main` y pull request.
+`.github/workflows/quality.yml` ejecuta, con la versión de Bun fijada en `packageManager`, en cada push a `main` y pull request: escaneo histórico de secretos, instalación con lockfile, auditoría de dependencias, `check`, tests, `build`, escaneo de seguridad del árbol, comprobación de enlaces internos y presupuestos de rendimiento.

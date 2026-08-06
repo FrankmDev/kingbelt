@@ -1,11 +1,12 @@
 ---
 import Badge from '../ui/Badge.astro';
 import Icon from '../ui/Icon.astro';
-import { formatMoney } from '../../lib/commerce/money';
-import type { CommerceProductSummary } from '../../lib/commerce/types';
+import { formatMoney } from '@commerce/domain/money';
+import type { ProductSummary } from '@commerce/domain/catalog';
+import { buildCardSource } from '@shared/image-source';
 
 interface Props {
-  product: CommerceProductSummary;
+  product: ProductSummary;
   /** Posición en el grid; alimenta el folio numérico. */
   index: number;
   /** Metadata bajo la imagen; por defecto `categoría · color`. */
@@ -20,24 +21,30 @@ const priceLabel = hasPriceRange
   ? `Desde ${formatMoney(product.priceRange.min)}`
   : formatMoney(product.priceRange.min);
 const colorLabel = product.colors.length === 1
-  ? product.colors[0].value
+  ? product.colors[0].label
   : `${product.colors.length} colores`;
 const metaLabel = meta ?? `${product.primaryCollection.title} · ${colorLabel}`;
 const folio = String(index + 1).padStart(2, '0');
+const cardSizes = '(min-width: 64rem) 25vw, (min-width: 40rem) 33vw, 50vw';
+const primarySource = product.primaryImage
+  ? buildCardSource(product.primaryImage.url, cardSizes)
+  : null;
 ---
 
 <a
   href={`/productos/${product.handle}`}
-  class:list={['product-card kb-rise-sm', !product.availableForSale && 'is-unavailable', className]}
+  class:list={['product-card kb-rise-sm', !product.purchasable && 'is-unavailable', className]}
   aria-label={`Ver ${product.title} — ${priceLabel}`}
 >
   <div class="product-card__media">
-    {product.primaryImage ? (
+    {product.primaryImage && primarySource ? (
       <img
-        src={product.primaryImage.url}
+        src={primarySource.src}
+        srcset={primarySource.srcset}
+        sizes={primarySource.sizes}
         alt={product.primaryImage.altText}
-        width={product.primaryImage.width ?? 480}
-        height={product.primaryImage.height ?? 600}
+        width={product.primaryImage.width}
+        height={product.primaryImage.height}
         loading="lazy"
         decoding="async"
         style={`object-position: ${product.primaryImage.position ?? 'center'}`}
@@ -47,8 +54,8 @@ const folio = String(index + 1).padStart(2, '0');
     )}
 
     <div class="product-card__tags">
-      {product.badge || !product.availableForSale ? (
-        <Badge variant="steel">{product.availableForSale ? product.badge : 'Agotado'}</Badge>
+      {product.badge || !product.purchasable ? (
+        <Badge variant="steel">{product.purchasable ? product.badge : 'Agotado'}</Badge>
       ) : (
         <span aria-hidden="true" />
       )}
@@ -68,7 +75,8 @@ const folio = String(index + 1).padStart(2, '0');
   <div class="product-card__info">
     <p class="product-card__meta kb-meta-label text-king-muted">{metaLabel}</p>
     <h3 class="product-card__name font-display">{product.title}</h3>
-    <p class="product-card__excerpt text-king-muted">{product.shortDescription}</p>
+
+    <p class="product-card__excerpt text-king-muted">{product.summary}</p>
 
     <div class="product-card__stitch kb-stitch-line" aria-hidden="true" />
 

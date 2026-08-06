@@ -1,11 +1,11 @@
 ---
-import SectionHeaderHome from './SectionHeaderHome.astro';
+import HomeSectionHead from './HomeSectionHead.astro';
 import FeaturedArticleSection from '../../blog/FeaturedArticleSection.astro';
 import LatestPostsSection from '../../blog/LatestPostsSection.astro';
 import Button from '../../ui/Button.astro';
 import Icon from '../../ui/Icon.astro';
-import type { BlogPost } from '../../../data/blog';
-import { journalSection } from '../../../data/home';
+import type { BlogPost } from '@content/blog';
+import { journalSection } from '@content/home';
 
 interface Props {
   posts: BlogPost[];
@@ -15,81 +15,73 @@ const { posts } = Astro.props;
 const [lead, ...secondary] = posts;
 ---
 
-<div id="revista" class="home-journal">
-  <section class="home-journal__intro section-spacing" aria-labelledby="home-journal-title">
-    <div class="kb-shell-wide">
-      <div class="home-journal__head">
-        <SectionHeaderHome
-          index={journalSection.index}
-          eyebrow={journalSection.eyebrow}
-          body={journalSection.body}
-          meta={journalSection.meta}
-          titleId="home-journal-title"
-          class="home-journal__header"
-        >
-          <Fragment slot="title">
-            <span set:html={journalSection.title} />
-          </Fragment>
-        </SectionHeaderHome>
+<section id="revista" class="home-journal section-spacing" aria-labelledby="home-journal-title">
+  <div class="kb-shell-wide home-journal__shell">
+    <HomeSectionHead
+      index={journalSection.index}
+      eyebrow={journalSection.eyebrow}
+      body={journalSection.body}
+      meta={journalSection.meta}
+      titleId="home-journal-title"
+    >
+      <Fragment slot="title">
+        <span set:html={journalSection.title} />
+      </Fragment>
 
-        <div class="home-journal__cta">
-          <Button href={journalSection.cta.href} variant="outline" size="md">
-            {journalSection.cta.label}
-            <Icon
-              name="arrow-right"
-              class="h-3.5 w-3.5 transition-transform duration-[var(--kb-dur-fast)] group-hover:translate-x-1"
-            />
-          </Button>
-        </div>
-      </div>
-    </div>
-  </section>
+      <Fragment slot="action">
+        <Button href={journalSection.cta.href} variant="outline" size="md">
+          {journalSection.cta.label}
+          <Icon
+            name="arrow-right"
+            class="h-3.5 w-3.5 transition-transform duration-[var(--kb-dur-fast)] group-hover:translate-x-1"
+          />
+        </Button>
+      </Fragment>
+    </HomeSectionHead>
 
-  {lead && (
-    <FeaturedArticleSection
-      post={lead}
-      showHeader={false}
-      afterNav={false}
-      class="home-journal__featured"
-    />
-  )}
+    {lead && (
+      <FeaturedArticleSection
+        post={lead}
+        showHeader={false}
+        afterNav={false}
+        embedded
+        class="home-journal__featured"
+      />
+    )}
+  </div>
 
   {secondary.length > 0 && (
-    <LatestPostsSection posts={secondary} showHeader={false} class="home-journal__latest" />
+    <LatestPostsSection
+      posts={secondary}
+      showHeader={false}
+      embedded
+      class="home-journal__latest"
+    />
   )}
-</div>
+</section>
 
 <style>
-  .home-journal__intro {
+  .home-journal {
     background: var(--color-king-bg);
   }
 
-  .home-journal__head {
-    display: grid;
-    gap: var(--kb-space-6);
-    align-items: end;
-    margin-bottom: var(--kb-space-gap-lg);
+  .home-journal__shell {
+    display: flex;
+    flex-direction: column;
+    gap: var(--kb-space-gap);
   }
 
-  .home-journal__header:global(.section-header-home) {
+  .home-journal__shell :global(.home-section-head) {
     margin-bottom: 0;
   }
 
-  .home-journal__header:global(.section-header-home) .shh-body {
-    max-width: 40ch;
-  }
-
-  .home-journal__featured:global(.blog-featured) {
-    padding-top: 0;
-    background: var(--color-king-bg);
-  }
-
-  .home-journal__featured:global(.blog-featured--chapter-end) {
-    padding-bottom: clamp(1.5rem, 3vw, 2.25rem);
+  .home-journal__featured :global(.kb-shell-wide) {
+    width: 100%;
   }
 
   .home-journal__latest:global(.blog-latest) {
-    padding-top: 0;
+    margin-top: var(--kb-space-gap-lg);
+    padding-block: var(--kb-space-gap-lg) var(--kb-space-section);
     background: var(--color-king-surface);
   }
 
@@ -104,17 +96,6 @@ const [lead, ...secondary] = posts;
   @media (min-width: 40rem) {
     .home-journal__latest :global(.blog-latest-grid) {
       grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-  }
-
-  @media (min-width: 48rem) {
-    .home-journal__head {
-      grid-template-columns: minmax(0, 1fr) auto;
-      gap: var(--kb-space-8);
-    }
-
-    .home-journal__cta {
-      padding-bottom: 0.35rem;
     }
   }
 </style>

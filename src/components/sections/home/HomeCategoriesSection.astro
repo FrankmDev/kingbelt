@@ -1,11 +1,11 @@
 ---
 import SectionHeaderHome from './SectionHeaderHome.astro';
 import Badge from '../../ui/Badge.astro';
-import { categoriesSection } from '../../../data/home';
-import type { CommerceCollection } from '../../../lib/commerce/types';
+import { categoriesSection } from '@content/home';
+import type { Collection } from '@commerce/domain/catalog';
 
 interface Props {
-  categories: CommerceCollection[];
+  categories: Collection[];
 }
 
 const { categories } = Astro.props;
@@ -145,10 +145,6 @@ const cards = featured ? [
     background: var(--color-king-surface);
   }
 
-  .home-categories__header:global(.section-header-home) .shh-body {
-    max-width: 42ch;
-  }
-
   .home-categories__grid {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
@@ -174,7 +170,7 @@ const cards = featured ? [
   }
 
   .home-categories__card--hero {
-    min-height: clamp(24rem, 76vw, 34rem);
+    min-height: clamp(20rem, 62vw, 28rem);
   }
 
   .home-categories__media-wrap {
@@ -273,11 +269,11 @@ const cards = featured ? [
 
   .home-categories__folio {
     font-family: var(--font-display);
-    font-size: clamp(3.5rem, 9vw, 5.5rem);
+    font-size: clamp(2.25rem, 5.5vw, 3.5rem);
     font-weight: var(--kb-w-heading-light);
-    line-height: 0.82;
-    letter-spacing: -0.04em;
-    color: rgba(255, 250, 241, 0.44);
+    line-height: 0.86;
+    letter-spacing: -0.032em;
+    color: rgba(255, 250, 241, 0.4);
     text-shadow: 0 2px 18px rgba(0, 0, 0, 0.45);
     transition:
       color 0.65s var(--kb-ease-out),
@@ -285,7 +281,7 @@ const cards = featured ? [
   }
 
   .home-categories__folio--compact {
-    font-size: clamp(2.5rem, 6vw, 3.25rem);
+    font-size: clamp(1.75rem, 3.8vw, 2.35rem);
   }
 
   .home-categories__copy {
@@ -329,10 +325,10 @@ const cards = featured ? [
   .home-categories__title {
     margin: 0;
     font-family: var(--font-display);
-    font-size: clamp(2.65rem, 6.5vw, 4.25rem);
+    font-size: var(--kb-text-h2);
     font-weight: var(--kb-w-heading-light);
-    line-height: 0.9;
-    letter-spacing: -0.038em;
+    line-height: 0.98;
+    letter-spacing: -0.028em;
     text-wrap: balance;
     color: var(--color-king-bone);
     text-shadow:
@@ -345,9 +341,9 @@ const cards = featured ? [
   }
 
   .home-categories__title--compact {
-    font-size: clamp(1.9rem, 4vw, 2.5rem);
-    line-height: 0.92;
-    letter-spacing: -0.032em;
+    font-size: var(--kb-text-h3);
+    line-height: 1.02;
+    letter-spacing: -0.022em;
   }
 
   .home-categories__tagline {
@@ -437,7 +433,7 @@ const cards = featured ? [
 
     .home-categories__card--hero {
       grid-column: 1 / -1;
-      min-height: clamp(22rem, 48vw, 30rem);
+      min-height: clamp(18rem, 40vw, 24rem);
     }
 
     .home-categories__card:not(.home-categories__card--hero) {
@@ -457,7 +453,7 @@ const cards = featured ? [
       grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
       grid-template-rows: repeat(var(--secondary-count), minmax(10rem, 1fr));
       gap: var(--kb-space-3);
-      min-height: clamp(34rem, 42vw, 40rem);
+      min-height: clamp(30rem, 38vw, 34rem);
     }
 
     .home-categories__card--hero {
@@ -476,19 +472,19 @@ const cards = featured ? [
     }
 
     .home-categories__title {
-      font-size: clamp(3rem, 3.4vw, 4.5rem);
+      font-size: clamp(1.875rem, 2.4vw, 2.5rem);
     }
 
     .home-categories__title--compact {
-      font-size: clamp(1.85rem, 1.7vw, 2.35rem);
+      font-size: clamp(1.375rem, 1.35vw, 1.75rem);
     }
 
     .home-categories__folio {
-      font-size: clamp(4rem, 5vw, 6rem);
+      font-size: clamp(2.5rem, 3.2vw, 3.5rem);
     }
 
     .home-categories__folio--compact {
-      font-size: clamp(2.75rem, 3vw, 3.5rem);
+      font-size: clamp(1.875rem, 2vw, 2.35rem);
     }
   }
 

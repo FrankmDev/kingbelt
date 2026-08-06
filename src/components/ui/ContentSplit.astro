@@ -52,7 +52,8 @@ const mediaAlignClass = `content-split__media--${mediaAlign}`;
     className,
   ]}
   style={gridStyle}
-  data-content-split
+  data-scroll-reveal-target
+  data-scroll-reveal-threshold="0.12"
 >
   {hasTitle && (
     <div class="content-split__title-block">
@@ -96,28 +97,6 @@ const mediaAlignClass = `content-split__media--${mediaAlign}`;
     )}
   </div>
 </div>
-
-<script>
-  const splits = document.querySelectorAll('[data-content-split]');
-
-  if (splits.length && 'IntersectionObserver' in window) {
-    const io = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('is-visible');
-            io.unobserve(entry.target);
-          }
-        });
-      },
-      { threshold: 0.12, rootMargin: '0px 0px -40px 0px' }
-    );
-
-    splits.forEach((el) => io.observe(el));
-  } else {
-    splits.forEach((el) => el.classList.add('is-visible'));
-  }
-</script>
 
 <style>
   .content-split {

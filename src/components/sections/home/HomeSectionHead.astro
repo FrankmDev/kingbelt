@@ -1,0 +1,62 @@
+---
+import SectionHeaderHome from './SectionHeaderHome.astro';
+
+interface Props {
+  index?: string;
+  eyebrow?: string;
+  meta?: string;
+  titleId?: string;
+  body?: string;
+  class?: string;
+}
+
+const { index, eyebrow, meta, titleId, body, class: className = '' } = Astro.props;
+const hasAction = Astro.slots.has('action');
+---
+
+<div
+  class:list={['home-section-head', hasAction && 'home-section-head--with-action', className]}
+>
+  <SectionHeaderHome
+    index={index}
+    eyebrow={eyebrow}
+    meta={meta}
+    body={body}
+    titleId={titleId}
+    class="home-section-head__header"
+  >
+    <slot name="title" slot="title" />
+    <slot name="body" slot="body" />
+  </SectionHeaderHome>
+
+  {hasAction && (
+    <div class="home-section-head__action">
+      <slot name="action" />
+    </div>
+  )}
+</div>
+
+<style>
+  .home-section-head {
+    display: grid;
+    gap: var(--kb-space-5);
+    align-items: end;
+    margin-bottom: var(--kb-space-gap);
+  }
+
+  .home-section-head__header:global(.section-header-home) {
+    margin-bottom: 0;
+  }
+
+  @media (min-width: 48rem) {
+    .home-section-head--with-action {
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: var(--kb-space-6);
+    }
+
+    .home-section-head__action {
+      justify-self: end;
+      padding-bottom: 0.2rem;
+    }
+  }
+</style>

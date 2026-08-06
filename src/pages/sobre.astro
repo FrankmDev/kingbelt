@@ -1,15 +1,15 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Header from '../components/layout/Header.astro';
-import FooterSection from '../components/layout/FooterSection.astro';
+import Footer from '../components/layout/Footer.astro';
 import AboutCtaSection from '../components/sections/about/AboutCtaSection.astro';
 import AboutContextSection from '../components/sections/about/AboutContextSection.astro';
 import AboutDirectionSection from '../components/sections/about/AboutDirectionSection.astro';
 import AboutOriginSection from '../components/sections/about/AboutOriginSection.astro';
 import AboutStandardsSection from '../components/sections/about/AboutStandardsSection.astro';
 import PageHeader from '../components/ui/PageHeader.astro';
-import { aboutPage } from '../data/about';
-import { site } from '../data/site';
+import { aboutPage } from '@content/about';
+import { site } from '@config/site';
 
 const { meta, hero, origin, standards, direction, context, cta } = aboutPage;
 const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href;
@@ -24,7 +24,7 @@ const aboutSchema = {
     '@type': 'Organization',
     name: site.name,
     url: Astro.site ?? Astro.url.origin,
-    sameAs: [site.urls.instagram],
+    sameAs: [site.social.instagram.href],
   },
 };
 ---
@@ -53,5 +53,5 @@ const aboutSchema = {
 
   <AboutCtaSection cta={cta} backgroundImage={hero.image} />
 
-  <FooterSection slot="footer" connected />
+  <Footer slot="footer" connected />
 </BaseLayout>

@@ -1,20 +1,37 @@
 ---
-import type { ProductImage } from '../../lib/commerce/types';
+import type { ProductImage, ProductMediaGroup } from '@commerce/domain/catalog';
+import { escapeCssIdentifier } from '@shared/css/css-identifier';
+import { buildProductGalleryRules } from './build-product-gallery-rules';
+import { buildSlideSource, buildThumbnailUrl } from '@shared/image-source';
 
 interface Props {
   images: ProductImage[];
+  mediaGroups?: ProductMediaGroup[];
   /** Prefijo único para name/ids del grupo de radios (p. ej. slug del producto). */
   idPrefix: string;
   class?: string;
 }
 
-const { images, idPrefix, class: className } = Astro.props;
+const { images, mediaGroups = [], idPrefix, class: className } = Astro.props;
 
-const groupName = `gallery-${idPrefix}`;
+const safePrefix = escapeCssIdentifier(idPrefix);
+const groupName = `gallery-${safePrefix}`;
+const galleryClass = `product-gallery--${safePrefix}`;
+const galleryRules = buildProductGalleryRules({ idPrefix, images, mediaGroups });
+
+const mediaGroupByImageId = new Map(
+  mediaGroups.flatMap((group) => group.imageIds.map((imageId) => [imageId, group.id] as const))
+);
+
+/** `sizes` aproximado de la escena: columna principal del PDP en escritorio, ancho completo en móvil. */
+const slideSizes = '(min-width: 48rem) 52vw, 100vw';
 ---
 
-<div class:list={['product-gallery', className]} data-product-gallery>
-  {images.map((_, index) => (
+<div
+  class:list={['product-gallery', galleryClass, className]}
+  data-product-gallery={idPrefix}
+>
+  {images.map((image, index) => (
     <input
       type="radio"
       class="product-gallery__input sr-only"
@@ -23,41 +40,47 @@ const groupName = `gallery-${idPrefix}`;
       checked={index === 0}
       aria-label={`Ver imagen ${index + 1} de ${images.length}`}
       data-gallery-choice
-      data-gallery-image-url={images[index].url}
+      data-gallery-image-id={image.id}
+      data-gallery-media-group={mediaGroupByImageId.get(image.id)}
     />
   ))}
 
   <div class="product-gallery__stage">
-    {images.map((image, index) => (
-      <img
-        src={image.url}
-        alt={image.altText}
-        width={image.width ?? 960}
-        height={image.height ?? 1200}
-        class="product-gallery__slide"
-        loading={index === 0 ? 'eager' : 'lazy'}
-        fetchpriority={index === 0 ? 'high' : undefined}
-        decoding="async"
-        style={`object-position: ${image.position ?? 'center'}`}
-        data-gallery-slide
-        hidden={index !== 0}
-      />
-    ))}
+    {images.map((image, index) => {
+      const source = buildSlideSource(image.url, slideSizes);
+      return (
+        <img
+          src={source.src}
+          srcset={source.srcset}
+          sizes={source.sizes}
+          alt={image.altText}
+          width={image.width}
+          height={image.height}
+          class="product-gallery__slide"
+          loading={index === 0 ? 'eager' : 'lazy'}
+          fetchpriority={index === 0 ? 'high' : undefined}
+          decoding="async"
+          style={`object-position: ${image.position ?? 'center'}`}
+          data-gallery-slide
+          data-gallery-media-group={mediaGroupByImageId.get(image.id)}
+        />
+      );
+    })}
   </div>
 
-  <div class="product-gallery__thumbs">
+  <div class="product-gallery__thumbs" role="radiogroup" aria-label={`Imágenes del producto, ${images.length} en total`}>
     {images.map((image, index) => (
       <label
         class="product-gallery__thumb"
         for={`${groupName}-${index + 1}`}
         data-gallery-thumb
-        data-selected={index === 0 ? 'true' : undefined}
+        data-gallery-media-group={mediaGroupByImageId.get(image.id)}
       >
         <img
-          src={image.url}
+          src={buildThumbnailUrl(image.url)}
           alt=""
-          width={image.width ?? 240}
-          height={image.height ?? 300}
+          width={image.width}
+          height={image.height}
           loading="lazy"
           decoding="async"
           aria-hidden="true"
@@ -68,10 +91,7 @@ const groupName = `gallery-${idPrefix}`;
   </div>
 </div>
 
-<script>
-  import { initProductGalleries } from '../../scripts/product-gallery';
-  initProductGalleries();
-</script>
+{galleryRules.length > 0 && <style is:global set:html={galleryRules} />}
 
 <style>
   .product-gallery {
@@ -80,8 +100,6 @@ const groupName = `gallery-${idPrefix}`;
     min-width: 0;
     align-content: start;
   }
-
-  /* ---------- Imagen principal ---------- */
 
   .product-gallery__stage {
     position: relative;
@@ -99,20 +117,10 @@ const groupName = `gallery-${idPrefix}`;
     height: 100%;
     object-fit: cover;
     opacity: 0;
+    visibility: hidden;
     filter: saturate(0.92) contrast(1.03);
     transition: opacity var(--kb-dur-med) var(--kb-ease-out);
   }
-
-  .product-gallery__slide:not([hidden]) {
-    opacity: 1;
-  }
-
-  .product-gallery__slide[hidden] {
-    display: block;
-    visibility: hidden;
-  }
-
-  /* ---------- Miniaturas 3×1 ---------- */
 
   .product-gallery__thumbs {
     display: grid;
@@ -141,20 +149,6 @@ const groupName = `gallery-${idPrefix}`;
     opacity: 0.7;
     filter: saturate(0.92) contrast(1.03);
     transition: opacity var(--kb-dur-fast) var(--kb-ease-out);
-  }
-
-  .product-gallery__thumb[data-selected='true'] {
-    border-color: var(--color-king-accent);
-    box-shadow: inset 0 0 0 1px var(--color-king-accent);
-  }
-
-  .product-gallery__thumb[data-selected='true'] img {
-    opacity: 1;
-  }
-
-  .product-gallery:has(.product-gallery__input:focus-visible) .product-gallery__thumb[data-selected='true'] {
-    outline: 2px solid var(--color-king-accent);
-    outline-offset: 3px;
   }
 
   @media (hover: hover) and (pointer: fine) {

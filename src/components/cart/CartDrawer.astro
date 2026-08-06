@@ -1,10 +1,12 @@
 ---
+import '../../styles/cart.css';
 import Button from '../ui/Button.astro';
 import Icon from '../ui/Icon.astro';
 import CartEmpty from './CartEmpty.astro';
 ---
 
 <div
+  id="cart-drawer"
   class="cart-drawer"
   data-cart-drawer
   aria-hidden="true"
@@ -24,6 +26,7 @@ import CartEmpty from './CartEmpty.astro';
     role="dialog"
     aria-modal="true"
     aria-labelledby="cart-drawer-title"
+    tabindex="-1"
   >
     <header class="cart-drawer__header">
       <div class="cart-drawer__heading">
@@ -112,8 +115,14 @@ import CartEmpty from './CartEmpty.astro';
     inset-block: 0;
     right: 0;
     display: grid;
-    grid-template-rows: auto 1fr auto;
+    grid-template-rows: auto auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      'header'
+      'status'
+      'body'
+      'footer';
     width: min(100%, 26rem);
+    height: 100dvh;
     max-width: 100%;
     border-left: 1px solid var(--kb-stroke-hairline);
     background: var(--color-king-bg);
@@ -137,6 +146,7 @@ import CartEmpty from './CartEmpty.astro';
   }
 
   .cart-drawer__header {
+    grid-area: header;
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
@@ -188,6 +198,7 @@ import CartEmpty from './CartEmpty.astro';
   }
 
   .cart-drawer__status {
+    grid-area: status;
     margin: 0;
     padding: var(--kb-space-3) var(--kb-space-5) 0;
     color: var(--color-king-muted);
@@ -202,7 +213,9 @@ import CartEmpty from './CartEmpty.astro';
   }
 
   .cart-drawer__body {
+    grid-area: body;
     overflow: auto;
+    overscroll-behavior: contain;
     padding: var(--kb-space-4) var(--kb-space-5);
     min-height: 0;
     -webkit-overflow-scrolling: touch;
@@ -214,6 +227,7 @@ import CartEmpty from './CartEmpty.astro';
   }
 
   .cart-drawer__footer {
+    grid-area: footer;
     display: grid;
     gap: var(--kb-space-3);
     padding: var(--kb-space-5);

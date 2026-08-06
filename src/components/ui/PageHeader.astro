@@ -145,32 +145,64 @@ const objectStyle = `object-position:${heroImagePosition}`;
   )}
 </section>
 
-<script>
-  import gsap from 'gsap';
+<style>
+  @keyframes page-header-zoom-in {
+    from {
+      opacity: 0;
+      transform: scale(1.12);
+    }
 
-  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const headers = document.querySelectorAll('[data-page-header]');
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
 
-  headers.forEach((header) => {
-    const scope = header as HTMLElement;
-    const img = scope.querySelector<HTMLElement>('.page-header-img');
-    const eyebrow = scope.querySelector<HTMLElement>('.page-header-kicker');
-    const title = scope.querySelector<HTMLElement>('.page-header-title');
-    const meta = scope.querySelector<HTMLElement>('.page-header-article-meta');
-    const lede = scope.querySelector<HTMLElement>('.page-header-lede');
-    const bar = scope.querySelector<HTMLElement>('.page-header-bar');
-    const breadcrumbs = scope.querySelector<HTMLElement>('.page-header-breadcrumbs');
+  @keyframes page-header-rise {
+    from {
+      opacity: 0;
+      transform: translate3d(0, var(--page-header-rise, 1rem), 0);
+    }
 
-    if (reduceMotion) return;
+    to {
+      opacity: 1;
+      transform: translate3d(0, 0, 0);
+    }
+  }
 
-    const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
+  @media (prefers-reduced-motion: no-preference) {
+    [data-page-header] .page-header-img {
+      animation: page-header-zoom-in 1.9s var(--kb-ease-out) both;
+    }
 
-    if (img) tl.from(img, { scale: 1.12, opacity: 0, duration: 1.9 }, 0);
-    if (breadcrumbs) tl.from(breadcrumbs, { y: -10, opacity: 0, duration: 0.7 }, 0.4);
-    if (eyebrow) tl.from(eyebrow, { y: 14, opacity: 0, duration: 0.7 }, 0.6);
-    if (title) tl.from(title, { y: 32, opacity: 0, duration: 1.0 }, 0.8);
-    if (meta) tl.from(meta, { y: 18, opacity: 0, duration: 0.75 }, 1.0);
-    if (lede) tl.from(lede, { y: 18, opacity: 0, duration: 0.85 }, 1.05);
-    if (bar) tl.from(bar, { y: 14, opacity: 0, duration: 0.7 }, 1.2);
-  });
-</script>
+    [data-page-header] .page-header-breadcrumbs {
+      --page-header-rise: -0.625rem;
+      animation: page-header-rise 0.7s var(--kb-ease-out) 0.4s both;
+    }
+
+    [data-page-header] .page-header-kicker {
+      --page-header-rise: 0.875rem;
+      animation: page-header-rise 0.7s var(--kb-ease-out) 0.6s both;
+    }
+
+    [data-page-header] .page-header-title {
+      --page-header-rise: 2rem;
+      animation: page-header-rise 1s var(--kb-ease-out) 0.8s both;
+    }
+
+    [data-page-header] .page-header-article-meta {
+      --page-header-rise: 1.125rem;
+      animation: page-header-rise 0.75s var(--kb-ease-out) 1s both;
+    }
+
+    [data-page-header] .page-header-lede {
+      --page-header-rise: 1.125rem;
+      animation: page-header-rise 0.85s var(--kb-ease-out) 1.05s both;
+    }
+
+    [data-page-header] .page-header-bar {
+      --page-header-rise: 0.875rem;
+      animation: page-header-rise 0.7s var(--kb-ease-out) 1.2s both;
+    }
+  }
+</style>

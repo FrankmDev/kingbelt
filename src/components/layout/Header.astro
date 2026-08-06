@@ -1,5 +1,5 @@
 ---
-import { mainNav } from '../../data/navigation';
+import { mainNav } from '@config/navigation';
 import CartDrawer from '../cart/CartDrawer.astro';
 import CartTrigger from '../cart/CartTrigger.astro';
 import MobileNavigation from './MobileNavigation.astro';
@@ -8,12 +8,15 @@ interface Props {
   initialTheme?: 'dark' | 'light';
   scrolledTheme?: 'dark' | 'light';
   compactThreshold?: number;
+  /** Carga el carrito en cuanto la página esté lista (p. ej. /carrito). */
+  cartEager?: boolean;
 }
 
 const {
   initialTheme = 'dark',
   scrolledTheme = 'light',
   compactThreshold = 72,
+  cartEager = false,
 } = Astro.props;
 
 const links = mainNav;
@@ -28,12 +31,14 @@ const links = mainNav;
   data-scrolled="false"
   data-menu-open="false"
   data-compact-threshold={compactThreshold}
+  data-cart-eager={cartEager ? 'true' : undefined}
   class="fixed left-0 right-0 top-0 z-50 px-3 pt-3 md:px-5 md:pt-4"
 >
   <div class="header-shell mx-auto overflow-hidden">
     <nav
       id="header-nav"
       class="header-tier-2 mx-auto flex items-center justify-between gap-3 px-5 md:px-8 lg:px-10"
+      aria-label="Principal"
     >
       <a href="/" id="header-logo" class="group relative flex items-center gap-3 md:gap-4" aria-label="KingBelt — Inicio">
         <span class="header-wordmark font-display whitespace-nowrap uppercase">KingBelt</span>
@@ -43,16 +48,16 @@ const links = mainNav;
       <div class="hidden items-center gap-1 lg:flex">
         {links.map((l, i) => (
           <>
-            {i > 0 && <span class="header-divider mx-2.5 h-3.5 w-px lg:mx-3.5"></span>}
+            {i > 0 && <span class="header-divider mx-2.5 h-3.5 w-px lg:mx-3.5" aria-hidden="true"></span>}
             <a href={l.href} class="header-link group relative flex items-center gap-2 py-1">
               <span>{l.label}</span>
               <span class="header-link-line absolute bottom-0 left-0 h-px w-full origin-left scale-x-0 bg-king-accent transition-transform duration-[var(--kb-dur-med)] group-hover:scale-x-100"></span>
             </a>
           </>
         ))}
-        <span class="header-divider mx-2.5 h-3.5 w-px lg:mx-3.5"></span>
+        <span class="header-divider mx-2.5 h-3.5 w-px lg:mx-3.5" aria-hidden="true"></span>
         <CartTrigger />
-        <span class="header-divider mx-2.5 h-3.5 w-px lg:mx-3.5"></span>
+        <span class="header-divider mx-2.5 h-3.5 w-px lg:mx-3.5" aria-hidden="true"></span>
         <a href="/contacto" id="header-cta" class="group hidden items-center gap-2.5 uppercase lg:inline-flex">
           <span class="h-1.5 w-1.5 rounded-full bg-king-accent/65 transition-[background-color,transform] duration-[var(--kb-dur-fast)] group-hover:scale-110 group-hover:bg-king-accent"></span>
           Escribir
@@ -336,18 +341,5 @@ const links = mainNav;
 </style>
 
 <script>
-  import { initHeader } from '../../scripts/header';
-
-  const cleanups = Array.from(document.querySelectorAll<HTMLElement>('[data-site-header]'))
-    .map((root) => initHeader(root));
-
-  document.addEventListener(
-    'astro:before-swap',
-    () => cleanups.forEach((cleanup) => cleanup()),
-    { once: true }
-  );
-</script>
-
-<script>
-  import '../../scripts/init-cart.ts';
+  import '@scripts/layout/header-client';
 </script>

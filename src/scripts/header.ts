@@ -1,5 +1,5 @@
-import { CART_DRAWER_OPEN_EVENT } from '../lib/commerce/cart-client';
-import { lockBodyScroll, unlockBodyScroll } from '../lib/dom/scroll-lock';
+import { CART_DRAWER_OPEN_EVENT } from '@shared/browser/cart-events';
+import { lockBodyScroll, unlockBodyScroll } from '@shared/browser/scroll-lock';
 
 type Cleanup = () => void;
 
@@ -25,8 +25,26 @@ export function initHeader(header: HTMLElement): Cleanup {
   let lastProgress = '';
   let lastTheme = header.dataset.theme ?? '';
   let lastScrolled = header.dataset.scrolled ?? '';
+  const outsideInertState = new Map<HTMLElement, boolean>();
 
   const isMenuOpen = () => header.dataset.menuOpen === 'true';
+
+  const setOutsideInert = (inert: boolean) => {
+    if (inert) {
+      outsideInertState.clear();
+      Array.from(document.body.children).forEach((element) => {
+        if (!(element instanceof HTMLElement) || element === mobileMenu || element.contains(mobileMenu)) return;
+        outsideInertState.set(element, element.inert);
+        element.inert = true;
+      });
+      return;
+    }
+
+    outsideInertState.forEach((wasInert, element) => {
+      if (element.isConnected) element.inert = wasInert;
+    });
+    outsideInertState.clear();
+  };
 
   const closeMenu = ({ restoreFocus = true } = {}) => {
     if (!isMenuOpen()) return;
@@ -42,6 +60,7 @@ export function initHeader(header: HTMLElement): Cleanup {
     menuToggle.setAttribute('aria-label', 'Abrir menú');
     mobileMenu.setAttribute('aria-hidden', 'true');
     mobileMenu.setAttribute('inert', '');
+    setOutsideInert(false);
     unlockBodyScroll('mobile-navigation');
     if (restoreFocus) menuToggle.focus();
   };
@@ -55,6 +74,7 @@ export function initHeader(header: HTMLElement): Cleanup {
     menuToggle.setAttribute('aria-label', 'Cerrar menú');
     mobileMenu.setAttribute('aria-hidden', 'false');
     mobileMenu.removeAttribute('inert');
+    setOutsideInert(true);
     lockBodyScroll('mobile-navigation');
 
     const focusDelay = reducedMotion.matches ? 0 : 400;

@@ -119,7 +119,7 @@ Todo adaptador valida el catálogo normalizado antes de exponerlo. `assertValidC
 
 `Product` es el agregado canónico y no almacena precio mínimo/máximo, disponibilidad global, colores para grid, referencias expandidas de colección ni objetos de imagen dentro de variantes. Esos datos se derivan en `ProductSummary`, carrito y ficha mediante funciones puras. La pertenencia a colecciones vive solo en `Product.collectionIds`; `Collection` no mantiene una lista inversa de productos.
 
-Una variante selecciona IDs de valores de opción existentes. El inventario es una unión explícita `known` | `unknown`, separada de `inventoryPolicy` (`deny` | `continue`), `salesStatus` y el `purchaseLimit` opcional declarado por el origen. La disponibilidad se deriva exclusivamente con `getVariantAvailability()`: una variante agotada continúa existiendo, una combinación no declarada no produce variante, una variante eliminada deja de resolverse y la venta sin stock solo ocurre con política `continue`.
+Una variante selecciona IDs de valores de opción existentes. El inventario es una unión explícita `known` | `unknown`, separada de `inventoryPolicy` (`deny` | `continue`), `salesStatus` y la regla `quantityRule` (`minimum`, `increment`, `maximum?`) declarada por el origen. La disponibilidad se deriva exclusivamente con `getVariantAvailability()`: una variante agotada continúa existiendo, una combinación no declarada no produce variante, una variante eliminada deja de resolverse y la venta sin stock solo ocurre con política `continue`.
 
 El límite efectivo de una línea conserva su motivo: inventario, máximo comercial de variante o protección técnica del carrito. `src/commerce/domain/commerce-rules.ts` contiene el umbral y la política de exposición pendientes de confirmación, además de los límites técnicos que protegen inputs y persistencia. Ningún límite técnico se presenta como stock. Con la configuración conservadora actual se muestran estados —incluido «pocas unidades»—, pero no cifras exactas de inventario.
 
@@ -152,7 +152,9 @@ Al conectar Shopify:
 - normaliza `Money`, producto, variante y líneas dentro del adaptador;
 - conserva las credenciales privadas y tokens no públicos exclusivamente en código servidor mediante `astro:env/server`;
 - no pases secretos por `PUBLIC_*`, `define:vars`, HTML, atributos `data-*`, eventos DOM ni almacenamiento del navegador;
-- si la operación requiere un secreto, añade primero un adapter de despliegue y una frontera servidor; el build estático actual no puede custodiarlo;
+- toda operación de carrito pasa por una frontera servidor/BFF same-origin; el build estático actual no puede custodiarla y no se añade hasta activar Shopify con un adapter de despliegue;
+- el navegador envía únicamente identificadores públicos de variante, cantidades y comandos cerrados; nunca recibe la parte secreta del ID de carrito, tokens, credenciales, respuestas administrativas ni identidad sensible del comprador;
+- el servicio servidor conserva el carrito remoto y es autoridad para precios, cantidades aceptadas, stock, identidad del comprador, checkout, errores y avisos;
 - devuelve la URL de checkout junto con una lista exacta de hosts permitidos; la UI exige HTTPS, sin credenciales embebidas ni hosts por sufijo;
 - considera todo precio, stock y cantidad enviados por el navegador datos no confiables y vuelve a validarlos antes de crear o actualizar el carrito remoto.
   - trata como autoridad final la respuesta actual del carrito remoto —líneas, cantidades aceptadas, errores, avisos y URL de checkout—, no el snapshot de ficha, el estado cliente ni `localStorage`.
@@ -166,7 +168,7 @@ Las fronteras por capacidad quedan así; el detalle operativo vive en `docs/SHOP
 | Crear/recuperar carrito, mutar líneas, checkout | `CartProvider` (tiempo real) |
 | Cuenta de cliente futura | puerto propio en `application/`; sin implementar hasta que exista caso de uso real |
 
-El catálogo se lee entero durante el build con paginación interna por cursor (productos, variantes e imágenes); el carrito se consulta y muta solo en el navegador. El adaptador remoto normaliza dentro de `infrastructure/`, valida con `assertValidCatalog()` antes de exponer y nunca deja que una respuesta parcial o una caída del catálogo genere páginas corruptas: el build falla en vez de publicar a medias.
+El catálogo se lee entero durante el build con paginación interna por cursor (productos, variantes e imágenes). En tiempo real, el navegador opera el cliente neutral de carrito, que llama a endpoints same-origin; esos endpoints delegan en un servicio servidor que consulta y muta Shopify. El adaptador remoto normaliza dentro de `infrastructure/`, valida con `assertValidCatalog()` antes de exponer y nunca deja que una respuesta parcial o una caída del catálogo genere páginas corruptas: el build falla en vez de publicar a medias.
 
 La política de referrer se define en `BaseLayout.astro`; las cabeceras HTTP de Vercel viven en `vercel.json`: CSP, HSTS, `X-Content-Type-Options`, `Permissions-Policy` y política de framing. El build no incrusta módulos ejecutables para ser compatible con `script-src 'self'`. Cualquier servicio o CDN nuevo debe actualizar a la vez la allowlist pública, la directiva CSP mínima y las pruebas descritas en `docs/SECURITY.md`.
 
@@ -184,6 +186,8 @@ No se crea una carpeta de autenticación hasta que exista un caso de uso real. C
 - reset y estilos base;
 - shells, ritmos de sección y utilidades compartidas;
 - superficies, botones, formularios y patrones reutilizados.
+
+El build conserva `build.inlineStylesheets: 'never'`. En la comparación de la auditoría de 2026-08-06, `never` y `auto` produjeron el mismo resultado (5.009.619 B de HTML + CSS únicos sobre 63 rutas), mientras que `always` elevó esa base a 13.848.512 B al repetir CSS en cada HTML. El CSS externo permite caché entre páginas, reduce el HTML y mantiene las hojas bajo la política de assets propios; se vuelve a medir si cambia materialmente la estructura de estilos.
 
 El `<style>` de un componente contiene únicamente:
 

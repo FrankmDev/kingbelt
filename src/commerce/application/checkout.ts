@@ -105,7 +105,7 @@ export const buildCheckoutBlockedMessage = (cart: Cart): string => {
   return 'No se puede continuar al checkout con el carrito actual.';
 };
 
-export const withCheckoutTimeout = <T>(
+export const withCheckoutTimeout = async <T>(
   promise: Promise<T>,
   timeoutMs: number = DEFAULT_CHECKOUT_TIMEOUT_MS
 ): Promise<T> => {
@@ -114,9 +114,11 @@ export const withCheckoutTimeout = <T>(
     timeoutId = setTimeout(() => reject(new CheckoutTimeoutError()), timeoutMs);
   });
 
-  return Promise.race([promise, timeoutPromise]).finally(() => {
+  try {
+    return await Promise.race([promise, timeoutPromise]);
+  } finally {
     if (timeoutId !== undefined) clearTimeout(timeoutId);
-  });
+  }
 };
 
 /** Estado de demostración del proveedor local. No simula pedidos ni pagos. */

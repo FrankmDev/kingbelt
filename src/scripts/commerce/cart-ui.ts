@@ -137,7 +137,7 @@ const createQuantitySelector = (
   decrease.className = 'qty-selector__btn';
   decrease.setAttribute('aria-label', `Reducir cantidad de ${line.product.title}`);
   decrease.setAttribute('data-qty-decrease', line.id);
-  decrease.disabled = controlsDisabled || line.quantity <= 1;
+  decrease.disabled = controlsDisabled || line.quantity <= line.availability.minimum;
   if (decrease.disabled) decrease.title = disabledReason || 'No puedes reducir más la cantidad.';
   const decreaseGlyph = document.createElement('span');
   decreaseGlyph.setAttribute('aria-hidden', 'true');
@@ -147,9 +147,9 @@ const createQuantitySelector = (
   const input = document.createElement('input');
   input.type = 'number';
   input.className = 'qty-selector__input kb-input';
-  input.min = '1';
+  input.min = String(line.availability.minimum);
   input.max = String(Math.max(line.availability.maxQuantity, line.quantity));
-  input.step = '1';
+  input.step = String(line.availability.increment);
   input.inputMode = 'numeric';
   input.value = String(line.quantity);
   input.setAttribute('data-qty-input', line.id);

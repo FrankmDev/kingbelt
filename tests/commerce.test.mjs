@@ -2,7 +2,13 @@ import { describe, expect, test } from 'bun:test';
 import { demoCollections, demoProducts } from '../src/demo-catalog.ts';
 import { createCartService, emptyCart } from '../src/commerce/application/cart-service.ts';
 import { filterProductSummaries, getCollectionFacets, matchesCatalogSelection, matchesPriceRange, normalizeFilterValue, parseCatalogFilterParams, serializeCatalogFilterParams, toFilterableProduct, COLLECTION_PRICE_RANGES } from '../src/commerce/domain/catalog-filters.ts';
-import { assertValidCatalog, CatalogValidationError, validateCatalog } from '../src/commerce/application/catalog-validation.ts';
+import {
+  assertValidCatalog,
+  CatalogValidationError,
+  SHOPIFY_MAX_PRODUCT_OPTIONS,
+  SHOPIFY_MAX_PRODUCT_VARIANTS,
+  validateCatalog,
+} from '../src/commerce/application/catalog-validation.ts';
 import { getSafeCheckoutUrl } from '../src/commerce/application/checkout.ts';
 import {
   createDemoCatalogAdapter,
@@ -65,7 +71,7 @@ const variant = ({
   salesStatus = 'active',
   quantity = 10,
   inventoryPolicy = 'deny',
-  purchaseLimit,
+  quantityRule = { minimum: 1, increment: 1 },
   compareAtPrice,
   imageId = 'image:test',
 }) => ({
@@ -80,7 +86,7 @@ const variant = ({
   salesStatus,
   inventory: quantity === null ? { kind: 'unknown' } : { kind: 'known', quantity },
   inventoryPolicy,
-  ...(purchaseLimit === undefined ? {} : { purchaseLimit }),
+  quantityRule,
   imageId,
 });
 
@@ -94,14 +100,22 @@ const makeProduct = ({
   productType = 'Piel lisa',
   collectionId = collection.id,
 }) => {
-  const image = productImage(`${id}:image:primary`);
-  const normalizedVariants = variants.map((item) => ({ ...item, imageId: image.id }));
-  const colors = [...new Set(normalizedVariants.map((item) =>
+  const colors = [...new Set(variants.map((item) =>
     labelFromId(item.optionValues.find((option) => option.optionId === colorOptionId).valueId)
   ))].map((label) => ({ id: colorId(label), label, swatch: '#111111' }));
-  const sizes = [...new Set(normalizedVariants.map((item) =>
+  const sizes = [...new Set(variants.map((item) =>
     labelFromId(item.optionValues.find((option) => option.optionId === sizeOptionId).valueId)
   ))].map((label) => ({ id: sizeId(label), label }));
+  const galleries = colors.map((color) => ({
+    color,
+    images: Array.from({ length: 3 }, (_, index) => productImage(`${id}:image:${color.id}:${index}`)),
+  }));
+  const primaryImageByColor = new Map(galleries.map(({ color, images }) => [color.id, images[0].id]));
+  const normalizedVariants = variants.map((item) => {
+    const selectedColor = item.optionValues.find((option) => option.optionId === colorOptionId)?.valueId;
+    return { ...item, imageId: primaryImageByColor.get(selectedColor) };
+  });
+  const images = galleries.flatMap((gallery) => gallery.images);
   return {
     id,
     handle,
@@ -111,6 +125,8 @@ const makeProduct = ({
     summary: 'Resumen de prueba.',
     vendor: 'KingBelt',
     productType,
+    category: { id: 'category:belts', name: 'Cinturones' },
+    publicationStatus: 'published',
     primaryCollectionId: collectionId,
     collectionIds: [collectionId],
     options: [
@@ -118,12 +134,12 @@ const makeProduct = ({
       { id: sizeOptionId, name: 'Talla', purpose: 'size', values: sizes },
     ],
     variants: normalizedVariants,
-    images: [image],
-    primaryImageId: image.id,
-    mediaGroups: colors.map((color) => ({
+    images,
+    primaryImageId: images[0].id,
+    mediaGroups: galleries.map(({ color, images: galleryImages }) => ({
       id: `${id}:media:${color.id}`,
       optionValueId: color.id,
-      imageIds: [image.id],
+      imageIds: galleryImages.map((image) => image.id),
     })),
     specifications: [],
   };
@@ -256,13 +272,27 @@ describe('medios canónicos por color y variante', () => {
     expect('image' in black).toBe(false);
   });
 
-  test('una imagen específica de variante puede ser independiente de la galería de color', () => {
+  test('rechaza una imagen de variante ajena a la galería de su color', () => {
     const product = structuredClone(asymmetricProduct);
     const independent = productImage('image:variant-specific');
     product.images.push(independent);
     product.variants[0].imageId = independent.id;
     expect(getVariantGallery(product, product.variants[0])[0].id).toBe(independent.id);
-    expect(validateCatalog([product], [collection])).toEqual([]);
+    expect(validateCatalog([product], [collection]).map((entry) => entry.code)).toEqual(
+      expect.arrayContaining(['unassigned_color_image', 'variant_color_image_mismatch'])
+    );
+  });
+
+  test('rechaza galerías de color incompletas, repetidas o sin relación', () => {
+    const invalid = structuredClone(asymmetricProduct);
+    invalid.mediaGroups[0].imageIds.pop();
+    invalid.mediaGroups[1].imageIds[0] = invalid.mediaGroups[0].imageIds[0];
+    const codes = validateCatalog([invalid], [collection]).map((entry) => entry.code);
+    expect(codes).toEqual(expect.arrayContaining([
+      'invalid_color_gallery_size',
+      'media_image_reused_between_colors',
+      'variant_color_image_mismatch',
+    ]));
   });
 });
 
@@ -380,7 +410,7 @@ describe('validación exhaustiva de catálogo', () => {
     invalid.variants[0].optionValues.pop();
     invalid.variants[0].imageId = 'image:missing';
     invalid.variants[0].inventory.quantity = -1;
-    invalid.variants[0].purchaseLimit = 0;
+    invalid.variants[0].quantityRule.maximum = 0;
     invalid.variants[0].compareAtPrice = { amountMinor: 1, currency: 'USD' };
     invalid.variants[0].weight = { value: 0, unit: 'stone' };
     invalid.images[0].url = 'javascript:alert(1)';
@@ -392,7 +422,7 @@ describe('validación exhaustiva de catálogo', () => {
       'incomplete_variant_options',
       'variant_unknown_image',
       'invalid_inventory_quantity',
-      'invalid_purchase_limit',
+      'invalid_quantity_maximum',
       'unsupported_currency',
       'compare_price_currency_mismatch',
       'invalid_compare_price',
@@ -406,14 +436,76 @@ describe('validación exhaustiva de catálogo', () => {
     expect(() => assertValidCatalog([invalid], [collection])).toThrow(CatalogValidationError);
   });
 
-  test('los campos SEO opcionales y una galería sin asociación tienen fallback predecible', () => {
+  test('los campos SEO opcionales conservan fallback y una relación de color parcial falla', () => {
     const safe = structuredClone(asymmetricProduct);
     delete safe.seo;
     safe.mediaGroups = [];
     safe.variants.forEach((item) => delete item.imageId);
     expect(getVariantImage(safe, safe.variants[0])?.id).toBe(safe.primaryImageId);
     expect(getVariantGallery(safe, safe.variants[0])).toEqual(safe.images);
-    expect(validateCatalog([safe], [collection])).toEqual([]);
+    expect(validateCatalog([safe], [collection]).map((entry) => entry.code)).toEqual(
+      expect.arrayContaining([
+        'missing_color_media_group',
+        'unassigned_color_image',
+        'missing_variant_color_image',
+      ])
+    );
+  });
+
+  test('aplica los límites vigentes de tres opciones y 2.048 variantes por producto', () => {
+    const tooManyOptions = structuredClone(asymmetricProduct);
+    tooManyOptions.options.push(
+      { id: 'option:finish', name: 'Acabado', values: [{ id: 'finish:mate', label: 'Mate' }] },
+      { id: 'option:edge', name: 'Canto', values: [{ id: 'edge:tonal', label: 'Tonal' }] },
+    );
+    expect(tooManyOptions.options).toHaveLength(SHOPIFY_MAX_PRODUCT_OPTIONS + 1);
+    expect(validateCatalog([tooManyOptions], [collection]).map((entry) => entry.code))
+      .toContain('too_many_product_options');
+
+    const variants = Array.from({ length: SHOPIFY_MAX_PRODUCT_VARIANTS + 1 }, (_, index) =>
+      variant({
+        id: `variant:limit:${index}`,
+        sku: `SKU-LIMIT-${index}`,
+        color: 'Negro',
+        size: String(index),
+      })
+    );
+    const tooManyVariants = makeProduct({
+      id: 'product:variant-limit',
+      handle: 'producto-limite-variantes',
+      reference: 'KB-LIMIT',
+      variants,
+    });
+    expect(validateCatalog([tooManyVariants], [collection]).map((entry) => entry.code))
+      .toContain('too_many_product_variants');
+    expect(validateCatalog([
+      makeProduct({
+        id: 'product:variant-limit-ok',
+        handle: 'producto-limite-variantes-ok',
+        reference: 'KB-LIMIT-OK',
+        variants: variants.slice(0, SHOPIFY_MAX_PRODUCT_VARIANTS),
+      }),
+    ], [collection]).map((entry) => entry.code)).not.toContain('too_many_product_variants');
+  });
+
+  test('rechaza reglas de cantidad parciales o distintas de la política 1/1', () => {
+    const unsupported = structuredClone(asymmetricProduct);
+    unsupported.variants[0].quantityRule = { minimum: 2, increment: 2, maximum: 10 };
+    const unsupportedCodes = validateCatalog([unsupported], [collection]).map((entry) => entry.code);
+    expect(unsupportedCodes).toEqual(expect.arrayContaining([
+      'unsupported_quantity_minimum',
+      'unsupported_quantity_increment',
+    ]));
+
+    const partial = structuredClone(asymmetricProduct);
+    delete partial.variants[0].quantityRule;
+    delete partial.category;
+    const partialCodes = validateCatalog([partial], [collection]).map((entry) => entry.code);
+    expect(partialCodes).toEqual(expect.arrayContaining([
+      'missing_quantity_rule',
+      'invalid_product_category',
+    ]));
+    expect(validateCatalog([], []).map((entry) => entry.code)).toEqual(['empty_catalog', 'empty_catalog']);
   });
 });
 

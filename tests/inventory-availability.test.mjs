@@ -16,12 +16,16 @@ const availabilityVariant = ({
   salesStatus = 'active',
   quantity = 10,
   inventoryPolicy = 'deny',
-  purchaseLimit,
+  maximum,
 } = {}) => ({
   salesStatus,
   inventory: quantity === null ? { kind: 'unknown' } : { kind: 'known', quantity },
   inventoryPolicy,
-  ...(purchaseLimit === undefined ? {} : { purchaseLimit }),
+  quantityRule: {
+    minimum: 1,
+    increment: 1,
+    ...(maximum === undefined ? {} : { maximum }),
+  },
 });
 
 const demoRecord = () => {
@@ -49,6 +53,8 @@ describe('interpretación única de disponibilidad', () => {
       status: 'available',
       purchasable: true,
       maxQuantity: 10,
+      minimum: 1,
+      increment: 1,
       limitReason: 'inventory',
       quantityKnown: true,
       backorder: false,
@@ -102,12 +108,14 @@ describe('interpretación única de disponibilidad', () => {
     expect(getVariantAvailability(availabilityVariant({
       quantity: 0,
       inventoryPolicy: 'continue',
-      purchaseLimit: 4,
+      maximum: 4,
     }))).toEqual({
       status: 'available',
       purchasable: true,
       maxQuantity: 4,
-      limitReason: 'purchase_limit',
+      minimum: 1,
+      increment: 1,
+      limitReason: 'quantity_rule',
       quantityKnown: true,
       backorder: true,
       message: 'Disponible para pedir.',
@@ -115,14 +123,14 @@ describe('interpretación única de disponibilidad', () => {
   });
 
   test('un máximo comercial limita la compra sin presentarse como inventario', () => {
-    const availability = getVariantAvailability(availabilityVariant({ quantity: 20, purchaseLimit: 3 }));
-    expect(availability).toMatchObject({ maxQuantity: 3, limitReason: 'purchase_limit' });
+    const availability = getVariantAvailability(availabilityVariant({ quantity: 20, maximum: 3 }));
+    expect(availability).toMatchObject({ maxQuantity: 3, limitReason: 'quantity_rule' });
     expect(getQuantityLimitMessage(availability)).toBe('El máximo por compra para esta variante es 3.');
   });
 
   test('el carrito aplica el máximo comercial con un error distinto al de stock', () => {
     const state = mutableCatalog(demoRecord());
-    state.record.variant.purchaseLimit = 2;
+    state.record.variant.quantityRule.maximum = 2;
     const service = createCartService(state.catalog);
     const result = service.addToCart(emptyCart(), {
       variantId: state.record.variant.id,

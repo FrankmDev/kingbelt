@@ -50,6 +50,12 @@ export type VariantInventory =
 export type InventoryPolicy = 'deny' | 'continue';
 export type VariantSalesStatus = 'active' | 'unavailable';
 
+export interface QuantityRule {
+  minimum: number;
+  increment: number;
+  maximum?: number;
+}
+
 export interface ProductVariant {
   id: VariantId;
   sku: Sku;
@@ -60,8 +66,8 @@ export interface ProductVariant {
   salesStatus: VariantSalesStatus;
   inventory: VariantInventory;
   inventoryPolicy: InventoryPolicy;
-  /** Máximo comercial por compra, solo cuando el origen lo declare. */
-  purchaseLimit?: number;
+  /** Regla comercial autoritativa de cantidad normalizada desde el origen. */
+  quantityRule: QuantityRule;
   imageId?: string;
   weight?: ProductWeight;
 }
@@ -70,6 +76,13 @@ export interface ProductSeo {
   title?: string;
   description?: string;
 }
+
+export interface OfficialProductCategory {
+  id: string;
+  name: string;
+}
+
+export type ProductPublicationStatus = 'published' | 'unpublished';
 
 export interface ProductSpecification {
   label: string;
@@ -117,6 +130,8 @@ export interface Product {
   summary: string;
   vendor: string;
   productType: string;
+  category: OfficialProductCategory;
+  publicationStatus: ProductPublicationStatus;
   primaryCollectionId: string;
   collectionIds: string[];
   badge?: string;

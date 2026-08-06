@@ -116,7 +116,7 @@ export const calculatePriceRange = (
 };
 
 export const getMaxSelectableQuantity = (
-  variant: Pick<ProductVariant, 'salesStatus' | 'inventory' | 'inventoryPolicy' | 'purchaseLimit'> | undefined,
+  variant: Pick<ProductVariant, 'salesStatus' | 'inventory' | 'inventoryPolicy' | 'quantityRule'> | undefined,
   hardLimit = MAX_CART_QUANTITY
 ): number => variant ? getVariantAvailability(variant, hardLimit).maxQuantity : 0;
 

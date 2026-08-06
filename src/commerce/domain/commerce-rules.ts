@@ -11,6 +11,11 @@ export const commerceRules = {
     technicalLineQuantityLimit: 99,
     maximumDistinctLines: 50,
   },
+  quantity: {
+    /** Política admitida hasta que la interfaz soporte reglas escalonadas. */
+    supportedMinimum: 1,
+    supportedIncrement: 1,
+  },
   checkout: {
     /** Tiempo máximo de espera antes de ofrecer recuperación sin vaciar el carrito. */
     timeoutMs: 30_000,
@@ -21,4 +26,3 @@ export const commerceRules = {
     decisionStatus: 'pending',
   },
 } as const;
-

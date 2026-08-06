@@ -14,7 +14,7 @@ Estado: baseline preventiva. El sitio sigue usando catálogo y carrito demo; no 
 ## Variables y secretos
 
 - `.env*`, estado local de Vercel, claves privadas, certificados y archivos habituales de credenciales están ignorados por Git; `.env.example` documenta solo plantillas inactivas (comentadas) hasta que existan adaptadores reales.
-- Un nombre `PUBLIC_*` se considera parte del bundle y del HTML público. No puede contener secretos, tokens Admin, contraseñas ni credenciales privadas. Un token Storefront público solo se permitirá si el flujo elegido lo exige y con los scopes mínimos de catálogo/carrito.
+- Un nombre `PUBLIC_*` se considera parte del bundle y del HTML público. No puede contener secretos, tokens Admin, tokens Storefront, contraseñas ni credenciales privadas. El futuro carrito Shopify usará siempre el BFF same-origin; el navegador no necesita un token del proveedor.
 - Los secretos privados se leerán únicamente desde una frontera servidor mediante `astro:env/server`. El build estático actual no puede custodiar un secreto: si una operación lo necesita, debe existir antes un runtime servidor.
 - Preview y producción deben usar proyectos/entornos de secretos separados, tiendas o credenciales separadas y permisos independientes. Nunca se copia el valor de producción a preview.
 - Todo secreto debe poder rotarse desde el gestor del despliegue sin editar código. La rotación incluye revocar el valor anterior, actualizar el entorno correspondiente y reconstruir/reiniciar el runtime que lo consume.
@@ -51,7 +51,7 @@ Estado: baseline preventiva. El sitio sigue usando catálogo y carrito demo; no 
 
 1. Confirmar dueño, entorno, scopes mínimos, cuota, hosts y política de rotación.
 2. Crear credenciales distintas para preview y producción en el gestor de secretos, nunca en archivos locales compartidos.
-3. Elegir explícitamente cliente con token realmente público o frontera servidor para cualquier secreto privado.
+3. Implementar la frontera servidor/BFF same-origin: cliente neutral → endpoints acotados → servicio servidor → Storefront Cart API.
 4. Añadir hosts exactos a la allowlist y a la directiva CSP mínima; probar URLs adversariales.
 5. Validar y limitar respuestas/payloads antes de mapearlos al dominio; no exponer campos administrativos.
 6. Probar carrito falsificado, stock/precio cambiado, checkout caducado, errores redactados, rate limiting y ausencia de PII en almacenamiento/logs.

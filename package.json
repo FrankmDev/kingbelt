@@ -11,9 +11,10 @@
     "check": "astro check",
     "test": "bun test",
     "build": "astro build",
-    "validate": "bun run security:scan && bun run check && bun run test && bun run build && bun run security:scan && bun run check:links && bun run check:perf",
+    "validate": "bun install --frozen-lockfile && bun run audit:dependencies && bun run security:scan:history && bun run check && bun run build && bun run test && bun run security:scan && bun run check:links && bun run check:perf && bun run check:scale",
     "check:links": "node scripts/check-internal-links.mjs",
     "check:perf": "node scripts/check-performance-budgets.mjs",
+    "check:scale": "node scripts/check-scale-product.mjs",
     "security:scan": "node scripts/security-audit.mjs",
     "security:scan:history": "node scripts/security-audit.mjs --history",
     "audit:dependencies": "bun audit",
@@ -28,13 +29,6 @@
     "@astrojs/check": "^0.9.10",
     "@tailwindcss/vite": "^4.3.3",
     "tailwindcss": "^4.3.3",
-    "typescript": "^6.0.3",
-    "vite": "^8.2.0"
-  },
-  "overrides": {
-    "fast-uri": "3.1.5",
-    "sharp": "0.35.3",
-    "svgo": "4.0.2",
-    "yaml": "2.9.0"
+    "typescript": "^6.0.3"
   }
 }

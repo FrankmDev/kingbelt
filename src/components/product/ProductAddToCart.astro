@@ -5,7 +5,10 @@ import Icon from '../ui/Icon.astro';
 import { formatMoney } from '@commerce/domain/money';
 import { calculatePriceRange, getFirstAvailableVariant } from '@commerce/domain/variants';
 import { getVariantAvailability } from '@commerce/domain/inventory';
-import { toPublicBuyBoxVariant } from '@commerce/domain/product-mappers';
+import {
+  toCompactPublicBuyBoxPayload,
+  toPublicBuyBoxVariant,
+} from '@commerce/domain/product-mappers';
 import type { Product } from '@commerce/domain/catalog';
 import { serializeJsonForHtml } from '@shared/security/serialize-json-for-html';
 
@@ -25,6 +28,8 @@ const publicInitial = initialVariant ? toPublicBuyBoxVariant(initialVariant) : u
 const purchasable = initialAvailability?.purchasable ?? false;
 /** Tope HTML público: nunca el stock exacto cuando la política lo oculta. */
 const initialMax = publicInitial?.availability.maxQuantity ?? 0;
+const initialMinimum = publicInitial?.availability.minimum ?? 1;
+const initialIncrement = publicInitial?.availability.increment ?? 1;
 const initialSubmitLabel = purchasable
   ? 'Añadir al carrito'
   : initialAvailability?.status === 'out_of_stock'
@@ -33,12 +38,7 @@ const initialSubmitLabel = purchasable
 const priceRange = calculatePriceRange(product.variants);
 const optionKey = (value: string) => value.toLocaleLowerCase('es').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-');
 const initialValue = (optionId: string) => initialVariant?.optionValues.find((option) => option.optionId === optionId)?.valueId;
-const currency = initialVariant?.price.currency ?? product.variants[0]?.price.currency ?? 'EUR';
-const variantsJson = serializeJsonForHtml({
-  currency,
-  options: product.options,
-  variants: product.variants.map(toPublicBuyBoxVariant),
-});
+const variantsJson = serializeJsonForHtml(toCompactPublicBuyBoxPayload(product));
 ---
 
 <form
@@ -72,7 +72,12 @@ const variantsJson = serializeJsonForHtml({
     const isColor = option.purpose === 'color';
     const isSize = option.purpose === 'size';
     return (
-        <fieldset class="product-buy__fieldset" aria-describedby={errorId} data-product-option-group={option.id}>
+        <fieldset
+          class="product-buy__fieldset"
+          aria-describedby={errorId}
+          data-product-option-group={option.id}
+          data-product-option-name={option.name}
+        >
         <legend class="product-buy__legend kb-label">{isSize ? 'Talla (cm)' : option.name}</legend>
         <div class={isColor ? 'product-buy__swatches' : 'product-buy__sizes'}>
           {option.values.map((value) => (
@@ -84,6 +89,7 @@ const variantsJson = serializeJsonForHtml({
                 class="sr-only"
                 data-product-option
                 data-option-id={option.id}
+                data-option-value-label={value.label}
                 checked={initialValue(option.id) === value.id}
                 required
               />
@@ -120,9 +126,10 @@ const variantsJson = serializeJsonForHtml({
         type="number"
         class="kb-input product-buy__qty-input"
         name="quantity"
-        value="1"
-        min="1"
+        value={initialMinimum}
+        min={initialMinimum}
         max={Math.max(1, initialMax)}
+        step={initialIncrement}
         inputmode="numeric"
         data-product-quantity
         aria-describedby={quantityErrorId}

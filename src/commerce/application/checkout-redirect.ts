@@ -1,5 +1,3 @@
-import type { CheckoutResult } from './checkout';
-
 const HOSTNAME_PATTERN =
   /^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)*[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/i;
 
@@ -8,6 +6,13 @@ const IPV6_PATTERN = /^[\da-f:]+$/i;
 const CONTROL_CHARACTER_PATTERN = /[\u0000-\u001f\u007f]/;
 
 export const MAX_CHECKOUT_URL_LENGTH = 2_048;
+
+/** Proyección mínima para validar una salida de checkout sin acoplar módulos. */
+export interface CheckoutRedirectCandidate {
+  status: string;
+  url?: string;
+  allowedHosts?: readonly string[];
+}
 
 /** Normaliza un host permitido; rechaza comodines, puertos y sufijos ambiguos. */
 export const normalizeCheckoutHost = (host: string): string | null => {
@@ -43,7 +48,7 @@ const isHostnameAllowed = (hostname: string, allowedHosts: ReadonlySet<string>):
  * Defensa adicional antes de abandonar el sitio. El adaptador debe declarar
  * explícitamente sus hosts de checkout (dominio propio o Shopify).
  */
-export const getSafeCheckoutUrl = (result: CheckoutResult): URL | null => {
+export const getSafeCheckoutUrl = (result: CheckoutRedirectCandidate): URL | null => {
   if (
     result.status !== 'ready' ||
     !result.url ||

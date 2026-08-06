@@ -1,4 +1,9 @@
-import { getQuantityLimitMessage, getVariantAvailability } from '../domain/inventory';
+import {
+  clampQuantityToRule,
+  getQuantityLimitMessage,
+  getVariantAvailability,
+  isQuantityAllowed,
+} from '../domain/inventory';
 import type { LineAvailability } from '../domain/inventory';
 import { multiplyMoney, sumMoney, zeroMoney } from '../domain/money';
 import { MAX_CART_QUANTITY } from '../domain/variants';
@@ -67,7 +72,7 @@ const computeLineErrors = (lines: readonly CartLine[]): CartLineError[] => {
       errors.push({ lineId: line.id, code: 'out_of_stock', message: line.availability.message, severity: 'error' });
     } else if (line.availability.status === 'unavailable') {
       errors.push({ lineId: line.id, code: 'unavailable', message: line.availability.message, severity: 'error' });
-    } else if (line.quantity > line.availability.maxQuantity) {
+    } else if (!isQuantityAllowed(line.quantity, line.availability)) {
       errors.push({
         lineId: line.id,
         code: getLimitErrorCode(line.availability),
@@ -134,6 +139,27 @@ const validateInput = (
       },
     };
   }
+  const availability = getVariantAvailability(record.variant);
+  if (availability.status === 'out_of_stock' || availability.status === 'unavailable') {
+    return {
+      success: false,
+      cart,
+      error: { code: availability.status, message: availability.message, field: 'variant' },
+    };
+  }
+  if (!isQuantityAllowed(input.quantity, availability)) {
+    return {
+      success: false,
+      cart,
+      error: {
+        code: input.quantity > availability.maxQuantity ? getLimitErrorCode(availability) : 'validation',
+        message: input.quantity > availability.maxQuantity
+          ? getQuantityLimitMessage(availability)
+          : `La cantidad debe comenzar en ${availability.minimum} y avanzar de ${availability.increment} en ${availability.increment}.`,
+        field: 'quantity',
+      },
+    };
+  }
   return { record, quantity: input.quantity };
 };
 
@@ -142,10 +168,6 @@ const addToCart = (catalog: CartCatalog, cart: Cart, input: AddToCartInput): Car
   if ('success' in validated) return validated;
   const { record, quantity } = validated;
   const availability = getVariantAvailability(record.variant);
-  if (availability.status === 'out_of_stock' || availability.status === 'unavailable') {
-    return { success: false, cart, error: { code: availability.status, message: availability.message, field: 'variant' } };
-  }
-
   const lineId = createLineId(record.variant.id);
   const existing = cart.lines.find((line) => line.id === lineId);
   if (!existing && cart.lines.length >= MAX_CART_LINES) {
@@ -160,7 +182,7 @@ const addToCart = (catalog: CartCatalog, cart: Cart, input: AddToCartInput): Car
     };
   }
   const nextQuantity = (existing?.quantity ?? 0) + quantity;
-  if (nextQuantity > availability.maxQuantity) {
+  if (!isQuantityAllowed(nextQuantity, availability)) {
     return {
       success: false,
       cart,
@@ -203,8 +225,15 @@ const updateLineQuantity = (
   if (availability.status === 'out_of_stock' || availability.status === 'unavailable') {
     return { success: false, cart: computeCart(catalog, cart.lines), error: { code: availability.status, message: availability.message } };
   }
-  if (quantity > availability.maxQuantity) {
-    const adjustedQuantity = availability.maxQuantity;
+  if (!isQuantityAllowed(quantity, availability)) {
+    const adjustedQuantity = clampQuantityToRule(quantity, availability);
+    if (adjustedQuantity < availability.minimum) {
+      return {
+        success: false,
+        cart: computeCart(catalog, cart.lines),
+        error: { code: 'validation', message: 'La cantidad solicitada no cumple la regla de esta variante.', field: 'quantity' },
+      };
+    }
     const adjustedLines = cart.lines.map((item) => item.id === lineId ? buildLine(record, adjustedQuantity) : item);
     return {
       success: true,
@@ -256,7 +285,7 @@ const restoreCart = (
     const availability = getVariantAvailability(record.variant);
     const requestedQuantity = Math.min(existingQuantity + persisted.quantity, MAX_CART_QUANTITY);
     const quantity = availability.maxQuantity > 0
-      ? Math.min(requestedQuantity, availability.maxQuantity)
+      ? clampQuantityToRule(requestedQuantity, availability)
       : requestedQuantity;
     restored.set(lineId, buildLine(record, quantity));
     if (quantity < requestedQuantity) {

@@ -1,0 +1,25 @@
+---
+import ProductAddToCart from '../../../../../src/components/product/ProductAddToCart.astro';
+import ProductGallery from '../../../../../src/components/product/ProductGallery.astro';
+import '../../../../../src/styles/global.css';
+import { scaleProduct } from '../../../scale-product';
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>Fixture de 76 variantes</title>
+  </head>
+  <body>
+    <main data-product-page>
+      <ProductGallery
+        images={scaleProduct.images}
+        mediaGroups={scaleProduct.mediaGroups}
+        idPrefix={scaleProduct.handle}
+      />
+      <ProductAddToCart product={scaleProduct} />
+    </main>
+  </body>
+</html>

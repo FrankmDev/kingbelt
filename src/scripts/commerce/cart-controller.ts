@@ -198,7 +198,12 @@ const bindCartInteractions = () => {
       const lineId = decrease.getAttribute('data-qty-decrease');
       const line = getCart().lines.find((item) => item.id === lineId);
       if (lineId && line) {
-        await handleQuantityAction(lineId, line.quantity - 1, getView(decrease), 'decrease');
+        await handleQuantityAction(
+          lineId,
+          line.quantity - line.availability.increment,
+          getView(decrease),
+          'decrease'
+        );
       }
       return;
     }
@@ -208,7 +213,12 @@ const bindCartInteractions = () => {
       const lineId = increase.getAttribute('data-qty-increase');
       const line = getCart().lines.find((item) => item.id === lineId);
       if (lineId && line) {
-        await handleQuantityAction(lineId, line.quantity + 1, getView(increase), 'increase');
+        await handleQuantityAction(
+          lineId,
+          line.quantity + line.availability.increment,
+          getView(increase),
+          'increase'
+        );
       }
       return;
     }
@@ -273,7 +283,11 @@ const bindCartInteractions = () => {
     const view = getView(target);
     if (!lineId || !line) return;
 
-    if (!Number.isInteger(quantity) || quantity < 1) {
+    if (
+      !Number.isInteger(quantity) ||
+      quantity < line.availability.minimum ||
+      (quantity - line.availability.minimum) % line.availability.increment !== 0
+    ) {
       target.value = String(line.quantity);
       setCartStatusMessage(getStatusTarget(view), 'Introduce una cantidad válida.', true, true);
       return;

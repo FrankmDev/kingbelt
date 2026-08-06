@@ -17,7 +17,7 @@ export default defineConfig({
   devToolbar: {
     enabled: false,
   },
-  // La CSP de despliegue usa `script-src 'self'`: no incrustar chunks ejecutables.
+  // CSS externo: reutilizable entre rutas y compatible con una CSP basada en assets propios.
   build: {
     inlineStylesheets: 'never',
   },

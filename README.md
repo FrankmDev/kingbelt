@@ -21,7 +21,7 @@ bun run validate
 bun run preview
 ```
 
-`bun run validate` agrupa escaneo de seguridad, check, tests, build, enlaces internos y presupuestos de rendimiento.
+`bun run validate` ejecuta instalación congelada, auditoría de dependencias, escaneo de fuentes e historial, check de Astro/TypeScript, build estático, tests, escaneo del build, enlaces internos y presupuestos de rendimiento —incluida la ficha renderizada de 76 variantes—.
 
 ## Estructura
 

@@ -24,6 +24,8 @@ import type {
 export interface PublicBuyBoxAvailability {
   status: AvailabilityStatus;
   maxQuantity: number;
+  minimum: number;
+  increment: number;
   limitReason: LineAvailability['limitReason'];
   backorder?: true;
 }
@@ -42,6 +44,46 @@ export interface PublicBuyBoxVariant {
   inventory?: ProductVariant['inventory'];
 }
 
+type PublicAvailabilityCode = 'a' | 'l' | 'o' | 'u';
+type PublicLimitCode = 'i' | 'q' | 't' | 'u';
+
+export type CompactPublicBuyBoxVariant = readonly [
+  id: ProductVariant['id'],
+  optionValueIds: readonly string[],
+  priceMinor: number,
+  compareAtPriceMinor: number | null,
+  imageId: string | null,
+  availability: PublicAvailabilityCode,
+  maxQuantity: number,
+  minimum: number,
+  increment: number,
+  limitReason: PublicLimitCode,
+  backorder: 0 | 1,
+];
+
+export interface CompactPublicBuyBoxPayload {
+  /** Moneda única del producto. */
+  c: string;
+  /** IDs de opciones en el orden usado por cada tupla de variante. */
+  o: string[];
+  /** Tuplas compactas sin SKU, inventario, nombres ni objetos repetidos. */
+  v: CompactPublicBuyBoxVariant[];
+}
+
+const availabilityCodes: Record<AvailabilityStatus, PublicAvailabilityCode> = {
+  available: 'a',
+  limited: 'l',
+  out_of_stock: 'o',
+  unavailable: 'u',
+};
+
+const limitCodes: Record<LineAvailability['limitReason'], PublicLimitCode> = {
+  inventory: 'i',
+  quantity_rule: 'q',
+  technical: 't',
+  unavailable: 'u',
+};
+
 export const isPublicBuyBoxPurchasable = (
   availability: PublicBuyBoxAvailability
 ): boolean =>
@@ -53,7 +95,7 @@ export const isPublicBuyBoxPurchasable = (
  * autoridad y ajustará o rechazará cantidades.
  */
 export const toPublicBuyBoxAvailability = (
-  variant: Pick<ProductVariant, 'salesStatus' | 'inventory' | 'inventoryPolicy' | 'purchaseLimit'>
+  variant: Pick<ProductVariant, 'salesStatus' | 'inventory' | 'inventoryPolicy' | 'quantityRule'>
 ): PublicBuyBoxAvailability => {
   const availability = getVariantAvailability(variant);
   const base = {
@@ -68,26 +110,32 @@ export const toPublicBuyBoxAvailability = (
   ) {
     return {
       ...base,
+      minimum: availability.minimum,
+      increment: availability.increment,
       maxQuantity: availability.maxQuantity,
       limitReason: availability.limitReason,
     };
   }
 
-  const purchaseLimit =
-    Number.isSafeInteger(variant.purchaseLimit) && Number(variant.purchaseLimit) > 0
-      ? Number(variant.purchaseLimit)
+  const quantityMaximum =
+    Number.isSafeInteger(variant.quantityRule.maximum) && Number(variant.quantityRule.maximum) > 0
+      ? Number(variant.quantityRule.maximum)
       : undefined;
 
-  if (purchaseLimit !== undefined) {
+  if (quantityMaximum !== undefined) {
     return {
       ...base,
-      maxQuantity: purchaseLimit,
-      limitReason: 'purchase_limit',
+      minimum: variant.quantityRule.minimum,
+      increment: variant.quantityRule.increment,
+      maxQuantity: quantityMaximum,
+      limitReason: 'quantity_rule',
     };
   }
 
   return {
     ...base,
+    minimum: variant.quantityRule.minimum,
+    increment: variant.quantityRule.increment,
     maxQuantity: TECHNICAL_LINE_QUANTITY_LIMIT,
     limitReason: 'technical',
   };
@@ -106,6 +154,36 @@ export const toPublicBuyBoxVariant = (variant: ProductVariant): PublicBuyBoxVari
     projection.inventory = variant.inventory;
   }
   return projection;
+};
+
+export const toCompactPublicBuyBoxPayload = (
+  product: Pick<Product, 'options' | 'variants'>
+): CompactPublicBuyBoxPayload => {
+  const currency = product.variants[0]?.price.currency;
+  if (!currency) throw new Error('No se puede crear el payload público de un producto sin variantes.');
+  return {
+    c: currency,
+    o: product.options.map((option) => option.id),
+    v: product.variants.map((variant) => {
+      const publicVariant = toPublicBuyBoxVariant(variant);
+      const valuesByOption = new Map(
+        variant.optionValues.map((selection) => [selection.optionId, selection.valueId])
+      );
+      return [
+        publicVariant.id,
+        product.options.map((option) => valuesByOption.get(option.id) ?? ''),
+        publicVariant.price,
+        publicVariant.compareAtPrice ?? null,
+        publicVariant.imageId ?? null,
+        availabilityCodes[publicVariant.availability.status],
+        publicVariant.availability.maxQuantity,
+        publicVariant.availability.minimum,
+        publicVariant.availability.increment,
+        limitCodes[publicVariant.availability.limitReason],
+        publicVariant.availability.backorder ? 1 : 0,
+      ];
+    }),
+  };
 };
 
 /** Mensaje de ficha derivado de la proyección pública (sin cifrar stock). */

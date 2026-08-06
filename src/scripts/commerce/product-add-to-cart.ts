@@ -3,12 +3,11 @@ import { ensureCartReady } from './lazy-init-cart';
 import { addProductToCart, openCartDrawer } from './cart-store';
 import { formatMoney } from '@commerce/domain/money';
 import { variantId } from '@commerce/domain/identifiers';
-import { getQuantityLimitMessage } from '@commerce/domain/inventory';
+import { getQuantityLimitMessage, isQuantityAllowed } from '@commerce/domain/inventory';
 import {
   getPublicBuyBoxMessage,
   isPublicBuyBoxPurchasable,
   type PublicBuyBoxAvailability,
-  type PublicBuyBoxVariant,
 } from '@commerce/domain/product-mappers';
 import {
   getCompatibleOptionValues,
@@ -23,37 +22,113 @@ import type {
 
 void ensureCartReady();
 
-interface PublicVariant extends Omit<PublicBuyBoxVariant, 'price' | 'compareAtPrice' | 'inventory'> {
+interface PublicVariant {
+  id: string;
+  optionValues: OptionSelection[];
   price: Money;
   compareAtPrice?: Money;
+  imageId?: string;
+  availability: PublicBuyBoxAvailability;
 }
-
-type SerializedVariant = PublicBuyBoxVariant;
 
 interface VariantPayload {
-  currency: string;
-  options: ProductOption[];
-  variants: SerializedVariant[];
+  c: string;
+  o: string[];
+  v: unknown[];
 }
+
+const availabilityStatuses = {
+  a: 'available',
+  l: 'limited',
+  o: 'out_of_stock',
+  u: 'unavailable',
+} as const;
+
+const limitReasons = {
+  i: 'inventory',
+  q: 'quantity_rule',
+  t: 'technical',
+  u: 'unavailable',
+} as const;
 
 const isPublicAvailability = (value: unknown): value is PublicBuyBoxAvailability => {
   if (!value || typeof value !== 'object') return false;
   const availability = value as Partial<PublicBuyBoxAvailability>;
   return (
-    typeof availability.status === 'string' &&
-    typeof availability.maxQuantity === 'number' &&
-    typeof availability.limitReason === 'string' &&
+    ['available', 'limited', 'out_of_stock', 'unavailable'].includes(availability.status ?? '') &&
+    Number.isSafeInteger(availability.maxQuantity) &&
+    Number(availability.maxQuantity) >= 0 &&
+    Number.isSafeInteger(availability.minimum) &&
+    Number(availability.minimum) >= 1 &&
+    Number.isSafeInteger(availability.increment) &&
+    Number(availability.increment) >= 1 &&
+    ['inventory', 'quantity_rule', 'technical', 'unavailable'].includes(availability.limitReason ?? '') &&
     (availability.backorder === undefined || availability.backorder === true)
   );
 };
 
-const toPublicVariant = (variant: SerializedVariant, currency: string): PublicVariant => ({
-  ...variant,
-  price: { amountMinor: variant.price, currency },
-  compareAtPrice: variant.compareAtPrice === undefined
-    ? undefined
-    : { amountMinor: variant.compareAtPrice, currency },
-});
+const readOptions = (form: HTMLFormElement, optionIds: readonly string[]): ProductOption[] =>
+  optionIds.flatMap((optionId) => {
+    const fieldset = [...form.querySelectorAll<HTMLElement>('[data-product-option-group]')]
+      .find((candidate) => candidate.dataset.productOptionGroup === optionId);
+    if (!fieldset?.dataset.productOptionName) return [];
+    const values = [...fieldset.querySelectorAll<HTMLInputElement>('[data-product-option]')]
+      .flatMap((input) => input.dataset.optionValueLabel
+        ? [{ id: input.value, label: input.dataset.optionValueLabel }]
+        : []);
+    return values.length
+      ? [{ id: optionId, name: fieldset.dataset.productOptionName, values }]
+      : [];
+  });
+
+const toPublicVariant = (
+  value: unknown,
+  optionIds: readonly string[],
+  currency: string
+): PublicVariant | null => {
+  if (!Array.isArray(value) || value.length !== 11) return null;
+  const [id, optionValueIds, price, compareAtPrice, imageId, status, max, minimum, increment, limit, backorder] = value;
+  if (
+    typeof id !== 'string' ||
+    !Array.isArray(optionValueIds) ||
+    optionValueIds.length !== optionIds.length ||
+    optionValueIds.some((item) => typeof item !== 'string') ||
+    !Number.isSafeInteger(price) ||
+    (compareAtPrice !== null && !Number.isSafeInteger(compareAtPrice)) ||
+    (imageId !== null && typeof imageId !== 'string') ||
+    typeof status !== 'string' ||
+    !(status in availabilityStatuses) ||
+    !Number.isSafeInteger(max) ||
+    !Number.isSafeInteger(minimum) ||
+    !Number.isSafeInteger(increment) ||
+    typeof limit !== 'string' ||
+    !(limit in limitReasons) ||
+    (backorder !== 0 && backorder !== 1)
+  ) return null;
+
+  const availability: PublicBuyBoxAvailability = {
+    status: availabilityStatuses[status as keyof typeof availabilityStatuses],
+    maxQuantity: Number(max),
+    minimum: Number(minimum),
+    increment: Number(increment),
+    limitReason: limitReasons[limit as keyof typeof limitReasons],
+    ...(backorder === 1 ? { backorder: true } : {}),
+  };
+  if (!isPublicAvailability(availability)) return null;
+  return {
+    id,
+    optionValues: optionIds.map((optionId, index) => ({
+      optionId,
+      valueId: optionValueIds[index] as string,
+    })),
+    price: { amountMinor: Number(price), currency },
+    ...(compareAtPrice === null
+      ? {}
+      : { compareAtPrice: { amountMinor: Number(compareAtPrice), currency } }),
+    ...(imageId === null ? {} : { imageId }),
+    availability,
+  };
+};
 
 const parsePayload = (form: HTMLFormElement): { options: ProductOption[]; variants: PublicVariant[] } | null => {
   const script = form.querySelector<HTMLScriptElement>('[data-product-variants]');
@@ -63,18 +138,21 @@ const parsePayload = (form: HTMLFormElement): { options: ProductOption[]; varian
     if (!value || typeof value !== 'object') return null;
     const payload = value as Partial<VariantPayload>;
     if (
-      typeof payload.currency !== 'string' ||
-      !Array.isArray(payload.options) ||
-      !Array.isArray(payload.variants)
+      typeof payload.c !== 'string' ||
+      !Array.isArray(payload.o) ||
+      payload.o.some((optionId) => typeof optionId !== 'string') ||
+      !Array.isArray(payload.v) ||
+      payload.v.length > 2_048
     ) {
       return null;
     }
-    if (payload.variants.some((variant) => !isPublicAvailability(variant.availability))) {
-      return null;
-    }
+    const options = readOptions(form, payload.o);
+    if (options.length !== payload.o.length) return null;
+    const variants = payload.v.map((variant) => toPublicVariant(variant, payload.o!, payload.c!));
+    if (variants.some((variant) => variant === null)) return null;
     return {
-      options: payload.options,
-      variants: payload.variants.map((variant) => toPublicVariant(variant, payload.currency!)),
+      options,
+      variants: variants as PublicVariant[],
     };
   } catch {
     return null;
@@ -166,9 +244,14 @@ const bindProductAddForm = (form: HTMLFormElement): void => {
   const syncQuantityControls = () => {
     const availability = selectedVariant?.availability;
     const max = availability?.maxQuantity ?? 0;
-    qtyInput.max = String(Math.max(1, max));
+    const minimum = availability?.minimum ?? 1;
+    const increment = availability?.increment ?? 1;
+    qtyInput.min = String(minimum);
+    qtyInput.step = String(increment);
+    qtyInput.max = String(Math.max(minimum, max));
+    if (qtyInput.valueAsNumber < minimum) qtyInput.value = String(minimum);
     if (qtyInput.valueAsNumber > max && max > 0) qtyInput.value = String(max);
-    const current = Number.isInteger(qtyInput.valueAsNumber) ? qtyInput.valueAsNumber : 1;
+    const current = Number.isInteger(qtyInput.valueAsNumber) ? qtyInput.valueAsNumber : minimum;
     const disabled = submitting || !availability || !isPublicBuyBoxPurchasable(availability);
     const disabledReason = availability && !isPublicBuyBoxPurchasable(availability)
       ? getPublicBuyBoxMessage(availability)
@@ -176,10 +259,10 @@ const bindProductAddForm = (form: HTMLFormElement): void => {
         ? 'La variante seleccionada no está disponible.'
         : '';
     qtyInput.disabled = disabled;
-    decreaseBtn?.toggleAttribute('disabled', disabled || current <= 1);
+    decreaseBtn?.toggleAttribute('disabled', disabled || current <= minimum);
     increaseBtn?.toggleAttribute('disabled', disabled || current >= max);
     if (decreaseBtn) {
-      decreaseBtn.title = disabled || current <= 1
+      decreaseBtn.title = disabled || current <= minimum
         ? disabledReason || 'No puedes reducir más la cantidad.'
         : '';
     }
@@ -287,14 +370,17 @@ const bindProductAddForm = (form: HTMLFormElement): void => {
   }));
 
   decreaseBtn?.addEventListener('click', () => {
-    qtyInput.value = String(Math.max(1, (qtyInput.valueAsNumber || 1) - 1));
+    const minimum = selectedVariant?.availability.minimum ?? 1;
+    const increment = selectedVariant?.availability.increment ?? 1;
+    qtyInput.value = String(Math.max(minimum, (qtyInput.valueAsNumber || minimum) - increment));
     setQuantityError();
     syncQuantityControls();
   });
   increaseBtn?.addEventListener('click', () => {
     const max = Number(qtyInput.max);
+    const increment = selectedVariant?.availability.increment ?? 1;
     if (!Number.isSafeInteger(max) || max < 1) return;
-    qtyInput.value = String(Math.min(max, (qtyInput.valueAsNumber || 1) + 1));
+    qtyInput.value = String(Math.min(max, (qtyInput.valueAsNumber || 1) + increment));
     setQuantityError();
     syncQuantityControls();
   });
@@ -322,15 +408,14 @@ const bindProductAddForm = (form: HTMLFormElement): void => {
     const availability = selectedVariant?.availability;
     const availabilityMessage = availability ? getPublicBuyBoxMessage(availability) : undefined;
     const purchasable = availability ? isPublicBuyBoxPurchasable(availability) : false;
-    if (!Number.isInteger(quantity) || quantity < 1) {
-      setQuantityError('Introduce una cantidad válida a partir de 1.');
-    } else if (availability && quantity > availability.maxQuantity) {
-      setQuantityError(getQuantityLimitMessage({
-        ...availability,
-        message: availabilityMessage ?? '',
-      }));
+    if (availability && !isQuantityAllowed(quantity, availability)) {
+      setQuantityError(
+        quantity > availability.maxQuantity
+          ? getQuantityLimitMessage({ ...availability, message: availabilityMessage ?? '' })
+          : `La cantidad debe comenzar en ${availability.minimum} y avanzar de ${availability.increment} en ${availability.increment}.`
+      );
     }
-    if (!selectedVariant || !purchasable || !Number.isInteger(quantity) || quantity < 1 || quantity > (availability?.maxQuantity ?? 0)) {
+    if (!selectedVariant || !purchasable || !availability || !isQuantityAllowed(quantity, availability)) {
       setFeedback(
         selectedVariant
           ? availabilityMessage ?? 'La variante seleccionada no está disponible.'

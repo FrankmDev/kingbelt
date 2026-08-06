@@ -193,6 +193,7 @@ const buildVariants = (
             ? { kind: 'unknown' as const }
             : { kind: 'known' as const, quantity: knownQuantity },
           inventoryPolicy: 'deny' as const,
+          quantityRule: { minimum: 1, increment: 1 },
           imageId: imageIdsByColor.get(color.id),
         };
       })
@@ -225,6 +226,8 @@ const buildProducts = (): Product[] =>
         summary,
         vendor: 'KingBelt',
         productType,
+        category: { id: 'local:category:belts', name: 'Cinturones' },
+        publicationStatus: 'published',
         primaryCollectionId: collection.id,
         collectionIds: [collection.id],
         options: [

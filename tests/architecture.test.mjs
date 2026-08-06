@@ -35,15 +35,18 @@ const resolveImport = (importer, specifier) => {
 
 const importsFor = (path) => {
   const source = readFileSync(path, 'utf8');
-  const imports = [];
+  const imports = new Set();
   const pattern = /\b(?:import|export)\s+(?:[^'";]*?\s+from\s+)?['"]([^'"]+)['"]/gs;
-  for (const match of source.matchAll(pattern)) imports.push(match[1]);
-  return imports;
+  const dynamicPattern = /\bimport\(\s*['"]([^'"]+)['"]\s*\)/g;
+  for (const match of source.matchAll(pattern)) imports.add(match[1]);
+  for (const match of source.matchAll(dynamicPattern)) imports.add(match[1]);
+  return [...imports];
 };
 
 const localDependencies = sourceFiles.flatMap((importer) => importsFor(importer)
   .map((specifier) => ({ importer: sourcePath(importer), dependency: resolveImport(importer, specifier) }))
   .filter(({ dependency }) => dependency));
+const canonicalSourceByStem = new Map(sourceFiles.map((path) => [stripExt(sourcePath(path)), sourcePath(path)]));
 
 describe('límites de arquitectura', () => {
   test('elimina contenedores ambiguos y barrels que oculten dependencias', () => {
@@ -151,5 +154,108 @@ describe('límites de arquitectura', () => {
       !roots.has(stripExt(importer))
     );
     expect(violations).toEqual([]);
+  });
+
+  test('el grafo local de módulos no contiene dependencias circulares', () => {
+    const graph = new Map(sourceFiles.map((path) => [sourcePath(path), []]));
+    localDependencies.forEach(({ importer, dependency }) => {
+      const target = canonicalSourceByStem.get(stripExt(dependency));
+      if (target) graph.get(importer)?.push(target);
+    });
+
+    const active = new Set();
+    const visited = new Set();
+    const cycles = [];
+    const visit = (path, trail = []) => {
+      if (active.has(path)) {
+        cycles.push([...trail.slice(trail.indexOf(path)), path]);
+        return;
+      }
+      if (visited.has(path)) return;
+      active.add(path);
+      (graph.get(path) ?? []).forEach((dependency) => visit(dependency, [...trail, path]));
+      active.delete(path);
+      visited.add(path);
+    };
+    graph.keys().forEach((path) => visit(path));
+    expect(cycles).toEqual([]);
+  });
+
+  test('todo módulo de producción es alcanzable desde páginas o configuración', () => {
+    const graph = new Map(sourceFiles.map((path) => [sourcePath(path), []]));
+    localDependencies.forEach(({ importer, dependency }) => {
+      const target = canonicalSourceByStem.get(stripExt(dependency));
+      if (target) graph.get(importer)?.push(target);
+    });
+
+    const configPath = join(root, 'astro.config.mjs');
+    const configRoots = importsFor(configPath)
+      .map((specifier) => resolveImport(configPath, specifier))
+      .map((dependency) => dependency && canonicalSourceByStem.get(stripExt(dependency)))
+      .filter(Boolean);
+    const roots = [
+      ...sourceFiles.map(sourcePath).filter((path) => path.startsWith('src/pages/')),
+      ...configRoots,
+    ];
+    const reachable = new Set();
+    const visit = (path) => {
+      if (reachable.has(path)) return;
+      reachable.add(path);
+      (graph.get(path) ?? []).forEach(visit);
+    };
+    roots.forEach(visit);
+
+    const unreachable = sourceFiles.map(sourcePath).filter((path) => !reachable.has(path));
+    expect(unreachable).toEqual([]);
+  });
+
+  test('el árbol actual no recupera el antiguo escaparate eliminado', () => {
+    const legacyName = ['mus', 'eum'].join('');
+    const auditedPaths = [
+      ...sourceFiles,
+      ...walk(join(root, 'docs')),
+      ...walk(join(root, 'public')),
+      ...walk(join(root, 'scripts')),
+      ...walk(join(root, 'tests')),
+      join(root, 'README.md'),
+      join(root, 'astro.config.mjs'),
+      join(root, 'package.json'),
+    ];
+    const violations = auditedPaths
+      .filter((path) => {
+        const normalizedPath = sourcePath(path).toLowerCase();
+        const searchableContent = /\.(?:astro|css|html|js|json|md|mjs|svg|ts)$/.test(path)
+          ? readFileSync(path, 'utf8').toLowerCase()
+          : '';
+        return normalizedPath.includes(legacyName) || searchableContent.includes(legacyName);
+      })
+      .map(sourcePath);
+    expect(violations).toEqual([]);
+  });
+
+  test('el contrato futuro de carrito fija un BFF same-origin sin secretos en el navegador', () => {
+    const readiness = readFileSync(join(root, 'docs/SHOPIFY_READINESS.md'), 'utf8');
+    expect(readiness).toContain('cliente neutral de carrito → endpoints same-origin → servicio servidor → Storefront Cart API');
+    expect(readiness).toContain('parte secreta del identificador de carrito Shopify no entra en HTML');
+    expect(readiness).toContain('El servidor es autoridad para carrito remoto, precios, cantidades aceptadas, stock');
+    expect(readiness).not.toMatch(/cliente con token público|decisión final del cliente de carrito/);
+  });
+
+  test('documenta el contrato obligatorio de metafields e imágenes antes de importar', () => {
+    const readiness = readFileSync(join(root, 'docs/SHOPIFY_READINESS.md'), 'utf8');
+    const requiredProductMetafields = [
+      'kingbelt.model_reference',
+      'kingbelt.summary',
+      'kingbelt.material',
+      'kingbelt.width_mm',
+      'kingbelt.buckle_finish',
+      'kingbelt.color_galleries',
+    ];
+    requiredProductMetafields.forEach((key) => {
+      expect(readiness).toContain(`\`${key}\``);
+    });
+    expect(readiness).toContain('list.metaobject_reference<kingbelt.color_gallery>');
+    expect(readiness).toContain('exactamente 3, ordenadas');
+    expect(readiness).toContain('ninguno; falla import');
   });
 });

@@ -13,7 +13,9 @@ export interface LineAvailability {
   status: AvailabilityStatus;
   purchasable: boolean;
   maxQuantity: number;
-  limitReason: 'inventory' | 'purchase_limit' | 'technical' | 'unavailable';
+  minimum: number;
+  increment: number;
+  limitReason: 'inventory' | 'quantity_rule' | 'technical' | 'unavailable';
   quantityKnown: boolean;
   backorder: boolean;
   message: string;
@@ -21,7 +23,7 @@ export interface LineAvailability {
 
 type VariantAvailabilityInput = Pick<
   ProductVariant,
-  'salesStatus' | 'inventory' | 'inventoryPolicy' | 'purchaseLimit'
+  'salesStatus' | 'inventory' | 'inventoryPolicy' | 'quantityRule'
 >;
 
 const getTechnicalLimit = (value: number): number =>
@@ -29,7 +31,7 @@ const getTechnicalLimit = (value: number): number =>
     ? value
     : TECHNICAL_LINE_QUANTITY_LIMIT;
 
-const getConfiguredPurchaseLimit = (value: number | undefined): number | undefined =>
+const getConfiguredMaximum = (value: number | undefined): number | undefined =>
   Number.isSafeInteger(value) && Number(value) > 0 ? Number(value) : undefined;
 
 const getLimit = (
@@ -40,9 +42,9 @@ const getLimit = (
   const candidates: Array<{ value: number; reason: LineAvailability['limitReason']; priority: number }> = [
     { value: technicalLimit, reason: 'technical', priority: 3 },
   ];
-  const purchaseLimit = getConfiguredPurchaseLimit(variant.purchaseLimit);
-  if (purchaseLimit !== undefined) {
-    candidates.push({ value: purchaseLimit, reason: 'purchase_limit', priority: 1 });
+  const quantityMaximum = getConfiguredMaximum(variant.quantityRule.maximum);
+  if (quantityMaximum !== undefined) {
+    candidates.push({ value: quantityMaximum, reason: 'quantity_rule', priority: 1 });
   }
   if (inventoryCapsQuantity && variant.inventory.kind === 'known') {
     candidates.push({ value: variant.inventory.quantity, reason: 'inventory', priority: 2 });
@@ -57,12 +59,18 @@ export const getVariantAvailability = (
 ): LineAvailability => {
   const validTechnicalLimit = getTechnicalLimit(technicalLimit);
   const quantityKnown = variant.inventory.kind === 'known';
+  const quantityRule = variant.quantityRule;
+  const rule = {
+    minimum: quantityRule.minimum,
+    increment: quantityRule.increment,
+  };
 
   if (variant.salesStatus === 'unavailable') {
     return {
       status: 'unavailable',
       purchasable: false,
       maxQuantity: 0,
+      ...rule,
       limitReason: 'unavailable',
       quantityKnown,
       backorder: false,
@@ -76,6 +84,7 @@ export const getVariantAvailability = (
         status: 'available',
         purchasable: true,
         ...getLimit(variant, validTechnicalLimit, false),
+        ...rule,
         quantityKnown: true,
         backorder: true,
         message: 'Disponible para pedir.',
@@ -86,6 +95,7 @@ export const getVariantAvailability = (
       status: 'out_of_stock',
       purchasable: false,
       maxQuantity: 0,
+      ...rule,
       limitReason: 'inventory',
       quantityKnown: true,
       backorder: false,
@@ -98,6 +108,7 @@ export const getVariantAvailability = (
       status: 'available',
       purchasable: true,
       ...getLimit(variant, validTechnicalLimit, false),
+      ...rule,
       quantityKnown: false,
       backorder: false,
       message: 'Disponible.',
@@ -109,6 +120,7 @@ export const getVariantAvailability = (
       status: 'available',
       purchasable: true,
       ...getLimit(variant, validTechnicalLimit, false),
+      ...rule,
       quantityKnown: true,
       backorder: false,
       message: 'Disponible.',
@@ -121,6 +133,7 @@ export const getVariantAvailability = (
     status: limited ? 'limited' : 'available',
     purchasable: true,
     ...limit,
+    ...rule,
     quantityKnown: true,
     backorder: false,
     message: limited ? 'Quedan pocas unidades.' : 'Disponible.',
@@ -129,6 +142,24 @@ export const getVariantAvailability = (
 
 export const isVariantPurchasable = (variant: VariantAvailabilityInput): boolean =>
   getVariantAvailability(variant).purchasable;
+
+export const isQuantityAllowed = (
+  quantity: number,
+  rule: Pick<LineAvailability, 'minimum' | 'increment' | 'maxQuantity'>
+): boolean =>
+  Number.isSafeInteger(quantity) &&
+  quantity >= rule.minimum &&
+  quantity <= rule.maxQuantity &&
+  (quantity - rule.minimum) % rule.increment === 0;
+
+export const clampQuantityToRule = (
+  quantity: number,
+  rule: Pick<LineAvailability, 'minimum' | 'increment' | 'maxQuantity'>
+): number => {
+  if (rule.maxQuantity < rule.minimum) return 0;
+  const bounded = Math.min(Math.max(quantity, rule.minimum), rule.maxQuantity);
+  return rule.minimum + Math.floor((bounded - rule.minimum) / rule.increment) * rule.increment;
+};
 
 export const getQuantityLimitMessage = (
   availability: Pick<LineAvailability, 'limitReason' | 'maxQuantity' | 'message'>,
@@ -140,7 +171,7 @@ export const getQuantityLimitMessage = (
       : 'Hemos reducido la cantidad al máximo permitido para esta variante.';
   }
 
-  if (availability.limitReason === 'purchase_limit') {
+  if (availability.limitReason === 'quantity_rule') {
     return `El máximo por compra para esta variante es ${availability.maxQuantity}.`;
   }
   if (availability.limitReason === 'technical') {

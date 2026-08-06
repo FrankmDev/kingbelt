@@ -28,10 +28,10 @@ Orden de prioridad:
 
 Referencias especialmente útiles:
 
-- Sistema y variantes: `Card.astro`, `Panel.astro`, `Button.astro`, `FormField.astro`, `Icon.astro`.
-- Páginas y composición: `PageHeader.astro`, `ContentSplit.astro`, `faq/FAQ.astro`, `CTABox.astro`.
+- Sistema y variantes: `FeatureCard.astro`, `Panel.astro`, `Button.astro`, `FormField.astro`, `Icon.astro`.
+- Páginas y composición: `PageHeader.astro`, `faq/FAQ.astro`, `CTABox.astro`.
 - Contacto: `src/pages/contacto.astro`, `src/components/sections/contact/`, `ContactMethod.astro` y `src/components/faq/`.
-- Primitivas y composición: `src/components/ui/` (Button, PageHeader, ContentSplit, FormField, etc.).
+- Primitivas y composición: `src/components/ui/` (Button, PageHeader, Panel, FormField, etc.).
 
 Inspecciona el componente afectado y una referencia con el mismo propósito. No copies un patrón solo porque se vea bien si su función es distinta.
 
@@ -120,11 +120,11 @@ Imagen atmosférica dominante, overlay suficiente para contraste, breadcrumbs di
 
 ### Cards y panels
 
-Usa `Card` y `Panel` antes de aplicar primitivas a mano. Mantén una sola superficie perceptible: evita card dentro de card salvo relación funcional clara. La variante, padding y radio deben proceder de la API o de tokens.
+Usa `FeatureCard`, `ContactMethod` y `Panel` según su propósito antes de aplicar primitivas a mano. Mantén una sola superficie perceptible: evita card dentro de card salvo relación funcional clara. La variante, padding y radio deben proceder de la API o de tokens.
 
 ### Split y secciones editoriales
 
-Usa `ContentSplit` o una composición equivalente cuando texto y media tengan relación directa. En móvil conserva un orden semántico útil: contexto, evidencia/media y acción. La asimetría es una herramienta, no una obligación.
+Usa una composición scoped cuando texto y media tengan relación directa. En móvil conserva un orden semántico útil: contexto, evidencia/media y acción. La asimetría es una herramienta, no una obligación.
 
 ### Formularios
 

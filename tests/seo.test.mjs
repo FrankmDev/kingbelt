@@ -42,6 +42,7 @@ const makeVariant = ({
   salesStatus,
   inventory: { kind: 'known', quantity },
   inventoryPolicy,
+  quantityRule: { minimum: 1, increment: 1 },
 });
 
 const makeProduct = (overrides = {}) => ({
@@ -53,6 +54,8 @@ const makeProduct = (overrides = {}) => ({
   summary: 'Resumen comercial del producto.',
   vendor: 'KingBelt',
   productType: 'Piel lisa',
+  category: { id: 'category:belts', name: 'Cinturones' },
+  publicationStatus: 'published',
   primaryCollectionId: 'collection:test',
   collectionIds: ['collection:test'],
   options: [],

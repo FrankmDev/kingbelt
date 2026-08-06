@@ -33,6 +33,8 @@ const MAX_IDENTIFIER_LENGTH = 256;
 const MAX_CATALOG_TEXT_LENGTH = 10_000;
 const MAX_CATALOG_PRODUCTS = 5_000;
 const MAX_CATALOG_COLLECTIONS = 1_000;
+export const SHOPIFY_MAX_PRODUCT_OPTIONS = 3;
+export const SHOPIFY_MAX_PRODUCT_VARIANTS = 2_048;
 
 const normalizedKey = (value: string): string =>
   value.trim().toLocaleLowerCase('es');
@@ -56,7 +58,7 @@ const issue = (
 ) => issues.push({ code, path, message });
 
 const validateIdentifier = (
-  value: string,
+  value: unknown,
   path: string,
   code: string,
   label: string,
@@ -74,7 +76,7 @@ const validateIdentifier = (
 };
 
 const validateRequiredText = (
-  value: string,
+  value: unknown,
   path: string,
   code: string,
   label: string,
@@ -98,7 +100,7 @@ const validateRequiredText = (
 };
 
 const validateHandle = (
-  value: string,
+  value: unknown,
   path: string,
   issues: CatalogValidationIssue[]
 ) => {
@@ -170,6 +172,13 @@ export const validateCatalog = (
   const issues: CatalogValidationIssue[] = [];
   const supported = new Set(supportedCurrencies);
 
+  if (!products.length) {
+    issue(issues, 'empty_catalog', 'products', 'El catálogo normalizado no puede estar vacío.');
+  }
+  if (!collections.length) {
+    issue(issues, 'empty_catalog', 'collections', 'El catálogo normalizado debe incluir sus colecciones.');
+  }
+
   if (products.length > MAX_CATALOG_PRODUCTS) {
     issue(issues, 'catalog_too_large', 'products', `El catálogo supera ${MAX_CATALOG_PRODUCTS} productos.`);
   }
@@ -232,6 +241,13 @@ export const validateCatalog = (
     validateRequiredText(product.title, `${productPath}.title`, 'empty_product_title', 'El título de producto', issues);
     validateRequiredText(product.vendor, `${productPath}.vendor`, 'empty_vendor', 'El vendor', issues);
     validateRequiredText(product.productType, `${productPath}.productType`, 'empty_product_type', 'El tipo de producto', issues);
+    validateIdentifier(product.category?.id, `${productPath}.category.id`, 'invalid_product_category', 'El ID de categoría oficial', issues);
+    validateRequiredText(product.category?.name, `${productPath}.category.name`, 'invalid_product_category', 'La categoría oficial', issues);
+    if (!['published', 'unpublished'].includes(product.publicationStatus)) {
+      issue(issues, 'invalid_publication_status', `${productPath}.publicationStatus`, 'El estado de publicación no es válido.');
+    } else if (product.publicationStatus !== 'published') {
+      issue(issues, 'unpublished_product', `${productPath}.publicationStatus`, 'Un catálogo publicable no puede contener productos no publicados para el canal.');
+    }
     validateRequiredText(product.summary, `${productPath}.summary`, 'empty_product_summary', 'El resumen', issues);
     validateRequiredText(product.description, `${productPath}.description`, 'empty_product_description', 'La descripción', issues);
     validateOptionalText(product.badge, `${productPath}.badge`, 'empty_product_badge', 'El distintivo de producto', issues);
@@ -264,6 +280,14 @@ export const validateCatalog = (
     duplicateValues(optionNames).forEach((name) =>
       issue(issues, 'duplicate_option_name', `${productPath}.options`, `Nombre de opción duplicado: ${name}.`)
     );
+    if (product.options.length > SHOPIFY_MAX_PRODUCT_OPTIONS) {
+      issue(
+        issues,
+        'too_many_product_options',
+        `${productPath}.options`,
+        `Shopify admite como máximo ${SHOPIFY_MAX_PRODUCT_OPTIONS} opciones por producto.`
+      );
+    }
     const purposes = product.options.flatMap((option) => option.purpose ? [option.purpose] : []);
     duplicateValues(purposes).forEach((purpose) =>
       issue(issues, 'duplicate_option_purpose', `${productPath}.options`, `Propósito de opción duplicado: ${purpose}.`)
@@ -316,6 +340,10 @@ export const validateCatalog = (
     }
 
     const mediaGroupIds = product.mediaGroups.map((group) => group.id);
+    const colorOption = product.options.find((option) => option.purpose === 'color');
+    const colorValueIds = new Set(colorOption?.values.map((value) => value.id) ?? []);
+    const mediaGroupByValue = new Map(product.mediaGroups.map((group) => [group.optionValueId, group]));
+    const mediaImageOwner = new Map<string, string>();
     duplicateValues(mediaGroupIds).forEach((id) =>
       issue(issues, 'duplicate_media_group_id', `${productPath}.mediaGroups`, `ID de grupo de medios duplicado: ${id}.`)
     );
@@ -328,7 +356,12 @@ export const validateCatalog = (
       if (!valueToOption.has(group.optionValueId)) {
         issue(issues, 'media_group_unknown_option_value', `${groupPath}.optionValueId`, `Valor de opción inexistente: ${group.optionValueId}.`);
       }
-      if (!group.imageIds.length) {
+      if (colorOption && !colorValueIds.has(group.optionValueId)) {
+        issue(issues, 'media_group_not_color', `${groupPath}.optionValueId`, 'Cada grupo de medios debe pertenecer a un valor de la opción Color.');
+      }
+      if (colorOption && group.imageIds.length !== 3) {
+        issue(issues, 'invalid_color_gallery_size', `${groupPath}.imageIds`, 'Cada color debe declarar exactamente tres imágenes ordenadas.');
+      } else if (!group.imageIds.length) {
         issue(issues, 'empty_media_group', `${groupPath}.imageIds`, 'El grupo de medios debe contener al menos una imagen.');
       }
       duplicateValues(group.imageIds).forEach((id) =>
@@ -338,11 +371,41 @@ export const validateCatalog = (
         if (!imageIds.has(id)) {
           issue(issues, 'media_group_unknown_image', `${groupPath}.imageIds[${imageIndex}]`, `Imagen inexistente: ${id}.`);
         }
+        const owner = mediaImageOwner.get(id);
+        if (owner && owner !== group.optionValueId) {
+          issue(issues, 'media_image_reused_between_colors', `${groupPath}.imageIds[${imageIndex}]`, `La imagen ${id} ya pertenece a otro color.`);
+        } else {
+          mediaImageOwner.set(id, group.optionValueId);
+        }
       });
     });
+    if (colorOption) {
+      colorOption.values.forEach((value, valueIndex) => {
+        if (!mediaGroupByValue.has(value.id)) {
+          issue(issues, 'missing_color_media_group', `${productPath}.options[${product.options.indexOf(colorOption)}].values[${valueIndex}]`, `El color ${value.label} no tiene una galería asociada.`);
+        }
+      });
+      product.images.forEach((image, imageIndex) => {
+        if (!mediaImageOwner.has(image.id)) {
+          issue(issues, 'unassigned_color_image', `${productPath}.images[${imageIndex}]`, `La imagen ${image.id} no pertenece a ninguna galería de color.`);
+        }
+      });
+      const firstColorImageId = mediaGroupByValue.get(colorOption.values[0]?.id)?.imageIds[0];
+      if (firstColorImageId && product.primaryImageId !== firstColorImageId) {
+        issue(issues, 'primary_image_color_mismatch', `${productPath}.primaryImageId`, 'La imagen principal debe ser la primera del primer color publicado.');
+      }
+    }
 
     if (!product.variants.length) {
       issue(issues, 'product_without_variants', `${productPath}.variants`, 'El producto no tiene variantes.');
+    }
+    if (product.variants.length > SHOPIFY_MAX_PRODUCT_VARIANTS) {
+      issue(
+        issues,
+        'too_many_product_variants',
+        `${productPath}.variants`,
+        `Shopify admite como máximo ${SHOPIFY_MAX_PRODUCT_VARIANTS.toLocaleString('es-ES')} variantes por producto.`
+      );
     }
     const combinations = new Set<string>();
     const productCurrencies = new Set<string>();
@@ -405,11 +468,33 @@ export const validateCatalog = (
       } else if (variant.inventory.kind !== 'unknown') {
         issue(issues, 'invalid_inventory', `${variantPath}.inventory`, 'El inventario debe ser conocido o desconocido.');
       }
-      if (
-        variant.purchaseLimit !== undefined &&
-        (!Number.isSafeInteger(variant.purchaseLimit) || variant.purchaseLimit < 1)
-      ) {
-        issue(issues, 'invalid_purchase_limit', `${variantPath}.purchaseLimit`, 'El límite de compra debe ser un entero positivo.');
+      const quantityRule = variant.quantityRule;
+      if (!quantityRule || typeof quantityRule !== 'object') {
+        issue(issues, 'missing_quantity_rule', `${variantPath}.quantityRule`, 'La variante debe declarar su regla de cantidad completa.');
+      } else {
+        if (!Number.isSafeInteger(quantityRule.minimum) || quantityRule.minimum < 1) {
+          issue(issues, 'invalid_quantity_minimum', `${variantPath}.quantityRule.minimum`, 'El mínimo debe ser un entero positivo.');
+        } else if (quantityRule.minimum !== 1) {
+          issue(issues, 'unsupported_quantity_minimum', `${variantPath}.quantityRule.minimum`, 'KingBelt admite actualmente un mínimo de cantidad igual a 1.');
+        }
+        if (!Number.isSafeInteger(quantityRule.increment) || quantityRule.increment < 1) {
+          issue(issues, 'invalid_quantity_increment', `${variantPath}.quantityRule.increment`, 'El incremento debe ser un entero positivo.');
+        } else if (quantityRule.increment !== 1) {
+          issue(issues, 'unsupported_quantity_increment', `${variantPath}.quantityRule.increment`, 'KingBelt admite actualmente un incremento de cantidad igual a 1.');
+        }
+        if (
+          quantityRule.maximum !== undefined &&
+          (!Number.isSafeInteger(quantityRule.maximum) || quantityRule.maximum < quantityRule.minimum)
+        ) {
+          issue(issues, 'invalid_quantity_maximum', `${variantPath}.quantityRule.maximum`, 'El máximo debe ser un entero igual o superior al mínimo.');
+        } else if (
+          quantityRule.maximum !== undefined &&
+          Number.isSafeInteger(quantityRule.minimum) &&
+          Number.isSafeInteger(quantityRule.increment) &&
+          (quantityRule.maximum - quantityRule.minimum) % quantityRule.increment !== 0
+        ) {
+          issue(issues, 'unaligned_quantity_maximum', `${variantPath}.quantityRule.maximum`, 'El máximo debe estar alineado con el mínimo y el incremento.');
+        }
       }
       if (variant.weight) {
         if (!Number.isFinite(variant.weight.value) || variant.weight.value <= 0) {
@@ -422,6 +507,15 @@ export const validateCatalog = (
       if (variant.imageId) {
         if (!imageIds.has(variant.imageId)) {
           issue(issues, 'variant_unknown_image', `${variantPath}.imageId`, `Imagen de variante inexistente: ${variant.imageId}.`);
+        }
+      }
+      if (colorOption) {
+        const selectedColorId = selectionByOption.get(colorOption.id);
+        const expectedImageId = selectedColorId ? mediaGroupByValue.get(selectedColorId)?.imageIds[0] : undefined;
+        if (!variant.imageId) {
+          issue(issues, 'missing_variant_color_image', `${variantPath}.imageId`, 'La variante debe referenciar la imagen principal de su color.');
+        } else if (expectedImageId && variant.imageId !== expectedImageId) {
+          issue(issues, 'variant_color_image_mismatch', `${variantPath}.imageId`, 'La variante debe referenciar la primera imagen de su galería de color.');
         }
       }
     });

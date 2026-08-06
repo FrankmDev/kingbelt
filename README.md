@@ -89,4 +89,4 @@ Política de secretos, checkout, CSP, cabeceras, formularios y CI: `docs/SECURIT
 
 Detalle de activación: `docs/BUSINESS_AND_LEGAL_REQUIREMENTS.md`.
 
-La validación continua vive en `.github/workflows/quality.yml` y ejecuta escaneo de secretos, auditoría de dependencias, check, tests, build, enlaces internos y presupuestos de rendimiento con la versión de Bun declarada en `packageManager`, tanto en `main` como en pull requests.
+La validación local se ejecuta con `bun run validate` (check, tests, build, enlaces internos y presupuestos de rendimiento) usando la versión de Bun declarada en `packageManager`.

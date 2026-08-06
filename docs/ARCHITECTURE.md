@@ -245,4 +245,4 @@ Según el cambio, `bun run validate` agrupa sin duplicar:
 
 No declares completada una tarea si el check relevante falla por tus cambios. Distingue claramente errores previos del proyecto.
 
-`.github/workflows/quality.yml` ejecuta, con la versión de Bun fijada en `packageManager`, en cada push a `main` y pull request: escaneo histórico de secretos, instalación con lockfile, auditoría de dependencias, `check`, tests, `build`, escaneo de seguridad del árbol, comprobación de enlaces internos y presupuestos de rendimiento.
+Antes de integrar cambios, ejecuta `bun run validate` localmente con la versión de Bun fijada en `packageManager`.

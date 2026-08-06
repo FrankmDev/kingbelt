@@ -40,12 +40,11 @@ Estado: baseline preventiva. El sitio sigue usando catálogo y carrito demo; no 
 
 `style-src` conserva temporalmente `'unsafe-inline'` porque la interfaz usa atributos `style` para posición de imagen y muestras de color. `script-src` no permite `'unsafe-inline'`; el build fuerza los módulos ejecutables a archivos propios para que la política sea compatible. Cada servicio futuro debe justificar y añadir únicamente sus orígenes exactos a la directiva mínima necesaria. La política debe probarse primero en preview y comprobarse en la respuesta HTTP real; un `<meta>` no sustituye cabeceras de plataforma.
 
-## Dependencias y CI
+## Dependencias y validación
 
-- Bun y las Actions están fijados; las Actions usan SHA completo, permisos `contents: read` y `persist-credentials: false`.
-- Los pull requests no reciben secretos. Un workflow que necesite secretos debe usar un `environment` protegido, no ejecutarse con código no confiable y limitar permisos por job.
-- `bun install --frozen-lockfile` evita resolver versiones distintas en CI. `bun run audit:dependencies` revisa dependencias conocidas como vulnerables; cada excepción debe documentar paquete, alcance, mitigación, propietario y fecha de caducidad.
-- No se imprimen variables de entorno, contextos completos de GitHub ni respuestas externas. Los artefactos de build se vuelven a escanear después de compilar.
+- Bun está fijado en `packageManager`; usa `bun install --frozen-lockfile` para evitar resolver versiones distintas.
+- `bun run audit:dependencies` revisa dependencias conocidas como vulnerables; cada excepción debe documentar paquete, alcance, mitigación, propietario y fecha de caducidad.
+- No se imprimen variables de entorno ni respuestas externas completas en logs. Los artefactos de build se vuelven a escanear después de compilar.
 
 ## Checklist para activar una integración
 

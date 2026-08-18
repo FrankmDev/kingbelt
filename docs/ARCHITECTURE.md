@@ -7,7 +7,7 @@ Lee este archivo para arquitectura de páginas, componentización, datos, estilo
 - Astro 7.2, Vite 8 y TypeScript estricto.
 - Tailwind CSS 4 junto al sistema CSS propio.
 - Bun como único gestor de paquetes.
-- Renderizado estático por defecto.
+- Renderizado server-side en Vercel; las páginas editoriales pueden prerenderizarse cuando no dependen de comercio.
 - GSAP disponible, reservado para motion complejo que CSS no resuelva bien.
 - `src/styles/global.css` como entrada global y fuente de tokens.
 
@@ -22,6 +22,7 @@ src/
     application/            # puertos, casos de uso, validación y checkout
     infrastructure/
       demo/                 # adaptadores locales y persistencia de demostración
+      shopify/              # gateway, importador y adaptador Storefront server-side
     catalog.ts              # composición del proveedor de catálogo activo
     cart.ts                 # composición del proveedor de carrito activo
   components/
@@ -42,7 +43,7 @@ src/
   content/                  # datos editoriales tipados; no contiene integración
   demo-catalog.ts           # catálogo ficticio, fuera de los contratos de producción
   layouts/
-  pages/          # rutas; coordinan datos y componentes
+  pages/          # rutas; coordinan datos y componentes; `pages/api/` aloja los endpoints BFF same-origin (carrito y webhook de rebuild)
   scripts/                  # controladores cliente procesados por Astro
     commerce/               # store, controlador y render de carrito, producto, galería y filtros
   shared/
@@ -55,7 +56,7 @@ scripts/          # herramientas de build/validación, no se envían al navegado
 
 La estructura es una guía, no un motivo para crear carpetas vacías. Coloca cada pieza en el nivel más pequeño que refleje su responsabilidad real.
 
-`astro.config.mjs` mantiene `compressHTML: true` para reducir el HTML estático, `fetchFile: null` para no activar Advanced Routing y `devToolbar.enabled: false` para desactivar el astronauta/Dev Toolbar en desarrollo. El proyecto no usa adapter, SSR ni flags experimentales.
+`astro.config.mjs` mantiene `compressHTML: true` para reducir el HTML, `fetchFile: null` para no activar Advanced Routing y `devToolbar.enabled: false` para desactivar el astronauta/Dev Toolbar en desarrollo. El proyecto renderiza bajo demanda con `output: 'server'` y el adapter `@astrojs/vercel`; solo los artículos del blog se prerenderizan por ser contenido editorial del repositorio. No usa flags experimentales.
 
 ## Responsabilidades
 
@@ -66,7 +67,7 @@ La estructura es una guía, no un motivo para crear carpetas vacías. Coloca cad
 - **Domain:** modelos y reglas comerciales puras; no importa aplicación, infraestructura ni presentación.
 - **Application:** define puertos y coordina casos de uso; solo depende del dominio.
 - **Infrastructure:** implementa puertos y traduce un origen concreto al dominio. Nunca es importada por componentes.
-- **Composition root:** `commerce/catalog.ts` y `commerce/cart.ts` eligen adaptadores. Solo rutas y scripts de entrada consumen estas fronteras.
+- **Composition root:** `commerce/catalog.ts`, `commerce/cart.ts` y `commerce/cart-server.ts` eligen adaptadores. Solo rutas y scripts de entrada consumen estas fronteras.
 - **Content/config:** contenido editorial y configuración estable, separados de fixtures y transformación comercial.
 - **Scripts:** comportamiento del navegador. Pueden consumir dominio, aplicación, composition roots y utilidades compartidas, no adaptadores concretos.
 
@@ -104,16 +105,16 @@ No extraigas wrappers triviales que solo oculten dos clases ni crees variantes c
 Flujos actuales:
 
 ```txt
-pages   → commerce/catalog.ts → CatalogProvider → adaptador demo
-scripts → commerce/cart.ts    → CartProvider    → adaptador demo
+pages   → commerce/catalog.ts → CatalogProvider → Shopify bajo demanda con credenciales / demo sin ellas
+scripts → commerce/cart.ts    → CartProvider    → híbrido: BFF `/api/cart` (Cart API) o demo (localStorage + `/cart-catalog.json`)
 components → commerce/domain/* (solo contratos y reglas neutrales)
 ```
 
-Catálogo y carrito tienen puertos distintos: `CatalogProvider` para lectura durante el build y `CartProvider` para estado cliente y checkout. Los componentes importan únicamente contratos o reglas de `commerce/domain`; nunca composition roots, fixtures, respuestas ni clientes externos. `demo-catalog.ts` contiene datos ficticios y solo puede importarlo `commerce/infrastructure/demo`. `localStorage` conserva únicamente ID de variante y cantidad bajo un esquema versionado y limitado; nunca es autoridad para precio, disponibilidad ni checkout.
+Catálogo y carrito tienen puertos distintos: `CatalogProvider` para lectura en servidor y `CartProvider` para estado cliente y checkout. Los componentes importan únicamente contratos o reglas de `commerce/domain`; nunca composition roots, fixtures, respuestas ni clientes externos. `demo-catalog.ts` contiene datos ficticios y solo puede importarlo `commerce/infrastructure/demo`. `localStorage` conserva únicamente ID de variante y cantidad bajo un esquema versionado y limitado; nunca es autoridad para precio, disponibilidad ni checkout.
 
-El store cliente termina su inicialización antes de ejecutar comandos, serializa mutaciones distintas, deduplica envíos equivalentes y coalesce cambios de cantidad por línea. El adaptador demo relee y reconcilia la persistencia dentro de un bloqueo compartido entre pestañas cuando el navegador ofrece Web Locks; los eventos de `storage` actualizan el mismo store consumido por drawer y página. Cada reconciliación reconstruye título, imagen, precio, disponibilidad y stock desde el catálogo activo. Una excepción de almacenamiento degrada el carrito a memoria con aviso, sin reemplazar el último estado válido.
+El store cliente termina su inicialización antes de ejecutar comandos, serializa mutaciones distintas, deduplica envíos equivalentes y coalesce cambios de cantidad por línea. El adaptador demo carga el snapshot `/cart-catalog.json` —servido bajo demanda desde el catálogo vigente, sin dependencia de builds— antes de restaurar líneas, relee y reconcilia la persistencia dentro de un bloqueo compartido entre pestañas cuando el navegador ofrece Web Locks; los eventos de `storage` actualizan el mismo store consumido por drawer y página. Cada reconciliación reconstruye título, imagen, precio, disponibilidad y stock desde ese catálogo. Una excepción de almacenamiento degrada el carrito a memoria con aviso, sin reemplazar el último estado válido.
 
-Todo adaptador valida el catálogo normalizado antes de exponerlo. `assertValidCatalog()` falla con rutas y códigos concretos para identidades, relaciones, opciones, variantes, dinero, inventario, medios y colecciones; el adaptador demo ejecuta la misma frontera que deberá ejecutar el futuro adaptador real.
+Todo adaptador valida el catálogo normalizado antes de exponerlo. `assertValidCatalog()` falla con rutas y códigos concretos para identidades, relaciones, opciones, variantes, dinero, inventario, medios y colecciones; los adaptadores demo y Shopify ejecutan la misma frontera. El importador Shopify pagina internamente y solo corre en servidor; cada instancia conserva el catálogo en una caché breve (30 s en producción) y, si Shopify falla con un catálogo válido previo, sirve ese último catálogo (stale-if-error) en vez de convertir las páginas en errores.
 
 `Product`, `ProductVariant`, `ProductOption`, `ProductImage`, `Collection`, `Money`, `Cart` y `CartLine` son nombres de dominio. Interfaces y tipos usan `PascalCase`; funciones, valores y archivos usan `camelCase` y `kebab-case`; una implementación externa termina en `-adapter.ts`. No se usan barrels `index.ts`: cada import declara su dependencia concreta.
 
@@ -152,7 +153,7 @@ Al conectar Shopify:
 - normaliza `Money`, producto, variante y líneas dentro del adaptador;
 - conserva las credenciales privadas y tokens no públicos exclusivamente en código servidor mediante `astro:env/server`;
 - no pases secretos por `PUBLIC_*`, `define:vars`, HTML, atributos `data-*`, eventos DOM ni almacenamiento del navegador;
-- toda operación de carrito pasa por una frontera servidor/BFF same-origin; el build estático actual no puede custodiarla y no se añade hasta activar Shopify con un adapter de despliegue;
+- toda operación de carrito pasa por la frontera servidor/BFF same-origin `src/pages/api/cart.ts`, activa cuando existen credenciales y `SHOPIFY_CART_COOKIE_SECRET`;
 - el navegador envía únicamente identificadores públicos de variante, cantidades y comandos cerrados; nunca recibe la parte secreta del ID de carrito, tokens, credenciales, respuestas administrativas ni identidad sensible del comprador;
 - el servicio servidor conserva el carrito remoto y es autoridad para precios, cantidades aceptadas, stock, identidad del comprador, checkout, errores y avisos;
 - devuelve la URL de checkout junto con una lista exacta de hosts permitidos; la UI exige HTTPS, sin credenciales embebidas ni hosts por sufijo;
@@ -168,7 +169,7 @@ Las fronteras por capacidad quedan así; el detalle operativo vive en `docs/SHOP
 | Crear/recuperar carrito, mutar líneas, checkout | `CartProvider` (tiempo real) |
 | Cuenta de cliente futura | puerto propio en `application/`; sin implementar hasta que exista caso de uso real |
 
-El catálogo se lee entero durante el build con paginación interna por cursor (productos, variantes e imágenes). En tiempo real, el navegador opera el cliente neutral de carrito, que llama a endpoints same-origin; esos endpoints delegan en un servicio servidor que consulta y muta Shopify. El adaptador remoto normaliza dentro de `infrastructure/`, valida con `assertValidCatalog()` antes de exponer y nunca deja que una respuesta parcial o una caída del catálogo genere páginas corruptas: el build falla en vez de publicar a medias.
+El catálogo se lee entero bajo demanda con paginación interna por cursor (productos, variantes e imágenes). En tiempo real, el navegador opera el cliente neutral de carrito, que llama a endpoints same-origin; esos endpoints delegan en un servicio servidor que consulta y muta Shopify. El adaptador remoto normaliza dentro de `infrastructure/`, valida con `assertValidCatalog()` antes de exponer y nunca deja que una respuesta parcial o una caída del catálogo genere páginas corruptas: sin catálogo previo la petición falla cerrada y con uno válido sirve el último conocido (stale-if-error).
 
 La política de referrer se define en `BaseLayout.astro`; las cabeceras HTTP de Vercel viven en `vercel.json`: CSP, HSTS, `X-Content-Type-Options`, `Permissions-Policy` y política de framing. El build no incrusta módulos ejecutables para ser compatible con `script-src 'self'`. Cualquier servicio o CDN nuevo debe actualizar a la vez la allowlist pública, la directiva CSP mínima y las pruebas descritas en `docs/SECURITY.md`.
 
@@ -226,8 +227,8 @@ Promueve un patrón a global o a componente cuando se repita con la misma intenc
 - Imágenes con dimensiones para evitar CLS, `alt` contextual y lazy loading salvo contenido crítico/hero.
 - Un H1 por página, `title`, description, canonical y schema cuando corresponda.
 - `BaseLayout` acepta `robots`, `ogImageAlt` (vía `imageAlt`), `publishedAt` y `updatedAt`.
-- Sitemap: `@astrojs/sitemap` con filtro en `isSitemapExcluded()` (`src/config/sitemap.ts`).
-- `robots.txt`: endpoint estático en `src/pages/robots.txt.ts`.
+- Sitemap: `@astrojs/sitemap` con filtro en `isSitemapExcluded()` (`src/config/sitemap.ts`). Excluye `/carrito` y `/cart-catalog.json`.
+- `robots.txt`: endpoint en `src/pages/robots.txt.ts`; `Disallow` del snapshot de catálogo del carrito y de `/api/`.
 - Documentos legales en `draft` usan `noindex,follow` y quedan fuera del sitemap hasta publicación.
 - No añadas dependencias, hydration o JavaScript para resolver algo que Astro/CSS/HTML ya cubre.
 - Evita trabajo duplicado en cliente y assets desproporcionados para su tamaño visible.

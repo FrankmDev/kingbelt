@@ -23,8 +23,8 @@ const mediaGroupByImageId = new Map(
   mediaGroups.flatMap((group) => group.imageIds.map((imageId) => [imageId, group.id] as const))
 );
 
-/** `sizes` aproximado de la escena: columna principal del PDP en escritorio, ancho completo en móvil. */
-const slideSizes = '(min-width: 48rem) 52vw, 100vw';
+/** `sizes` de la escena: columna acotada del PDP en escritorio, ancho de shell en móvil. */
+const slideSizes = '(min-width: 64rem) 28rem, (min-width: 48rem) 22rem, 100vw';
 ---
 
 <div

@@ -46,6 +46,7 @@ const placeholderPattern = /^(?:example|placeholder|replace|redacted|changeme|no
 const publicPrivateName = /\bPUBLIC_[A-Z0-9_]*(?:PRIVATE|SECRET|PASSWORD|ADMIN)[A-Z0-9_]*\b/;
 const privateBrowserName = /\b(?:SHOPIFY_[A-Z0-9_]*PRIVATE[A-Z0-9_]*|ADMIN_API_[A-Z0-9_]*)\b/;
 const clientPathPattern = /^src\/(?:components|layouts|pages|scripts|shared\/browser)\//;
+const browserCompositionRoots = new Set(['src/commerce/cart.ts']);
 const clientLogPattern = /\bconsole\.(?:debug|info|log|warn|error)\s*\(/;
 
 const findings = [];
@@ -73,11 +74,13 @@ candidatePaths.forEach((path) => {
   const text = buffer.toString('utf8');
   scanText(text, normalized, { generic: normalized !== 'scripts/security-audit.mjs' });
 
-  if (clientPathPattern.test(normalized)) {
+  if (clientPathPattern.test(normalized) || browserCompositionRoots.has(normalized)) {
     if (text.includes('astro:env/server') || privateBrowserName.test(text)) {
       report(normalized, 'private_env_in_browser_surface');
     }
-    if (clientLogPattern.test(text)) report(normalized, 'browser_console_log');
+    if (clientPathPattern.test(normalized) && clientLogPattern.test(text)) {
+      report(normalized, 'browser_console_log');
+    }
   }
 });
 

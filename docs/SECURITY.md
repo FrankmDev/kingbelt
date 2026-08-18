@@ -1,21 +1,21 @@
 # Seguridad antes de integrar servicios externos
 
-Estado: baseline preventiva. El sitio sigue usando catálogo y carrito demo; no hay credenciales reales ni llamadas activas a Shopify. La presencia de contratos o adaptadores inactivos no autoriza a activar una integración.
+Estado: baseline preventiva. El catálogo de build usa Storefront cuando existen credenciales servidor; el carrito sigue en persistencia demo y resuelve variantes desde el snapshot público `/cart-catalog.json`. No hay token en el navegador ni checkout remoto cableado.
 
 ## Límites de confianza
 
 - El navegador no es autoridad para precio, stock, identidad de producto, descuentos, comprador ni posibilidad de checkout. Solo puede proponer `variantId` y cantidad; el proveedor recompone todas las líneas y vuelve a sincronizarlas antes del checkout.
 - El contrato cliente de carrito/checkout no transporta access tokens ni identidad autenticada. Si se activa Customer Accounts, la sesión y los tokens vivirán en servidor detrás de una cookie `HttpOnly`; el proveedor resolverá la identidad sin confiar en un campo enviado por el navegador.
-- `localStorage` contiene exclusivamente versión, `variantId` y cantidad, con límites de tamaño, líneas, longitud y cantidad. No se guardan tokens, email, nombre, direcciones, precios ni respuestas completas. No se usa `sessionStorage`.
+- `localStorage` contiene exclusivamente versión, `variantId` y cantidad, con límites de tamaño, líneas, longitud y cantidad. No se guardan tokens, email, nombre, direcciones, precios ni respuestas completas. No se usa `sessionStorage`. El snapshot `/cart-catalog.json` es una proyección pública del catálogo ya emitido en las fichas; no incluye secretos ni campos administrativos.
 - El catálogo externo debe normalizarse y pasar `assertValidCatalog()` antes de llegar a páginas o componentes. Sus campos son texto plano: el HTML del proveedor se rechaza. Si en el futuro se necesitara rich text, deberá sanitizarse en servidor con una allowlist explícita y nunca pasarse directamente a `set:html`.
 - El JSON incrustado se serializa con `serializeJsonForHtml()`, que escapa `<`, `>`, `&`, U+2028 y U+2029. Los atributos `data-*` solo contienen IDs, estados o proyecciones públicas; nunca secretos ni objetos administrativos.
 - Las imágenes del catálogo solo pueden usar rutas raíz o HTTPS hacia hosts exactos declarados en `publicSecurityConfig.remoteImageHosts`. No se aceptan comodines, credenciales, HTTP, puertos alternativos ni coincidencias por sufijo.
 
 ## Variables y secretos
 
-- `.env*`, estado local de Vercel, claves privadas, certificados y archivos habituales de credenciales están ignorados por Git; `.env.example` documenta solo plantillas inactivas (comentadas) hasta que existan adaptadores reales.
-- Un nombre `PUBLIC_*` se considera parte del bundle y del HTML público. No puede contener secretos, tokens Admin, tokens Storefront, contraseñas ni credenciales privadas. El futuro carrito Shopify usará siempre el BFF same-origin; el navegador no necesita un token del proveedor.
-- Los secretos privados se leerán únicamente desde una frontera servidor mediante `astro:env/server`. El build estático actual no puede custodiar un secreto: si una operación lo necesita, debe existir antes un runtime servidor.
+- Configurar dominio y token privado selecciona el catálogo Storefront en el runtime SSR; el carrito híbrido usa el BFF Shopify cuando existe `SHOPIFY_CART_COOKIE_SECRET` y degrada a demo sin él. `SHOPIFY_WEBHOOK_SECRET` y `VERCEL_DEPLOY_HOOK_URL` viven solo en el runtime de `/api/shopify-catalog-rebuild` y en el entorno de Vercel; no entran en `astro:env` ni en el bundle.
+- Un nombre `PUBLIC_*` se considera parte del bundle y del HTML público. No puede contener secretos, tokens Admin, tokens Storefront, contraseñas ni credenciales privadas. El carrito Shopify usa siempre el BFF same-origin; el navegador no necesita un token del proveedor.
+- Los secretos privados se leen únicamente desde una frontera servidor mediante `astro:env/server`. El runtime SSR usa el token privado en cada ciclo de caché para consultar el catálogo: el secreto vive solo en el entorno del servidor y no entra en el HTML, los assets ni el bundle cliente. Las operaciones de carrito pasan por el BFF same-origin.
 - Preview y producción deben usar proyectos/entornos de secretos separados, tiendas o credenciales separadas y permisos independientes. Nunca se copia el valor de producción a preview.
 - Todo secreto debe poder rotarse desde el gestor del despliegue sin editar código. La rotación incluye revocar el valor anterior, actualizar el entorno correspondiente y reconstruir/reiniciar el runtime que lo consume.
 - `bun run security:scan` revisa archivos fuente y artefactos generados sin imprimir valores. CI usa `bun run security:scan:history` con historial completo. Si aparece un secreto real, no basta con borrarlo: hay que revocarlo, rotarlo y purgarlo del historial siguiendo el procedimiento aprobado por el propietario del repositorio.

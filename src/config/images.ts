@@ -8,11 +8,8 @@
  *   miniaturas. Cuando el CDN permite transformación, se pide un recorte
  *   centrado con esas dimensiones; cuando no, los contenedores la imponen con
  *   `object-fit: cover` y `aspect-ratio`.
- * - `transformableHosts` está vacío a propósito. No se autoriza ningún CDN
- *   remoto genérico ni host arbitrario. Cuando se conozca el CDN real, añadir
- *   aquí su host exacto (p. ej. `'cdn.shopify.com'`) para activar srcset,
- *   formatos modernos y calidad. Debe coincidir con un host de
- *   `publicSecurityConfig.remoteImageHosts` para que el catálogo lo acepte.
+ * - `cdn.shopify.com` está autorizado de forma exacta porque el catálogo real
+ *   ya devuelve sus imágenes desde ese host. No se admiten comodines.
  * - Las URLs transformadas son deterministas: misma URL origen + mismos
  *   parámetros = misma URL servida. Eso las hace idempotentes para la caché
  *   del CDN y del navegador sin variaciones por sesión.
@@ -28,5 +25,5 @@ export const imagePolicy = {
   /** Ancho servido para miniaturas y carrito. */
   thumbWidth: 240,
   /** Hosts exactos cuyo CDN puede generar variantes (recorte, calidad, formato). */
-  transformableHosts: [],
+  transformableHosts: ['cdn.shopify.com'],
 } as const;

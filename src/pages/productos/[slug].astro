@@ -1,5 +1,4 @@
 ---
-import type { GetStaticPaths } from 'astro';
 import ProductCard from '../../components/collection/ProductCard.astro';
 import Footer from '../../components/layout/Footer.astro';
 import Header from '../../components/layout/Header.astro';
@@ -10,33 +9,23 @@ import { site, siteUrl } from '@config/site';
 import { catalogProvider } from '@commerce/catalog';
 import { getRedirectedProductHandles } from '@commerce/application/product-redirects';
 import { resolveProductPageHead, type CommercePageHead } from '@commerce/application/seo';
-import type { Product } from '@commerce/domain/catalog';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 
-export const getStaticPaths = (async () => {
-  const redirectedHandles = getRedirectedProductHandles();
-  const handles = (await catalogProvider.getProductHandles())
-    .filter((handle) => !redirectedHandles.has(handle));
-
-  return Promise.all(handles.map(async (handle) => {
-    const product = await catalogProvider.getProductByHandle(handle);
-    if (!product) throw new Error(`Producto no encontrado: ${handle}`);
-    return {
-      params: { slug: handle },
-      props: {
-        product,
-        pageHead: resolveProductPageHead(product, site, siteUrl),
-      },
-    };
-  }));
-}) satisfies GetStaticPaths;
-
-interface Props {
-  product: Product;
-  pageHead: CommercePageHead;
+const handle = Astro.params.slug;
+const redirectedHandles = getRedirectedProductHandles();
+if (handle && redirectedHandles.has(handle)) {
+  Astro.response.status = 404;
+  return Astro.rewrite('/404');
 }
-
-const { product, pageHead } = Astro.props;
+const product = handle ? await catalogProvider.getProductByHandle(handle) : undefined;
+if (!product) {
+  Astro.response.status = 404;
+  return Astro.rewrite('/404');
+}
+// HTML anónimo: el estado del carrito llega solo por cliente. Caché CDN breve
+// alineada con la del catálogo; un redeploy purga la CDN de Vercel.
+Astro.response.headers.set('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=600');
+const pageHead: CommercePageHead = resolveProductPageHead(product, site, siteUrl);
 const category = (await catalogProvider.getCollections())
   .find((collection) => collection.id === product.primaryCollectionId);
 if (!category) throw new Error(`Colección principal no encontrada: ${product.primaryCollectionId}`);
@@ -167,6 +156,10 @@ const breadcrumbs = [
     min-width: 0;
   }
 
+  .pdp__gallery {
+    width: min(100%, 28rem);
+  }
+
   .pdp__buy {
     display: grid;
     gap: var(--kb-space-6);
@@ -257,13 +250,20 @@ const breadcrumbs = [
 
   @media (min-width: 48rem) {
     .pdp__main {
-      grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
-      gap: var(--kb-space-10);
+      grid-template-columns: minmax(0, 22rem) minmax(0, 1fr);
+      gap: var(--kb-space-8);
     }
 
     .pdp__related-grid {
       grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: var(--kb-space-6);
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .pdp__main {
+      grid-template-columns: minmax(0, 28rem) minmax(0, 1fr);
+      gap: var(--kb-space-10);
     }
   }
 

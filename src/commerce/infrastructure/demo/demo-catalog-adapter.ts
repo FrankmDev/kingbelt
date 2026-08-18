@@ -6,13 +6,13 @@ import {
 import { publicSecurityConfig } from '@config/security';
 import { getCollectionFacets } from '../../domain/catalog-filters';
 import { assertValidCatalog } from '../../application/catalog-validation';
+import { createCartCatalog } from '../../application/cart-catalog';
 import { toCollectionReference, toProductSummary } from '../../domain/product-mappers';
-import type { CartCatalog, CartCatalogVariant } from '../../application/cart-service';
+import type { CartCatalog } from '../../application/cart-service';
 import type { CatalogProvider } from '../../application/catalog-provider';
 import type {
   Collection,
   Product,
-  ProductVariant,
 } from '../../domain/catalog';
 
 interface DemoCatalogSource {
@@ -24,21 +24,7 @@ interface DemoCatalogSource {
 const createIndexes = (source: DemoCatalogSource) => {
   const productsByHandle = new Map(source.products.map((product) => [product.handle, product]));
   const collectionsById = new Map(source.collections.map((collection) => [collection.id, collection]));
-  const productsByLegacyId = new Map(
-    source.products.map((product) => [product.reference.toLocaleLowerCase('es'), product])
-  );
-  const variantsById = new Map<string, CartCatalogVariant>();
-  source.products.forEach((product) => {
-    const collection = collectionsById.get(product.primaryCollectionId);
-    if (!collection) return;
-    const primaryCollection = toCollectionReference(collection);
-    product.variants.forEach((variant) => variantsById.set(variant.id, {
-      product,
-      variant,
-      primaryCollection,
-    }));
-  });
-  return { productsByHandle, collectionsById, productsByLegacyId, variantsById };
+  return { productsByHandle, collectionsById };
 };
 
 const activeSource: DemoCatalogSource = {
@@ -53,31 +39,6 @@ assertValidCatalog(
   publicSecurityConfig.remoteImageHosts
 );
 const activeIndexes = createIndexes(activeSource);
-
-const getDemoVariant = (variantId: string): CartCatalogVariant | undefined =>
-  activeIndexes.variantsById.get(variantId);
-
-const resolveDemoLegacyVariant = (
-  productId: string,
-  color: string,
-  size: string
-): ProductVariant | undefined => {
-  const product = activeIndexes.productsByLegacyId.get(productId.toLocaleLowerCase('es'));
-  if (!product) return undefined;
-  const matches = product.variants.filter((variant) =>
-    variant.optionValues.some((selection) => {
-      const option = product.options.find((item) => item.id === selection.optionId);
-      const value = option?.values.find((item) => item.id === selection.valueId);
-      return option?.purpose === 'color' && value?.label === color;
-    }) &&
-    variant.optionValues.some((selection) => {
-      const option = product.options.find((item) => item.id === selection.optionId);
-      const value = option?.values.find((item) => item.id === selection.valueId);
-      return option?.purpose === 'size' && value?.label === size;
-    })
-  );
-  return matches.length === 1 ? matches[0] : undefined;
-};
 
 export const createDemoCatalogAdapter = (
   source: DemoCatalogSource = activeSource
@@ -146,7 +107,7 @@ export const createDemoCatalogAdapter = (
 
 export const demoCatalogAdapter = createDemoCatalogAdapter();
 
-export const demoCartCatalog: CartCatalog = {
-  getVariant: getDemoVariant,
-  resolveLegacyVariant: resolveDemoLegacyVariant,
-};
+export const demoCartCatalog: CartCatalog = createCartCatalog(
+  activeSource.products,
+  activeSource.collections
+);

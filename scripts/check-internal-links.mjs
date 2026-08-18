@@ -1,7 +1,8 @@
 import { readFile, readdir, stat } from 'node:fs/promises';
 import { join, relative, resolve, sep } from 'node:path';
 
-const distRoot = resolve('dist');
+const distRoot = resolve('dist/client');
+const serverBuildExists = await stat(resolve('.vercel/output/_functions/entry.mjs')).then(() => true).catch(() => false);
 const localOrigin = 'https://kingbelt.local';
 const ignoredSchemes = /^(?:mailto:|tel:|javascript:|data:)/i;
 
@@ -69,6 +70,10 @@ const getTarget = async (pathname) => {
   return targetCache.get(pathname);
 };
 
+const isServerRoute = (pathname) => serverBuildExists &&
+  !pathname.startsWith('/_astro/') &&
+  (!pathname.includes('.') || pathname === '/sitemap-commerce.xml');
+
 for (const sourceFile of htmlFiles) {
   const html = await readHtml(sourceFile);
   const sourceUrl = new URL(getSourcePathname(sourceFile), localOrigin);
@@ -83,6 +88,7 @@ for (const sourceFile of htmlFiles) {
     checked += 1;
     const target = await getTarget(targetUrl.pathname);
     if (!target) {
+      if (isServerRoute(targetUrl.pathname)) continue;
       missing.push({ sourceFile, href: rawHref, reason: 'target not found' });
       continue;
     }

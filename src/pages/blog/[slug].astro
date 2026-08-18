@@ -10,6 +10,8 @@ import { blogPage, blogPosts, type BlogPost } from '@content/blog';
 import { site } from '@config/site';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 
+export const prerender = true;
+
 export const getStaticPaths = (() =>
   blogPosts.map((post) => ({
     params: { slug: post.slug },

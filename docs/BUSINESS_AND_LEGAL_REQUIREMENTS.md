@@ -94,7 +94,7 @@ En `src/content/legal.ts`, establecer `showDraftLegalInNav = false`.
 
 - Sitemap: `@astrojs/sitemap` → `/sitemap-index.xml`
 - Robots: `src/pages/robots.txt.ts`
-- Exclusiones: `/404`, `/carrito`, `/desistimiento`, documentos draft
+- Exclusiones: `/404`, `/carrito`, `/cart-catalog.json`, `/desistimiento`, documentos draft
 
 ## Cómo confirmar un dato
 

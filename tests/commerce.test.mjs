@@ -279,18 +279,17 @@ describe('medios canónicos por color y variante', () => {
     product.variants[0].imageId = independent.id;
     expect(getVariantGallery(product, product.variants[0])[0].id).toBe(independent.id);
     expect(validateCatalog([product], [collection]).map((entry) => entry.code)).toEqual(
-      expect.arrayContaining(['unassigned_color_image', 'variant_color_image_mismatch'])
+      expect.arrayContaining(['variant_color_image_mismatch'])
     );
   });
 
-  test('rechaza galerías de color incompletas, repetidas o sin relación', () => {
+  test('rechaza galerías de color vacías o sin relación con la variante', () => {
     const invalid = structuredClone(asymmetricProduct);
-    invalid.mediaGroups[0].imageIds.pop();
-    invalid.mediaGroups[1].imageIds[0] = invalid.mediaGroups[0].imageIds[0];
+    invalid.mediaGroups[0].imageIds = [];
+    invalid.mediaGroups[1].imageIds[0] = invalid.images[0].id;
     const codes = validateCatalog([invalid], [collection]).map((entry) => entry.code);
     expect(codes).toEqual(expect.arrayContaining([
-      'invalid_color_gallery_size',
-      'media_image_reused_between_colors',
+      'empty_media_group',
       'variant_color_image_mismatch',
     ]));
   });
@@ -446,7 +445,6 @@ describe('validación exhaustiva de catálogo', () => {
     expect(validateCatalog([safe], [collection]).map((entry) => entry.code)).toEqual(
       expect.arrayContaining([
         'missing_color_media_group',
-        'unassigned_color_image',
         'missing_variant_color_image',
       ])
     );

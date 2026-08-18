@@ -5,6 +5,7 @@ import { normalizePathname } from '../shared/url';
 const STATIC_SITEMAP_EXCLUDED = new Set([
   '/404',
   '/carrito',
+  '/cart-catalog.json',
 ]);
 
 export const isSitemapExcluded = (pathname: string): boolean => {

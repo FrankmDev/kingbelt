@@ -1,5 +1,4 @@
 ---
-import type { GetStaticPaths } from 'astro';
 import CollectionCatalog from '../../components/collection/CollectionCatalog.astro';
 import Footer from '../../components/layout/Footer.astro';
 import Header from '../../components/layout/Header.astro';
@@ -7,30 +6,17 @@ import Breadcrumbs from '../../components/ui/Breadcrumbs.astro';
 import { site, siteUrl } from '@config/site';
 import { catalogProvider } from '@commerce/catalog';
 import { resolveCollectionPageHead, type CommercePageHead } from '@commerce/application/seo';
-import type { CollectionPage } from '@commerce/domain/catalog';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 
-export const getStaticPaths = (async () => {
-  const handles = await catalogProvider.getCollectionHandles();
-  return Promise.all(handles.map(async (handle) => {
-    const collectionPage = await catalogProvider.getCollectionByHandle(handle);
-    if (!collectionPage) throw new Error(`Colección no encontrada: ${handle}`);
-    return {
-      params: { slug: handle },
-      props: {
-        collectionPage,
-        pageHead: resolveCollectionPageHead(collectionPage, site, siteUrl),
-      },
-    };
-  }));
-}) satisfies GetStaticPaths;
-
-interface Props {
-  collectionPage: CollectionPage;
-  pageHead: CommercePageHead;
+const handle = Astro.params.slug;
+const collectionPage = handle ? await catalogProvider.getCollectionByHandle(handle) : undefined;
+if (!collectionPage) {
+  Astro.response.status = 404;
+  return Astro.rewrite('/404');
 }
-
-const { collectionPage, pageHead } = Astro.props;
+// HTML anónimo y derivado del catálogo: caché CDN breve con revalidación.
+Astro.response.headers.set('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=600');
+const pageHead: CommercePageHead = resolveCollectionPageHead(collectionPage, site, siteUrl);
 const { collection: category, products, facets } = collectionPage;
 const categories = await catalogProvider.getCollections();
 ---

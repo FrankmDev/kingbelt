@@ -135,7 +135,7 @@ describe('límites de arquitectura', () => {
   });
 
   test('las rutas de páginas consumen comercio solo mediante composition roots o contratos', () => {
-    const roots = new Set(['src/commerce/catalog', 'src/commerce/cart']);
+    const roots = new Set(['src/commerce/catalog', 'src/commerce/cart', 'src/commerce/cart-server']);
     const allowed = ['src/commerce/application/', 'src/commerce/domain/'];
     const violations = localDependencies.filter(({ importer, dependency }) =>
       importer.startsWith('src/pages/') &&
@@ -147,7 +147,7 @@ describe('límites de arquitectura', () => {
   });
 
   test('solo los composition roots eligen adaptadores de infraestructura', () => {
-    const roots = new Set(['src/commerce/catalog', 'src/commerce/cart']);
+    const roots = new Set(['src/commerce/catalog', 'src/commerce/cart', 'src/commerce/cart-server']);
     const violations = localDependencies.filter(({ importer, dependency }) =>
       dependency.startsWith('src/commerce/infrastructure/') &&
       !importer.startsWith('src/commerce/infrastructure/') &&
@@ -241,6 +241,18 @@ describe('límites de arquitectura', () => {
     expect(readiness).not.toMatch(/cliente con token público|decisión final del cliente de carrito/);
   });
 
+  test('documenta el canal Headless y los scopes Storefront mínimos', () => {
+    const readiness = readFileSync(join(root, 'docs/SHOPIFY_READINESS.md'), 'utf8');
+    expect(readiness).toContain('canal Headless');
+    [
+      'unauthenticated_read_product_listings',
+      'unauthenticated_read_product_inventory',
+      'unauthenticated_read_metaobjects',
+      'unauthenticated_read_checkouts',
+      'unauthenticated_write_checkouts',
+    ].forEach((scope) => expect(readiness).toContain(scope));
+  });
+
   test('documenta el contrato obligatorio de metafields e imágenes antes de importar', () => {
     const readiness = readFileSync(join(root, 'docs/SHOPIFY_READINESS.md'), 'utf8');
     const requiredProductMetafields = [
@@ -256,6 +268,6 @@ describe('límites de arquitectura', () => {
     });
     expect(readiness).toContain('list.metaobject_reference<kingbelt.color_gallery>');
     expect(readiness).toContain('exactamente 3, ordenadas');
-    expect(readiness).toContain('ninguno; falla import');
+    expect(readiness).toContain('galería nativa desde `variant.image`');
   });
 });

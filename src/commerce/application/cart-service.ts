@@ -23,8 +23,22 @@ import type {
 } from '../domain/catalog';
 import type { VariantId } from '../domain/identifiers';
 
+export type CartCatalogProduct = Pick<
+  Product,
+  | 'id'
+  | 'handle'
+  | 'title'
+  | 'reference'
+  | 'primaryCollectionId'
+  | 'options'
+  | 'variants'
+  | 'images'
+  | 'primaryImageId'
+  | 'mediaGroups'
+>;
+
 export interface CartCatalogVariant {
-  product: Product;
+  product: CartCatalogProduct;
   variant: ProductVariant;
   primaryCollection: CollectionReference;
 }

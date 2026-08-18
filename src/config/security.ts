@@ -3,5 +3,5 @@
  * recurso realmente usado y revisarse junto con CSP y las pruebas de seguridad.
  */
 export const publicSecurityConfig = {
-  remoteImageHosts: ['images.unsplash.com'],
+  remoteImageHosts: ['images.unsplash.com', 'cdn.shopify.com'],
 } as const;

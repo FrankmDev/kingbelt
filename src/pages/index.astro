@@ -20,6 +20,8 @@ const featuredPost = blogPosts.find((post) => post.status === 'featured') ?? blo
 const journalPosts = [featuredPost, blogPosts[1], blogPosts[2]].filter(Boolean);
 const featuredProducts = await catalogProvider.getFeaturedProducts(4);
 const productCategories = await catalogProvider.getCollections();
+// HTML anónimo derivado del catálogo: caché CDN breve; un redeploy purga.
+Astro.response.headers.set('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=600');
 
 const homeSchema = {
   '@context': 'https://schema.org',

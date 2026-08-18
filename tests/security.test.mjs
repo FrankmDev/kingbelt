@@ -45,6 +45,8 @@ describe('serialización y contenido externo', () => {
     const allowed = publicSecurityConfig.remoteImageHosts;
     expect(isAllowedImageUrl('/images/producto.jpg', allowed)).toBe(true);
     expect(isAllowedImageUrl('https://images.unsplash.com/photo.jpg', allowed)).toBe(true);
+    expect(isAllowedImageUrl('https://cdn.shopify.com/s/files/product.jpg', allowed)).toBe(true);
+    expect(isAllowedImageUrl('https://cdn.shopify.com.evil.test/product.jpg', allowed)).toBe(false);
     expect(isAllowedImageUrl('https://images.unsplash.com.evil.test/photo.jpg', allowed)).toBe(false);
     expect(isAllowedImageUrl('https://user:pass@images.unsplash.com/photo.jpg', allowed)).toBe(false);
     expect(isAllowedImageUrl('http://images.unsplash.com/photo.jpg', allowed)).toBe(false);

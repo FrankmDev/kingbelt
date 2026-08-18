@@ -206,7 +206,9 @@ export const getPublicBuyBoxMessage = (
   }
 };
 
-export const toCollectionReference = (collection: Collection): CollectionReference => ({
+export const toCollectionReference = (
+  collection: Pick<Collection, 'id' | 'handle' | 'title'>
+): CollectionReference => ({
   id: collection.id,
   handle: collection.handle,
   title: collection.title,
@@ -240,7 +242,7 @@ export const getSelectedOptionLabels = (
 });
 
 export const toCartProduct = (
-  product: Product,
+  product: Pick<Product, 'id' | 'handle' | 'title' | 'reference' | 'images' | 'primaryImageId'>,
   variant: ProductVariant,
   primaryCollection: CollectionReference
 ): CartProduct => ({

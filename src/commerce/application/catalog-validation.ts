@@ -343,7 +343,6 @@ export const validateCatalog = (
     const colorOption = product.options.find((option) => option.purpose === 'color');
     const colorValueIds = new Set(colorOption?.values.map((value) => value.id) ?? []);
     const mediaGroupByValue = new Map(product.mediaGroups.map((group) => [group.optionValueId, group]));
-    const mediaImageOwner = new Map<string, string>();
     duplicateValues(mediaGroupIds).forEach((id) =>
       issue(issues, 'duplicate_media_group_id', `${productPath}.mediaGroups`, `ID de grupo de medios duplicado: ${id}.`)
     );
@@ -359,9 +358,7 @@ export const validateCatalog = (
       if (colorOption && !colorValueIds.has(group.optionValueId)) {
         issue(issues, 'media_group_not_color', `${groupPath}.optionValueId`, 'Cada grupo de medios debe pertenecer a un valor de la opción Color.');
       }
-      if (colorOption && group.imageIds.length !== 3) {
-        issue(issues, 'invalid_color_gallery_size', `${groupPath}.imageIds`, 'Cada color debe declarar exactamente tres imágenes ordenadas.');
-      } else if (!group.imageIds.length) {
+      if (!group.imageIds.length) {
         issue(issues, 'empty_media_group', `${groupPath}.imageIds`, 'El grupo de medios debe contener al menos una imagen.');
       }
       duplicateValues(group.imageIds).forEach((id) =>
@@ -371,23 +368,12 @@ export const validateCatalog = (
         if (!imageIds.has(id)) {
           issue(issues, 'media_group_unknown_image', `${groupPath}.imageIds[${imageIndex}]`, `Imagen inexistente: ${id}.`);
         }
-        const owner = mediaImageOwner.get(id);
-        if (owner && owner !== group.optionValueId) {
-          issue(issues, 'media_image_reused_between_colors', `${groupPath}.imageIds[${imageIndex}]`, `La imagen ${id} ya pertenece a otro color.`);
-        } else {
-          mediaImageOwner.set(id, group.optionValueId);
-        }
       });
     });
     if (colorOption) {
       colorOption.values.forEach((value, valueIndex) => {
         if (!mediaGroupByValue.has(value.id)) {
           issue(issues, 'missing_color_media_group', `${productPath}.options[${product.options.indexOf(colorOption)}].values[${valueIndex}]`, `El color ${value.label} no tiene una galería asociada.`);
-        }
-      });
-      product.images.forEach((image, imageIndex) => {
-        if (!mediaImageOwner.has(image.id)) {
-          issue(issues, 'unassigned_color_image', `${productPath}.images[${imageIndex}]`, `La imagen ${image.id} no pertenece a ninguna galería de color.`);
         }
       });
       const firstColorImageId = mediaGroupByValue.get(colorOption.values[0]?.id)?.imageIds[0];

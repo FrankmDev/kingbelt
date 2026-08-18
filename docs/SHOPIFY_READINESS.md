@@ -2,22 +2,26 @@
 
 ## 1. Estado actual
 
-La web sigue siendo estática y funciona sin variables de entorno. El catálogo, las variantes y el carrito de demostración se resuelven con proveedores locales; no existe cliente HTTP, GraphQL, tienda configurada ni dependencia de Shopify.
+La web usa SSR en Vercel. Con `SHOPIFY_STORE_DOMAIN` y `SHOPIFY_STOREFRONT_PRIVATE_TOKEN`, `commerce/catalog.ts` selecciona el adaptador Shopify y consulta el catálogo bajo demanda con una caché breve por instancia. Sin esas credenciales conserva la demo. El webhook de catálogo puede reconstruir Vercel como respaldo. El carrito usa el BFF same-origin `/api/cart` y la Cart API de Shopify cuando existe `SHOPIFY_CART_COOKIE_SECRET`; sin configuración completa conserva el adaptador demo.
+
+La Storefront API está fijada en `2026-07` y usa exclusivamente el token privado. El importador consulta y pagina productos, colecciones, variantes, opciones, imágenes, SEO y metafields; normaliza la respuesta al dominio neutral y falla antes de emitir páginas si el catálogo es parcial. `bun run shopify:smoke` continúa siendo la comprobación mínima `shop { name }`. No se consulta ni se implementa carrito real.
 
 `src/demo-catalog.ts` no es una plantilla de importación ni una definición del catálogo definitivo. Sus productos, nombres, precios, inventario, colecciones e imágenes son fixtures para probar contratos, rutas y estados. El catálogo sintético de tests verifica la escala prevista sin anticipar datos comerciales reales.
 
-El adaptador demo pasa por `assertValidCatalog()` antes de exponer datos. El futuro adaptador deberá aplicar esa misma validación después de normalizar la respuesta externa y antes de que páginas o carrito la consuman; los fixtures solo prueban esa frontera.
+Los adaptadores demo y Shopify pasan por `assertValidCatalog()` antes de exponer datos. Las respuestas externas quedan confinadas a `infrastructure/shopify/`; páginas y componentes no conocen tipos de Shopify.
+
+La consulta real del 18 de agosto de 2026 confirma `cdn.shopify.com` como host exacto de imágenes, ya autorizado en la política de imagen y la CSP. Los metafields `kingbelt.*` todavía no están visibles en Storefront: el importador usa campos nativos (handle, descripción, imágenes de variante, título como `alt` y como descripción de colección). No se inventa material, ancho ni copy comercial. Un fallo de obtención o un catálogo vacío sigue fallando cerrado: sin catálogo previo la petición no se renderiza; con uno válido, se sirve el último conocido (stale-if-error).
 
 ## 2. Arquitectura objetivo
 
 ```txt
-páginas → CatalogProvider → demo ahora / importador Shopify durante build después
+páginas SSR → CatalogProvider → Shopify con caché breve / demo sin credenciales
 
 navegador → cliente neutral de carrito → endpoints same-origin → servicio servidor → Storefront Cart API
-                                      ↘ contratos de aplicación y dominio neutrales
+                    ↘ checkout Shopify validado por host
 ```
 
-Las respuestas GraphQL se transformarán al dominio neutral dentro de la futura infraestructura. No llegarán a páginas ni componentes. Los endpoints, el servicio servidor y el adapter de despliegue no se crean hasta activar la integración; hoy el sitio continúa completamente estático.
+Las respuestas GraphQL se transforman al dominio neutral dentro de los adaptadores y no llegan a páginas ni componentes. El token privado y el ID remoto del carrito quedan confinados al servidor.
 
 ## 3. Proveedor de catálogo
 
@@ -25,7 +29,7 @@ Es responsable de colecciones, resúmenes para grids, fichas completas, handles,
 
 ## 4. Proveedor de carrito
 
-El contrato neutral es responsable de inicializar, añadir una variante, modificar cantidades, eliminar líneas y obtener checkout. La identidad pública de entrada es `variantId`; título, precio, imagen, opciones, stock y cantidad aceptada se vuelven a resolver en el servidor. En la integración futura su implementación cliente solo hablará con endpoints same-origin, nunca con Shopify.
+El contrato neutral es responsable de inicializar, añadir una variante, modificar cantidades, eliminar líneas y obtener checkout. La identidad pública de entrada es `variantId`; título, precio, imagen, opciones, stock y cantidad aceptada se vuelven a resolver contra el catálogo. Mientras no exista BFF, el adaptador demo las resuelve desde `/cart-catalog.json` y conserva líneas en `localStorage`. En la integración futura su implementación cliente solo hablará con endpoints same-origin, nunca con Shopify.
 
 ## 5. Producto y variante
 
@@ -35,13 +39,24 @@ El contrato neutral es responsable de inicializar, añadir una variante, modific
 
 Cada variante declara `quantityRule.minimum`, `increment` y `maximum?`. La política inicial de KingBelt acepta expresamente mínimo 1 e incremento 1; una regla distinta hace fallar el catálogo. El máximo opcional se respeta en selector, carrito, persistencia, reconciliación y futuro servicio servidor. Los límites técnicos de protección siguen separados de este máximo comercial y nunca se presentan como stock.
 
-## 6. Generación estática
+## 6. Renderizado server-side
 
-`getStaticPaths()` solicita únicamente handles. Cada ruta obtiene después su producto o colección por handle durante el build. El sitio continúa sin adapter y sin SSR.
+Las rutas de producto y colección consultan el proveedor por handle en cada render server-side y ya no dependen de `getStaticPaths()`. La caché de 30 segundos limita la latencia y permite reflejar cambios de Shopify rápidamente. El sitemap de comercio se genera en `/sitemap-commerce.xml`.
 
-## 7. Actualización futura
+## 7. Actualización del catálogo
 
-Los datos se obtendrán durante el build. Cuando cambie el catálogo se reconstruirá el despliegue de Vercel. Más adelante podrá conectarse un webhook de Shopify a un deploy hook de Vercel; esa automatización no está implementada.
+Los datos se obtienen bajo demanda. Un cambio en Shopify queda disponible al expirar la caché breve de la instancia; el webhook sigue disponible para disparar un rebuild de respaldo.
+
+En `astro dev`, el adaptador Shopify vuelve a consultar Storefront en cada petición (con coalescencia si hay varias lecturas a la vez). Recargar la ficha basta para ver descripciones nuevas.
+
+En producción, `POST /api/shopify-catalog-rebuild` verifica la firma HMAC de Shopify y, si el topic es de producto o colección, llama al Deploy Hook de Vercel. El navegador no consulta Shopify. Sin `SHOPIFY_WEBHOOK_SECRET` y `VERCEL_DEPLOY_HOOK_URL` el endpoint responde `503`.
+
+Para activarlo:
+
+1. En Vercel, crear un Deploy Hook y guardar la URL en `VERCEL_DEPLOY_HOOK_URL`.
+2. Copiar el secreto de firma de webhooks de Shopify en `SHOPIFY_WEBHOOK_SECRET`.
+3. En Shopify Admin → Settings → Notifications → Webhooks, crear eventos `products/create`, `products/update`, `products/delete`, `collections/create`, `collections/update` y `collections/delete` hacia `https://kingbelt.com/api/shopify-catalog-rebuild`.
+4. Un build que falle deja publicado el despliegue anterior.
 
 ## 8. Contrato definitivo de producto
 
@@ -66,25 +81,25 @@ Los datos se obtendrán durante el build. Cuando cambie el catálogo se reconstr
 | `quantityRule` | mínimo e incremento obligatorios; máximo opcional | `quantityRule`; inicialmente solo 1/1 es compatible |
 | título y cuerpo | título y descripción obligatorios, texto saneado | `title` y `description` |
 | SEO nativo | título/description opcionales | `seo`; fallback determinista a título y resumen, sin inventar copy |
-| media de producto | tres imágenes válidas por valor de `Color` | `images`, `primaryImageId`, `mediaGroups` e `imageId` de variante |
+| media de producto | al menos una imagen por valor de `Color`; tres ordenadas si existe `kingbelt.color_galleries` | `images`, `primaryImageId`, `mediaGroups` e `imageId` de variante |
 
-`reference`, `summary`, `badge`, material, ancho y hebilla/acabado se resuelven mediante el contrato de metafields siguiente. No se importa coste, margen, tags administrativos ni HTML sin sanear.
+`reference`, `summary`, `badge`, material, ancho y hebilla/acabado se resuelven con los metafields `kingbelt.*` cuando están publicados para Storefront. Si aún no lo están, el importador usa campos nativos: `handle` como referencia, `description` como resumen, galerías derivadas de `variant.image` y del orden de `Product.images`, título de colección si falta descripción, título de producto como `alt` y `id` de variante si falta SKU. No se inventa copy comercial, material ni medidas. No se importa coste, margen, tags administrativos ni HTML sin sanear.
 
 ### 8.1 Metafields y metaobject de galería
 
 | Propietario | Namespace / key | Tipo Shopify | Cardinalidad | Obligatorio | Fallback | Destino interno |
 | --- | --- | --- | --- | --- | --- | --- |
-| Product | `kingbelt.model_reference` | `single_line_text_field` | exactamente 1 | sí | ninguno; falla import | `Product.reference` |
-| Product | `kingbelt.summary` | `multi_line_text_field` | exactamente 1 | sí | ninguno; falla import | `Product.summary` |
-| Product | `kingbelt.material` | `single_line_text_field` | exactamente 1 | sí | ninguno; falla import | `specifications[Material]` |
-| Product | `kingbelt.width_mm` | `number_integer` | exactamente 1, positivo | sí | ninguno; falla import | `specifications[Ancho]` |
-| Product | `kingbelt.buckle_finish` | `single_line_text_field` | exactamente 1 | sí | ninguno; falla import | `specifications[Hebilla/acabado]` |
+| Product | `kingbelt.model_reference` | `single_line_text_field` | exactamente 1 | si está publicado | `handle` del producto | `Product.reference` |
+| Product | `kingbelt.summary` | `multi_line_text_field` | exactamente 1 | si está publicado | `description` nativa | `Product.summary` |
+| Product | `kingbelt.material` | `single_line_text_field` | exactamente 1 | si está publicado | se omite la especificación | `specifications[Material]` |
+| Product | `kingbelt.width_mm` | `number_integer` | exactamente 1, positivo | si está publicado | se omite la especificación | `specifications[Ancho]` |
+| Product | `kingbelt.buckle_finish` | `single_line_text_field` | exactamente 1 | si está publicado | se omite la especificación | `specifications[Hebilla/acabado]` |
 | Product | `kingbelt.badge` | `single_line_text_field` | 0..1 | no | se omite | `Product.badge` |
-| Product | `kingbelt.color_galleries` | `list.metaobject_reference<kingbelt.color_gallery>` | exactamente una referencia por valor de Color | sí si existe Color | ninguno; falla import | `Product.mediaGroups` |
-| Metaobject `kingbelt.color_gallery` | `color_value` | `single_line_text_field` | exactamente 1 | sí | ninguno; falla import | relación con `optionValueId` de Color |
-| Metaobject `kingbelt.color_gallery` | `images` | `list.file_reference` | exactamente 3, ordenadas | sí | ninguno; falla import | IDs de `Product.images` del grupo |
+| Product | `kingbelt.color_galleries` | `list.metaobject_reference<kingbelt.color_gallery>` | exactamente una referencia por valor de Color | si está publicado y existe Color | galería nativa desde `variant.image` | `Product.mediaGroups` |
+| Metaobject `kingbelt.color_gallery` | `color_value` | `single_line_text_field` | exactamente 1 | si el metaobject está publicado | no aplica | relación con `optionValueId` de Color |
+| Metaobject `kingbelt.color_gallery` | `images` | `list.file_reference` | exactamente 3, ordenadas | si el metaobject está publicado | no aplica | IDs de `Product.images` del grupo |
 
-Todos los metafields obligatorios se consultan juntos. Un nodo, campo o relación ausente convierte la respuesta en parcial y detiene el build. No se usan valores ficticios ni se reinterpreta un metafield desconocido.
+Todos los metafields `kingbelt.*` se consultan juntos. Si están publicados, un tipo o relación inválida detiene el build. Si no están visibles en Storefront, el importador continúa con los campos nativos de §8 y no inventa copy.
 
 ## 9. Decisiones empresariales pendientes
 
@@ -115,9 +130,9 @@ Cada archivo debe pertenecer a la media del producto, tener ID y URL únicos, `a
 
 ## 12. Filtros
 
-La selección, el predicado y la serialización URL viven en `commerce/domain/catalog-filters.ts` y los comparten build, navegador y futuro adaptador. La selección (`CatalogFilterSelection`) usa tipo, colores normalizados, un rango de precio declarativo y disjunto sobre el precio de entrada, y disponibilidad. La URL transporta esa selección (`tipo`, `color`, `precio`, `disponible`) para enlazar estados y conservarlos al volver atrás o recargar.
+La selección, el predicado y la serialización URL viven en `commerce/domain/catalog-filters.ts` y los comparten build, navegador y adaptadores. La selección (`CatalogFilterSelection`) usa tipo, colores normalizados, un rango de precio declarativo y disjunto sobre el precio de entrada, y disponibilidad. La URL transporta esa selección (`tipo`, `color`, `precio`, `disponible`) para enlazar estados y conservarlos al volver atrás o recargar.
 
-El controlador cliente aplica el mismo predicado del dominio y revela la colección por páginas con «Mostrar más». Cuando exista Shopify, el adaptador traducirá `CatalogFilterSelection` a sus filtros disponibles y devolverá `CollectionPage` (productos y facets) ya filtrado y paginado; los componentes no cambian. No se ha configurado Search & Discovery ni consultas remotas.
+El controlador cliente aplica el mismo predicado del dominio y revela la colección por páginas con «Mostrar más». El adaptador Shopify importa el catálogo completo bajo demanda (caché breve por instancia) y devuelve `CollectionPage`; los componentes no cambian. Traducir filtros a Search & Discovery remoto queda fuera de esta activación.
 
 ## 13. SEO
 
@@ -125,18 +140,16 @@ El SEO consume el dominio neutral. La ficha genera `Product`, marca, imágenes, 
 
 ## 14. Pasos exactos para activar Shopify
 
-1. Confirmar campos pendientes, colecciones, mercados, inventario y política de imágenes.
-2. Crear y validar la tienda y el catálogo fuera de este repositorio.
-3. Añadir el adapter de despliegue y el BFF same-origin; no cambiar las páginas ni el store.
-4. Fijar `SHOPIFY_API_VERSION` y configurar dominio y credenciales privadas solo en el entorno servidor.
-5. Implementar endpoints de comandos cerrados y el cliente Storefront mínimo dentro del servidor.
-6. Implementar adaptadores separados para `CatalogProvider` y el servicio servidor de carrito dentro de `commerce/infrastructure/shopify/`.
-7. Mapear respuestas GraphQL al dominio neutral y ejecutar el validador antes de renderizar.
-8. Autorizar el dominio CDN de imágenes solo cuando sea conocido.
-9. Ejecutar pruebas de catálogo, variantes, carrito, rutas, SEO y validación visual.
-10. Cambiar los composition roots `commerce/catalog.ts` y `commerce/cart.ts` a los adaptadores Shopify.
-11. Configurar reconstrucciones de Vercel; valorar después webhook/deploy hook.
-12. Verificar checkout, secretos, CSP/cabeceras y vuelta al adaptador demo antes de publicar.
+1. Completar las descripciones de `casual`, `sport` y `vestir`.
+2. Crear, rellenar y habilitar visibilidad Storefront de los metafields/metaobjects de §8.1 para cada producto publicado en Headless.
+3. Añadir alt contextual a todas las imágenes, completar imágenes/SKU pendientes y corregir cualquier relación variante-color. Mientras un producto no esté listo, retirarlo del canal Headless en vez de depender de un filtro local.
+4. Mantener activos `unauthenticated_read_product_listings` y `unauthenticated_read_metaobjects`. Habilitar `unauthenticated_read_product_inventory` si se quiere importar `quantityAvailable`; mientras no esté autorizado, el adaptador conserva inventario `unknown` sin inventar cifras. Los scopes futuros de carrito siguen siendo `unauthenticated_read_checkouts` y `unauthenticated_write_checkouts`.
+5. Ejecutar `bun run shopify:smoke`, `bun run build` y `bun run validate`; al superar el contrato, las rutas se generarán desde Shopify sin cambios de UI.
+6. Mantener desplegado el adapter de Vercel y el BFF same-origin para carrito.
+7. Configurar `SHOPIFY_CART_COOKIE_SECRET` con un secreto aleatorio de al menos 32 caracteres.
+8. Ejecutar pruebas de variantes, carrito, checkout, seguridad y validación visual.
+9. Configurar `SHOPIFY_WEBHOOK_SECRET`, `VERCEL_DEPLOY_HOOK_URL` y los webhooks de catálogo hacia `/api/shopify-catalog-rebuild` como respaldo opcional (el catálogo ya se actualiza solo vía SSR).
+10. Verificar checkout, secretos, CSP/cabeceras y vuelta al adaptador demo antes de publicar.
 
 El flujo de carrito queda fijado: BFF same-origin. Ningún token Storefront se expone al navegador. La versión API debe fijarse explícitamente y nunca ser `latest`.
 
@@ -150,28 +163,28 @@ La arquitectura aprobada para login, registro y cuenta utiliza Customer accounts
 
 ## 17. Decisiones de arquitectura de la integración
 
-Este apartado fija las decisiones que se ejecutarán al activar la tienda. Las secciones 1–16 definen contexto, mapeo y pasos; aquí se decide la frontera de datos y los comportamientos de fallo. Nada de este apartado exige llamadas reales ni credenciales hoy, y ninguna decisión sustituye el paso §14 de implementar, validar y cablear los adaptadores antes de activarlos.
+Este apartado fija las decisiones de la integración. La lectura de catálogo, el carrito BFF y el runtime SSR están implementados; las cuentas de cliente siguen pendientes (§16).
 
 ### 17.1 Fronteras por capacidad
 
 | Capacidad | Puerto / contrato | Implementación prevista |
 | --- | --- | --- |
-| Lectura de catálogo | `CatalogProvider` (§3) | `infrastructure/shopify/catalog-adapter.ts` (aún no creado) |
+| Lectura de catálogo | `CatalogProvider` (§3) | `infrastructure/shopify/catalog-adapter.ts` |
 | Lectura de colecciones | `CatalogProvider.getCollections` / `getCollectionByHandle` | idem |
 | Producto por handle | `CatalogProvider.getProductByHandle` / `getProductHandles` | idem |
 | Destacados | `CatalogProvider.getFeaturedProducts` | idem |
 | Relacionados | `CatalogProvider.getRelatedProducts` | idem, derivado desde el dominio |
-| Resolución de variantes | dentro del adaptador (identidad `gid` de variante) y mappers a `ProductVariant` | `mappers.ts` (aún no creado) |
-| Crear/recuperar carrito | `CartProvider.initialize` / `refresh` | cliente neutral → endpoint same-origin → servicio servidor (aún no creados) |
+| Resolución de variantes | dentro del adaptador (identidad `gid` de variante) y mappers a `ProductVariant` | `catalog-mappers.ts` |
+| Crear/recuperar carrito | `CartProvider.initialize` / `refresh` | cliente neutral → `src/pages/api/cart.ts` → `shopify-cart.ts` (BFF same-origin implementado) |
 | Modificar líneas | `CartProvider.addItem` / `updateItem` / `removeItem` | comandos cerrados al mismo BFF |
 | Checkout | `CartProvider.checkout` + `CheckoutResult` / `getSafeCheckoutUrl` | BFF autoritativo + `checkout-redirect` |
 | Cuenta de cliente futura | puerto `CustomerAccountProvider` nuevo en `application/` | §16 y plan en `plans/` |
 
-Regla general: las respuestas GraphQL y los tipos de Shopify vivirán exclusivamente en `infrastructure/shopify/` cuando se implemente. Hoy esa carpeta no existe: no hay adaptadores incompletos en el repositorio. Páginas, componentes y scripts consumen solo los composition roots `@commerce/catalog` y `@commerce/cart` o contratos de `application`/`domain`. `tests/architecture.test.mjs` ejecuta esta frontera (rutas por composition root y solo los roots eligen infraestructura).
+Regla general: las respuestas GraphQL y los tipos de Shopify viven exclusivamente en `infrastructure/shopify/`. La carpeta contiene configuración, gateway genérico, frontera `astro:env`, query paginada, mapper y adapter de catálogo. Páginas, componentes y scripts consumen solo los composition roots `@commerce/catalog` y `@commerce/cart` o contratos de `application`/`domain`. Todo el árbol Shopify es ahora alcanzable desde el composition root real, por lo que `tests/architecture.test.mjs` ya no necesita una excepción temporal de reachability.
 
 ### 17.2 Datos de build y datos en tiempo real
 
-Durante el build se obtiene todo el catálogo: colecciones, productos completos (opciones, variantes, imágenes, grupos de medios, especificaciones, SEO y pertenencia a colecciones) y las proyecciones de grid `ProductSummary`. Destacados y relacionados se derivan desde el dominio durante el build; el sitio no consulta el catálogo en el navegador.
+Durante cada ciclo de caché SSR se obtiene todo el catálogo: colecciones, productos completos (opciones, variantes, imágenes, grupos de medios, especificaciones, SEO y pertenencia a colecciones) y las proyecciones de grid `ProductSummary`. Destacados y relacionados se derivan desde el dominio en servidor; el sitio no consulta Shopify desde el navegador.
 
 En tiempo real el navegador solo envía al BFF identificadores públicos, cantidades y comandos permitidos. Un identificador opaco de sesión same-origin puede ir en cookie `HttpOnly`; la parte secreta del identificador de carrito Shopify no entra en HTML, JavaScript, almacenamiento ni respuestas públicas. El servicio servidor crea o recupera el carrito, muta líneas y obtiene checkout. Después de cada operación devuelve una proyección neutral reconstruida desde la respuesta remota (§9.1), nunca desde `localStorage` ni desde el snapshot de ficha. La tienda no muta el catálogo desde el cliente.
 
@@ -188,14 +201,14 @@ La paginación es una preocupación interna del adaptador de importación, no de
 
 ### 17.4 Transformación al dominio interno
 
-La normalización vive en `mappers.ts` y no conoce página ni componente:
+La normalización vive en `catalog-mappers.ts` y no conoce página ni componente:
 
 - `MoneyV2 { amount, currencyCode }` → `moneyFromDecimal(amount, currencyCode)`; nunca aritmética de coma flotante.
 - IDs opacos `gid://shopify/...` → `productId()` / `variantId()` tal cual.
 - `options` → `ProductOption`; `purpose` solo cuando el nombre coincide con los conocidos (Color→color, Talla/Tamaño→size). `swatch` solo si el origen lo expone.
 - `selectedOptions` de variante → `OptionSelection[]` contra valores existentes; las combinaciones no declaradas no producen variante (§5).
 - Inventario y política según §9.1: `availableForSale`, `currentlyNotInStock`, `quantityAvailable` (cuando esté autorizado) y `quantityRule { minimum, increment, maximum }` → `inventory`, `inventoryPolicy`, `salesStatus` y `quantityRule`. Un mínimo/incremento distinto de 1/1 falla explícitamente hasta que todas las capas amplíen su política.
-- Imágenes: una sola vez en `Product.images`; `featuredImage` → `primaryImageId`; imagen de variante y `mediaGroups` por valor de opción se agrupan desde `variant.image` (§11). Para activar el srcset y el recorte 4:5 ya preparados, autorizar el host exacto del CDN de Shopify (p. ej. `cdn.shopify.com`) en `imagePolicy.transformableHosts` (`src/config/images.ts`) y, a la vez, en `publicSecurityConfig.remoteImageHosts` (`src/config/security.ts`); sin eso, las URLs se sirven tal cual llegan. El render ya aplica `width`/`height`, `sizes` y `loading`/`fetchpriority` sin JavaScript de cliente.
+- Imágenes: una sola vez en `Product.images`; `featuredImage` → `primaryImageId`; imagen de variante y `mediaGroups` por valor de opción se agrupan desde `variant.image` (§11). El host real `cdn.shopify.com` está autorizado de forma exacta en `imagePolicy.transformableHosts`, `publicSecurityConfig.remoteImageHosts` y CSP; no se usan comodines. El render aplica `width`/`height`, `srcset`, `sizes` y `loading`/`fetchpriority` sin JavaScript de cliente.
 - `descriptionHtml` se sanea a texto plano antes de usarse en ficha y meta.
 
 ### 17.5 Validación antes del uso
@@ -210,17 +223,17 @@ Tras normalizar el catálogo completo, el adaptador ejecuta `assertValidCatalog(
 ### 17.7 Límites, errores y reintentos
 
 - Límites: `first ≤ 250` (§17.3), máximo tres opciones y 2.048 variantes por producto; los límites técnicos de línea y carrito siguen aplicándose a lo que envía el navegador, y las reglas comerciales normalizadas y el carrito remoto son autoridad de cantidades (§9.1).
-- Throttling: Storefront aplica coste de query. El gateway respeta `429`/límite esperando `Retry-After`, con backoff exponencial y jitter, máximo 3 reintentos y un timeout por request (~15 s). Agotados los reintentos, el import falla con error claro; no se publica catálogo parcial.
+- Throttling: Storefront aplica coste de query. El importador actual usa el timeout de 15 s del gateway y no reintenta. Una política acotada de `429`/`Retry-After` para lecturas idempotentes queda pendiente hasta observar una necesidad real; las mutaciones nunca compartirán esa política de forma automática.
 - Mutaciones de carrito: no se reintentan sin confirmación (evita duplicar líneas); solo se reintentan lecturas idempotentes. Los fallos de red se traducen a `provider_error`.
 - Errores de negocio (stock, límites) no se reintentan: se devuelven como `CartOperationResult`.
 
 ### 17.8 Versión de la API
 
-La versión Storefront se fija explícitamente —como constante de módulo en el gateway o como variable de entorno consumida por él— y nunca como `latest`; es una decisión deliberada que implica revisión y reconstrucción. No se añade ninguna variable de entorno mientras no exista un consumidor real que la lea (§14).
+La versión Storefront está fijada en `2026-07` mediante una constante compartida y `SHOPIFY_API_VERSION`, validada por `astro:env` y por la frontera de inicialización. No acepta `latest` ni otra versión. Cambiarla exige una modificación deliberada, revisión y reconstrucción.
 
 ### 17.9 Actualización del sitio al cambiar el catálogo
 
-El catálogo se lee en cada build (§7). Un cambio en la tienda provoca reconstrucción del despliegue: primero rebuild manual o deploy; después, si se desea automatizar, un webhook de Shopify a un deploy hook de Vercel (no implementado). El contenido editorial no participa.
+El catálogo se lee bajo demanda con una caché breve por instancia (§7): un cambio en Shopify queda visible al expirar la caché, sin necesidad de rebuild. El webhook `POST /api/shopify-catalog-rebuild` (endpoint Astro dentro de `src/pages/api/`) dispara el Deploy Hook de Vercel como respaldo opcional —por ejemplo, para forzar un redeploy que purgue la caché CDN—. El contenido editorial no participa.
 
 ### 17.10 Vuelta temporal al proveedor local
 
@@ -228,11 +241,16 @@ Se conservan `src/demo-catalog.ts` y `commerce/infrastructure/demo/`. La reversi
 
 ### 17.11 Evitar páginas corruptas por caída del catálogo
 
-- Fail-closed: si la obtención o la validación del catálogo falla, el build lanza y no se emite la ruta; el despliegue anterior de Vercel sigue sirviendo el último build válido.
+- Fail-closed en runtime: si la obtención o la validación del catálogo falla sin un catálogo válido previo, la petición falla y la página no se renderiza vacía ni corrupta; el despliegue anterior de Vercel sigue publicando el sitio.
+- Stale-if-error: con un catálogo válido en memoria, una caída puntual de Shopify sirve el último catálogo conocido y la siguiente petición reintenta la carga; el sitio no se apaga por una incidencia ajena.
 - El adaptador no degrada a un «catálogo vacío» silencioso: un resultado vacío o parcial se trata como anomalía del import y se resuelve antes de publicar.
 - En el navegador, un fallo del carrito degrada el estado (error o último estado válido), nunca la página.
 - El rollback al adaptador demo (§17.10) es la vía operativa rápida y no exige cambios de UI.
 
 ### 17.12 Gateway GraphQL servidor ligero (sin SDK)
 
-No se usará `@shopify/hydrogen-react` ni otro SDK cliente: un gateway propio exclusivamente servidor en `infrastructure/shopify/` con `fetch`, la versión fijada, las credenciales privadas y una función `graphql()` tipada cubre catálogo, carrito y cuenta futura sin dependencia nueva. La carpeta se crea al implementar; no se conserva ningún adaptador, endpoint ni variable incompletos en el repositorio. Los roots siguen usando demo hasta que la infraestructura real implemente sus contratos, pase validación y se pruebe (§14).
+Existe un gateway propio exclusivamente servidor en `infrastructure/shopify/` con `fetch`, versión `2026-07`, autenticación privada, timeout y una función `graphql()` genérica y tipada. Distingue fallos HTTP, JSON inválido y errores GraphQL sin devolver respuestas parciales ni registrar cuerpos o credenciales. No usa Hydrogen ni SDK adicional y no conoce el dominio; las queries de catálogo viven separadas en `catalog-query.ts`.
+
+`SHOPIFY_STORE_DOMAIN` y `SHOPIFY_API_VERSION` son variables `server/public`; `SHOPIFY_STOREFRONT_PRIVATE_TOKEN` es `server/secret`. Sin dominio y token el composition root conserva la demo; con ambos, el catálogo Shopify es obligatorio y un fallo de obtención o validación hace fallar la petición de forma explícita. `commerce/cart.ts` es híbrido: usa el BFF Shopify cuando hay credenciales y `SHOPIFY_CART_COOKIE_SECRET`, y degrada al adaptador demo en caso contrario.
+
+El gateway acepta `buyerIp` opcional y, si existe, envía `Shopify-Storefront-Buyer-IP` con una IPv4/IPv6 validada. El smoke test y las lecturas de catálogo durante un static build no corresponden a tráfico de comprador y no deben inventar esa IP. Cuando una petición server-side nazca de tráfico real —carrito, checkout u otra operación dinámica— el BFF deberá pasarla. Las peticiones autenticadas no siguen redirects y no reutilizan caché HTTP.

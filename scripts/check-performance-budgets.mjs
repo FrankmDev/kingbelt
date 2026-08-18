@@ -3,13 +3,19 @@ import { join, resolve } from 'node:path';
 
 const root = resolve(import.meta.dirname, '..');
 const distDir = join(root, 'dist');
+const staticDir = existsSync(join(distDir, '_astro'))
+  ? distDir
+  : join(distDir, '.vercel', 'output', 'static');
 
 if (!existsSync(distDir)) {
   console.error('dist/ no existe. Ejecuta `bun run build` antes de comprobar presupuestos.');
   process.exit(1);
 }
 
-const readText = (relativePath) => readFileSync(join(distDir, relativePath), 'utf8');
+const readText = (relativePath) => {
+  const absolutePath = join(staticDir, relativePath);
+  return existsSync(absolutePath) ? readFileSync(absolutePath, 'utf8') : '';
+};
 
 const fileSize = (relativePath) => {
   const absolutePath = join(distDir, relativePath);
@@ -23,10 +29,11 @@ const listAssets = (extension) => {
     for (const entry of readdirSync(directory, { withFileTypes: true })) {
       const path = join(directory, entry.name);
       if (entry.isDirectory()) walk(path);
-      else if (entry.name.endsWith(extension)) assets.push(path.slice(distDir.length + 1));
+      else if (entry.name.endsWith(extension)) assets.push(path.slice(staticDir.length + 1));
     }
   };
-  walk(join(distDir, '_astro'));
+  const assetRoot = join(staticDir, '_astro');
+  if (existsSync(assetRoot)) walk(assetRoot);
   return assets;
 };
 
@@ -55,7 +62,7 @@ const initialJsFiles = (htmlPath) => {
     files.add(file);
     staticImports(readFileSync(file, 'utf8'), file).forEach(visit);
   };
-  scriptSrcs(htmlPath).map((src) => join(distDir, src.replace(/^\//, ''))).forEach(visit);
+    scriptSrcs(htmlPath).map((src) => join(staticDir, src.replace(/^\//, ''))).forEach(visit);
   return [...files];
 };
 
@@ -64,6 +71,7 @@ const initialJsBytes = (htmlPath) =>
 
 const maxVariantJsonBytes = () => {
   const productDir = join(distDir, 'productos');
+  if (!existsSync(productDir)) return { maxBytes: 0, largestHandle: '' };
   let maxBytes = 0;
   let largestHandle = '';
 
@@ -84,6 +92,7 @@ const maxVariantJsonBytes = () => {
 
 const largestProductPage = () => {
   const productDir = join(distDir, 'productos');
+  if (!existsSync(productDir)) return { htmlPath: '', jsBytes: 0, scriptRequests: 0 };
   let result = { htmlPath: '', jsBytes: 0, scriptRequests: 0 };
   for (const entry of readdirSync(productDir, { withFileTypes: true })) {
     if (!entry.isDirectory()) continue;

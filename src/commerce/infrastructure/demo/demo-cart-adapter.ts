@@ -1,7 +1,12 @@
 import {
+  CART_CATALOG_PATH,
+  parseCartCatalogSnapshot,
+} from '../../application/cart-catalog';
+import {
   createCartService,
   emptyCart,
 } from '../../application/cart-service';
+import type { CartCatalog } from '../../application/cart-service';
 import { requestDemoCheckout } from '../../application/checkout';
 import { demoCartCatalog } from './demo-catalog-adapter';
 import {
@@ -17,6 +22,8 @@ import type { CartProvider } from '../../application/cart-provider';
 
 interface DemoCartAdapterOptions {
   storage?: StorageLike | null;
+  catalog?: CartCatalog;
+  loadPublishedCatalog?: () => Promise<unknown>;
 }
 
 const CART_LOCK_NAME = 'kingbelt:cart';
@@ -51,7 +58,13 @@ const appendNotice = (cart: Cart, message: string): Cart => ({
 export const createDemoCartAdapter = (
   options: DemoCartAdapterOptions = {}
 ): CartProvider => {
-  const cartService = createCartService(demoCartCatalog);
+  let activeCatalog = options.catalog ?? demoCartCatalog;
+  const catalog: CartCatalog = {
+    getVariant: (variantId) => activeCatalog.getVariant(variantId),
+    resolveLegacyVariant: (productId, color, size) =>
+      activeCatalog.resolveLegacyVariant(productId, color, size),
+  };
+  const cartService = createCartService(catalog);
   const storage = options.storage === undefined ? getBrowserStorage() : options.storage;
   const browserStorageUnavailable =
     options.storage === undefined && typeof window !== 'undefined' && storage === null;
@@ -60,6 +73,31 @@ export const createDemoCartAdapter = (
   let cart: Cart = emptyCart();
   let operationTail: Promise<void> = Promise.resolve();
   let storageDegraded = browserStorageUnavailable;
+  const shouldLoadPublishedCatalog =
+    options.catalog === undefined &&
+    (options.storage === undefined || options.loadPublishedCatalog !== undefined);
+  let publishedCatalogLoaded = false;
+
+  const readPublishedSnapshot = async (): Promise<unknown> => {
+    if (options.loadPublishedCatalog) return options.loadPublishedCatalog();
+    const response = await fetch(CART_CATALOG_PATH, {
+      credentials: 'same-origin',
+      cache: 'no-store',
+    });
+    if (!response.ok) throw new Error('catalog_unavailable');
+    return response.json();
+  };
+
+  const loadPublishedCatalog = async (): Promise<void> => {
+    if (!shouldLoadPublishedCatalog || publishedCatalogLoaded) return;
+    publishedCatalogLoaded = true;
+    try {
+      const next = parseCartCatalogSnapshot(await readPublishedSnapshot());
+      if (next) activeCatalog = next;
+    } catch {
+      // Conserva el catálogo de respaldo; addItem falla cerrado si el ID no existe.
+    }
+  };
 
   const runExclusive = <T>(operation: () => Promise<T>): Promise<T> => {
     const run = operationTail.then(() =>
@@ -135,6 +173,7 @@ export const createDemoCartAdapter = (
 
   return {
     initialize: () => runExclusive(async () => {
+      await loadPublishedCatalog();
       if (!storage) {
         if (browserStorageUnavailable) cart = appendNotice(cart, STORAGE_UNAVAILABLE_NOTICE);
         return cart;

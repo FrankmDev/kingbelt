@@ -1,18 +1,55 @@
 // @ts-check
-import { defineConfig } from 'astro/config';
+import { defineConfig, envField } from 'astro/config';
 import tailwindcss from '@tailwindcss/vite';
 import sitemap from '@astrojs/sitemap';
+import vercel from '@astrojs/vercel';
 import { siteUrl } from './src/config/site.ts';
 import { isSitemapExcluded } from './src/config/sitemap.ts';
 import { buildProductRedirectMap } from './src/commerce/application/product-redirects.ts';
+import {
+  MAX_SHOPIFY_STOREFRONT_TOKEN_LENGTH,
+  SHOPIFY_STOREFRONT_API_VERSION,
+} from './src/commerce/infrastructure/shopify/config.ts';
 
 const productRedirects = buildProductRedirectMap();
 
 // https://astro.build/config
 export default defineConfig({
+  output: 'server',
+  adapter: vercel({
+    webAnalytics: { enabled: false },
+  }),
   compressHTML: true,
   fetchFile: null,
   site: siteUrl,
+  env: {
+    schema: {
+      SHOPIFY_STORE_DOMAIN: envField.string({
+        context: 'server',
+        access: 'public',
+        optional: true,
+        max: 255,
+      }),
+      SHOPIFY_API_VERSION: envField.enum({
+        context: 'server',
+        access: 'public',
+        values: [SHOPIFY_STOREFRONT_API_VERSION],
+        default: SHOPIFY_STOREFRONT_API_VERSION,
+      }),
+      SHOPIFY_STOREFRONT_PRIVATE_TOKEN: envField.string({
+        context: 'server',
+        access: 'secret',
+        optional: true,
+        max: MAX_SHOPIFY_STOREFRONT_TOKEN_LENGTH,
+      }),
+      SHOPIFY_CART_COOKIE_SECRET: envField.string({
+        context: 'server',
+        access: 'secret',
+        optional: true,
+        max: 256,
+      }),
+    },
+  },
   // Sin astronauta/Dev Toolbar en desarrollo: menos ruido y superficie JS.
   devToolbar: {
     enabled: false,

@@ -1,6 +1,6 @@
 # KingBelt
 
-Frontend estático de KingBelt construido con Astro 7.2, TypeScript estricto, Tailwind CSS 4 y Bun. La base editorial y el sistema visual están preparados para evolucionar hacia Shopify sin acoplar la interfaz al proveedor de comercio.
+Frontend de KingBelt construido con Astro 7.2, TypeScript estricto, Tailwind CSS 4 y Bun, con renderizado server-side en Vercel y catálogo Shopify Storefront consultado bajo demanda. La base editorial y el sistema visual están preparados para evolucionar hacia Shopify sin acoplar la interfaz al proveedor de comercio.
 
 ## Requisitos
 
@@ -21,7 +21,7 @@ bun run validate
 bun run preview
 ```
 
-`bun run validate` ejecuta instalación congelada, auditoría de dependencias, escaneo de fuentes e historial, check de Astro/TypeScript, build estático, tests, escaneo del build, enlaces internos y presupuestos de rendimiento —incluida la ficha renderizada de 76 variantes—.
+`bun run validate` ejecuta instalación congelada, auditoría de dependencias, escaneo de fuentes e historial, check de Astro/TypeScript, build, tests, escaneo del build, enlaces internos y presupuestos de rendimiento —incluida la ficha renderizada de 76 variantes—.
 
 ## Estructura
 
@@ -31,8 +31,10 @@ src/
 │   ├── domain/              Modelos y reglas comerciales puras
 │   ├── application/         Puertos, casos de uso y validación
 │   ├── infrastructure/demo/ Adaptadores del ecommerce de demostración
+│   ├── infrastructure/shopify/ Gateway, catálogo y carrito de Storefront API
 │   ├── catalog.ts           Proveedor de catálogo activo
-│   └── cart.ts              Proveedor de carrito activo
+│   ├── cart.ts              Proveedor de carrito activo
+│   └── cart-server.ts       Composición del carrito servidor (BFF)
 ├── components/
 │   ├── faq/                 Presentación de preguntas frecuentes
 │   ├── layout/              Header y footer
@@ -64,13 +66,13 @@ src/
 - `src/commerce/application` define contratos neutrales; `src/commerce/catalog.ts` y `src/commerce/cart.ts` seleccionan los adaptadores activos fuera de los componentes.
 - No hay barrels `index.ts`: los imports identifican la dependencia concreta.
 - `tests/architecture.test.mjs` impide dependencias desde dominio/aplicación hacia infraestructura y desde UI hacia adaptadores o datos demo.
-- El proyecto genera HTML estático: no usa adapter, SSR, frameworks de UI ni Advanced Routing.
+- El proyecto renderiza bajo demanda con `output: 'server'` y el adapter `@astrojs/vercel`; solo los artículos del blog se prerenderizan. No usa frameworks de UI ni Advanced Routing.
 - La Dev Toolbar de Astro (astronauta) está desactivada en `astro.config.mjs`.
 - Usa Bun exclusivamente; el lockfile válido es `bun.lock`.
 
 Lee `AGENTS.md` antes de modificar el proyecto y carga `docs/DESIGN.md`, `docs/ARCHITECTURE.md` o `docs/PROJECT.md` según el alcance.
 
-Preparación Shopify (sin tienda conectada aún): `docs/SHOPIFY_READINESS.md`.  
+Preparación y activación Shopify: `docs/SHOPIFY_READINESS.md`.  
 Política de secretos, checkout, CSP, cabeceras, formularios y CI: `docs/SECURITY.md`. No conectes credenciales reales sin completar su checklist de activación.
 
 ## Rutas de ayuda y legal

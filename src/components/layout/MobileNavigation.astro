@@ -1,5 +1,6 @@
 ---
-import type { NavItem } from '@config/navigation';
+import Icon from '../ui/Icon.astro';
+import { headerAccountCta, type NavItem } from '@config/navigation';
 
 interface Props {
   links: readonly NavItem[];
@@ -50,23 +51,24 @@ const { links } = Astro.props;
 
     <a
       href="/carrito"
-      class="mobile-nav-cta kb-action-label group inline-flex items-center gap-3 border border-white/15 px-5 py-3 text-white/60 transition-[background-color,border-color,color,opacity,transform] duration-[var(--kb-dur-med)] hover:border-king-accent hover:bg-king-accent/10 hover:text-white"
+      class="mobile-nav-cta mobile-nav-cta--cart kb-action-label group inline-flex items-center gap-3 border border-white/15 px-5 py-3 text-white/60 transition-[background-color,border-color,color,opacity,transform] duration-[var(--kb-dur-med)] hover:border-king-accent hover:bg-king-accent/10 hover:text-white"
       data-cart-drawer-open
       data-cart-count-wrapper
       aria-label="Carrito vacío"
       aria-controls="cart-drawer"
       aria-expanded="false"
     >
-      <span class="h-1.5 w-1.5 rounded-full bg-king-accent/40 transition-colors duration-[var(--kb-dur-fast)] group-hover:bg-king-accent"></span>
+      <Icon name="shopping-bag" class="h-3.5 w-3.5" strokeWidth={1.65} />
       Carrito <span data-cart-count class="tabular-nums" aria-hidden="true"></span>
     </a>
 
     <a
-      href="/contacto"
+      href={headerAccountCta.href}
       class="mobile-nav-cta kb-action-label group mt-3 inline-flex items-center gap-3 border border-white/15 px-5 py-3 text-white/60 transition-[background-color,border-color,color,opacity,transform] duration-[var(--kb-dur-med)] hover:border-king-accent hover:bg-king-accent/10 hover:text-white"
+      aria-label={headerAccountCta.ariaLabel}
     >
-      <span class="h-1.5 w-1.5 rounded-full bg-king-accent/40 transition-colors duration-[var(--kb-dur-fast)] group-hover:bg-king-accent"></span>
-      Escribir
+      <Icon name="user" class="h-3.5 w-3.5" strokeWidth={1.75} />
+      {headerAccountCta.label}
     </a>
   </div>
 </nav>
@@ -116,7 +118,8 @@ const { links } = Astro.props;
   #mobile-menu[data-open='true'] .mobile-nav-link:nth-child(2) { transition-delay: 0.36s; }
   #mobile-menu[data-open='true'] .mobile-nav-link:nth-child(3) { transition-delay: 0.44s; }
   #mobile-menu[data-open='true'] .mobile-nav-divider { transition-delay: 0.52s; }
-  #mobile-menu[data-open='true'] .mobile-nav-cta { transition-delay: 0.6s; }
+  #mobile-menu[data-open='true'] .mobile-nav-cta--cart { transition-delay: 0.58s; }
+  #mobile-menu[data-open='true'] .mobile-nav-cta:nth-of-type(2) { transition-delay: 0.66s; }
 
   @media (prefers-reduced-motion: reduce) {
     #mobile-menu,

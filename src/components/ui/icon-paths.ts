@@ -45,6 +45,8 @@ export const iconPaths = {
     '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>',
   'shopping-bag':
     '<path d="M6 7h12l-1.2 12.4a2 2 0 0 1-2 1.8H9.2a2 2 0 0 1-2-1.8L6 7Z"/><path d="M9 7V5a3 3 0 0 1 6 0v2"/>',
+  user:
+    '<circle cx="12" cy="8" r="4"/><path d="M5 20a7 7 0 0 1 14 0"/>',
   minus: '<path d="M5 12h14"/>',
   plus: '<path d="M5 12h14"/><path d="M12 5v14"/>',
 } as const;

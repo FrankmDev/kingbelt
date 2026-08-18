@@ -14,49 +14,46 @@ const { index, eyebrow, meta, titleId, body, class: className = '' } = Astro.pro
 const hasAction = Astro.slots.has('action');
 ---
 
-<div
-  class:list={['home-section-head', hasAction && 'home-section-head--with-action', className]}
+<SectionHeaderHome
+  index={index}
+  eyebrow={eyebrow}
+  meta={meta}
+  body={body}
+  titleId={titleId}
+  class:list={['home-section-head', className]}
 >
-  <SectionHeaderHome
-    index={index}
-    eyebrow={eyebrow}
-    meta={meta}
-    body={body}
-    titleId={titleId}
-    class="home-section-head__header"
-  >
-    <slot name="title" slot="title" />
-    <slot name="body" slot="body" />
-  </SectionHeaderHome>
+  <slot name="title" slot="title" />
+  {Astro.slots.has('body') && <slot name="body" slot="body" />}
 
   {hasAction && (
-    <div class="home-section-head__action">
+    <div slot="aside" class="home-section-head__action">
       <slot name="action" />
     </div>
   )}
-</div>
+</SectionHeaderHome>
 
 <style>
-  .home-section-head {
-    display: grid;
-    gap: var(--kb-space-5);
-    align-items: end;
+  .home-section-head:global(.section-header-home) {
+    width: 100%;
     margin-bottom: var(--kb-space-gap);
   }
 
-  .home-section-head__header:global(.section-header-home) {
-    margin-bottom: 0;
+  .home-section-head__action {
+    display: flex;
+    justify-content: flex-end;
+    align-items: flex-end;
+    padding-bottom: 0.2rem;
   }
 
-  @media (min-width: 48rem) {
-    .home-section-head--with-action {
-      grid-template-columns: minmax(0, 1fr) auto;
-      gap: var(--kb-space-6);
+  @media (max-width: 47.99rem) {
+    .home-section-head__action {
+      justify-content: flex-start;
+      padding-bottom: 0;
     }
 
-    .home-section-head__action {
-      justify-self: end;
-      padding-bottom: 0.2rem;
+    .home-section-head__action :global(.kb-btn) {
+      width: 100%;
+      justify-content: center;
     }
   }
 </style>

@@ -16,6 +16,7 @@ interface Props extends HTMLAttributes<'section'> {
   class?: string;
   cta?: FAQCTA;
   stickySidebar?: boolean;
+  itemVariant?: 'default' | 'editorial';
 }
 
 const {
@@ -27,6 +28,7 @@ const {
   class: className = '',
   cta,
   stickySidebar = true,
+  itemVariant = 'default',
   ...rest
 } = Astro.props;
 
@@ -67,6 +69,8 @@ const counts = items.reduce<Record<string, number>>((accumulator, item) => {
         <slot name="sidebar">
           <div class="faq-sidebar-inner kb-panel">
             <span class="faq-sidebar-rule" aria-hidden="true"></span>
+
+            <slot name="sidebarPrepend" />
 
             {(eyebrow || title || description) && (
               <header class="faq-sidebar-header">
@@ -169,6 +173,7 @@ const counts = items.reduce<Record<string, number>>((accumulator, item) => {
             sectionId={sectionId}
             groupName={groupName}
             tone={tone}
+            variant={itemVariant}
           />
         ))}
       </div>

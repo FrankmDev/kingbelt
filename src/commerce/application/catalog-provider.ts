@@ -9,4 +9,5 @@ export interface CatalogProvider {
   getProductByHandle(handle: string): Promise<Product | undefined>;
   getFeaturedProducts(limit: number): Promise<ProductSummary[]>;
   getRelatedProducts(product: Product, limit: number): Promise<ProductSummary[]>;
+  getProductSummaries(): Promise<ProductSummary[]>;
 }

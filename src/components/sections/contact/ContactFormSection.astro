@@ -1,5 +1,5 @@
 ---
-import SectionHeader from '@components/ui/SectionHeader.astro';
+import SectionHeaderHome from '../home/SectionHeaderHome.astro';
 import Button from '../../ui/Button.astro';
 import ContactMethod from '../../ui/ContactMethod.astro';
 import FormField from '../../ui/FormField.astro';
@@ -14,160 +14,163 @@ interface Props {
 const { channels, inquiryTypes } = Astro.props;
 ---
 
-<section class="contact-main section-spacing" aria-labelledby="contact-form-title">
-  <div class="contact-layout kb-shell-wide">
-    <aside class="contact-aside" aria-labelledby="contact-channels-title">
-      <SectionHeader
-        eyebrow="Contacto directo"
-        title="Elige el canal."
-        titleId="contact-channels-title"
-        body="El formulario es la vía más completa. También puedes escribir directamente por email o Instagram."
-        align="left"
-        density="compact"
-        class="contact-aside-header"
-      />
+<section class="contact-form-section" aria-labelledby="contact-form-title">
+  <div class="contact-form-section__inner kb-shell-wide">
+    <SectionHeaderHome
+      index="01"
+      eyebrow="Escríbenos"
+      meta="Formulario"
+      titleId="contact-form-title"
+      density="compact"
+      class="contact-form-section__header"
+    >
+      <Fragment slot="title">Cuéntanos el contexto.</Fragment>
+      <Fragment slot="body">
+        El formulario es la vía más completa. También puedes escribir directamente por email o Instagram.
+      </Fragment>
+    </SectionHeaderHome>
 
-      <div class="contact-channels">
-        {channels.map((channel, index) => (
-          <ContactMethod
-            label={channel.label}
-            value={channel.value}
-            description={channel.description}
-            href={channel.href}
-            icon={channel.icon}
-            index={index + 1}
-            meta={channel.meta}
-            variant={index === 0 ? 'steel' : 'default'}
-          />
-        ))}
-      </div>
-    </aside>
+    <div class="contact-form-section__layout">
+      <aside class="contact-form-section__channels" aria-labelledby="contact-channels-title">
+        <h2 id="contact-channels-title" class="contact-form-section__channels-title kb-meta-label text-king-muted">
+          Canales directos
+        </h2>
 
-    <div class="contact-form-column kb-panel">
-      <SectionHeader
-        eyebrow="Escríbenos"
-        title="Cuéntanos el contexto."
-        titleId="contact-form-title"
-        align="left"
-        density="compact"
-        class="contact-form-header"
-      >
-        <p slot="body">Los campos marcados con <span aria-hidden="true">*</span> son obligatorios.</p>
-      </SectionHeader>
-
-      <!-- Integración pendiente: sustituir action por el endpoint real sin cambiar el markup del formulario. -->
-      <form
-        id="contact-form"
-        class="contact-form"
-        action="/api/contacto"
-        method="post"
-        accept-charset="UTF-8"
-        aria-describedby="contact-form-note"
-        novalidate
-      >
-        <div class="contact-form-row">
-          <FormField label="Nombre" for="contact-name" required>
-            <input
-              id="contact-name"
-              class="kb-input"
-              data-contact-field="name"
-              type="text"
-              autocomplete="name"
-              minlength="2"
-              maxlength="100"
-              aria-describedby="contact-name-error"
-              required
+        <div class="contact-form-section__channels-list">
+          {channels.map((channel, index) => (
+            <ContactMethod
+              label={channel.label}
+              value={channel.value}
+              description={channel.description}
+              href={channel.href}
+              icon={channel.icon}
+              index={index + 1}
+              meta={channel.meta}
+              variant={index === 0 ? 'steel' : 'default'}
             />
-            <p id="contact-name-error" class="contact-field-error" role="alert" hidden></p>
-          </FormField>
-
-          <FormField label="Email" for="contact-email" required>
-            <input
-              id="contact-email"
-              class="kb-input"
-              data-contact-field="email"
-              type="email"
-              autocomplete="email"
-              inputmode="email"
-              spellcheck="false"
-              maxlength="254"
-              aria-describedby="contact-email-error"
-              required
-            />
-            <p id="contact-email-error" class="contact-field-error" role="alert" hidden></p>
-          </FormField>
+          ))}
         </div>
+      </aside>
 
-        <FormField label="Tipo de consulta" for="contact-subject" required>
-          <div class="kb-select-wrap">
-            <select
-              id="contact-subject"
-              class="kb-input"
-              data-contact-field="subject"
-              aria-describedby="contact-subject-error"
-              required
-            >
-              <option value="" disabled selected>Selecciona una opción</option>
-              {inquiryTypes.map((item) => <option value={item.value}>{item.label}</option>)}
-            </select>
-            <span class="kb-select-icon" aria-hidden="true">
-              <Icon name="caret-down" />
-            </span>
-          </div>
-          <p id="contact-subject-error" class="contact-field-error" role="alert" hidden></p>
-        </FormField>
+      <div class="contact-form-section__panel">
+        <p class="contact-form-section__panel-note kb-meta-label text-king-muted">
+          Los campos marcados con <span aria-hidden="true">*</span> son obligatorios.
+        </p>
 
-        <FormField
-          label="Mensaje"
-          for="contact-message"
-          required
-          help="Incluye referencia de pedido o producto si ayuda a entender la consulta."
+        <!-- Integración pendiente: sustituir action por el endpoint real sin cambiar el markup del formulario. -->
+        <form
+          id="contact-form"
+          class="contact-form"
+          action="/api/contacto"
+          method="post"
+          accept-charset="UTF-8"
+          aria-describedby="contact-form-note"
+          novalidate
         >
-          <textarea
-            id="contact-message"
-            class="kb-input contact-textarea"
-            data-contact-field="message"
-            rows={6}
-            autocomplete="off"
-            minlength="10"
-            maxlength="5000"
-            aria-describedby="contact-message-help contact-message-error"
+          <div class="contact-form-row">
+            <FormField label="Nombre" for="contact-name" required>
+              <input
+                id="contact-name"
+                class="kb-input"
+                data-contact-field="name"
+                type="text"
+                autocomplete="name"
+                minlength="2"
+                maxlength="100"
+                aria-describedby="contact-name-error"
+                required
+              />
+              <p id="contact-name-error" class="contact-field-error" role="alert" hidden></p>
+            </FormField>
+
+            <FormField label="Email" for="contact-email" required>
+              <input
+                id="contact-email"
+                class="kb-input"
+                data-contact-field="email"
+                type="email"
+                autocomplete="email"
+                inputmode="email"
+                spellcheck="false"
+                maxlength="254"
+                aria-describedby="contact-email-error"
+                required
+              />
+              <p id="contact-email-error" class="contact-field-error" role="alert" hidden></p>
+            </FormField>
+          </div>
+
+          <FormField label="Tipo de consulta" for="contact-subject" required>
+            <div class="kb-select-wrap">
+              <select
+                id="contact-subject"
+                class="kb-input"
+                data-contact-field="subject"
+                aria-describedby="contact-subject-error"
+                required
+              >
+                <option value="" disabled selected>Selecciona una opción</option>
+                {inquiryTypes.map((item) => <option value={item.value}>{item.label}</option>)}
+              </select>
+              <span class="kb-select-icon" aria-hidden="true">
+                <Icon name="caret-down" />
+              </span>
+            </div>
+            <p id="contact-subject-error" class="contact-field-error" role="alert" hidden></p>
+          </FormField>
+
+          <FormField
+            label="Mensaje"
+            for="contact-message"
             required
-          ></textarea>
-          <p id="contact-message-error" class="contact-field-error" role="alert" hidden></p>
-        </FormField>
-
-        <div class="contact-privacy">
-          <label class="contact-privacy-label" for="contact-privacy">
-            <input
-              id="contact-privacy"
-              class="contact-privacy-input"
-              data-contact-field="privacy"
-              type="checkbox"
-              aria-describedby="contact-privacy-error"
+            help="Incluye referencia de pedido o producto si ayuda a entender la consulta."
+          >
+            <textarea
+              id="contact-message"
+              class="kb-input contact-textarea"
+              data-contact-field="message"
+              rows={6}
+              autocomplete="off"
+              minlength="10"
+              maxlength="5000"
+              aria-describedby="contact-message-help contact-message-error"
               required
-            />
-            <span class="contact-privacy-text">
-              He leído y acepto la
-              <a href="/privacidad" class="kb-link">política de privacidad</a>.
-              <span class="contact-privacy-required" aria-hidden="true">*</span>
-            </span>
-          </label>
-          <p id="contact-privacy-error" class="contact-field-error" role="alert" hidden></p>
-        </div>
+            ></textarea>
+            <p id="contact-message-error" class="contact-field-error" role="alert" hidden></p>
+          </FormField>
 
-        <div class="contact-form-actions">
-          <Button type="submit" variant="primary" size="md">
-            Enviar consulta
-            <Icon name="arrow-right" />
-          </Button>
-          <p id="contact-form-note">
-            No incluyas contraseñas, datos de pago ni otra información sensible.
-          </p>
-        </div>
+          <div class="contact-privacy">
+            <label class="contact-privacy-label" for="contact-privacy">
+              <input
+                id="contact-privacy"
+                class="contact-privacy-input"
+                data-contact-field="privacy"
+                type="checkbox"
+                aria-describedby="contact-privacy-error"
+                required
+              />
+              <span class="contact-privacy-text">
+                He leído y acepto la
+                <a href="/privacidad" class="kb-link">política de privacidad</a>.
+                <span class="contact-privacy-required" aria-hidden="true">*</span>
+              </span>
+            </label>
+            <p id="contact-privacy-error" class="contact-field-error" role="alert" hidden></p>
+          </div>
 
-        <p id="contact-form-status" role="status" aria-live="polite" aria-atomic="true" tabindex="-1"></p>
-      </form>
+          <div class="contact-form-actions">
+            <Button type="submit" variant="primary" size="md">
+              Enviar consulta
+              <Icon name="arrow-right" />
+            </Button>
+            <p id="contact-form-note">
+              No incluyas contraseñas, datos de pago ni otra información sensible.
+            </p>
+          </div>
+
+          <p id="contact-form-status" role="status" aria-live="polite" aria-atomic="true" tabindex="-1"></p>
+        </form>
+      </div>
     </div>
   </div>
 </section>
@@ -178,54 +181,67 @@ const { channels, inquiryTypes } = Astro.props;
 </script>
 
 <style>
-  .contact-main {
-    padding-bottom: clamp(2rem, 3.5vw, 3.5rem);
+  .contact-form-section {
+    padding-block: var(--kb-space-section);
   }
 
-  .contact-layout {
+  .contact-form-section__header:global(.section-header-home) {
+    width: 100%;
+    margin-bottom: var(--kb-space-gap);
+  }
+
+  .contact-form-section__layout {
     display: grid;
-    grid-template-columns: 1fr 1.5fr;
-    gap: clamp(2.75rem, 7vw, 8rem);
-    align-items: stretch;
+    grid-template-columns: 1fr;
+    gap: var(--kb-space-gap-lg);
+    align-items: start;
   }
 
-  .contact-aside,
-  .contact-channels,
-  .contact-form-column {
+  .contact-form-section__channels,
+  .contact-form-section__panel,
+  .contact-form-section__channels-list {
     min-width: 0;
   }
 
-  .contact-channels :global(.kb-card),
-  .contact-channels :global(.kb-card-steel) {
+  .contact-form-section__channels {
+    display: grid;
+    gap: var(--kb-space-5);
+  }
+
+  .contact-form-section__channels-title {
+    margin: 0;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .contact-form-section__channels-list {
+    display: grid;
+    gap: var(--kb-space-4);
+  }
+
+  .contact-form-section__channels-list :global(.kb-card),
+  .contact-form-section__channels-list :global(.kb-card-steel) {
     box-sizing: border-box;
     max-width: 100%;
   }
 
-  .contact-aside-header:global(.section-header) {
-    --sh-max-title: 22ch;
-    --sh-max-copy: 42ch;
-  }
-
-  .contact-channels {
+  .contact-form-section__panel {
     display: grid;
-    gap: var(--kb-form-row-gap);
-    margin-top: var(--kb-space-8);
+    gap: var(--kb-space-5);
+    padding: var(--kb-space-5);
+    border: 1px solid var(--kb-stroke-hairline);
+    border-radius: var(--kb-radius-sm);
+    background: var(--color-king-bone);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.45) inset;
   }
 
-  .contact-form-column {
-    padding: var(--kb-form-panel-padding);
-  }
-
-  .contact-form-header:global(.section-header) {
-    --sh-max-copy: 38rem;
-    max-width: 38rem;
-    margin-bottom: var(--kb-space-6);
+  .contact-form-section__panel-note {
+    margin: 0;
   }
 
   .contact-form {
     display: grid;
     gap: var(--kb-space-3);
-    max-width: 38rem;
   }
 
   .contact-form-row {
@@ -315,37 +331,21 @@ const { channels, inquiryTypes } = Astro.props;
     color: var(--color-king-text);
   }
 
-  @media (max-width: 63.99rem) {
-    .contact-layout {
-      grid-template-columns: 1fr;
-    }
-
-    .contact-aside {
-      display: grid;
-      grid-template-columns: minmax(14rem, 0.55fr) minmax(0, 1.45fr);
-      gap: var(--kb-space-gap-lg);
-    }
-
-    .contact-aside-header:global(.section-header) {
-      grid-column: 1 / -1;
-    }
-
-    .contact-channels {
-      grid-column: 1 / -1;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      margin-top: 0;
+  @media (min-width: 64rem) {
+    .contact-form-section__layout {
+      grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+      gap: var(--kb-space-10);
     }
   }
 
   @media (max-width: 47.99rem) {
-    .contact-aside,
     .contact-form-row {
       grid-template-columns: 1fr;
     }
   }
 
   @media (max-width: 29.99rem) {
-    .contact-form-column {
+    .contact-form-section__panel {
       padding: var(--kb-space-5);
     }
 

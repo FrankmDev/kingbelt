@@ -61,7 +61,7 @@ const footLabel = meta ?? (href ? (isExternal ? 'Abrir enlace' : 'Ir al canal') 
   <header class="contact-method-head">
     {icon && (
       <div class="contact-method-icon" aria-hidden="true">
-        <Icon name={icon} class="contact-method-icon-svg" strokeWidth={1.65} />
+        <Icon name={icon} strokeWidth={1.65} />
       </div>
     )}
 
@@ -92,8 +92,6 @@ const footLabel = meta ?? (href ? (isExternal ? 'Abrir enlace' : 'Ir al canal') 
       )}
     </footer>
   )}
-
-  <slot />
 </Element>
 
 <style>
@@ -196,7 +194,7 @@ const footLabel = meta ?? (href ? (isExternal ? 'Abrir enlace' : 'Ir al canal') 
       background-color var(--kb-dur-med) var(--kb-ease-out);
   }
 
-  .contact-method-icon :global(.contact-method-icon-svg) {
+  .contact-method-icon :global(svg) {
     width: 1.25rem;
     height: 1.25rem;
   }
@@ -275,7 +273,7 @@ const footLabel = meta ?? (href ? (isExternal ? 'Abrir enlace' : 'Ir al canal') 
     text-transform: uppercase;
   }
 
-  .contact-method-meta :global(.contact-method-meta-icon) {
+  .contact-method-meta :global(svg) {
     width: 0.75rem;
     height: 0.75rem;
     flex-shrink: 0;

@@ -1,0 +1,189 @@
+---
+import type { Collection } from '@commerce/domain/catalog';
+
+interface Props {
+  categories: Collection[];
+  /** Handle de la categoría activa; en el índice omitir para «Todas». */
+  currentHandle?: string;
+  /** Si existe, las categorías son radios asociados al formulario de filtros. */
+  formId?: string;
+  allLabel?: string;
+  class?: string;
+}
+
+const {
+  categories,
+  currentHandle,
+  formId,
+  allLabel = 'Todas',
+  class: className,
+} = Astro.props;
+
+const isFilter = Boolean(formId);
+---
+
+<nav class:list={['collection-cats', className]} aria-label="Categorías de la colección">
+  {isFilter ? (
+    <fieldset class="collection-cats__fieldset">
+      <legend class="sr-only">Filtrar por categoría</legend>
+      <ul class="collection-cats__list">
+        <li class="collection-cats__item">
+          <input
+            type="radio"
+            id={`${formId}-categoria-todas`}
+            name="categoria"
+            value=""
+            form={formId}
+            class="collection-cats__input"
+            checked={!currentHandle}
+          />
+          <label for={`${formId}-categoria-todas`} class="collection-cats__label kb-meta-label">
+            {allLabel}
+          </label>
+        </li>
+        {categories.map((item) => {
+          const isCurrent = item.handle === currentHandle;
+          const inputId = `${formId}-categoria-${item.handle}`;
+          return (
+            <li class="collection-cats__item">
+              <input
+                type="radio"
+                id={inputId}
+                name="categoria"
+                value={item.handle}
+                form={formId}
+                class="collection-cats__input"
+                checked={isCurrent}
+              />
+              <label for={inputId} class="collection-cats__label kb-meta-label">
+                {item.title}
+              </label>
+            </li>
+          );
+        })}
+      </ul>
+    </fieldset>
+  ) : (
+    <ul class="collection-cats__list">
+      {categories.map((item) => {
+        const isCurrent = item.handle === currentHandle;
+        return (
+          <li class="collection-cats__item">
+            <a
+              href={`/categorias/${item.handle}`}
+              class:list={['collection-cats__link kb-meta-label', isCurrent && 'is-current']}
+              aria-current={isCurrent ? 'page' : undefined}
+            >
+              {item.title}
+            </a>
+          </li>
+        );
+      })}
+    </ul>
+  )}
+</nav>
+
+<style>
+  .collection-cats__fieldset {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    min-width: 0;
+  }
+
+  .collection-cats__list {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--kb-space-2) var(--kb-space-4);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .collection-cats__item {
+    display: flex;
+    align-items: center;
+    gap: var(--kb-space-4);
+    min-width: 0;
+  }
+
+  .collection-cats__item + .collection-cats__item::before {
+    content: '';
+    width: 1px;
+    height: 0.75rem;
+    background: var(--kb-stroke-dark);
+  }
+
+  .collection-cats__input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .collection-cats__link,
+  .collection-cats__label {
+    position: relative;
+    padding: var(--kb-space-2) 0;
+    color: var(--color-king-muted);
+    text-decoration: none;
+    cursor: pointer;
+    transition: color var(--kb-dur-fast) var(--kb-ease-out);
+  }
+
+  .collection-cats__link::after,
+  .collection-cats__label::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0;
+    height: 1px;
+    background: var(--color-king-accent);
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform var(--kb-dur-med) var(--kb-ease-out);
+  }
+
+  .collection-cats__link.is-current,
+  .collection-cats__input:checked + .collection-cats__label {
+    color: var(--color-king-accent);
+  }
+
+  .collection-cats__link.is-current::after,
+  .collection-cats__input:checked + .collection-cats__label::after {
+    transform: scaleX(1);
+  }
+
+  .collection-cats__link:focus-visible,
+  .collection-cats__input:focus-visible + .collection-cats__label {
+    outline: 2px solid var(--color-king-accent);
+    outline-offset: 4px;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .collection-cats__link:hover,
+    .collection-cats__label:hover {
+      color: var(--color-king-accent);
+    }
+
+    .collection-cats__link:hover::after,
+    .collection-cats__label:hover::after {
+      transform: scaleX(1);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .collection-cats__link,
+    .collection-cats__label,
+    .collection-cats__link::after,
+    .collection-cats__label::after {
+      transition: none;
+    }
+  }
+</style>

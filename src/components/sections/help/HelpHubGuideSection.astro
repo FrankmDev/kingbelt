@@ -1,0 +1,149 @@
+---
+import SectionHeaderHome from '../home/SectionHeaderHome.astro';
+import MediaFrame from '../../ui/MediaFrame.astro';
+
+interface GuidePhase {
+  label: string;
+  title: string;
+  text: string;
+}
+
+interface GuideImage {
+  src: string;
+  alt: string;
+  label: string;
+  caption: string;
+}
+
+interface SectionCopy {
+  index: string;
+  eyebrow: string;
+  meta: string;
+  title: string;
+  body: string;
+  image: GuideImage;
+  phases: readonly GuidePhase[];
+}
+
+interface Props {
+  section: SectionCopy;
+  class?: string;
+}
+
+const { section, class: className = '' } = Astro.props;
+const titleId = 'help-hub-guide-title';
+const layerCount = section.phases.length;
+---
+
+<section
+  id="que-encontraras"
+  class:list={['help-hub-guide', className]}
+  aria-labelledby={titleId}
+>
+  <div class="help-hub-guide__inner kb-shell-wide">
+    <SectionHeaderHome
+      index={section.index}
+      eyebrow={section.eyebrow}
+      meta={section.meta}
+      titleId={titleId}
+      body={section.body}
+      tone="dark"
+      class="help-hub-guide__header"
+    >
+      <Fragment slot="title">{section.title}</Fragment>
+    </SectionHeaderHome>
+
+    <div class="help-hub-guide__layout">
+      <MediaFrame
+        src={section.image.src}
+        alt={section.image.alt}
+        ratio="4/3"
+        label={section.image.label}
+        caption={section.image.caption}
+        captionNumber={section.index}
+        width={960}
+        height={720}
+        loading="lazy"
+        class="help-hub-guide__media"
+      />
+
+      <aside class="kb-reading-panel" aria-labelledby="help-hub-guide-panel-title">
+        <header class="kb-reading-panel__head">
+          <div class="kb-reading-panel__head-bar">
+            <p class="kb-eyebrow kb-eyebrow-lined kb-reading-panel__eyebrow">Recorrido</p>
+            <span class="kb-reading-panel__folio kb-meta-label" aria-hidden="true">
+              {String(layerCount).padStart(2, '0')}
+            </span>
+          </div>
+
+          <p id="help-hub-guide-panel-title" class="kb-reading-panel__statement">
+            Antes y después de comprar, con la misma claridad.
+          </p>
+        </header>
+
+        <ol class="kb-reading-panel__layers">
+          {section.phases.map((phase, index) => (
+            <li class="kb-reading-panel__layer">
+              <div class="kb-reading-panel__rail" aria-hidden="true">
+                <span class="kb-reading-panel__num">{String(index + 1).padStart(2, '0')}</span>
+                {index < layerCount - 1 && (
+                  <span class="kb-reading-panel__rail-line"></span>
+                )}
+              </div>
+
+              <div class="kb-reading-panel__body">
+                <div class="kb-reading-panel__layer-head">
+                  <h3 class="kb-reading-panel__label">{phase.title}</h3>
+                  <span class="kb-reading-panel__tag">{phase.label}</span>
+                </div>
+                <p class="kb-reading-panel__text">{phase.text}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+
+        <div class="kb-reading-panel__foot" aria-hidden="true">
+          <span class="kb-reading-panel__track"></span>
+          <span class="kb-reading-panel__track"></span>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<style>
+  .help-hub-guide {
+    padding-block: var(--kb-space-section);
+    background: var(--color-king-asphalt);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .help-hub-guide__header:global(.section-header-home) {
+    width: 100%;
+    margin-bottom: var(--kb-space-gap);
+  }
+
+  .help-hub-guide__layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--kb-space-gap);
+    align-items: start;
+  }
+
+  @media (min-width: 64rem) {
+    .help-hub-guide__layout {
+      grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+      align-items: stretch;
+    }
+
+    .help-hub-guide__layout .kb-reading-panel {
+      height: 100%;
+    }
+
+    .help-hub-guide__media:global(.media-frame) {
+      height: 100%;
+      min-height: 0;
+      aspect-ratio: auto;
+    }
+  }
+</style>

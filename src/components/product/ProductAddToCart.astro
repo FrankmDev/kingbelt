@@ -1,6 +1,5 @@
 ---
 import Button from '../ui/Button.astro';
-import FormField from '../ui/FormField.astro';
 import Icon from '../ui/Icon.astro';
 import { formatMoney } from '@commerce/domain/money';
 import { calculatePriceRange, getFirstAvailableVariant } from '@commerce/domain/variants';
@@ -10,6 +9,7 @@ import {
   toPublicBuyBoxVariant,
 } from '@commerce/domain/product-mappers';
 import type { Product } from '@commerce/domain/catalog';
+import { resolveColorSwatch } from '@commerce/domain/color-swatch';
 import { serializeJsonForHtml } from '@shared/security/serialize-json-for-html';
 
 interface Props {
@@ -48,128 +48,151 @@ const variantsJson = serializeJsonForHtml(toCompactPublicBuyBoxPayload(product))
   aria-describedby={`${availabilityId} ${feedbackId} ${submitHintId}`}
   novalidate
 >
-  <div class="product-buy__price-row">
-    <p class="product-buy__price font-display" data-product-price>
-      {initialVariant ? formatMoney(initialVariant.price) : formatMoney(priceRange.min)}
-    </p>
-    <p class="product-buy__compare" data-product-compare hidden={!initialVariant?.compareAtPrice}>
-      {initialVariant?.compareAtPrice ? formatMoney(initialVariant.compareAtPrice) : ''}
-    </p>
+  <div class="product-buy__header">
+    <div class="product-buy__price-row">
+      <p class="product-buy__price font-display" data-product-price>
+        {initialVariant ? formatMoney(initialVariant.price) : formatMoney(priceRange.min)}
+      </p>
+      <p class="product-buy__compare" data-product-compare hidden={!initialVariant?.compareAtPrice}>
+        {initialVariant?.compareAtPrice ? formatMoney(initialVariant.compareAtPrice) : ''}
+      </p>
+    </div>
+    <p
+      id={availabilityId}
+      class="product-buy__availability kb-meta-label"
+      data-product-availability
+      data-availability-status={initialAvailability?.status}
+      role="status"
+      aria-live="polite"
+    >{initialAvailability?.message ?? 'Esta combinación no está disponible.'}</p>
   </div>
 
-  <p
-    id={availabilityId}
-    class="product-buy__availability kb-meta-label"
-    data-product-availability
-    data-availability-status={initialAvailability?.status}
-    role="status"
-    aria-live="polite"
-  >{initialAvailability?.message ?? 'Esta combinación no está disponible.'}</p>
+  <slot />
 
-  {product.options.map((option) => {
-    const key = optionKey(option.name);
-    const errorId = `${formId}-${key}-error`;
-    const isColor = option.purpose === 'color';
-    const isSize = option.purpose === 'size';
-    return (
+  <div class="product-buy__panel">
+    {product.options.map((option) => {
+      const key = optionKey(option.name);
+      const errorId = `${formId}-${key}-error`;
+      const isColor = option.purpose === 'color';
+      const isSize = option.purpose === 'size';
+      return (
         <fieldset
-          class="product-buy__fieldset"
+          class:list={[
+            'product-buy__option',
+            isColor && 'product-buy__option--color',
+            isSize && 'product-buy__option--size',
+          ]}
           aria-describedby={errorId}
           data-product-option-group={option.id}
           data-product-option-name={option.name}
         >
-        <legend class="product-buy__legend kb-label">{isSize ? 'Talla (cm)' : option.name}</legend>
-        <div class={isColor ? 'product-buy__swatches' : 'product-buy__sizes'}>
-          {option.values.map((value) => (
-            <label class={isColor ? 'product-buy__swatch' : 'product-buy__size'} title={isColor ? value.label : undefined}>
-              <input
-                type="radio"
-                name={`${formId}-option-${key}`}
-                value={value.id}
-                class="sr-only"
-                data-product-option
-                data-option-id={option.id}
-                data-option-value-label={value.label}
-                checked={initialValue(option.id) === value.id}
-                required
-              />
-              {isColor ? (
-                <>
-                  <span class="product-buy__swatch-chip" style={`background: ${value.swatch ?? 'transparent'}`} aria-hidden="true" />
-                  <span class="product-buy__swatch-label kb-meta-label">{value.label}</span>
-                </>
-              ) : (
-                <span class="product-buy__size-chip kb-meta-label">{value.label}</span>
-              )}
-              <span class="sr-only" data-impossible-hint hidden>No compatible con la selección actual</span>
-            </label>
-          ))}
+          <div class:list={[isSize && 'product-buy__option-row']}>
+            <legend class="product-buy__legend">
+              <span class="product-buy__legend-label kb-meta-label">{isSize ? 'Talla (cm)' : option.name}</span>
+            </legend>
+            <div class={isColor ? 'product-buy__swatches' : 'product-buy__sizes'}>
+              {option.values.map((value) => (
+                <label class={isColor ? 'product-buy__swatch' : 'product-buy__size'} title={isColor ? value.label : undefined}>
+                  <input
+                    type="radio"
+                    name={`${formId}-option-${key}`}
+                    value={value.id}
+                    class="sr-only"
+                    data-product-option
+                    data-option-id={option.id}
+                    data-option-value-label={value.label}
+                    checked={initialValue(option.id) === value.id}
+                    required
+                  />
+                  {isColor ? (
+                    <>
+                      <span class="product-buy__swatch-media" aria-hidden="true">
+                        <span
+                          class="product-buy__swatch-chip"
+                          style={`background: ${resolveColorSwatch(value.label, value.swatch)}`}
+                        />
+                      </span>
+                      <span class="product-buy__swatch-label kb-meta-label">{value.label}</span>
+                    </>
+                  ) : (
+                    <span class="product-buy__size-chip">{value.label}</span>
+                  )}
+                  <span class="sr-only" data-impossible-hint hidden>No compatible con la selección actual</span>
+                </label>
+              ))}
+            </div>
+          </div>
+          <p id={errorId} class="product-buy__field-error" data-error-for-option={option.id} role="alert" hidden></p>
+        </fieldset>
+      );
+    })}
+
+    <div class="product-buy__checkout">
+      <fieldset class="product-buy__option product-buy__option--qty">
+        <legend class="product-buy__legend">
+          <span class="product-buy__legend-label kb-meta-label">Cantidad</span>
+        </legend>
+        <div class="product-buy__qty" data-product-qty>
+          <button
+            type="button"
+            class="product-buy__qty-btn"
+            data-product-qty-decrease
+            aria-label="Reducir cantidad"
+            disabled={!purchasable}
+          >
+            <Icon name="minus" class="h-3.5 w-3.5" />
+          </button>
+          <input
+            id={`qty-${product.handle}`}
+            type="number"
+            class="product-buy__qty-input"
+            name="quantity"
+            value={initialMinimum}
+            min={initialMinimum}
+            max={Math.max(1, initialMax)}
+            step={initialIncrement}
+            inputmode="numeric"
+            data-product-quantity
+            aria-describedby={quantityErrorId}
+            required
+            disabled={!purchasable}
+          />
+          <button
+            type="button"
+            class="product-buy__qty-btn"
+            data-product-qty-increase
+            aria-label="Aumentar cantidad"
+            disabled={!purchasable}
+          >
+            <Icon name="plus" class="h-3.5 w-3.5" />
+          </button>
         </div>
-        <p id={errorId} class="product-buy__field-error" data-error-for-option={option.id} role="alert" hidden></p>
+        <p id={quantityErrorId} class="product-buy__field-error" data-error-for="quantity" role="alert" hidden></p>
       </fieldset>
-    );
-  })}
 
-  <FormField label="Cantidad" for={`qty-${product.handle}`} required>
-    <div class="product-buy__qty">
-      <button
-        type="button"
-        class="product-buy__qty-btn"
-        data-product-qty-decrease
-        aria-label="Reducir cantidad"
-        disabled={!purchasable}
-      >
-        <Icon name="minus" class="h-3.5 w-3.5" />
-      </button>
-      <input
-        id={`qty-${product.handle}`}
-        type="number"
-        class="kb-input product-buy__qty-input"
-        name="quantity"
-        value={initialMinimum}
-        min={initialMinimum}
-        max={Math.max(1, initialMax)}
-        step={initialIncrement}
-        inputmode="numeric"
-        data-product-quantity
-        aria-describedby={quantityErrorId}
-        required
-        disabled={!purchasable}
-      />
-      <button
-        type="button"
-        class="product-buy__qty-btn"
-        data-product-qty-increase
-        aria-label="Aumentar cantidad"
-        disabled={!purchasable}
-      >
-        <Icon name="plus" class="h-3.5 w-3.5" />
-      </button>
-    </div>
-    <p id={quantityErrorId} class="product-buy__field-error" data-error-for="quantity" role="alert" hidden></p>
-  </FormField>
-
-  <div class="product-buy__actions">
-    <Button
-      type="submit"
-      variant="primary"
-      size="lg"
-      class="product-buy__submit"
-      data-product-submit
-      disabled={!purchasable}
-      aria-describedby={submitHintId}
-    >
-      <span data-product-submit-label>{initialSubmitLabel}</span>
-    </Button>
-    <div class="product-buy__drawer-wrap" data-product-drawer-wrap hidden>
-      <Button
-        type="button"
-        variant="outline"
-        size="md"
-        data-product-open-drawer
-      >
-        Ver carrito
-      </Button>
+      <div class="product-buy__actions">
+        <Button
+          type="submit"
+          variant="primary"
+          size="md"
+          class="product-buy__submit"
+          data-product-submit
+          disabled={!purchasable}
+          aria-describedby={submitHintId}
+        >
+          <span data-product-submit-label>{initialSubmitLabel}</span>
+        </Button>
+        <div class="product-buy__drawer-wrap" data-product-drawer-wrap hidden>
+          <Button
+            type="button"
+            variant="outline"
+            size="md"
+            data-product-open-drawer
+          >
+            Ver carrito
+          </Button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -198,17 +221,30 @@ const variantsJson = serializeJsonForHtml(toCompactPublicBuyBoxPayload(product))
 
 <style>
   .product-buy {
-    display: grid;
-    gap: var(--kb-space-5);
+    display: flex;
+    flex-direction: column;
+    gap: var(--kb-space-4);
     min-width: 0;
+  }
+
+  .product-buy__header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--kb-space-2) var(--kb-space-4);
+    padding-bottom: var(--kb-space-3);
+    border-bottom: 1px solid var(--kb-stroke-hairline);
   }
 
   .product-buy__price {
     margin: 0;
-    font-size: clamp(1.5rem, 1.2rem + 1vw, 1.875rem);
+    font-size: clamp(1.6875rem, 1.42rem + 0.9vw, 2.0625rem);
     font-weight: var(--kb-w-heading-light);
-    line-height: 1;
-    font-variant-numeric: tabular-nums;
+    line-height: 0.96;
+    letter-spacing: -0.04em;
+    font-variant-numeric: tabular-nums lining-nums;
+    font-feature-settings: "tnum" 1, "lnum" 1;
     color: var(--color-king-text);
   }
 
@@ -216,7 +252,7 @@ const variantsJson = serializeJsonForHtml(toCompactPublicBuyBoxPayload(product))
     display: flex;
     flex-wrap: wrap;
     align-items: baseline;
-    gap: var(--kb-space-3);
+    gap: var(--kb-space-2) var(--kb-space-3);
   }
 
   .product-buy__compare {
@@ -227,59 +263,142 @@ const variantsJson = serializeJsonForHtml(toCompactPublicBuyBoxPayload(product))
     font-variant-numeric: tabular-nums;
   }
 
-  .product-buy__fieldset {
+  .product-buy__availability {
+    margin: 0;
+    color: var(--color-king-muted);
+    letter-spacing: 0.06em;
+    text-align: end;
+  }
+
+  .product-buy__availability[data-availability-status='limited'] {
+    color: var(--color-king-accent);
+  }
+
+  .product-buy__availability[data-availability-status='out_of_stock'],
+  .product-buy__availability[data-availability-status='unavailable'] {
+    color: var(--color-king-error);
+  }
+
+  .product-buy__panel {
+    display: grid;
+    gap: var(--kb-space-4);
+    padding: var(--kb-space-4);
+    border: 1px solid var(--kb-stroke-hairline);
+    border-radius: var(--kb-card-radius);
+    background: color-mix(in srgb, var(--color-king-bone) 24%, var(--color-king-bg));
+  }
+
+  @media (min-width: 48rem) {
+    .product-buy__panel {
+      margin-top: auto;
+    }
+  }
+
+  .product-buy__option {
     margin: 0;
     padding: 0;
     border: 0;
     min-width: 0;
   }
 
+  .product-buy__option + .product-buy__option,
+  .product-buy__checkout {
+    padding-top: var(--kb-space-4);
+    border-top: 1px solid var(--kb-stroke-hairline);
+  }
+
+  .product-buy__option-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--kb-space-3);
+  }
+
+  .product-buy__option--size .product-buy__option-row {
+    display: grid;
+    gap: var(--kb-space-2);
+    width: 100%;
+  }
+
+  .product-buy__option--size .product-buy__legend {
+    margin: 0;
+  }
+
+  .product-buy__option--size .product-buy__sizes {
+    width: 100%;
+  }
+
   .product-buy__legend {
-    margin-bottom: var(--kb-space-3);
+    display: block;
+    margin: 0 0 var(--kb-space-2);
+    padding: 0;
+  }
+
+  .product-buy__legend-label {
+    color: var(--color-king-muted);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-size: var(--kb-text-meta);
   }
 
   .product-buy__swatches {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--kb-space-3);
+    gap: var(--kb-space-3) var(--kb-space-4);
   }
 
   .product-buy__swatch {
     display: grid;
-    gap: var(--kb-space-2);
+    gap: 0.4rem;
     justify-items: center;
+    width: 3.75rem;
     cursor: pointer;
     min-width: 0;
   }
 
+  .product-buy__swatch-media {
+    display: grid;
+    place-items: center;
+    width: 2.625rem;
+    height: 2.625rem;
+    padding: 3px;
+    border: 1px solid color-mix(in srgb, var(--kb-stroke-hairline) 90%, var(--color-king-text));
+    border-radius: var(--kb-radius-pill);
+    background: var(--color-king-bg);
+    transition:
+      border-color var(--kb-dur-fast) var(--kb-ease-out),
+      box-shadow var(--kb-dur-fast) var(--kb-ease-out);
+  }
+
   .product-buy__swatch-chip {
     display: block;
-    width: 2rem;
-    height: 2rem;
-    border: 1px solid var(--kb-stroke-hairline);
-    border-radius: var(--kb-radius-pill);
-    transition:
-      box-shadow var(--kb-dur-fast) var(--kb-ease-out),
-      border-color var(--kb-dur-fast) var(--kb-ease-out);
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-king-text) 12%, transparent);
   }
 
-  .product-buy__swatch input:checked + .product-buy__swatch-chip {
-    border-color: var(--color-king-accent);
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-king-accent) 25%, transparent);
+  .product-buy__swatch input:checked + .product-buy__swatch-media {
+    border-color: var(--color-king-text);
+    box-shadow: 0 0 0 1px var(--color-king-text);
   }
 
-  .product-buy__swatch input:focus-visible + .product-buy__swatch-chip {
+  .product-buy__swatch input:focus-visible + .product-buy__swatch-media {
     outline: 2px solid var(--color-king-accent);
-    outline-offset: 3px;
+    outline-offset: 2px;
   }
 
-  .product-buy__swatch[data-impossible] .product-buy__swatch-chip,
+  .product-buy__swatch input:checked ~ .product-buy__swatch-label {
+    color: var(--color-king-text);
+  }
+
+  .product-buy__swatch[data-impossible] .product-buy__swatch-media,
   .product-buy__size[data-impossible] .product-buy__size-chip {
     text-decoration: line-through;
     opacity: 0.45;
   }
 
-  .product-buy__swatch input:disabled + .product-buy__swatch-chip,
+  .product-buy__swatch input:disabled + .product-buy__swatch-media,
   .product-buy__size input:disabled + .product-buy__size-chip {
     opacity: 0.45;
     cursor: not-allowed;
@@ -290,57 +409,119 @@ const variantsJson = serializeJsonForHtml(toCompactPublicBuyBoxPayload(product))
     cursor: not-allowed;
   }
 
-  .product-buy__fieldset:disabled .product-buy__swatch,
-  .product-buy__fieldset:disabled .product-buy__size {
-    cursor: not-allowed;
-  }
-
   .product-buy__swatch-label {
+    width: 100%;
     color: var(--color-king-muted);
+    font-size: var(--kb-text-eyebrow);
+    font-weight: var(--kb-label-weight);
+    letter-spacing: 0.08em;
+    line-height: 1.25;
     text-align: center;
+    text-wrap: balance;
+    transition: color var(--kb-dur-fast) var(--kb-ease-out);
   }
 
   .product-buy__sizes {
     display: flex;
-    flex-wrap: wrap;
-    gap: var(--kb-space-2);
+    width: 100%;
+    max-width: 100%;
+    border: 1px solid var(--kb-stroke-hairline);
+    border-radius: var(--kb-radius-xs);
+    overflow: hidden;
+    background: var(--color-king-bg);
   }
 
   .product-buy__size {
+    flex: 1 1 0;
+    min-width: 0;
     cursor: pointer;
   }
 
+  .product-buy__size + .product-buy__size {
+    border-inline-start: 1px solid var(--kb-stroke-hairline);
+  }
+
   .product-buy__size-chip {
-    display: inline-flex;
+    display: flex;
     align-items: center;
     justify-content: center;
-    min-width: 2.75rem;
-    min-height: 2.75rem;
-    padding: 0 var(--kb-space-3);
-    border: 1px solid var(--kb-stroke-hairline);
-    border-radius: var(--kb-radius-xs);
+    width: 100%;
+    min-height: 2.5rem;
+    padding: 0 var(--kb-space-1);
+    border: 0;
+    border-radius: 0;
+    font-family: var(--font-sans);
+    font-size: var(--kb-text-sm);
+    font-weight: var(--kb-w-medium);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.01em;
     color: var(--color-king-text);
-    background: var(--color-king-bg);
+    background: transparent;
     transition:
-      border-color var(--kb-dur-fast) var(--kb-ease-out),
       color var(--kb-dur-fast) var(--kb-ease-out),
       background-color var(--kb-dur-fast) var(--kb-ease-out);
   }
 
   .product-buy__size input:checked + .product-buy__size-chip {
-    border-color: var(--color-king-accent);
-    color: var(--color-king-accent);
-    background: color-mix(in srgb, var(--color-king-accent) 6%, var(--color-king-bg));
+    color: var(--color-king-bg);
+    background: var(--color-king-accent);
   }
 
   .product-buy__size input:focus-visible + .product-buy__size-chip {
     outline: 2px solid var(--color-king-accent);
-    outline-offset: 3px;
+    outline-offset: -2px;
+    z-index: 1;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .product-buy__swatch:hover .product-buy__swatch-media {
+      border-color: var(--kb-stroke-accent);
+    }
+
+    .product-buy__size:hover .product-buy__size-chip {
+      background: color-mix(in srgb, var(--color-king-bone) 55%, var(--color-king-bg));
+    }
+
+    .product-buy__size input:checked:hover + .product-buy__size-chip {
+      background: color-mix(in srgb, var(--color-king-accent) 88%, var(--color-king-text));
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .product-buy__swatch-media,
+    .product-buy__size-chip,
+    .product-buy__qty-btn {
+      transition: none;
+    }
+  }
+
+  .product-buy__checkout {
+    display: grid;
+    gap: var(--kb-space-3);
+  }
+
+  @media (min-width: 30rem) {
+    .product-buy__checkout {
+      grid-template-columns: auto minmax(0, 1fr);
+      align-items: end;
+      gap: var(--kb-space-3);
+    }
+  }
+
+  .product-buy__option--qty {
+    display: grid;
+    gap: var(--kb-space-2);
+    align-content: start;
+  }
+
+  .product-buy__option--qty .product-buy__legend {
+    margin-bottom: var(--kb-space-2);
   }
 
   .product-buy__qty {
-    display: inline-flex;
-    align-items: center;
+    display: inline-grid;
+    grid-template-columns: 2.625rem 3.25rem 2.625rem;
+    align-items: stretch;
     border: 1px solid var(--kb-stroke-hairline);
     border-radius: var(--kb-radius-xs);
     overflow: hidden;
@@ -350,16 +531,18 @@ const variantsJson = serializeJsonForHtml(toCompactPublicBuyBoxPayload(product))
   .product-buy__qty-btn {
     display: grid;
     place-items: center;
-    width: 2.75rem;
-    height: 2.75rem;
     border: 0;
-    color: var(--color-king-text);
+    color: var(--color-king-muted);
     background: transparent;
-    transition: background-color var(--kb-dur-fast) var(--kb-ease-out);
+    cursor: pointer;
+    transition:
+      background-color var(--kb-dur-fast) var(--kb-ease-out),
+      color var(--kb-dur-fast) var(--kb-ease-out);
   }
 
-  .product-buy__qty-btn:hover {
-    background: var(--color-king-bone);
+  .product-buy__qty-btn:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--color-king-bone) 65%, var(--color-king-bg));
+    color: var(--color-king-accent);
   }
 
   .product-buy__qty-btn:focus-visible {
@@ -369,18 +552,37 @@ const variantsJson = serializeJsonForHtml(toCompactPublicBuyBoxPayload(product))
   }
 
   .product-buy__qty-btn:disabled {
-    opacity: 0.4;
+    opacity: 0.35;
     cursor: not-allowed;
   }
 
   .product-buy__qty-input {
-    width: 3.25rem;
+    width: 100%;
     min-height: 2.75rem;
+    padding: 0;
     border: 0;
     border-inline: 1px solid var(--kb-stroke-hairline);
     border-radius: 0;
     text-align: center;
+    font-family: var(--font-sans);
+    font-size: var(--kb-text-sm);
+    font-weight: var(--kb-w-medium);
+    font-variant-numeric: tabular-nums lining-nums;
+    letter-spacing: 0.04em;
+    color: var(--color-king-text);
+    background: var(--color-king-bg);
     -moz-appearance: textfield;
+  }
+
+  .product-buy__qty-input:focus-visible {
+    outline: 2px solid var(--color-king-accent);
+    outline-offset: -2px;
+    z-index: 1;
+  }
+
+  .product-buy__qty-input:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 
   .product-buy__qty-input::-webkit-outer-spin-button,
@@ -391,7 +593,7 @@ const variantsJson = serializeJsonForHtml(toCompactPublicBuyBoxPayload(product))
 
   .product-buy__actions {
     display: grid;
-    gap: var(--kb-space-3);
+    gap: var(--kb-space-2);
   }
 
   .product-buy__actions :global(.kb-btn) {
@@ -406,28 +608,14 @@ const variantsJson = serializeJsonForHtml(toCompactPublicBuyBoxPayload(product))
     color: var(--color-king-accent);
   }
 
-  .product-buy__availability {
-    margin: calc(var(--kb-space-3) * -1) 0 0;
-    color: var(--color-king-muted);
-  }
-
-  .product-buy__availability[data-availability-status='limited'] {
-    color: var(--color-king-accent);
-  }
-
-  .product-buy__availability[data-availability-status='out_of_stock'],
-  .product-buy__availability[data-availability-status='unavailable'] {
-    color: var(--color-king-error);
-  }
-
   .product-buy__feedback.is-error {
     color: var(--color-king-error);
   }
 
   .product-buy__field-error {
-    margin: var(--kb-space-2) 0 0;
+    margin: var(--kb-space-1) 0 0;
     font-size: var(--kb-text-meta);
-    line-height: 1.5;
+    line-height: 1.4;
     color: var(--color-king-error);
   }
 </style>

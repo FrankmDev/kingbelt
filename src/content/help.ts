@@ -179,6 +179,71 @@ export const careSections = [
   },
 ] as const;
 
+export const helpHub = {
+  hero: {
+    eyebrow: 'Ayuda',
+    title: 'Todo para comprar con <em>claridad</em>.',
+    description:
+      'Información útil antes y después de comprar: tallaje, cuidados, envíos y atención cuando la necesites.',
+    image: '/images/blog/cinturon-marron-oscuro.jpg',
+    imageAlt: 'Detalle de cinturón de cuero marrón oscuro',
+    imagePosition: 'center 48%',
+    meta: 'KingBelt · Ayuda',
+  },
+  primary: {
+    index: '01',
+    eyebrow: 'Accesos principales',
+    meta: 'Empieza aquí',
+    title: 'Lo esencial antes y después de comprar.',
+    body: 'Guía de tallas y políticas de envío: los dos puntos que más consultan antes de decidir.',
+  },
+  resources: {
+    index: '02',
+    eyebrow: 'También puede interesarte',
+    meta: 'Otros recursos',
+    title: 'Más información útil.',
+    body: 'Cuidados del cuero, preguntas frecuentes y contacto directo.',
+  },
+  guide: {
+    index: '03',
+    eyebrow: 'Qué encontrarás',
+    meta: 'Centro de ayuda',
+    title: 'Información operativa, sin rodeos.',
+    body:
+      'Esta sección reúne lo que necesitas para elegir bien, conservar las piezas y resolver dudas habituales.',
+    image: {
+      src: '/images/blog/cinturon-negro.jpg',
+      alt: 'Cinturón negro de vestir sobre fondo neutro',
+      label: 'Producto',
+      caption: 'Material, ajuste y atención en un solo lugar.',
+    },
+    phases: [
+      {
+        label: 'Antes de comprar',
+        title: 'Medir y elegir con criterio',
+        text:
+          'Consulta la guía de tallas y las fichas de producto. La equivalencia depende del modelo y del punto de medición.',
+      },
+      {
+        label: 'Después de comprar',
+        title: 'Envíos, cambios y atención',
+        text:
+          'Revisa políticas de envío y devoluciones cuando estén publicadas. Para consultas concretas, escríbenos desde contacto.',
+      },
+    ],
+  },
+  cta: {
+    eyebrow: '¿Necesitas más ayuda?',
+    title: 'Escríbenos con tu consulta',
+    description:
+      'Cuanto más concreto sea el contexto — modelo, medida o duda — más fácil será orientar la respuesta.',
+    buttonLabel: 'Ir a contacto',
+    buttonHref: '/contacto',
+    image: '/images/blog/cinturon-marron.jpg',
+    imagePosition: 'center 40%',
+  },
+} as const;
+
 export const helpMeta = {
   ayuda: {
     title: 'Centro de ayuda — KingBelt',

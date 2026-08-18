@@ -239,42 +239,55 @@ const completeProductConnections = async (
   gateway: ShopifyStorefrontGateway,
   product: ShopifyProductNode
 ): Promise<ShopifyProductNode> => {
+  const needsVariants = product.variants.pageInfo.hasNextPage;
+  const needsImages = product.images.pageInfo.hasNextPage;
+  const needsCollections = product.collections.pageInfo.hasNextPage;
+  if (!needsVariants && !needsImages && !needsCollections) return product;
+
   const variablesFor = (after: string) => ({ id: product.id, first: PAGE_SIZE, after });
-  const variants = await appendRemainingConnection(
-    product.variants,
-    `variantes de ${product.handle}`,
-    async (after) => {
-      const data = await gateway.graphql<
-        { node: { variants: Connection<ShopifyVariantNode> } | null },
-        ReturnType<typeof variablesFor>
-      >(PRODUCT_VARIANTS_PAGE_QUERY, variablesFor(after));
-      if (!data.node) throw new Error(`Shopify dejó de devolver el producto ${product.handle} durante la paginación.`);
-      return data.node.variants;
-    }
-  );
-  const images = await appendRemainingConnection(
-    product.images,
-    `imágenes de ${product.handle}`,
-    async (after) => {
-      const data = await gateway.graphql<
-        { node: { images: Connection<ShopifyImageNode> } | null },
-        ReturnType<typeof variablesFor>
-      >(PRODUCT_IMAGES_PAGE_QUERY, variablesFor(after));
-      if (!data.node) throw new Error(`Shopify dejó de devolver el producto ${product.handle} durante la paginación.`);
-      return data.node.images;
-    }
-  );
-  const collections = await appendRemainingConnection(
-    product.collections,
-    `colecciones de ${product.handle}`,
-    async (after) => {
-      const data = await gateway.graphql<{
-        node: { collections: Connection<Pick<ShopifyCollectionNode, 'id' | 'handle' | 'title'>> } | null;
-      }, ReturnType<typeof variablesFor>>(PRODUCT_COLLECTIONS_PAGE_QUERY, variablesFor(after));
-      if (!data.node) throw new Error(`Shopify dejó de devolver el producto ${product.handle} durante la paginación.`);
-      return data.node.collections;
-    }
-  );
+  const [variants, images, collections] = await Promise.all([
+    needsVariants
+      ? appendRemainingConnection(
+          product.variants,
+          `variantes de ${product.handle}`,
+          async (after) => {
+            const data = await gateway.graphql<
+              { node: { variants: Connection<ShopifyVariantNode> } | null },
+              ReturnType<typeof variablesFor>
+            >(PRODUCT_VARIANTS_PAGE_QUERY, variablesFor(after));
+            if (!data.node) throw new Error(`Shopify dejó de devolver el producto ${product.handle} durante la paginación.`);
+            return data.node.variants;
+          }
+        )
+      : Promise.resolve(product.variants.nodes),
+    needsImages
+      ? appendRemainingConnection(
+          product.images,
+          `imágenes de ${product.handle}`,
+          async (after) => {
+            const data = await gateway.graphql<
+              { node: { images: Connection<ShopifyImageNode> } | null },
+              ReturnType<typeof variablesFor>
+            >(PRODUCT_IMAGES_PAGE_QUERY, variablesFor(after));
+            if (!data.node) throw new Error(`Shopify dejó de devolver el producto ${product.handle} durante la paginación.`);
+            return data.node.images;
+          }
+        )
+      : Promise.resolve(product.images.nodes),
+    needsCollections
+      ? appendRemainingConnection(
+          product.collections,
+          `colecciones de ${product.handle}`,
+          async (after) => {
+            const data = await gateway.graphql<{
+              node: { collections: Connection<Pick<ShopifyCollectionNode, 'id' | 'handle' | 'title'>> } | null;
+            }, ReturnType<typeof variablesFor>>(PRODUCT_COLLECTIONS_PAGE_QUERY, variablesFor(after));
+            if (!data.node) throw new Error(`Shopify dejó de devolver el producto ${product.handle} durante la paginación.`);
+            return data.node.collections;
+          }
+        )
+      : Promise.resolve(product.collections.nodes),
+  ]);
   const complete: PageInfo = { hasNextPage: false, endCursor: null };
   return {
     ...product,

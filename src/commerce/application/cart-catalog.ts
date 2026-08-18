@@ -14,14 +14,26 @@ export interface CartCatalogSnapshot {
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 
+const legacyProductKeys = (product: CartCatalogProduct): string[] => {
+  const keys = [product.reference, product.handle, product.id];
+  const legacyMatch = product.id.match(/local:product:([^:]+):(\d+)$/i);
+  if (legacyMatch) {
+    keys.push(`kb-${legacyMatch[1]}-${legacyMatch[2]}`);
+  }
+  return keys;
+};
+
 export const createCartCatalog = (
   products: readonly CartCatalogProduct[],
   collections: readonly Pick<Collection, 'id' | 'handle' | 'title'>[]
 ): CartCatalog => {
   const collectionsById = new Map(collections.map((collection) => [collection.id, collection]));
-  const productsByReference = new Map(
-    products.map((product) => [product.reference.toLocaleLowerCase('es'), product])
-  );
+  const productsByLegacyKey = new Map<string, CartCatalogProduct>();
+  products.forEach((product) => {
+    legacyProductKeys(product).forEach((key) => {
+      productsByLegacyKey.set(key.toLocaleLowerCase('es'), product);
+    });
+  });
   const variantsById = new Map<string, CartCatalogVariant>();
   products.forEach((product) => {
     const collection = collectionsById.get(product.primaryCollectionId);
@@ -37,7 +49,7 @@ export const createCartCatalog = (
   return {
     getVariant: (variantId) => variantsById.get(variantId),
     resolveLegacyVariant: (productId, color, size) => {
-      const product = productsByReference.get(productId.toLocaleLowerCase('es'));
+      const product = productsByLegacyKey.get(productId.toLocaleLowerCase('es'));
       if (!product) return undefined;
       const matches = product.variants.filter((variant) =>
         variant.optionValues.some((selection) => {

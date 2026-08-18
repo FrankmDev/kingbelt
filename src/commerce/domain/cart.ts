@@ -82,7 +82,7 @@ export type CartOperationErrorCode =
   | 'provider_error';
 
 export interface CartOperationMessage {
-  code: CartOperationErrorCode | 'quantity_adjusted' | 'product_removed';
+  code: CartOperationErrorCode | 'quantity_adjusted' | 'product_removed' | 'cart_updated';
   message: string;
   field?: 'variant' | 'quantity';
 }

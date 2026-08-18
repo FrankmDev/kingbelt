@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'bun:test';
+import { describe, expect, mock, test } from 'bun:test';
 import { createCartService, emptyCart } from '../src/commerce/application/cart-service.ts';
 import {
   getQuantityLimitMessage,
@@ -7,7 +7,9 @@ import {
 } from '../src/commerce/domain/inventory.ts';
 import { commerceRules } from '../src/commerce/domain/commerce-rules.ts';
 import { toPublicBuyBoxVariant } from '../src/commerce/domain/product-mappers.ts';
-import { createCartStore } from '../src/scripts/commerce/cart-store.ts';
+
+mock.module('astro:env/client', () => ({ COMMERCE_SOURCE: 'demo' }));
+const { createCartStore } = await import('../src/scripts/commerce/cart-store.ts');
 import { demoCartCatalog } from '../src/commerce/infrastructure/demo/demo-catalog-adapter.ts';
 import { demoProducts } from '../src/demo-catalog.ts';
 import { serializeJsonForHtml } from '../src/shared/security/serialize-json-for-html.ts';

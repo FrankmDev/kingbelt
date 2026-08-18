@@ -29,7 +29,7 @@ export class ShopifyStorefrontRequestError extends Error {
 }
 
 export interface ShopifyStorefrontGateway {
-  graphql<TData, TVariables extends Record<string, unknown> = Record<string, never>>(
+  graphql<TData, TVariables extends object = Record<string, never>>(
     query: string,
     variables?: TVariables
   ): Promise<TData>;
@@ -120,7 +120,7 @@ export const createShopifyStorefrontGateway = (
   const buyerIp = options.buyerIp === undefined ? undefined : validateBuyerIp(options.buyerIp);
 
   return {
-    async graphql<TData, TVariables extends Record<string, unknown> = Record<string, never>>(
+    async graphql<TData, TVariables extends object = Record<string, never>>(
       query: string,
       variables?: TVariables
     ): Promise<TData> {

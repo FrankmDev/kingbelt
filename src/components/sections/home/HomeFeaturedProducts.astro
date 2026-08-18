@@ -1,12 +1,10 @@
 ---
 import HomeSectionHead from './HomeSectionHead.astro';
-import Badge from '../../ui/Badge.astro';
 import Button from '../../ui/Button.astro';
 import Icon from '../../ui/Icon.astro';
+import ProductCard from '../../collection/ProductCard.astro';
 import { featuredSection } from '@content/home';
-import { formatMoney } from '@commerce/domain/money';
 import type { ProductSummary } from '@commerce/domain/catalog';
-import { buildCardSource } from '@shared/image-source';
 
 interface Props {
   products: ProductSummary[];
@@ -44,79 +42,16 @@ const { products } = Astro.props;
     </HomeSectionHead>
 
     <ul class="home-featured__grid">
-      {products.map((product, index) => {
-        const priceLabel = product.priceRange.min.amountMinor === product.priceRange.max.amountMinor
-          ? formatMoney(product.priceRange.min)
-          : `Desde ${formatMoney(product.priceRange.min)}`;
-        const colorLabel = product.colors.length === 1 ? product.colors[0].label : `${product.colors.length} colores`;
-        const primarySource = product.primaryImage
-          ? buildCardSource(product.primaryImage.url, '(min-width: 64rem) 25vw, (min-width: 40rem) 50vw, 100vw')
-          : null;
-
-        return (
-          <li class="home-featured__item">
-            <article class="home-featured__card kb-rise-sm">
-              <div class="home-featured__media">
-                {product.primaryImage && primarySource ? (
-                  <img
-                    src={primarySource.src}
-                    srcset={primarySource.srcset}
-                    sizes={primarySource.sizes}
-                    alt={product.primaryImage.altText}
-                    width={product.primaryImage.width}
-                    height={product.primaryImage.height}
-                    loading="lazy"
-                    decoding="async"
-                    style={`object-position: ${product.primaryImage.position ?? 'center'}`}
-                  />
-                ) : <span class="home-featured__placeholder" aria-hidden="true" />}
-
-                <div class="home-featured__tags">
-                  {product.badge ? (
-                    <Badge variant="steel">{product.badge}</Badge>
-                  ) : (
-                    <span aria-hidden="true" />
-                  )}
-                  <span class="home-featured__folio kb-meta-label" aria-hidden="true">
-                    {String(index + 1).padStart(2, '0')}
-                  </span>
-                </div>
-
-                <span class="home-featured__media-line" aria-hidden="true" />
-              </div>
-
-              <div class="home-featured__info">
-                <p class="home-featured__meta kb-meta-label text-king-muted">
-                  {product.primaryCollection.title} · {colorLabel}
-                </p>
-                <h3 class="home-featured__name font-display">{product.title}</h3>
-                <p class="home-featured__excerpt text-king-muted">{product.summary}</p>
-
-                <div class="home-featured__stitch kb-stitch-line" aria-hidden="true" />
-
-                <div class="home-featured__foot">
-                  <span class="home-featured__price">{priceLabel}</span>
-                  <span class="home-featured__ref kb-code-label text-king-muted">{product.reference}</span>
-                </div>
-
-                <Button
-                  href={`/productos/${product.handle}`}
-                  variant="outline"
-                  size="sm"
-                  class="home-featured__action"
-                  aria-label={`Ver producto: ${product.title}`}
-                >
-                  Ver
-                  <Icon
-                    name="arrow-right"
-                    class="h-3 w-3 transition-transform duration-[var(--kb-dur-fast)] group-hover:translate-x-1"
-                  />
-                </Button>
-              </div>
-            </article>
-          </li>
-        );
-      })}
+      {products.map((product, index) => (
+        <li class="home-featured__item">
+          <ProductCard
+            product={product}
+            index={index}
+            priority={index < 2}
+            sizes="(min-width: 64rem) 25vw, (min-width: 40rem) 50vw, 50vw"
+          />
+        </li>
+      ))}
     </ul>
   </div>
 </section>
@@ -139,165 +74,9 @@ const { products } = Astro.props;
     min-width: 0;
   }
 
-  .home-featured__card {
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-    height: 100%;
-  }
-
-  /* ---------- Media ---------- */
-
-  .home-featured__media {
-    position: relative;
-    overflow: hidden;
-    aspect-ratio: 4 / 5;
-    border: 1px solid var(--kb-stroke-hairline);
-    border-radius: var(--kb-card-radius);
-    background: var(--color-king-bone);
-    box-shadow: var(--kb-shadow-xs);
-    transition:
-      border-color var(--kb-dur-med) var(--kb-ease-out),
-      box-shadow var(--kb-dur-med) var(--kb-ease-out);
-  }
-
-  .home-featured__media::after {
-    content: '';
-    position: absolute;
-    inset: 0 0 auto;
-    height: 32%;
-    background: linear-gradient(
-      to bottom,
-      rgba(13, 13, 12, 0.32),
-      rgba(13, 13, 12, 0.08) 55%,
-      transparent
-    );
-    pointer-events: none;
-  }
-
-  .home-featured__media img {
-    display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    filter: saturate(0.92) contrast(1.03);
-    transform: translateZ(0);
-    transition: transform var(--kb-dur-slow) var(--kb-ease-soft);
-    will-change: transform;
-  }
-
-  .home-featured__placeholder {
-    display: block;
-    width: 100%;
-    height: 100%;
-    background: var(--color-king-bone);
-  }
-
-  .home-featured__tags {
-    position: absolute;
-    inset-inline: 0;
-    top: 0;
-    z-index: 1;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--kb-space-2);
-    padding: var(--kb-space-3);
-    pointer-events: none;
-  }
-
-  .home-featured__folio {
-    color: var(--color-king-bone);
-    text-shadow: 0 1px 8px rgba(13, 13, 12, 0.55);
-    font-variant-numeric: tabular-nums;
-  }
-
-  .home-featured__media-line {
-    position: absolute;
-    inset-inline: 0;
-    bottom: 0;
-    z-index: 1;
-    height: 2px;
-    background: linear-gradient(
-      90deg,
-      var(--color-king-accent),
-      color-mix(in srgb, var(--color-king-brass) 70%, transparent) 60%,
-      transparent
-    );
-    transform: scaleX(0);
-    transform-origin: left center;
-    pointer-events: none;
-    transition: transform var(--kb-dur-med) var(--kb-ease-out);
-  }
-
-  /* ---------- Información ---------- */
-
-  .home-featured__info {
-    display: flex;
-    flex: 1;
-    flex-direction: column;
-    min-width: 0;
-    padding-top: var(--kb-space-4);
-  }
-
-  .home-featured__meta {
-    margin: 0 0 var(--kb-space-2);
-  }
-
-  .home-featured__name {
-    margin: 0 0 var(--kb-space-2);
-    font-size: var(--kb-text-h5);
-    font-weight: var(--kb-w-heading-light);
-    line-height: 1.12;
-    letter-spacing: -0.012em;
-    text-wrap: balance;
-    color: var(--color-king-text);
-    transition: color var(--kb-dur-med) var(--kb-ease-out);
-  }
-
-  .home-featured__excerpt {
-    margin: 0 0 var(--kb-space-4);
-    font-size: var(--kb-text-sm);
-    line-height: 1.55;
-  }
-
-  .home-featured__stitch {
-    width: 100%;
-    height: 1px;
-    margin: auto 0 var(--kb-space-3);
-  }
-
-  .home-featured__foot {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: var(--kb-space-3);
-    margin-bottom: var(--kb-space-4);
-  }
-
-  .home-featured__price {
-    font-family: var(--font-sans);
-    font-size: var(--kb-text-body-lg);
-    font-weight: var(--kb-w-semibold);
-    letter-spacing: 0.01em;
-    font-variant-numeric: tabular-nums;
-    color: var(--color-king-text);
-  }
-
-  .home-featured__info :global(.home-featured__action) {
-    justify-content: center;
-    width: 100%;
-  }
-
-  /* ---------- Responsive ---------- */
-
   @media (min-width: 40rem) {
     .home-featured__grid {
       gap: var(--kb-space-gap) var(--kb-space-5);
-    }
-
-    .home-featured__info {
-      padding-top: var(--kb-space-4);
     }
   }
 
@@ -305,37 +84,6 @@ const { products } = Astro.props;
     .home-featured__grid {
       grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: var(--kb-space-gap) var(--kb-space-5);
-    }
-  }
-
-  /* ---------- Hover ---------- */
-
-  @media (hover: hover) and (pointer: fine) {
-    .home-featured__card:hover .home-featured__media {
-      border-color: var(--kb-stroke-accent);
-      box-shadow: var(--kb-shadow-md);
-    }
-
-    .home-featured__card:hover .home-featured__media img {
-      transform: scale(1.06);
-    }
-
-    .home-featured__card:hover .home-featured__media-line {
-      transform: scaleX(1);
-    }
-
-    .home-featured__card:hover .home-featured__name {
-      color: var(--color-king-accent);
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .home-featured__card,
-    .home-featured__media,
-    .home-featured__media img,
-    .home-featured__media-line,
-    .home-featured__name {
-      transition: none;
     }
   }
 </style>

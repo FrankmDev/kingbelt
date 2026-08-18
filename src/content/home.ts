@@ -10,12 +10,12 @@ export const hero = {
     { text: 'con criterio.', variant: 'em' as const },
   ],
   signals: [
-    { label: 'Selección curada', href: '#coleccion' },
+    { label: 'Selección curada', href: '/productos' },
     { label: 'Guía de tallas', href: '/guia-de-tallas' },
     { label: 'Atención directa', href: '/contacto' },
   ] as const,
   index: '01',
-  primaryCta: { label: 'Ver colección', href: '#coleccion' },
+  primaryCta: { label: 'Ver colección', href: '/productos' },
   secondaryCta: { label: 'Sobre KingBelt', href: '/sobre' },
 } as const;
 
@@ -76,7 +76,7 @@ export const featuredSection = {
   title: 'Una selección <em>con criterio.</em>',
   body: 'Referencias destacadas de la colección. Imagen, categoría, descripción breve y precio — sin ruido comercial de más.',
   meta: 'Selección destacada',
-  cta: { label: 'Ver colección', href: '#coleccion' },
+  cta: { label: 'Ver colección', href: '/productos' },
 } as const;
 
 export const standardsSection = {
@@ -159,7 +159,7 @@ export const closingCta = {
   title: 'Descubre la colección <em>o conoce la marca.</em>',
   description:
     'Empieza por las categorías, revisa la selección o escríbenos si necesitas orientación antes de elegir.',
-  primary: { label: 'Ver colección', href: '#coleccion' },
+  primary: { label: 'Ver colección', href: '/productos' },
   secondary: { label: 'Contactar', href: '/contacto' },
   backgroundImage: '/images/blog/cinturon-negro.jpg',
   backgroundAlt: '',

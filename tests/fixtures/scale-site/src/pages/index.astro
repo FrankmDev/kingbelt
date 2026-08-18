@@ -3,6 +3,9 @@ import ProductAddToCart from '../../../../../src/components/product/ProductAddTo
 import ProductGallery from '../../../../../src/components/product/ProductGallery.astro';
 import '../../../../../src/styles/global.css';
 import { scaleProduct } from '../../../scale-product';
+import { getFirstAvailableVariant } from '../../../../../src/commerce/domain/variants';
+
+const initialVariant = getFirstAvailableVariant(scaleProduct) ?? scaleProduct.variants[0];
 ---
 
 <!doctype html>
@@ -17,6 +20,7 @@ import { scaleProduct } from '../../../scale-product';
       <ProductGallery
         images={scaleProduct.images}
         mediaGroups={scaleProduct.mediaGroups}
+        initialVariant={initialVariant}
         idPrefix={scaleProduct.handle}
       />
       <ProductAddToCart product={scaleProduct} />

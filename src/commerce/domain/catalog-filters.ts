@@ -26,6 +26,8 @@ export interface CatalogFilterSelection {
   colors?: readonly string[];
   priceRange?: string;
   availableOnly?: boolean;
+  /** Handle de la colección principal; solo el índice de catálogo lo usa. */
+  collectionHandle?: string;
 }
 
 /**
@@ -39,6 +41,7 @@ export interface CatalogFilterable {
   /** Precio de entrada (`priceRange.min`), el mismo que muestra la tarjeta. */
   fromPriceMinor: number;
   purchasable: boolean;
+  collectionHandle?: string;
 }
 
 /**
@@ -75,6 +78,13 @@ export const matchesCatalogSelection = (
   ) return false;
   if (!matchesPriceRange(product.fromPriceMinor, selection.priceRange)) return false;
   if (selection.availableOnly && !product.purchasable) return false;
+  if (
+    selection.collectionHandle &&
+    normalizeFilterValue(product.collectionHandle ?? '') !==
+      normalizeFilterValue(selection.collectionHandle)
+  ) {
+    return false;
+  }
   return true;
 };
 
@@ -83,6 +93,7 @@ export const toFilterableProduct = (product: ProductSummary): CatalogFilterable 
   colors: product.colors,
   fromPriceMinor: product.priceRange.min.amountMinor,
   purchasable: product.purchasable,
+  collectionHandle: product.primaryCollection.handle,
 });
 
 export const filterProductSummaries = (
@@ -97,6 +108,7 @@ export const CATALOG_FILTER_PARAMS = {
   colors: 'color',
   priceRange: 'precio',
   availableOnly: 'disponible',
+  collectionHandle: 'categoria',
 } as const;
 
 /** Valor del checkbox de faceta «solo disponibles» (formulario y facets). */
@@ -114,6 +126,7 @@ export const parseCatalogFilterParams = (
   const params = typeof search === 'string' ? new URLSearchParams(search) : search;
   const list = (key: string) => params.getAll(key).map(normalizeFilterValue).filter(Boolean);
   const priceRange = params.get(CATALOG_FILTER_PARAMS.priceRange) ?? undefined;
+  const collectionHandle = params.get(CATALOG_FILTER_PARAMS.collectionHandle);
   return {
     productTypes: list(CATALOG_FILTER_PARAMS.productTypes),
     colors: list(CATALOG_FILTER_PARAMS.colors),
@@ -121,6 +134,9 @@ export const parseCatalogFilterParams = (
       ? priceRange
       : undefined,
     availableOnly: params.get(CATALOG_FILTER_PARAMS.availableOnly) === '1',
+    ...(collectionHandle
+      ? { collectionHandle: normalizeFilterValue(collectionHandle) }
+      : {}),
   };
 };
 
@@ -136,6 +152,12 @@ export const serializeCatalogFilterParams = (
     params.set(CATALOG_FILTER_PARAMS.priceRange, selection.priceRange);
   }
   if (selection.availableOnly) params.set(CATALOG_FILTER_PARAMS.availableOnly, '1');
+  if (selection.collectionHandle) {
+    params.set(
+      CATALOG_FILTER_PARAMS.collectionHandle,
+      normalizeFilterValue(selection.collectionHandle)
+    );
+  }
   return params;
 };
 

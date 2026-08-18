@@ -7,21 +7,20 @@ import {
   createShopifyStorefrontGateway,
   type ShopifyStorefrontGatewayOptions,
 } from './storefront-gateway';
+import { getShopifyStorefrontConfig } from './config';
 
 /**
- * Frontera Astro de Storefront. El composition root de catálogo la usa cuando
- * existen credenciales. El BFF futuro puede pasar `buyerIp`; el build y el
- * smoke no deben inventar una.
+ * Frontera Astro de Storefront. Solo se alcanza cuando COMMERCE_SOURCE elige
+ * Shopify. El BFF puede pasar `buyerIp`; catálogo y smoke no deben inventarla.
  */
-export const createConfiguredShopifyStorefrontGateway = (
-  options: ShopifyStorefrontGatewayOptions = {}
-) =>
-  createShopifyStorefrontGateway({
+export const getConfiguredShopifyStorefrontConfig = () =>
+  getShopifyStorefrontConfig({
     storeDomain: SHOPIFY_STORE_DOMAIN,
     apiVersion: SHOPIFY_API_VERSION,
     storefrontToken: SHOPIFY_STOREFRONT_PRIVATE_TOKEN,
-  }, options);
+  });
 
-export const isShopifyStorefrontConfigured = (): boolean => Boolean(
-  SHOPIFY_STORE_DOMAIN && SHOPIFY_STOREFRONT_PRIVATE_TOKEN
-);
+export const createConfiguredShopifyStorefrontGateway = (
+  options: ShopifyStorefrontGatewayOptions = {}
+) =>
+  createShopifyStorefrontGateway(getConfiguredShopifyStorefrontConfig(), options);

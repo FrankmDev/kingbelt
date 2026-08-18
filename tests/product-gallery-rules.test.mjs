@@ -17,11 +17,9 @@ describe('utilidades CSS de build', () => {
   test('no permite cerrar el style con identificadores manipulados', () => {
     const rules = buildProductGalleryRules({
       idPrefix: 'demo',
-      images: [{ id: 'img-1', url: '/a.jpg', altText: 'A', width: 1, height: 1 }],
-      mediaGroups: [{
-        id: '</style><script>alert(1)</script>',
+      colorGalleries: [{
         optionValueId: '</style><img src=x onerror=alert(1)>',
-        imageIds: ['img-1'],
+        images: [{ id: 'img-1', url: '/a.jpg', altText: 'A', width: 1, height: 1 }],
       }],
     });
 
@@ -35,22 +33,46 @@ describe('reglas CSS de galería de producto', () => {
   test('genera selectores escapados para ids con caracteres especiales', () => {
     const rules = buildProductGalleryRules({
       idPrefix: 'cinturon:demo',
-      images: [
-        { id: 'img-1', url: '/a.jpg', altText: 'A', width: 1, height: 1 },
-        { id: 'img-2', url: '/b.jpg', altText: 'B', width: 1, height: 1 },
-      ],
-      mediaGroups: [
+      colorGalleries: [
         {
-          id: 'group-"a"',
           optionValueId: 'color-"negro"',
-          imageIds: ['img-1'],
+          images: [
+            { id: 'img-1', url: '/a.jpg', altText: 'A', width: 1, height: 1 },
+            { id: 'img-2', url: '/b.jpg', altText: 'B', width: 1, height: 1 },
+          ],
         },
       ],
     });
 
     expect(rules).toContain('product-gallery--cinturon\\:demo');
-    expect(rules).toContain('[value="color-\\"negro\\""]');
-    expect(rules).toContain('[data-gallery-media-group="group-\\"a\\""]');
+    expect(rules).toContain('[data-gallery-set="color-\\"negro\\""]');
     expect(rules).not.toContain('color-"negro"');
+  });
+
+  test('genera reglas de visibilidad para cada slide', () => {
+    const rules = buildProductGalleryRules({
+      idPrefix: 'atlas',
+      colorGalleries: [
+        {
+          optionValueId: 'color-negro',
+          images: [{ id: 'img-1', url: '/a.jpg', altText: 'A', width: 1, height: 1 }],
+        },
+        {
+          optionValueId: 'color-marron',
+          images: [{ id: 'img-2', url: '/b.jpg', altText: 'B', width: 1, height: 1 }],
+        },
+      ],
+    });
+
+    expect(rules).toContain('.product-gallery__slide{opacity:0;visibility:hidden}');
+    expect(rules).toContain(
+      '.product-gallery--atlas:has(#gallery-atlas-set-1-1:checked) [data-gallery-set="color-negro"] .product-gallery__stage .product-gallery__slide:nth-child(1){opacity:1;visibility:visible}'
+    );
+    expect(rules).toContain(
+      '.product-gallery--atlas [data-gallery-set="color-negro"]:not(:has(.product-gallery__input:checked)) .product-gallery__stage .product-gallery__slide:first-child{opacity:1;visibility:visible}'
+    );
+    expect(rules).not.toContain(
+      '.product-gallery--atlas:has(#gallery-atlas-set-1-1:checked) .product-gallery--atlas [data-gallery-set'
+    );
   });
 });

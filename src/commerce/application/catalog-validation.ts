@@ -1,7 +1,8 @@
-import type {
-  Collection,
-  Product,
-  ProductImage,
+import {
+  COLOR_GALLERY_IMAGE_COUNT,
+  type Collection,
+  type Product,
+  type ProductImage,
 } from '../domain/catalog';
 import type {
   CurrencyCode,
@@ -360,6 +361,13 @@ export const validateCatalog = (
       }
       if (!group.imageIds.length) {
         issue(issues, 'empty_media_group', `${groupPath}.imageIds`, 'El grupo de medios debe contener al menos una imagen.');
+      } else if (colorOption && group.imageIds.length > COLOR_GALLERY_IMAGE_COUNT) {
+        issue(
+          issues,
+          'invalid_color_gallery_cardinality',
+          `${groupPath}.imageIds`,
+          `Cada galería de color puede contener como máximo ${COLOR_GALLERY_IMAGE_COUNT} imágenes.`
+        );
       }
       duplicateValues(group.imageIds).forEach((id) =>
         issue(issues, 'duplicate_media_group_image', `${groupPath}.imageIds`, `Imagen repetida en el grupo: ${id}.`)

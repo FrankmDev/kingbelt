@@ -1,5 +1,5 @@
 ---
-import SectionHeader from '@components/ui/SectionHeader.astro';
+import HomeSectionHead from '../home/HomeSectionHead.astro';
 import Button from '../../ui/Button.astro';
 import Icon from '../../ui/Icon.astro';
 import MediaFrame from '../../ui/MediaFrame.astro';
@@ -46,488 +46,130 @@ const {
 } = Astro.props;
 
 const titleId = `${id}-title`;
-const cardVariants = ['default', 'steel', 'default'] as const;
+const layerCount = items.length;
 ---
 
 <section
   id={id}
-  class:list={['purchase-info section-spacing section-spacing-chapter', className]}
+  class:list={['purchase-info', className]}
   aria-labelledby={titleId}
 >
-  <div class="purchase-info-bg" aria-hidden="true"></div>
+  <div class="purchase-info__inner kb-shell-wide">
+    <HomeSectionHead
+      index="02"
+      eyebrow={eyebrow}
+      meta={badge ? badge.label : 'Tu compra'}
+      titleId={titleId}
+      body={description}
+      class="purchase-info__header"
+    >
+      <Fragment slot="title">{title}</Fragment>
 
-  <div class="purchase-info-inner kb-shell-wide">
-    <div class="purchase-info-frame">
-      <div class="purchase-info-hero">
-        <div class="purchase-info-statement">
-          <SectionHeader
-            eyebrow={eyebrow}
-            title={title}
-            titleId={titleId}
-            body={description}
-            meta={badge ? `05 · ${badge.label}` : '05'}
-            align="left"
-            class="purchase-info-header"
-          />
+      {cta && (
+        <Fragment slot="action">
+          <Button href={cta.href} variant="outline" size="md">
+            {cta.label}
+            <Icon name="arrow-right" />
+          </Button>
+        </Fragment>
+      )}
+    </HomeSectionHead>
 
-          {cta && (
-            <div class="purchase-info-cta-wrap">
-              <Button href={cta.href} variant="outline" size="md" class="purchase-info-cta">
-                {cta.label}
-                <Icon name="arrow-right" />
-              </Button>
-            </div>
-          )}
-        </div>
+    <div class="purchase-info__layout">
+      {image && (
+        <MediaFrame
+          src={image.src}
+          alt={image.alt}
+          ratio="4/3"
+          label={image.label}
+          caption={image.caption}
+          captionNumber="02"
+          width={960}
+          height={720}
+          loading="lazy"
+          class="purchase-info__media"
+        />
+      )}
 
-        {image && (
-          <div class="purchase-info-media">
-            <MediaFrame
-              src={image.src}
-              alt={image.alt}
-              ratio="4/3"
-              label={image.label}
-              caption={image.caption}
-              width={960}
-              height={720}
-              loading="lazy"
-              class="purchase-info-media-frame"
-            />
+      <aside class="kb-reading-panel" aria-labelledby={`${id}-panel-title`}>
+        <header class="kb-reading-panel__head">
+          <div class="kb-reading-panel__head-bar">
+            <p class="kb-eyebrow kb-eyebrow-lined kb-reading-panel__eyebrow">
+              Información
+            </p>
+            <span class="kb-reading-panel__folio kb-meta-label" aria-hidden="true">
+              {String(layerCount).padStart(2, '0')}
+            </span>
           </div>
-        )}
-      </div>
 
-      <div class="purchase-info-steps-wrap">
-        <div class="purchase-info-connector" aria-hidden="true">
-          <span class="purchase-info-connector-line"></span>
-        </div>
+          <p id={`${id}-panel-title`} class="kb-reading-panel__statement">
+            Todo lo que necesitas saber antes y después de comprar.
+          </p>
+        </header>
 
-        <ol class="purchase-info-steps" aria-label="Información sobre tu compra">
-          {items.map((item, index) => {
-            const variant = cardVariants[index] ?? 'default';
-            const cardSurface = variant === 'steel' ? 'kb-card-steel' : 'kb-card';
+        <ol class="kb-reading-panel__layers">
+          {items.map((item, index) => (
+            <li class="kb-reading-panel__layer">
+              <div class="kb-reading-panel__rail" aria-hidden="true">
+                <span class="kb-reading-panel__num">{String(index + 1).padStart(2, '0')}</span>
+                {index < layerCount - 1 && (
+                  <span class="kb-reading-panel__rail-line"></span>
+                )}
+              </div>
 
-            return (
-              <li class="purchase-info-step animate-on-scroll">
-                <article
-                  class:list={[
-                    'purchase-info-card',
-                    cardSurface,
-                    variant === 'steel' && 'purchase-info-card--steel',
-                  ]}
-                >
-                  <header class="purchase-info-card-head">
-                    <div class="purchase-info-card-icon" aria-hidden="true">
-                      <Icon name={item.icon} class="purchase-info-card-icon-svg" strokeWidth={1.65} />
-                    </div>
-
-                    <div class="purchase-info-card-kicker">
-                      <span class="purchase-info-card-index">{String(index + 1).padStart(2, '0')}</span>
-                      <p class="purchase-info-card-label kb-eyebrow kb-eyebrow-lined">{item.label}</p>
-                    </div>
-                  </header>
-
-                  <div class="purchase-info-card-body">
-                    <h3 class="purchase-info-card-title">{item.title}</h3>
-                    <p class="purchase-info-card-description">{item.description}</p>
-                  </div>
-
-                  {item.meta && (
-                    <footer class="purchase-info-card-foot">
-                      <span class="purchase-info-card-meta">{item.meta}</span>
-                    </footer>
-                  )}
-                </article>
-              </li>
-            );
-          })}
+              <div class="kb-reading-panel__body">
+                <div class="kb-reading-panel__layer-head">
+                  <h3 class="kb-reading-panel__label">{item.title}</h3>
+                  <span class="kb-reading-panel__tag">{item.label}</span>
+                </div>
+                <p class="kb-reading-panel__text">{item.description}</p>
+              </div>
+            </li>
+          ))}
         </ol>
-      </div>
 
-      <div class="purchase-info-tracks" aria-hidden="true">
-        <span></span>
-        <span></span>
-        <span></span>
-      </div>
+        <div class="kb-reading-panel__foot" aria-hidden="true">
+          <span class="kb-reading-panel__track"></span>
+          <span class="kb-reading-panel__track"></span>
+        </div>
+      </aside>
     </div>
   </div>
 </section>
 
 <style>
   .purchase-info {
-    position: relative;
-    isolation: isolate;
-    overflow: hidden;
-    padding-bottom: clamp(2rem, 3.5vw, 3.5rem);
-  }
-
-  .purchase-info-bg {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    opacity: 0.42;
-    background-image:
-      linear-gradient(90deg, rgba(138, 90, 43, 0.05) 0, rgba(138, 90, 43, 0.05) 1px, transparent 1px),
-      linear-gradient(rgba(26, 26, 26, 0.018) 1px, transparent 1px);
-    background-size: 10rem 100%, 100% 4.5rem;
-    mask-image: linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.75) 18%, transparent 94%);
-  }
-
-  .purchase-info-inner {
-    position: relative;
-    z-index: 1;
-    container-type: inline-size;
-  }
-
-  .purchase-info-frame {
-    position: relative;
-    padding: clamp(2rem, 5vw, 4rem);
-    border: 1px solid var(--kb-stroke-dark);
-    border-radius: var(--kb-radius-2xl);
+    padding-block: var(--kb-space-section);
     background: var(--color-king-surface);
-    box-shadow:
-      var(--kb-shadow-sm),
-      inset 0 1px 0 rgba(255, 255, 255, 0.45);
-    overflow: hidden;
+    border-top: 1px solid var(--kb-stroke-hairline);
   }
 
-  .purchase-info-frame::before {
-    content: '';
-    position: absolute;
-    inset: 0.75rem;
-    border: 1px solid var(--kb-stroke-hairline);
-    border-radius: calc(var(--kb-radius-2xl) - 0.5rem);
-    pointer-events: none;
+  .purchase-info__header:global(.section-header-home) {
+    width: 100%;
+    margin-bottom: var(--kb-space-gap);
   }
 
-  .purchase-info-hero {
-    position: relative;
-    z-index: 2;
+  .purchase-info__layout {
     display: grid;
-    grid-template-columns: 1fr;
-    gap: clamp(2.5rem, 6vw, 4.5rem);
-    align-items: start;
-    margin-bottom: clamp(2.75rem, 6vw, 4.5rem);
-  }
-
-  .purchase-info-statement {
-    display: flex;
-    flex-direction: column;
-    gap: var(--kb-space-6);
-    min-width: 0;
-  }
-
-  .purchase-info-header:global(.section-header) {
-    --sh-max-title: 14ch;
-    --sh-max-copy: 40ch;
-  }
-
-  .purchase-info-cta-wrap {
-    padding-top: var(--kb-space-2);
-  }
-
-  .purchase-info-media {
-    min-width: 0;
-  }
-
-  .purchase-info-media :global(.purchase-info-media-frame) {
-    border-radius: var(--kb-radius-xl);
-  }
-
-  .purchase-info-steps-wrap {
-    position: relative;
-    z-index: 2;
-  }
-
-  .purchase-info-connector {
-    display: none;
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: clamp(2.75rem, 4vw, 3.5rem);
-    height: 1px;
-    pointer-events: none;
-  }
-
-  .purchase-info-connector-line {
-    display: block;
-    height: 100%;
-    background: repeating-linear-gradient(
-      90deg,
-      rgba(123, 125, 120, 0.28),
-      rgba(123, 125, 120, 0.28) 6px,
-      transparent 6px,
-      transparent 14px
-    );
-  }
-
-  .purchase-info-steps {
-    display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: var(--kb-space-gap);
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  .purchase-info-step,
-  .purchase-info-card {
-    min-width: 0;
-    height: 100%;
-  }
-
-  .purchase-info-card {
-    --pi-icon-bg: rgba(138, 90, 43, 0.07);
-    --pi-icon-border: rgba(138, 90, 43, 0.2);
-    --pi-icon-fg: var(--color-king-accent);
-    --pi-index-fg: var(--color-king-accent);
-    --pi-label-fg: var(--color-king-accent);
-    --pi-title-fg: var(--color-king-text);
-    --pi-body-fg: var(--color-king-muted);
-    --pi-divider: rgba(138, 90, 43, 0.12);
-    --pi-meta-fg: var(--color-king-accent);
-    --pi-meta-bg: rgba(138, 90, 43, 0.05);
-    --pi-meta-border: rgba(138, 90, 43, 0.16);
-    --pi-accent: var(--color-king-accent);
-
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    gap: var(--kb-space-5);
-    min-height: 100%;
-    padding: clamp(1.5rem, 3vw, 2rem);
-    overflow: hidden;
-  }
-
-  .purchase-info-card--steel {
-    --pi-icon-bg: rgba(255, 255, 255, 0.08);
-    --pi-icon-border: rgba(255, 255, 255, 0.14);
-    --pi-icon-fg: rgba(255, 255, 255, 0.92);
-    --pi-index-fg: var(--color-king-accent-light);
-    --pi-label-fg: var(--color-king-accent-light);
-    --pi-title-fg: rgba(255, 255, 255, 0.94);
-    --pi-body-fg: rgba(255, 255, 255, 0.56);
-    --pi-divider: rgba(255, 255, 255, 0.1);
-    --pi-meta-fg: var(--color-king-accent-light);
-    --pi-meta-bg: rgba(183, 138, 79, 0.1);
-    --pi-meta-border: rgba(183, 138, 79, 0.24);
-    --pi-accent: var(--color-king-accent-light);
-  }
-
-  .purchase-info-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 3px;
-    height: 100%;
-    background: var(--pi-accent);
-    opacity: 0.65;
-    transform: scaleY(0.36);
-    transform-origin: top;
-    transition: transform var(--kb-dur-med) var(--kb-ease-out);
-    z-index: 2;
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .purchase-info-card:hover::before {
-      transform: scaleY(1);
-    }
-
-    .purchase-info-card:hover .purchase-info-card-icon {
-      transform: scale(1.04);
-      border-color: color-mix(in srgb, var(--pi-accent) 35%, transparent);
-      background-color: color-mix(in srgb, var(--pi-accent) 11%, transparent);
-    }
-  }
-
-  .purchase-info-card-head {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: var(--kb-space-4);
-    min-width: 0;
-  }
-
-  .purchase-info-card-icon {
-    display: flex;
-    flex-shrink: 0;
-    align-items: center;
-    justify-content: center;
-    width: 3rem;
-    height: 3rem;
-    border: 1px solid var(--pi-icon-border);
-    border-radius: var(--kb-radius-sm);
-    background: var(--pi-icon-bg);
-    color: var(--pi-icon-fg);
-    box-shadow: var(--kb-shadow-xs);
-    transition:
-      transform var(--kb-dur-med) var(--kb-ease-out),
-      border-color var(--kb-dur-med) var(--kb-ease-out),
-      background-color var(--kb-dur-med) var(--kb-ease-out);
-  }
-
-  .purchase-info-card-icon :global(.purchase-info-card-icon-svg) {
-    width: 1.25rem;
-    height: 1.25rem;
-  }
-
-  .purchase-info-card-kicker {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: var(--kb-space-2);
-    min-width: 0;
-    margin-left: auto;
-    text-align: right;
-  }
-
-  .purchase-info-card-index {
-    font-family: var(--font-display);
-    font-size: clamp(1.5rem, 2.4vw, 1.875rem);
-    font-weight: var(--kb-w-heading-light);
-    font-variant-numeric: tabular-nums;
-    line-height: 1;
-    letter-spacing: -0.01em;
-    color: var(--pi-index-fg);
-    opacity: 0.38;
-  }
-
-  .purchase-info-card-label {
-    margin: 0;
-    color: var(--pi-label-fg);
-  }
-
-  .purchase-info-card-body {
-    display: flex;
-    flex-direction: column;
-    gap: var(--kb-space-3);
-    min-width: 0;
-  }
-
-  .purchase-info-card-title {
-    margin: 0;
-    font-family: var(--font-display);
-    font-size: var(--kb-text-h4);
-    font-weight: var(--kb-w-medium);
-    line-height: 1.16;
-    text-wrap: balance;
-    color: var(--pi-title-fg);
-  }
-
-  .purchase-info-card-description {
-    margin: 0;
-    font-size: var(--kb-text-sm);
-    line-height: 1.68;
-    text-wrap: pretty;
-    color: var(--pi-body-fg);
-  }
-
-  .purchase-info-card-foot {
-    margin-top: auto;
-    padding-top: var(--kb-space-4);
-    border-top: 1px solid var(--pi-divider);
-  }
-
-  .purchase-info-card-meta {
-    display: inline-flex;
-    align-items: center;
-    padding: 0.3125rem 0.625rem;
-    border: 1px solid var(--pi-meta-border);
-    border-radius: var(--kb-radius-xs);
-    background: var(--pi-meta-bg);
-    color: var(--pi-meta-fg);
-    font-size: var(--kb-text-2xs);
-    font-weight: var(--kb-w-medium);
-    letter-spacing: 0.06em;
-    line-height: 1.2;
-    text-transform: uppercase;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .purchase-info-card::before,
-    .purchase-info-card-icon {
-      transition: none;
-    }
-
-    .purchase-info-card::before {
-      transform: scaleY(1);
-    }
-  }
-
-  .purchase-info-tracks {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 0.375rem;
-    padding: 0 clamp(2rem, 5vw, 4rem) clamp(1.25rem, 2.5vw, 2rem);
-    pointer-events: none;
-  }
-
-  .purchase-info-tracks span {
-    display: block;
-    height: 1px;
-    background: repeating-linear-gradient(
-      90deg,
-      transparent,
-      transparent 8px,
-      rgba(123, 125, 120, 0.2) 8px,
-      rgba(123, 125, 120, 0.2) 22px
-    );
-  }
-
-  .purchase-info-tracks span:nth-child(2) {
-    opacity: 0.6;
-  }
-
-  .purchase-info-tracks span:nth-child(3) {
-    opacity: 0.3;
-  }
-
-  @media (min-width: 48rem) {
-    .purchase-info-hero {
-      grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
-      gap: clamp(2.5rem, 5vw, 5rem);
-      align-items: center;
-    }
-
-    .purchase-info-steps {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: clamp(1.25rem, 2.5vw, 1.75rem);
-    }
-
-    .purchase-info-connector {
-      display: block;
-    }
+    align-items: start;
   }
 
   @media (min-width: 64rem) {
-    .purchase-info-hero {
-      grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
-      gap: clamp(3rem, 7vw, 6rem);
-    }
-  }
-
-  @media (max-width: 47.99rem) {
-    .purchase-info-frame {
-      padding: clamp(1.5rem, 5vw, 2rem);
-      border-radius: var(--kb-radius-xl);
+    .purchase-info__layout {
+      grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+      align-items: stretch;
     }
 
-    .purchase-info-frame::before {
-      display: none;
+    .purchase-info__layout .kb-reading-panel {
+      height: 100%;
     }
 
-    .purchase-info-hero {
-      margin-bottom: var(--kb-space-8);
-    }
-
-    .purchase-info-cta {
-      width: 100%;
+    .purchase-info__media:global(.media-frame) {
+      height: 100%;
+      min-height: 0;
+      aspect-ratio: auto;
     }
   }
 </style>

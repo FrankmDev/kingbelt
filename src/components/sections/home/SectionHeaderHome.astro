@@ -9,6 +9,7 @@ interface Props {
   tone?: 'light' | 'dark';
   density?: 'default' | 'compact';
   trackCell?: boolean;
+  asideLayout?: 'action' | 'panel';
   class?: string;
 }
 
@@ -22,6 +23,7 @@ const {
   tone = 'light',
   density = 'default',
   trackCell = false,
+  asideLayout = 'action',
   class: className = '',
 } = Astro.props;
 
@@ -29,10 +31,16 @@ const hasChapter = Boolean(index || eyebrow || meta);
 const hasTitle = Boolean(title || Astro.slots.has('title'));
 const hasBody = Boolean(body || Astro.slots.has('body'));
 const hasEditorial = hasTitle || hasBody;
+const hasAside = Astro.slots.has('aside');
 ---
 
 <header
-  class:list={['section-header-home', className]}
+  class:list={[
+    'section-header-home',
+    hasAside && 'section-header-home--with-aside',
+    hasAside && asideLayout === 'panel' && 'section-header-home--with-panel',
+    className,
+  ]}
   data-tone={tone}
   data-density={density}
   {...trackCell ? { 'data-brand-cell': true } : {}}
@@ -46,21 +54,35 @@ const hasEditorial = hasTitle || hasBody;
     </div>
   )}
 
-  {hasEditorial && (
-    <div class="shh-editorial">
-      {hasTitle && (
-        <h2 id={titleId} class="shh-title font-display">
-          {Astro.slots.has('title') ? (
-            <slot name="title" />
-          ) : (
-            <span set:html={title} />
+  {(hasEditorial || hasAside) && (
+    <div class="shh-row">
+      {hasEditorial && (
+        <div class="shh-editorial">
+          {hasTitle && (
+            <h2 id={titleId} class="shh-title font-display">
+              {Astro.slots.has('title') ? (
+                <slot name="title" />
+              ) : (
+                <span set:html={title} />
+              )}
+            </h2>
           )}
-        </h2>
+
+          {hasBody && (
+            <div class="shh-body">
+              {body ? (
+                <p>{body}</p>
+              ) : (
+                <slot name="body" />
+              )}
+            </div>
+          )}
+        </div>
       )}
 
-      {hasBody && (
-        <div class="shh-body">
-          {Astro.slots.has('body') ? <slot name="body" /> : <p>{body}</p>}
+      {hasAside && (
+        <div class="shh-aside">
+          <slot name="aside" />
         </div>
       )}
     </div>
@@ -77,6 +99,7 @@ const hasEditorial = hasTitle || hasBody;
     display: flex;
     flex-direction: column;
     gap: var(--kb-space-5);
+    width: 100%;
     min-width: 0;
     margin-bottom: var(--kb-space-gap);
     color: var(--shh-ink);
@@ -94,6 +117,7 @@ const hasEditorial = hasTitle || hasBody;
     grid-template-columns: auto auto 1fr auto;
     align-items: center;
     gap: var(--kb-space-4);
+    width: 100%;
     padding-block: var(--kb-space-3);
     border-block: 1px solid var(--shh-line);
   }
@@ -131,13 +155,46 @@ const hasEditorial = hasTitle || hasBody;
 
   .shh-meta {
     margin: 0;
+    justify-self: end;
     color: var(--shh-muted);
     white-space: nowrap;
+  }
+
+  .shh-row {
+    display: grid;
+    gap: var(--kb-space-5);
+    align-items: end;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .section-header-home--with-aside .shh-row {
+    align-items: stretch;
+  }
+
+  @media (min-width: 48rem) {
+    .section-header-home--with-aside .shh-row {
+      grid-template-columns: minmax(0, 1fr) auto;
+      column-gap: var(--kb-space-6);
+      align-items: end;
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .section-header-home--with-panel .shh-row {
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+      column-gap: var(--kb-space-10);
+      align-items: center;
+    }
   }
 
   .shh-editorial {
     display: grid;
     gap: var(--kb-space-4);
+    min-width: 0;
+  }
+
+  .shh-aside {
     min-width: 0;
   }
 

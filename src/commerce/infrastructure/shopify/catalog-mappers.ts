@@ -1,11 +1,13 @@
+import { resolveColorSwatch } from '../../domain/color-swatch';
 import { assertValidCatalog } from '../../application/catalog-validation';
-import type {
-  Collection,
-  Product,
-  ProductImage,
-  ProductOption,
-  ProductVariant,
-  ProductWeight,
+import {
+  COLOR_GALLERY_IMAGE_COUNT,
+  type Collection,
+  type Product,
+  type ProductImage,
+  type ProductOption,
+  type ProductVariant,
+  type ProductWeight,
 } from '../../domain/catalog';
 import { productId, sku, variantId } from '../../domain/identifiers';
 import { moneyFromDecimal } from '../../domain/money';
@@ -14,7 +16,6 @@ import type {
   ShopifyImageNode,
   ShopifyMetafieldNode,
   ShopifyProductNode,
-  ShopifyVariantNode,
 } from './catalog-query';
 
 export interface ShopifyCatalog {
@@ -69,7 +70,12 @@ const metafieldByKey = (
     candidate?.namespace === 'kingbelt' && candidate.key === key
   ) ?? undefined;
   if (!metafield) {
-    if (requiredField) fail(`${product.handle}.metafields.kingbelt.${key}`, 'no está publicado para Storefront.');
+    if (requiredField) {
+      fail(
+        `${product.handle}.metafields.kingbelt.${key}`,
+        'no llega por Storefront. Publica la definición con Storefront access = Read, rellena el valor en el producto y mantén el scope unauthenticated_read_metaobjects.'
+      );
+    }
     return undefined;
   }
   if (metafield.type !== expectedType) {
@@ -106,11 +112,13 @@ const mapOptions = (product: ShopifyProductNode): ProductOption[] =>
     name: requiredText(option.name, `${product.handle}.options[${optionIndex}].name`),
     purpose: optionPurpose(option.name),
     values: option.optionValues.map((value, valueIndex) => {
-      const swatch = optionalText(value.swatch?.color);
+      const label = requiredText(value.name, `${product.handle}.options[${optionIndex}].values[${valueIndex}].name`);
+      const shopifySwatch = optionalText(value.swatch?.color);
+      const purpose = optionPurpose(option.name);
       return {
         id: requiredText(value.id, `${product.handle}.options[${optionIndex}].values[${valueIndex}].id`),
-        label: requiredText(value.name, `${product.handle}.options[${optionIndex}].values[${valueIndex}].name`),
-        ...(swatch ? { swatch } : {}),
+        label,
+        ...(purpose === 'color' ? { swatch: resolveColorSwatch(label, shopifySwatch) } : {}),
       };
     }),
   }));
@@ -125,24 +133,13 @@ const mapWeightUnit = (unit: string): ProductWeight['unit'] => {
   }
 };
 
-const variantColorValueId = (
-  variant: ShopifyVariantNode,
-  optionsByName: Map<string, ProductOption>
-): string | undefined => {
-  const selection = variant.selectedOptions.find((item) => normalizeOptionName(item.name) === 'color');
-  if (!selection) return undefined;
-  const option = optionsByName.get(normalizeOptionName(selection.name));
-  return option?.values.find((value) =>
-    normalizeOptionName(value.label) === normalizeOptionName(selection.value)
-  )?.id;
-};
-
 const mapVariants = (
   product: ShopifyProductNode,
   options: ProductOption[],
   mediaGroups: Product['mediaGroups']
 ): ProductVariant[] => {
   const optionsByName = new Map(options.map((option) => [normalizeOptionName(option.name), option]));
+  const colorOption = options.find((option) => option.purpose === 'color');
   const colorImageByValue = new Map(
     mediaGroups.map((group) => [group.optionValueId, group.imageIds[0]])
   );
@@ -163,9 +160,26 @@ const mapVariants = (
       ), `${path}.selectedOptions[${selectionIndex}]`, `valor desconocido: ${selection.value}.`);
       return { optionId: option.id, valueId: value.id };
     });
-    const colorValueId = variantColorValueId(variant, optionsByName);
-    const imageId = (colorValueId ? colorImageByValue.get(colorValueId) : undefined)
-      ?? optionalText(variant.image?.id);
+    const colorValueId = colorOption
+      ? optionValues.find((selection) => selection.optionId === colorOption.id)?.valueId
+      : undefined;
+    if (colorOption && !colorValueId) {
+      fail(`${path}.selectedOptions`, 'la variante no selecciona un color.');
+    }
+    const expectedColorImageId = colorValueId ? colorImageByValue.get(colorValueId) : undefined;
+    const actualImageId = optionalText(variant.image?.id);
+    if (colorValueId) {
+      if (!expectedColorImageId) {
+        fail(`${path}.image`, 'la variante tiene un color sin galería.');
+      }
+      if (!actualImageId) {
+        fail(`${path}.image`, 'la variante debe tener asignada la imagen principal de su color.');
+      }
+      if (actualImageId !== expectedColorImageId) {
+        fail(`${path}.image`, 'la imagen de la variante no coincide con la portada de su galería de color.');
+      }
+    }
+    const imageId = expectedColorImageId ?? actualImageId;
 
     return {
       id: variantId(requiredText(variant.id, `${path}.id`)),
@@ -195,23 +209,28 @@ const mapVariants = (
 const mapMetafieldColorGalleries = (
   product: ShopifyProductNode,
   colorOption: ProductOption
-): Product['mediaGroups'] => {
-  const metafield = metafieldByKey(product, 'color_galleries', 'list.metaobject_reference', false);
+): Product['mediaGroups'] | undefined => {
+  const metafield = metafieldByKey(
+    product,
+    'color_galleries',
+    'list.metaobject_reference',
+    false
+  );
   const references = metafield?.references;
-  if (!references?.nodes.length) return [];
+  if (!references?.nodes.length) return undefined;
 
   if (references.pageInfo.hasNextPage) {
     fail(`${product.handle}.metafields.kingbelt.color_galleries.references`, 'supera el límite de 250 referencias.');
   }
 
-  return references.nodes.map((reference, referenceIndex) => {
+  const groupsByColorValueId = new Map<string, Product['mediaGroups'][number]>();
+  references.nodes.forEach((reference, referenceIndex) => {
     const path = `${product.handle}.metafields.kingbelt.color_galleries[${referenceIndex}]`;
     if (
       reference.__typename !== 'Metaobject' ||
-      reference.type !== 'kingbelt.color_gallery' ||
       !reference.fields
     ) {
-      fail(path, 'la referencia no es un metaobject kingbelt.color_gallery.');
+      fail(path, 'la referencia no es un metaobject de galería publicado.');
     }
     const fields = required(reference.fields, path, 'faltan los campos del metaobject.');
     const colorField = required(
@@ -226,6 +245,9 @@ const mapMetafieldColorGalleries = (
     const colorValue = required(colorOption.values.find((value) =>
       normalizeOptionName(value.label) === normalizeOptionName(colorLabel)
     ), `${path}.color_value`, `el color ${colorLabel} no existe en la opción Color.`);
+    if (groupsByColorValueId.has(colorValue.id)) {
+      fail(`${path}.color_value`, `el color ${colorLabel} tiene más de una galería.`);
+    }
 
     const imagesField = required(
       fields.find((field) => field.key === 'images'),
@@ -239,120 +261,158 @@ const mapMetafieldColorGalleries = (
     if (imageReferences.pageInfo.hasNextPage) {
       fail(`${path}.images`, 'supera el límite de 250 referencias.');
     }
+    if (imageReferences.nodes.length !== COLOR_GALLERY_IMAGE_COUNT) {
+      fail(
+        `${path}.images`,
+        `debe contener exactamente ${COLOR_GALLERY_IMAGE_COUNT} imágenes.`
+      );
+    }
+    const seenImageIds = new Set<string>();
     const imageIds = imageReferences.nodes.map((imageReference, imageIndex) => {
-      if (
-        imageReference.__typename !== 'MediaImage' ||
-        !('image' in imageReference) ||
-        !imageReference.image
-      ) {
-        fail(`${path}.images[${imageIndex}]`, 'la referencia no es una imagen publicada.');
+      const imagePath = `${path}.images[${imageIndex}]`;
+      if (imageReference.__typename !== 'MediaImage' || !imageReference.image) {
+        fail(imagePath, 'la referencia no es una MediaImage publicada.');
       }
-      const image = required(imageReference.image, `${path}.images[${imageIndex}]`, 'falta la imagen publicada.');
-      return requiredText(image.id, `${path}.images[${imageIndex}].id`);
+      const image = required(imageReference.image, imagePath, 'falta la imagen publicada.');
+      requiredText(image.url, `${imagePath}.url`);
+      if (image.width == null) fail(`${imagePath}.width`, 'falta la anchura.');
+      if (image.height == null) fail(`${imagePath}.height`, 'falta la altura.');
+      const imageId = requiredText(image.id, `${imagePath}.id`);
+      if (seenImageIds.has(imageId)) {
+        fail(imagePath, `la imagen ${imageId} está repetida en la galería.`);
+      }
+      seenImageIds.add(imageId);
+      return imageId;
     });
-    return {
+    groupsByColorValueId.set(colorValue.id, {
       id: requiredText(reference.id, `${path}.id`),
       optionValueId: colorValue.id,
       imageIds,
-    };
+    });
   });
+
+  return colorOption.values.map((value) =>
+    required(
+      groupsByColorValueId.get(value.id),
+      `${product.handle}.metafields.kingbelt.color_galleries`,
+      `el color ${value.label} no tiene una galería asociada.`
+    )
+  );
 };
 
-const rebalanceColorGalleries = (
-  groups: Map<string, string[]>,
-  target: number
-) => {
-  const keys = [...groups.keys()];
-  const extras = (key: string) => Math.max(0, (groups.get(key)?.length ?? 0) - 1);
-  while (true) {
-    const needy = keys.find((key) => (groups.get(key)?.length ?? 0) < target);
-    const donor = keys
-      .filter((key) => extras(key) > Math.max(0, target - 1))
-      .sort((left, right) => extras(right) - extras(left))[0];
-    if (!needy || !donor || donor === needy) break;
-    const taken = groups.get(donor)?.pop();
-    if (!taken) break;
-    groups.get(needy)?.push(taken);
+const FILENAME_COLOR_TOKEN_MIN = 3;
+
+const foldFilenameKey = (value: string): string =>
+  value
+    .trim()
+    .toLocaleLowerCase('es')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+
+const filenameToken = (value: string): string =>
+  foldFilenameKey(value).replace(/[^a-z0-9]+/g, '');
+
+const tokensFromImageUrl = (url: string): readonly string[] => {
+  try {
+    const pathname = new URL(url).pathname;
+    const filename = decodeURIComponent(pathname.slice(pathname.lastIndexOf('/') + 1));
+    const stem = filename.replace(/\.[a-z0-9]+$/i, '');
+    return foldFilenameKey(stem)
+      .split(/[^a-z0-9]+/)
+      .filter((token) => token.length >= FILENAME_COLOR_TOKEN_MIN);
+  } catch {
+    return [];
   }
 };
 
-const deriveColorMediaGroups = (
+/**
+ * Detalles nativos extra: solo archivos cuyo nombre contiene exactamente un
+ * token de color y no son portada de otro. Sin coincidencia inequívoca, se
+ * omiten. Nunca se reparte por posición ni por huecos entre portadas.
+ */
+const nativeDetailImageIdsByColor = (
   product: ShopifyProductNode,
   colorOption: ProductOption,
-  images: ProductImage[]
-): Product['mediaGroups'] => {
-  const imageIds = images.map((image) => image.id);
-  if (!imageIds.length) {
-    fail(`${product.handle}.images`, 'el producto no tiene imágenes publicadas.');
-  }
-  const imageIndex = new Map(imageIds.map((id, index) => [id, index]));
-  const primaryByColor = new Map<string, string>();
-  for (const variant of product.variants.nodes) {
-    const colorName = variant.selectedOptions.find((item) => normalizeOptionName(item.name) === 'color')?.value;
-    const colorValue = colorName
-      ? colorOption.values.find((value) =>
-        normalizeOptionName(value.label) === normalizeOptionName(colorName)
-      )
-      : undefined;
-    const imageId = optionalText(variant.image?.id);
-    if (!colorValue || !imageId || !imageIndex.has(imageId) || primaryByColor.has(colorValue.id)) continue;
-    primaryByColor.set(colorValue.id, imageId);
-  }
+  coverByColorId: ReadonlyMap<string, string>
+): Map<string, string[]> => {
+  const coverIds = new Set(coverByColorId.values());
+  const colors = colorOption.values.flatMap((value) => {
+    const token = filenameToken(value.label);
+    return token.length >= FILENAME_COLOR_TOKEN_MIN ? [{ id: value.id, token }] : [];
+  });
+  const extrasByColor = new Map(colorOption.values.map((value) => [value.id, [] as string[]]));
+  const maxExtras = COLOR_GALLERY_IMAGE_COUNT - 1;
 
-  const uniquePrimaries = new Set(primaryByColor.values());
-  const distinctPrimaries = colorOption.values.every((value) => primaryByColor.has(value.id))
-    && uniquePrimaries.size === colorOption.values.length;
-  const groups = new Map<string, string[]>();
+  product.images.nodes.forEach((image) => {
+    const imageId = optionalText(image.id);
+    const imageUrl = optionalText(image.url);
+    if (!imageId || !imageUrl || coverIds.has(imageId)) return;
+    const matches = colors.filter((color) => tokensFromImageUrl(imageUrl).includes(color.token));
+    if (matches.length !== 1) return;
+    const extras = extrasByColor.get(matches[0].id);
+    if (extras && extras.length < maxExtras) extras.push(imageId);
+  });
 
-  if (distinctPrimaries) {
-    const ordered = colorOption.values
-      .map((value) => ({
-        id: value.id,
-        index: imageIndex.get(primaryByColor.get(value.id) as string) as number,
-      }))
-      .sort((left, right) => left.index - right.index);
-    ordered.forEach((item, index) => {
-      const end = index + 1 < ordered.length ? ordered[index + 1].index : imageIds.length;
-      groups.set(item.id, imageIds.slice(item.index, Math.max(end, item.index + 1)));
-    });
-    rebalanceColorGalleries(groups, Math.min(3, Math.floor(imageIds.length / colorOption.values.length) || 1));
-  } else {
-    const sharedPrimary = uniquePrimaries.size === 1 ? [...uniquePrimaries][0] : undefined;
-    const claimed = new Set<string>();
-    for (const value of colorOption.values) {
-      const primary = primaryByColor.get(value.id)
-        ?? imageIds.find((id) => !claimed.has(id))
-        ?? imageIds[0];
-      groups.set(value.id, [primary]);
-      if (!sharedPrimary) claimed.add(primary);
-    }
-    const leftover = imageIds.filter((id) => id !== sharedPrimary && !claimed.has(id));
-    leftover.forEach((id, index) => {
-      groups.get(colorOption.values[index % colorOption.values.length].id)?.push(id);
-    });
-  }
-
-  return colorOption.values.map((value) => ({
-    id: `${product.id}::${value.id}`,
-    optionValueId: value.id,
-    imageIds: required(
-      groups.get(value.id)?.length ? groups.get(value.id) : undefined,
-      `${product.handle}.mediaGroups.${value.label}`,
-      'el color no tiene imagen publicada.'
-    ),
-  }));
+  return extrasByColor;
 };
 
-const mapMediaGroups = (
+/**
+ * Degradación segura cuando Storefront no expone `kingbelt.color_galleries`:
+ * la portada es la imagen autoritativa compartida por las variantes de cada
+ * color; los detalles nativos solo se añaden si el archivo nombra ese color
+ * de forma inequívoca.
+ */
+const mapNativeColorMediaGroups = (
   product: ShopifyProductNode,
-  options: ProductOption[],
-  images: ProductImage[]
+  colorOption: ProductOption
 ): Product['mediaGroups'] => {
-  const colorOption = options.find((option) => option.purpose === 'color');
-  if (!colorOption) return [];
-  const fromMetafields = mapMetafieldColorGalleries(product, colorOption);
-  if (fromMetafields.length) return fromMetafields;
-  return deriveColorMediaGroups(product, colorOption, images);
+  const productImageIds = new Set(product.images.nodes.map((image, imageIndex) =>
+    requiredText(image.id, `${product.handle}.images[${imageIndex}].id`)
+  ));
+  const coverByColorId = new Map<string, string>();
+
+  colorOption.values.forEach((value, valueIndex) => {
+    const variantsForColor = product.variants.nodes.flatMap((variant, variantIndex) => {
+      const selectedColor = variant.selectedOptions.find((selection) =>
+        normalizeOptionName(selection.name) === normalizeOptionName(colorOption.name)
+      );
+      return selectedColor && normalizeOptionName(selectedColor.value) === normalizeOptionName(value.label)
+        ? [{ variant, variantIndex }]
+        : [];
+    });
+    const path = `${product.handle}.options.color.values[${valueIndex}]`;
+    if (!variantsForColor.length) {
+      fail(path, `el color ${value.label} no tiene variantes publicadas.`);
+    }
+
+    const imageIds = new Set(variantsForColor.map(({ variant, variantIndex }) =>
+      requiredText(
+        variant.image?.id,
+        `${product.handle}.variants[${variantIndex}].image.id`
+      )
+    ));
+    if (imageIds.size !== 1) {
+      fail(path, `las variantes del color ${value.label} no comparten una única imagen principal.`);
+    }
+
+    const imageId = [...imageIds][0];
+    if (!productImageIds.has(imageId)) {
+      fail(path, `la imagen principal del color ${value.label} no pertenece a las imágenes del producto.`);
+    }
+    coverByColorId.set(value.id, imageId);
+  });
+
+  const extrasByColor = nativeDetailImageIdsByColor(product, colorOption, coverByColorId);
+
+  return colorOption.values.map((value) => {
+    const coverId = required(coverByColorId.get(value.id), `${product.handle}.options.color`, 'falta la portada nativa.');
+    const extras = extrasByColor.get(value.id) ?? [];
+    return {
+      id: `${requiredText(product.id, `${product.handle}.id`)}::native-color::${value.id}`,
+      optionValueId: value.id,
+      imageIds: [coverId, ...extras].slice(0, COLOR_GALLERY_IMAGE_COUNT),
+    };
+  });
 };
 
 const mapSpecifications = (source: ShopifyProductNode): Product['specifications'] => {
@@ -376,7 +436,11 @@ const mapProduct = (source: ShopifyProductNode): Product => {
   const images = source.images.nodes.map((image, index) =>
     mapImage(image, `${path}.images[${index}]`, title)
   );
-  const mediaGroups = mapMediaGroups(source, options, images);
+  const colorOption = options.find((option) => option.purpose === 'color');
+  const mediaGroups = colorOption
+    ? mapMetafieldColorGalleries(source, colorOption)
+      ?? mapNativeColorMediaGroups(source, colorOption)
+    : [];
   const primaryCollectionId = source.collections.nodes[0]?.id ??
     fail(`${path}.collections`, 'el producto no pertenece a ninguna colección publicada.');
   const badge = metafieldText(source, 'badge', 'single_line_text_field', false);

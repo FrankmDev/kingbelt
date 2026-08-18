@@ -8,6 +8,7 @@ import type {
   ProductOptionValue,
   ProductVariant,
 } from '@commerce/domain/catalog';
+import { resolveColorSwatch } from '@commerce/domain/color-swatch';
 
 const image = (
   id: string,
@@ -61,14 +62,10 @@ const imagePool: ImagePoolEntry[] = [
 ];
 
 const swatches: Record<string, string> = {
-  Negro: '#1c1a18',
-  Marrón: '#6d4a2f',
-  'Marrón oscuro': '#46301f',
-  Coñac: '#a06836',
-  'Negro / marrón': 'linear-gradient(135deg, #1c1a18 50%, #6d4a2f 50%)',
-  'Marrón / negro': 'linear-gradient(135deg, #6d4a2f 50%, #1c1a18 50%)',
-  'Negro / acero': 'linear-gradient(135deg, #1c1a18 50%, #7b7d78 50%)',
-  'Marrón / detalle tricolor': 'linear-gradient(135deg, #6d4a2f 0 68%, #aa151b 68% 78%, #f1bf00 78% 90%, #aa151b 90%)',
+  'Negro / marrón': resolveColorSwatch('Negro / marrón'),
+  'Marrón / negro': resolveColorSwatch('Marrón / negro'),
+  'Negro / acero': resolveColorSwatch('Negro / acero'),
+  'Marrón / detalle tricolor': resolveColorSwatch('Marrón / detalle tricolor'),
 };
 
 const baseColorways = ['Negro', 'Marrón', 'Coñac'];
@@ -88,7 +85,7 @@ const colorValues = (handle: string, primary: string): ProductOptionValue[] =>
     .map((label) => ({
       id: `${handle}:color:${slugify(label)}`,
       label,
-      swatch: swatches[label] ?? '#6d4a2f',
+      swatch: swatches[label] ?? resolveColorSwatch(label),
     }));
 
 const galleryLabels = ['Vista principal', 'Detalle de textura', 'Vista de conjunto'];
@@ -199,10 +196,17 @@ const buildVariants = (
       })
   );
 
+const buildModelReference = (collectionHandle: string, index: number): string => {
+  const collectionBase: Record<string, number> = { vestir: 5000, casual: 5100, sport: 5200 };
+  const model = (collectionBase[collectionHandle] ?? 5000) + (index + 1) * 3;
+  const width = 40 + (index % 5) * 2;
+  return `${model}/${width}`;
+};
+
 const buildProducts = (): Product[] =>
   demoCollections.flatMap((collection) =>
     (seeds[collection.handle] ?? []).map(([name, productType, color, price, summary], index) => {
-      const reference = `KB-${collection.handle.toUpperCase()}-${String(index + 1).padStart(3, '0')}`;
+      const reference = buildModelReference(collection.handle, index);
       const handle = `cinturon-${slugify(name)}`;
       const colors = colorValues(handle, color);
       const sizeOptions = sizes

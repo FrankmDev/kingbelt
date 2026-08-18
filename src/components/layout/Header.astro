@@ -1,5 +1,6 @@
 ---
 import { mainNav } from '@config/navigation';
+import HeaderAccountCta from '../account/HeaderAccountCta.astro';
 import CartDrawer from '../cart/CartDrawer.astro';
 import CartTrigger from '../cart/CartTrigger.astro';
 import MobileNavigation from './MobileNavigation.astro';
@@ -56,12 +57,9 @@ const links = mainNav;
           </>
         ))}
         <span class="header-divider mx-2.5 h-3.5 w-px lg:mx-3.5" aria-hidden="true"></span>
-        <CartTrigger />
+        <HeaderAccountCta />
         <span class="header-divider mx-2.5 h-3.5 w-px lg:mx-3.5" aria-hidden="true"></span>
-        <a href="/contacto" id="header-cta" class="group hidden items-center gap-2.5 uppercase lg:inline-flex">
-          <span class="h-1.5 w-1.5 rounded-full bg-king-accent/65 transition-[background-color,transform] duration-[var(--kb-dur-fast)] group-hover:scale-110 group-hover:bg-king-accent"></span>
-          Escribir
-        </a>
+        <CartTrigger />
       </div>
 
       <div class="flex items-center gap-1 lg:hidden">
@@ -174,21 +172,6 @@ const links = mainNav;
       font-size 400ms ease;
   }
 
-  #header-cta {
-    padding: calc(0.55rem - (var(--scroll-progress) * 0.14rem)) calc(1rem - (var(--scroll-progress) * 0.12rem));
-    border: 1px solid;
-    border-radius: var(--kb-radius-xs);
-    font-size: calc(0.54rem - (var(--scroll-progress) * 0.02rem));
-    font-weight: 600;
-    letter-spacing: calc(0.22em - (var(--scroll-progress) * 0.04em));
-    transition:
-      padding 500ms ease,
-      border-color 400ms ease,
-      background-color 400ms ease,
-      color 400ms ease,
-      letter-spacing 400ms ease;
-  }
-
   .menu-line {
     background: currentColor;
     transition:
@@ -274,17 +257,6 @@ const links = mainNav;
     color: #ffffff;
   }
 
-  #site-header[data-theme='dark'] #header-cta {
-    border-color: rgba(255, 255, 255, 0.16);
-    color: rgba(255, 255, 255, 0.75);
-  }
-
-  #site-header[data-theme='dark'] #header-cta:hover {
-    background-color: rgba(255, 255, 255, 0.08);
-    border-color: rgba(255, 255, 255, 0.3);
-    color: #ffffff;
-  }
-
   #site-header[data-theme='light'] {
     color: var(--color-king-text);
   }
@@ -306,17 +278,6 @@ const links = mainNav;
     color: var(--color-king-text);
   }
 
-  #site-header[data-theme='light'] #header-cta {
-    border-color: rgba(24, 21, 18, 0.18);
-    color: rgba(24, 21, 18, 0.85);
-  }
-
-  #site-header[data-theme='light'] #header-cta:hover {
-    background-color: rgba(24, 21, 18, 0.05);
-    border-color: rgba(24, 21, 18, 0.28);
-    color: var(--color-king-text);
-  }
-
   #site-header[data-scrolled='true'] .header-shell {
     border-radius: var(--kb-radius-md);
   }
@@ -332,7 +293,6 @@ const links = mainNav;
     .header-wordmark,
     .header-logo-rule,
     .header-link,
-    #header-cta,
     .menu-line,
     .header-progress-bar {
       transition: none !important;

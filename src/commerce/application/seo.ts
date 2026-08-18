@@ -1,7 +1,7 @@
-import type { Collection, CollectionPage, Product, ProductImage } from '../domain/catalog';
+import type { Collection, CollectionPage, Product, ProductImage, ProductSummary } from '../domain/catalog';
 import { getPrimaryProductImage } from '../domain/product-media';
 import type { PageSeo, SeoImage } from '@shared/seo/page-seo';
-import { collectionPath, productPath, resolveCanonicalUrl } from './paths';
+import { CATALOG_INDEX_PATH, collectionPath, productPath, resolveCanonicalUrl } from './paths';
 import { createCollectionStructuredData, createProductStructuredData } from './structured-data';
 
 export type { OgType, PageSeo, SeoImage } from '@shared/seo/page-seo';
@@ -12,6 +12,7 @@ export const NON_INDEXABLE_QUERY_PARAMS = new Set([
   'color',
   'precio',
   'disponible',
+  'categoria',
   'variant',
   'variante',
   'sku',
@@ -101,5 +102,37 @@ export const resolveCollectionPageHead = (
   return {
     seo,
     schema: createCollectionStructuredData(collection, products, seo.canonicalUrl, siteOrigin),
+  };
+};
+
+interface CatalogIndexHeadInput {
+  title: string;
+  description: string;
+  products: readonly ProductSummary[];
+  collections: readonly Collection[];
+}
+
+/** Metadatos y JSON-LD del índice de catálogo. */
+export const resolveCatalogIndexHead = (
+  input: CatalogIndexHeadInput,
+  brand: SiteBrand,
+  siteOrigin: string | URL
+): CommercePageHead => {
+  const featured = input.collections.find((collection) => collection.featured) ?? input.collections[0];
+  const seo: PageSeo = {
+    title: input.title,
+    description: input.description,
+    canonicalUrl: resolveCanonicalUrl(siteOrigin, CATALOG_INDEX_PATH),
+    ogType: 'website',
+    image: toSeoImage(featured?.image),
+  };
+  return {
+    seo,
+    schema: createCollectionStructuredData(
+      { title: `Colección ${brand.name}`, description: input.description, handle: 'productos' },
+      input.products,
+      seo.canonicalUrl,
+      siteOrigin
+    ),
   };
 };

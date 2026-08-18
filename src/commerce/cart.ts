@@ -1,9 +1,12 @@
-import { createDemoCartAdapter } from './infrastructure/demo/demo-cart-adapter';
-import { createHybridCartAdapter, createShopifyCartAdapter } from './infrastructure/shopify/shopify-cart-adapter';
+import { selectCommerceProvider } from './commerce-source';
 import type { CartProvider } from './application/cart-provider';
 
-/** Frontera activa del carrito, independiente del proveedor de catálogo. */
-export const cartProvider: CartProvider = createHybridCartAdapter(
-  createShopifyCartAdapter(),
-  createDemoCartAdapter(),
-);
+/** Proveedor explícito: Shopify nunca degrada al carrito demo. */
+export const cartProvider: CartProvider = await selectCommerceProvider({
+  demo: () =>
+    import('./infrastructure/demo/demo-cart-adapter').then((mod) => mod.createDemoCartAdapter()),
+  shopify: () =>
+    import('./infrastructure/shopify/shopify-cart-adapter').then((mod) =>
+      mod.createShopifyCartAdapter()
+    ),
+});

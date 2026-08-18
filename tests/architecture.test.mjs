@@ -135,7 +135,12 @@ describe('límites de arquitectura', () => {
   });
 
   test('las rutas de páginas consumen comercio solo mediante composition roots o contratos', () => {
-    const roots = new Set(['src/commerce/catalog', 'src/commerce/cart', 'src/commerce/cart-server']);
+    const roots = new Set([
+      'src/commerce/catalog',
+      'src/commerce/cart',
+      'src/commerce/cart-server',
+      'src/commerce/commerce-source',
+    ]);
     const allowed = ['src/commerce/application/', 'src/commerce/domain/'];
     const violations = localDependencies.filter(({ importer, dependency }) =>
       importer.startsWith('src/pages/') &&
@@ -233,9 +238,9 @@ describe('límites de arquitectura', () => {
     expect(violations).toEqual([]);
   });
 
-  test('el contrato futuro de carrito fija un BFF same-origin sin secretos en el navegador', () => {
+  test('el contrato Shopify fija un BFF same-origin sin secretos en el navegador', () => {
     const readiness = readFileSync(join(root, 'docs/SHOPIFY_READINESS.md'), 'utf8');
-    expect(readiness).toContain('cliente neutral de carrito → endpoints same-origin → servicio servidor → Storefront Cart API');
+    expect(readiness).toContain('CartProvider Shopify → /api/cart → servicio servidor → Storefront Cart API');
     expect(readiness).toContain('parte secreta del identificador de carrito Shopify no entra en HTML');
     expect(readiness).toContain('El servidor es autoridad para carrito remoto, precios, cantidades aceptadas, stock');
     expect(readiness).not.toMatch(/cliente con token público|decisión final del cliente de carrito/);
@@ -266,8 +271,9 @@ describe('límites de arquitectura', () => {
     requiredProductMetafields.forEach((key) => {
       expect(readiness).toContain(`\`${key}\``);
     });
-    expect(readiness).toContain('list.metaobject_reference<kingbelt.color_gallery>');
+    expect(readiness).toContain('list.metaobject_reference');
     expect(readiness).toContain('exactamente 3, ordenadas');
-    expect(readiness).toContain('galería nativa desde `variant.image`');
+    expect(readiness).toContain('imagen principal nativa compartida por las variantes');
+    expect(readiness).toContain('Nunca se deben repartir imágenes por posición');
   });
 });

@@ -1,5 +1,9 @@
 ---
-import type { ProductImage, ProductMediaGroup } from '@commerce/domain/catalog';
+import type { ProductImage, ProductMediaGroup, ProductVariant } from '@commerce/domain/catalog';
+import {
+  getColorGalleries,
+  getInitialColorValueId,
+} from '@commerce/domain/product-media';
 import { escapeCssIdentifier } from '@shared/css/css-identifier';
 import { buildProductGalleryRules } from './build-product-gallery-rules';
 import { buildSlideSource, buildThumbnailUrl } from '@shared/image-source';
@@ -7,107 +11,184 @@ import { buildSlideSource, buildThumbnailUrl } from '@shared/image-source';
 interface Props {
   images: ProductImage[];
   mediaGroups?: ProductMediaGroup[];
-  /** Prefijo único para name/ids del grupo de radios (p. ej. slug del producto). */
+  initialVariant?: Pick<ProductVariant, 'imageId' | 'optionValues'>;
   idPrefix: string;
   class?: string;
 }
 
-const { images, mediaGroups = [], idPrefix, class: className } = Astro.props;
+const { images, mediaGroups = [], initialVariant, idPrefix, class: className } = Astro.props;
 
+const colorGalleries = getColorGalleries({ images, mediaGroups });
+const initialColorValueId = getInitialColorValueId(initialVariant, colorGalleries);
+const multiColor = colorGalleries.length > 1;
 const safePrefix = escapeCssIdentifier(idPrefix);
-const groupName = `gallery-${safePrefix}`;
 const galleryClass = `product-gallery--${safePrefix}`;
-const galleryRules = buildProductGalleryRules({ idPrefix, images, mediaGroups });
-
-const mediaGroupByImageId = new Map(
-  mediaGroups.flatMap((group) => group.imageIds.map((imageId) => [imageId, group.id] as const))
-);
-
-/** `sizes` de la escena: columna acotada del PDP en escritorio, ancho de shell en móvil. */
-const slideSizes = '(min-width: 64rem) 28rem, (min-width: 48rem) 22rem, 100vw';
+const galleryRules = buildProductGalleryRules({ idPrefix, colorGalleries });
+const slideSizes = '(min-width: 90rem) 32rem, (min-width: 64rem) 28vw, (min-width: 48rem) 36vw, calc(100vw - 8.5rem)';
 ---
 
 <div
   class:list={['product-gallery', galleryClass, className]}
   data-product-gallery={idPrefix}
 >
-  {images.map((image, index) => (
-    <input
-      type="radio"
-      class="product-gallery__input sr-only"
-      id={`${groupName}-${index + 1}`}
-      name={groupName}
-      checked={index === 0}
-      aria-label={`Ver imagen ${index + 1} de ${images.length}`}
-      data-gallery-choice
-      data-gallery-image-id={image.id}
-      data-gallery-media-group={mediaGroupByImageId.get(image.id)}
-    />
-  ))}
+  {colorGalleries.map((gallery, setIndex) => {
+    const setName = `gallery-${safePrefix}-set-${setIndex + 1}`;
+    const isInitialSet = gallery.optionValueId === initialColorValueId;
+    const activeImageId = isInitialSet && initialVariant?.imageId && gallery.images.some((image) => image.id === initialVariant.imageId)
+      ? initialVariant.imageId
+      : gallery.images[0]?.id;
+    const showThumbs = gallery.images.length > 1;
 
-  <div class="product-gallery__stage">
-    {images.map((image, index) => {
-      const source = buildSlideSource(image.url, slideSizes);
-      return (
-        <img
-          src={source.src}
-          srcset={source.srcset}
-          sizes={source.sizes}
-          alt={image.altText}
-          width={image.width}
-          height={image.height}
-          class="product-gallery__slide"
-          loading={index === 0 ? 'eager' : 'lazy'}
-          fetchpriority={index === 0 ? 'high' : undefined}
-          decoding="async"
-          style={`object-position: ${image.position ?? 'center'}`}
-          data-gallery-slide
-          data-gallery-media-group={mediaGroupByImageId.get(image.id)}
-        />
-      );
-    })}
-  </div>
-
-  <div class="product-gallery__thumbs" role="radiogroup" aria-label={`Imágenes del producto, ${images.length} en total`}>
-    {images.map((image, index) => (
-      <label
-        class="product-gallery__thumb"
-        for={`${groupName}-${index + 1}`}
-        data-gallery-thumb
-        data-gallery-media-group={mediaGroupByImageId.get(image.id)}
+    return (
+      <div
+        class="product-gallery__set"
+        data-gallery-set={gallery.optionValueId}
+        hidden={multiColor && gallery.optionValueId !== initialColorValueId}
       >
-        <img
-          src={buildThumbnailUrl(image.url)}
-          alt=""
-          width={image.width}
-          height={image.height}
-          loading="lazy"
-          decoding="async"
-          aria-hidden="true"
-          style={`object-position: ${image.position ?? 'center'}`}
-        />
-      </label>
-    ))}
-  </div>
+        {gallery.images.map((image, index) => (
+          <input
+            type="radio"
+            class="product-gallery__input sr-only"
+            id={`${setName}-${index + 1}`}
+            name={setName}
+            checked={image.id === activeImageId}
+            aria-label={`Ver imagen ${index + 1} de ${gallery.images.length}`}
+            data-gallery-choice
+            data-gallery-image-id={image.id}
+          />
+        ))}
+
+        <div
+          class="product-gallery__layout"
+          style={`--gallery-thumb-count: ${gallery.images.length}`}
+          role={showThumbs ? 'radiogroup' : undefined}
+          aria-label={showThumbs ? `Imágenes del color seleccionado, ${gallery.images.length} en total` : undefined}
+        >
+          <div class="product-gallery__thumbs" hidden={!showThumbs}>
+            {gallery.images.map((image, index) => (
+              <label
+                class="product-gallery__thumb"
+                for={`${setName}-${index + 1}`}
+                data-gallery-thumb
+              >
+                <img
+                  src={buildThumbnailUrl(image.url)}
+                  alt=""
+                  width={image.width}
+                  height={image.height}
+                  loading="lazy"
+                  decoding="async"
+                  aria-hidden="true"
+                  style={`object-position: ${image.position ?? 'center'}`}
+                />
+              </label>
+            ))}
+          </div>
+
+          <div class="product-gallery__stage">
+            {gallery.images.map((image) => {
+              const source = buildSlideSource(image.url, slideSizes);
+              const isActive = image.id === activeImageId;
+              return (
+                <img
+                  src={source.src}
+                  srcset={source.srcset}
+                  sizes={source.sizes}
+                  alt={image.altText}
+                  width={image.width}
+                  height={image.height}
+                  class="product-gallery__slide"
+                  loading={isActive ? 'eager' : 'lazy'}
+                  fetchpriority={isActive ? 'high' : undefined}
+                  decoding="async"
+                  style={`object-position: ${image.position ?? 'center'}`}
+                  data-gallery-slide
+                />
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    );
+  })}
 </div>
 
 {galleryRules.length > 0 && <style is:global set:html={galleryRules} />}
 
 <style>
   .product-gallery {
-    display: grid;
-    gap: var(--kb-space-3);
+    --gallery-thumb-width: 4.5rem;
+    --gallery-gutter: var(--kb-space-3);
+    width: fit-content;
+    max-width: 100%;
     min-width: 0;
-    align-content: start;
+  }
+
+  .product-gallery__set {
+    display: grid;
+    min-width: 0;
+  }
+
+  .product-gallery__set[hidden] {
+    display: none !important;
+  }
+
+  .product-gallery__layout {
+    display: grid;
+    grid-template-columns: var(--gallery-thumb-width) auto;
+    grid-template-rows: repeat(var(--gallery-thumb-count, 3), auto);
+    column-gap: var(--gallery-gutter);
+    row-gap: var(--gallery-gutter);
+    align-items: stretch;
+    width: fit-content;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .product-gallery__thumbs {
+    display: contents;
+  }
+
+  .product-gallery__thumbs[hidden] {
+    display: none;
+  }
+
+  .product-gallery__layout:has(.product-gallery__thumbs[hidden]) {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto;
+    width: 100%;
   }
 
   .product-gallery__stage {
+    grid-column: 2;
+    grid-row: 1 / -1;
     position: relative;
     overflow: hidden;
+    box-sizing: border-box;
+    height: 100%;
+    width: auto;
+    max-width: 100%;
     aspect-ratio: 4 / 5;
     border: 1px solid var(--kb-stroke-hairline);
-    border-radius: var(--kb-radius-sm);
+    border-radius: var(--kb-card-radius);
     background: var(--color-king-bone);
+    box-shadow: var(--kb-shadow-xs);
+  }
+
+  .product-gallery__layout:has(.product-gallery__thumbs[hidden]) .product-gallery__stage {
+    grid-column: 1;
+    grid-row: auto;
+    width: min(100%, 26rem);
+    height: auto;
+  }
+
+  .product-gallery__stage::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-king-text) 4%, transparent);
   }
 
   .product-gallery__slide {
@@ -116,29 +197,25 @@ const slideSizes = '(min-width: 64rem) 28rem, (min-width: 48rem) 22rem, 100vw';
     width: 100%;
     height: 100%;
     object-fit: cover;
-    opacity: 0;
-    visibility: hidden;
-    filter: saturate(0.92) contrast(1.03);
+    filter: saturate(0.94) contrast(1.02);
     transition: opacity var(--kb-dur-med) var(--kb-ease-out);
-  }
-
-  .product-gallery__thumbs {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(5rem, 25%), 1fr));
-    gap: var(--kb-space-3);
   }
 
   .product-gallery__thumb {
     position: relative;
-    overflow: hidden;
+    grid-column: 1;
+    display: block;
+    width: 100%;
     aspect-ratio: 4 / 5;
+    overflow: hidden;
     border: 1px solid var(--kb-stroke-hairline);
     border-radius: var(--kb-radius-xs);
     background: var(--color-king-bone);
     cursor: pointer;
     transition:
       border-color var(--kb-dur-fast) var(--kb-ease-out),
-      box-shadow var(--kb-dur-fast) var(--kb-ease-out);
+      box-shadow var(--kb-dur-fast) var(--kb-ease-out),
+      transform var(--kb-dur-fast) var(--kb-ease-out);
   }
 
   .product-gallery__thumb img {
@@ -146,14 +223,34 @@ const slideSizes = '(min-width: 64rem) 28rem, (min-width: 48rem) 22rem, 100vw';
     width: 100%;
     height: 100%;
     object-fit: cover;
-    opacity: 0.7;
-    filter: saturate(0.92) contrast(1.03);
+    opacity: 0.82;
+    filter: saturate(0.94) contrast(1.02);
     transition: opacity var(--kb-dur-fast) var(--kb-ease-out);
+  }
+
+  @media (min-width: 48rem) {
+    .product-gallery {
+      --gallery-thumb-width: 7.5rem;
+      --gallery-gutter: var(--kb-space-4);
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .product-gallery {
+      --gallery-thumb-width: 9.5rem;
+    }
+  }
+
+  @media (min-width: 80rem) {
+    .product-gallery {
+      --gallery-thumb-width: 10.5rem;
+    }
   }
 
   @media (hover: hover) and (pointer: fine) {
     .product-gallery__thumb:hover {
       border-color: var(--kb-stroke-accent);
+      transform: translateX(1px);
     }
 
     .product-gallery__thumb:hover img {
@@ -166,6 +263,10 @@ const slideSizes = '(min-width: 64rem) 28rem, (min-width: 48rem) 22rem, 100vw';
     .product-gallery__thumb,
     .product-gallery__thumb img {
       transition: none;
+    }
+
+    .product-gallery__thumb:hover {
+      transform: none;
     }
   }
 </style>

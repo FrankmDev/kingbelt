@@ -1,4 +1,5 @@
 ---
+import CollectionCategoryNav from './CollectionCategoryNav.astro';
 import CollectionFilters from './CollectionFilters.astro';
 import ProductCard from './ProductCard.astro';
 import type {
@@ -7,30 +8,56 @@ import type {
   ProductSummary,
 } from '@commerce/domain/catalog';
 
+export interface CatalogGroup {
+  collection: Collection;
+  products: ProductSummary[];
+}
+
 interface Props {
-  category: Collection;
   products: ProductSummary[];
   facets: CollectionFacets;
+  category?: Collection;
+  groups?: CatalogGroup[];
   /** Referencias visibles antes de «Mostrar más». */
   pageSize?: number;
+  scope?: string;
   class?: string;
 }
 
-const { category, products, facets, pageSize = 24, class: className } = Astro.props;
+const {
+  category,
+  groups = [],
+  products,
+  facets,
+  pageSize,
+  scope,
+  class: className,
+} = Astro.props;
 
+const grouped = groups.length > 0;
+const resolvedPageSize = pageSize ?? (grouped ? 96 : 24);
+const idPrefix = grouped ? 'filters-catalog' : `filters-${category?.handle ?? 'coleccion'}`;
+const formId = `${idPrefix}-form`;
 const countLabel = `${products.length} ${products.length === 1 ? 'referencia' : 'referencias'}`;
+const catalogLabel = grouped
+  ? 'Productos de la colección'
+  : `Productos de la categoría ${category?.title ?? ''}`;
+const scopeCopy = scope
+  ?? (category
+    ? `Selección de ${category.title.toLowerCase()} con material, color y precio visibles en cada referencia.`
+    : 'Toda la colección, agrupada por categoría.');
 ---
 
 <section
   id="productos"
   class:list={['collection-catalog', className]}
-  aria-label={`Productos de la categoría ${category.title}`}
+  aria-label={catalogLabel}
   data-collection-catalog
-  data-page-size={pageSize}
+  data-page-size={resolvedPageSize}
 >
   <div class="collection-catalog__layout kb-shell-wide">
     <aside class="collection-catalog__aside" aria-label="Filtros de catálogo">
-      <CollectionFilters facets={facets} idPrefix={`filters-${category.handle}`} />
+      <CollectionFilters facets={facets} idPrefix={idPrefix} formId={formId} />
     </aside>
 
     <div class="collection-catalog__results">
@@ -40,28 +67,77 @@ const countLabel = `${products.length} ${products.length === 1 ? 'referencia' : 
           <p class="collection-catalog__heading font-display" data-results-count role="status" aria-live="polite">{countLabel}</p>
         </div>
         <p class="collection-catalog__scope text-king-muted">
-          Selección de {category.title.toLowerCase()} con material, color y precio visibles en cada referencia.
+          {scopeCopy}
         </p>
+        {grouped && (
+          <CollectionCategoryNav
+            categories={groups.map((group) => group.collection)}
+            formId={formId}
+            class="collection-catalog__cats"
+          />
+        )}
       </header>
 
-      <ul class="collection-catalog__grid">
-        {products.map((product, index) => (
-          <li
-            class="collection-catalog__item"
-            data-collection-product
-            data-filter-type={product.productType}
-            data-filter-colors={JSON.stringify(product.colors.map((color) => color.label))}
-            data-filter-price-min={product.priceRange.min.amountMinor}
-            data-filter-purchasable={product.purchasable}
+      {grouped ? (
+        groups.map((group, groupIndex) => (
+          <section
+            class="collection-catalog__group"
+            data-collection-group={group.collection.handle}
+            aria-labelledby={`group-${group.collection.handle}`}
           >
-            <ProductCard
-              product={product}
-              index={index}
-              meta={`${product.productType} · ${product.colors.length === 1 ? product.colors[0].label : `${product.colors.length} colores`}`}
-            />
-          </li>
-        ))}
-      </ul>
+            <header class="collection-catalog__group-head">
+              <div class="collection-catalog__group-copy">
+                <p class="collection-catalog__group-folio kb-code-label text-king-muted">
+                  {String(groupIndex + 1).padStart(2, '0')}
+                </p>
+                <h2 id={`group-${group.collection.handle}`} class="collection-catalog__group-title font-display">
+                  {group.collection.title}
+                </h2>
+                {group.collection.tagline && (
+                  <p class="collection-catalog__group-tagline text-king-muted">{group.collection.tagline}</p>
+                )}
+              </div>
+              <a
+                href={`/categorias/${group.collection.handle}`}
+                class="collection-catalog__group-link kb-meta-label"
+              >
+                Ver categoría
+              </a>
+            </header>
+            <ul class="collection-catalog__grid">
+              {group.products.map((product, productIndex) => (
+                <li
+                  class="collection-catalog__item"
+                  data-collection-product
+                  data-filter-type={product.productType}
+                  data-filter-colors={JSON.stringify(product.colors.map((color) => color.label))}
+                  data-filter-price-min={product.priceRange.min.amountMinor}
+                  data-filter-purchasable={product.purchasable}
+                  data-filter-collection={product.primaryCollection.handle}
+                >
+                  <ProductCard product={product} index={productIndex} />
+                </li>
+              ))}
+            </ul>
+          </section>
+        ))
+      ) : (
+        <ul class="collection-catalog__grid">
+          {products.map((product, index) => (
+            <li
+              class="collection-catalog__item"
+              data-collection-product
+              data-filter-type={product.productType}
+              data-filter-colors={JSON.stringify(product.colors.map((color) => color.label))}
+              data-filter-price-min={product.priceRange.min.amountMinor}
+              data-filter-purchasable={product.purchasable}
+              data-filter-collection={product.primaryCollection.handle}
+            >
+              <ProductCard product={product} index={index} />
+            </li>
+          ))}
+        </ul>
+      )}
 
       <div class="collection-catalog__more">
         <button type="button" class="kb-btn kb-btn-outline kb-btn-md" data-load-more hidden>
@@ -146,6 +222,106 @@ const countLabel = `${products.length} ${products.length === 1 ? 'referencia' : 
     font-size: var(--kb-text-sm);
     line-height: 1.6;
     text-wrap: pretty;
+  }
+
+  .collection-catalog__cats {
+    min-width: 0;
+  }
+
+  /* ---------- Grupos por categoría ---------- */
+
+  .collection-catalog__group {
+    min-width: 0;
+    padding-top: var(--kb-space-8);
+  }
+
+  .collection-catalog__group:first-of-type {
+    padding-top: 0;
+  }
+
+  .collection-catalog__group + .collection-catalog__group {
+    margin-top: var(--kb-space-8);
+    padding-top: var(--kb-space-8);
+    border-top: 1px solid var(--kb-stroke-hairline);
+  }
+
+  .collection-catalog__group[hidden] {
+    display: none;
+  }
+
+  .collection-catalog__group-head {
+    display: grid;
+    gap: var(--kb-space-4);
+    margin-bottom: var(--kb-space-6);
+    min-width: 0;
+  }
+
+  .collection-catalog__group-copy {
+    display: grid;
+    gap: var(--kb-space-2);
+    min-width: 0;
+  }
+
+  .collection-catalog__group-folio {
+    margin: 0;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  .collection-catalog__group-title {
+    margin: 0;
+    font-size: clamp(1.75rem, 1.4rem + 1.2vw, 2.35rem);
+    font-weight: var(--kb-w-heading-light);
+    line-height: 0.98;
+    letter-spacing: -0.028em;
+    text-wrap: balance;
+    color: var(--color-king-text);
+  }
+
+  .collection-catalog__group-tagline {
+    margin: 0;
+    max-width: 42ch;
+    font-size: var(--kb-text-sm);
+    line-height: 1.55;
+    text-wrap: pretty;
+  }
+
+  .collection-catalog__group-link {
+    position: relative;
+    width: fit-content;
+    padding: var(--kb-space-2) 0;
+    color: var(--color-king-muted);
+    text-decoration: none;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    transition: color var(--kb-dur-fast) var(--kb-ease-out);
+  }
+
+  .collection-catalog__group-link::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0;
+    height: 1px;
+    background: var(--color-king-accent);
+    transform: scaleX(0.28);
+    transform-origin: left center;
+    transition: transform var(--kb-dur-med) var(--kb-ease-out);
+  }
+
+  .collection-catalog__group-link:focus-visible {
+    outline: 2px solid var(--color-king-accent);
+    outline-offset: 4px;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .collection-catalog__group-link:hover {
+      color: var(--color-king-accent);
+    }
+
+    .collection-catalog__group-link:hover::after {
+      transform: scaleX(1);
+    }
   }
 
   /* ---------- Grid de productos ---------- */
@@ -235,12 +411,29 @@ const countLabel = `${products.length} ${products.length === 1 ? 'referencia' : 
       justify-self: end;
       text-align: right;
     }
+
+    .collection-catalog__cats {
+      grid-column: 1 / -1;
+    }
+
+    .collection-catalog__group-head {
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: end;
+      gap: var(--kb-space-6);
+    }
   }
 
   @media (min-width: 80rem) {
     .collection-catalog__layout {
       grid-template-columns: minmax(0, 20.5rem) minmax(0, 1fr);
       gap: clamp(3rem, 5vw, 5rem);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .collection-catalog__group-link,
+    .collection-catalog__group-link::after {
+      transition: none;
     }
   }
 </style>

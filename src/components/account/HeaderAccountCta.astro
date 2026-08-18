@@ -1,0 +1,30 @@
+---
+import Button from '../ui/Button.astro';
+import { headerAccountCta } from '@config/navigation';
+---
+
+<Button
+  href={headerAccountCta.href}
+  id="header-cta"
+  variant="outline"
+  size="sm"
+  class="header-account-btn hidden lg:inline-flex"
+  aria-label={headerAccountCta.ariaLabel}
+>
+  {headerAccountCta.label}
+</Button>
+
+<style>
+  .header-account-btn:global(.kb-btn) {
+    flex-shrink: 0;
+  }
+
+  :global(#site-header[data-theme='dark']) .header-account-btn:global(.kb-btn-outline) {
+    color: rgba(255, 255, 255, 0.82);
+    border-color: rgba(255, 255, 255, 0.22);
+  }
+
+  :global(#site-header[data-theme='dark']) .header-account-btn:global(.kb-btn-outline)::after {
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+</style>

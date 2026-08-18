@@ -22,7 +22,7 @@ import {
 } from '../src/commerce/infrastructure/demo/cart-storage.ts';
 import { getVariantAvailability } from '../src/commerce/domain/inventory.ts';
 import { moneyFromDecimal, moneyFromMajor, moneyToDecimal, multiplyMoney, sumMoney } from '../src/commerce/domain/money.ts';
-import { getVariantGallery, getVariantImage } from '../src/commerce/domain/product-media.ts';
+import { getProductGalleryImages, getVariantGallery, getVariantImage, getColorGalleries } from '../src/commerce/domain/product-media.ts';
 import { toCollectionReference, toProductSummary } from '../src/commerce/domain/product-mappers.ts';
 import {
   calculatePriceRange,
@@ -270,6 +270,20 @@ describe('medios canónicos por color y variante', () => {
     expect(blackGallery[0].id).not.toBe(brownGallery[0].id);
     expect(getVariantImage(product, black)?.id).toBe(black.imageId);
     expect('image' in black).toBe(false);
+    expect(getProductGalleryImages(product).map((image) => image.id)).toEqual(
+      product.mediaGroups.flatMap((group) => group.imageIds)
+    );
+    expect(getColorGalleries(product)).toHaveLength(product.mediaGroups.length);
+    expect(getColorGalleries(product)[0].images).toHaveLength(3);
+  });
+
+  test('ordena la ficha por mediaGroups aunque Product.images llegue en otro orden', () => {
+    const product = structuredClone(asymmetricProduct);
+    product.images = [...product.images].reverse();
+    expect(getProductGalleryImages(product)[0].id).toBe(product.mediaGroups[0].imageIds[0]);
+    expect(getProductGalleryImages(product).map((image) => image.id)).toEqual(
+      product.mediaGroups.flatMap((group) => group.imageIds)
+    );
   });
 
   test('rechaza una imagen de variante ajena a la galería de su color', () => {
@@ -292,6 +306,25 @@ describe('medios canónicos por color y variante', () => {
       'empty_media_group',
       'variant_color_image_mismatch',
     ]));
+  });
+
+  test('admite galerías nativas reducidas y limita a tres imágenes por color', () => {
+    const tooFew = structuredClone(asymmetricProduct);
+    tooFew.mediaGroups[0].imageIds = tooFew.mediaGroups[0].imageIds.slice(0, 2);
+    expect(validateCatalog([tooFew], [collection]).map((entry) => entry.code))
+      .not.toContain('invalid_color_gallery_cardinality');
+
+    const nativeOnly = structuredClone(asymmetricProduct);
+    nativeOnly.mediaGroups[0].imageIds = nativeOnly.mediaGroups[0].imageIds.slice(0, 1);
+    expect(validateCatalog([nativeOnly], [collection]).map((entry) => entry.code))
+      .not.toContain('invalid_color_gallery_cardinality');
+
+    const tooMany = structuredClone(asymmetricProduct);
+    const extra = productImage('image:extra');
+    tooMany.images.push(extra);
+    tooMany.mediaGroups[0].imageIds.push(extra.id);
+    expect(validateCatalog([tooMany], [collection]).map((entry) => entry.code))
+      .toContain('invalid_color_gallery_cardinality');
   });
 });
 
@@ -318,7 +351,7 @@ describe('carrito por identidad exacta de variante', () => {
   test('restaura una línea únicamente por ID de variante', () => {
     const cart = restoreCart([{ variantId: atlasVariant.id, quantity: 2 }]);
     expect(cart.lines[0].variantId).toBe(atlasVariant.id);
-    expect(cart.lines[0].product.reference).toBe('KB-VESTIR-001');
+    expect(cart.lines[0].product.reference).toBe('5003/40');
   });
 });
 
@@ -580,6 +613,14 @@ describe('filtros: disponibilidad y selección por URL', () => {
     expect(getCollectionFacets(summaries).availability[0].value).toBe('Disponibles');
   });
 
+  test('el índice de catálogo filtra por handle de colección principal', () => {
+    const summaries = summariesOf();
+    const vestir = filterProductSummaries(summaries, { collectionHandle: 'vestir' });
+    expect(vestir.length).toBeGreaterThan(0);
+    expect(vestir.length).toBeLessThan(summaries.length);
+    expect(vestir.every((product) => product.primaryCollection.handle === 'vestir')).toBe(true);
+  });
+
   test('el predicado comparte el contrato mínimo que consume el navegador', () => {
     const summary = summariesOf().find((product) => product.handle === 'cinturon-atlas');
     const model = toFilterableProduct(summary);
@@ -588,6 +629,8 @@ describe('filtros: disponibilidad y selección por URL', () => {
     expect(matchesCatalogSelection(model, { colors: ['negro'] })).toBe(true);
     expect(matchesCatalogSelection(model, { priceRange: '80-90' })).toBe(true);
     expect(matchesCatalogSelection(model, { availableOnly: true })).toBe(true);
+    expect(matchesCatalogSelection(model, { collectionHandle: 'vestir' })).toBe(true);
+    expect(matchesCatalogSelection(model, { collectionHandle: 'sport' })).toBe(false);
   });
 
   test('la selección viaja por la URL normalizada y vuelve intacta', () => {
@@ -608,6 +651,8 @@ describe('filtros: disponibilidad y selección por URL', () => {
     });
     expect(serializeCatalogFilterParams({}).toString()).toBe('');
     expect(serializeCatalogFilterParams({ productTypes: [], colors: [] }).toString()).toBe('');
+    expect(serializeCatalogFilterParams({ collectionHandle: 'Vestir' }).toString()).toBe('categoria=vestir');
+    expect(parseCatalogFilterParams('?categoria=vestir').collectionHandle).toBe('vestir');
   });
 
   test('un id de rango inválido en la URL se descarta como «sin filtro»', () => {
@@ -720,6 +765,7 @@ describe('catálogo sintético de escala prevista', () => {
 
     const page = await provider.getCollectionByHandle('escala');
     expect(page.products).toHaveLength(70);
+    expect(await provider.getProductSummaries()).toHaveLength(70);
     expect(page.products.every((summary) => !('variants' in summary))).toBe(true);
     expect(JSON.stringify(page.products)).not.toContain('"variants"');
     expect(filterProductSummaries(page.products, { productTypes: ['tipo par'], colors: ['color 0'] })).toHaveLength(35);

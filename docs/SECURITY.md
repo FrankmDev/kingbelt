@@ -1,21 +1,21 @@
 # Seguridad antes de integrar servicios externos
 
-Estado: baseline preventiva. El catálogo de build usa Storefront cuando existen credenciales servidor; el carrito sigue en persistencia demo y resuelve variantes desde el snapshot público `/cart-catalog.json`. No hay token en el navegador ni checkout remoto cableado.
+Estado: la fuente de comercio se declara explícitamente con `COMMERCE_SOURCE=demo|shopify`. Demo usa catálogo local, `localStorage` y `/cart-catalog.json`; Shopify usa Storefront, el BFF `/api/cart`, la Cart API y checkout remoto sin exponer tokens al navegador.
 
 ## Límites de confianza
 
 - El navegador no es autoridad para precio, stock, identidad de producto, descuentos, comprador ni posibilidad de checkout. Solo puede proponer `variantId` y cantidad; el proveedor recompone todas las líneas y vuelve a sincronizarlas antes del checkout.
 - El contrato cliente de carrito/checkout no transporta access tokens ni identidad autenticada. Si se activa Customer Accounts, la sesión y los tokens vivirán en servidor detrás de una cookie `HttpOnly`; el proveedor resolverá la identidad sin confiar en un campo enviado por el navegador.
-- `localStorage` contiene exclusivamente versión, `variantId` y cantidad, con límites de tamaño, líneas, longitud y cantidad. No se guardan tokens, email, nombre, direcciones, precios ni respuestas completas. No se usa `sessionStorage`. El snapshot `/cart-catalog.json` es una proyección pública del catálogo ya emitido en las fichas; no incluye secretos ni campos administrativos.
+- Solo en modo demo, `localStorage` contiene exclusivamente versión, `variantId` y cantidad, con límites de tamaño, líneas, longitud y cantidad. No se guardan tokens, email, nombre, direcciones, precios ni respuestas completas. No se usa `sessionStorage`. El snapshot `/cart-catalog.json` es una proyección pública del catálogo demo ya emitido en las fichas; no incluye secretos ni campos administrativos y responde 404 en modo Shopify.
 - El catálogo externo debe normalizarse y pasar `assertValidCatalog()` antes de llegar a páginas o componentes. Sus campos son texto plano: el HTML del proveedor se rechaza. Si en el futuro se necesitara rich text, deberá sanitizarse en servidor con una allowlist explícita y nunca pasarse directamente a `set:html`.
 - El JSON incrustado se serializa con `serializeJsonForHtml()`, que escapa `<`, `>`, `&`, U+2028 y U+2029. Los atributos `data-*` solo contienen IDs, estados o proyecciones públicas; nunca secretos ni objetos administrativos.
 - Las imágenes del catálogo solo pueden usar rutas raíz o HTTPS hacia hosts exactos declarados en `publicSecurityConfig.remoteImageHosts`. No se aceptan comodines, credenciales, HTTP, puertos alternativos ni coincidencias por sufijo.
 
 ## Variables y secretos
 
-- Configurar dominio y token privado selecciona el catálogo Storefront en el runtime SSR; el carrito híbrido usa el BFF Shopify cuando existe `SHOPIFY_CART_COOKIE_SECRET` y degrada a demo sin él. `SHOPIFY_WEBHOOK_SECRET` y `VERCEL_DEPLOY_HOOK_URL` viven solo en el runtime de `/api/shopify-catalog-rebuild` y en el entorno de Vercel; no entran en `astro:env` ni en el bundle.
+- `COMMERCE_SOURCE` es pública, obligatoria y solo acepta `demo` o `shopify`; no contiene secretos. Selecciona a la vez catálogo y carrito. Dominio, token privado y secreto de cookie solo validan la rama Shopify y nunca la activan automáticamente. Si faltan o son inválidos, Shopify falla cerrado sin degradar a demo. `SHOPIFY_WEBHOOK_SECRET` y `VERCEL_DEPLOY_HOOK_URL` viven solo en el runtime de `/api/shopify-catalog-rebuild` y en el entorno de Vercel; no entran en `astro:env` ni en el bundle.
 - Un nombre `PUBLIC_*` se considera parte del bundle y del HTML público. No puede contener secretos, tokens Admin, tokens Storefront, contraseñas ni credenciales privadas. El carrito Shopify usa siempre el BFF same-origin; el navegador no necesita un token del proveedor.
-- Los secretos privados se leen únicamente desde una frontera servidor mediante `astro:env/server`. El runtime SSR usa el token privado en cada ciclo de caché para consultar el catálogo: el secreto vive solo en el entorno del servidor y no entra en el HTML, los assets ni el bundle cliente. Las operaciones de carrito pasan por el BFF same-origin.
+- Los secretos privados se leen únicamente desde una frontera servidor mediante `astro:env/server`. En modo Shopify, el runtime SSR usa el token privado en cada ciclo de caché para consultar el catálogo: el secreto vive solo en el entorno del servidor y no entra en el HTML, los assets ni el bundle cliente. Las operaciones de carrito pasan por el BFF same-origin; el ID remoto solo vive en la cookie `kingbelt_cart` firmada, `HttpOnly`, `SameSite=Lax` y `Secure` en producción.
 - Preview y producción deben usar proyectos/entornos de secretos separados, tiendas o credenciales separadas y permisos independientes. Nunca se copia el valor de producción a preview.
 - Todo secreto debe poder rotarse desde el gestor del despliegue sin editar código. La rotación incluye revocar el valor anterior, actualizar el entorno correspondiente y reconstruir/reiniciar el runtime que lo consume.
 - `bun run security:scan` revisa archivos fuente y artefactos generados sin imprimir valores. CI usa `bun run security:scan:history` con historial completo. Si aparece un secreto real, no basta con borrarlo: hay que revocarlo, rotarlo y purgarlo del historial siguiendo el procedimiento aprobado por el propietario del repositorio.
@@ -55,4 +55,4 @@ Estado: baseline preventiva. El catálogo de build usa Storefront cuando existen
 5. Validar y limitar respuestas/payloads antes de mapearlos al dominio; no exponer campos administrativos.
 6. Probar carrito falsificado, stock/precio cambiado, checkout caducado, errores redactados, rate limiting y ausencia de PII en almacenamiento/logs.
 7. Ejecutar `bun run validate`, `bun run audit:dependencies` y verificar las cabeceras sobre el deployment de preview.
-8. Documentar procedimiento de revocación y rollback al adaptador demo antes de habilitar producción.
+8. Documentar el rollback explícito: cambiar `COMMERCE_SOURCE=demo` y redeploy/restart; para volver, declarar `COMMERCE_SOURCE=shopify`. Nunca usar un fallback en runtime.

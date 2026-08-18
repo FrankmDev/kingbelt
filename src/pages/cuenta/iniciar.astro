@@ -1,0 +1,46 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import AccountAccessPanel from '../../components/account/AccountAccessPanel.astro';
+import Footer from '../../components/layout/Footer.astro';
+import Header from '../../components/layout/Header.astro';
+import Breadcrumbs from '../../components/ui/Breadcrumbs.astro';
+import { accountAccessPage } from '@content/account';
+
+const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href;
+---
+
+<BaseLayout
+  title={accountAccessPage.title}
+  description={accountAccessPage.description}
+  canonicalURL={canonicalURL}
+  robots="noindex,nofollow"
+>
+  <Header slot="header" initialTheme="light" scrolledTheme="light" compactThreshold={32} />
+
+  <div class="account-page">
+    <div class="account-page__frame">
+      <Breadcrumbs items={[{ label: 'Acceder' }]} />
+      <AccountAccessPanel />
+    </div>
+  </div>
+
+  <Footer slot="footer" connected />
+</BaseLayout>
+
+<style>
+  .account-page {
+    display: flex;
+    justify-content: center;
+    padding:
+      clamp(7.5rem, 10vw, 9.5rem)
+      var(--kb-gutter)
+      var(--kb-space-12);
+  }
+
+  .account-page__frame {
+    display: grid;
+    gap: var(--kb-space-5);
+    width: min(100%, 26.5rem);
+    min-width: 0;
+  }
+</style>

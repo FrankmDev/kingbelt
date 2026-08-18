@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'bun:test';
+import { describe, expect, mock, test } from 'bun:test';
 import { demoProducts } from '../src/demo-catalog.ts';
 import { createCartService, emptyCart } from '../src/commerce/application/cart-service.ts';
 import { MAX_CART_LINES } from '../src/commerce/domain/cart.ts';
@@ -9,7 +9,9 @@ import {
   persistCart,
   readPersistedCart,
 } from '../src/commerce/infrastructure/demo/cart-storage.ts';
-import { createCartStore } from '../src/scripts/commerce/cart-store.ts';
+
+mock.module('astro:env/client', () => ({ COMMERCE_SOURCE: 'demo' }));
+const { createCartStore } = await import('../src/scripts/commerce/cart-store.ts');
 
 class MemoryStorage {
   values = new Map();

@@ -1,0 +1,118 @@
+---
+import Breadcrumbs from '../ui/Breadcrumbs.astro';
+
+interface Props {
+  eyebrow: string;
+  title: string;
+  titleId?: string;
+  description?: string;
+  breadcrumbs: { label: string; href?: string }[];
+  class?: string;
+}
+
+const {
+  eyebrow,
+  title,
+  titleId = 'collection-title',
+  description,
+  breadcrumbs,
+  class: className,
+} = Astro.props;
+---
+
+<section class:list={['collection-head', className]} aria-labelledby={titleId}>
+  <div class="collection-head__inner kb-shell-wide">
+    <Breadcrumbs items={breadcrumbs} />
+
+    <div class="collection-head__grid">
+      <div class="collection-head__title-block">
+        <p class="collection-head__eyebrow kb-eyebrow text-king-accent">{eyebrow}</p>
+        <h1 id={titleId} class="collection-head__title font-display">
+          {title}
+        </h1>
+      </div>
+
+      <div class="collection-head__side">
+        {description && (
+          <p class="collection-head__description text-king-muted">{description}</p>
+        )}
+        <slot />
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .collection-head {
+    padding-top: clamp(7.5rem, 10vw, 9.5rem);
+    padding-bottom: var(--kb-space-8);
+  }
+
+  .collection-head__inner {
+    display: grid;
+    gap: var(--kb-space-6);
+  }
+
+  .collection-head__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--kb-space-6);
+  }
+
+  .collection-head__title-block {
+    display: grid;
+    gap: var(--kb-space-4);
+    min-width: 0;
+  }
+
+  .collection-head__eyebrow {
+    margin: 0;
+  }
+
+  .collection-head__title {
+    margin: 0;
+    font-size: clamp(2.75rem, 6vw, 4.5rem);
+    font-weight: var(--kb-w-heading-light);
+    line-height: 0.95;
+    letter-spacing: -0.035em;
+    text-wrap: balance;
+    color: var(--color-king-text);
+  }
+
+  .collection-head__side {
+    display: grid;
+    gap: var(--kb-space-5);
+    align-content: start;
+    min-width: 0;
+  }
+
+  .collection-head__description {
+    margin: 0;
+    max-width: 44ch;
+    font-size: var(--kb-text-body);
+    line-height: 1.65;
+    text-wrap: pretty;
+  }
+
+  .collection-head__inner::after {
+    content: '';
+    display: block;
+    width: 100%;
+    height: 1px;
+    margin-top: var(--kb-space-2);
+    background: linear-gradient(
+      90deg,
+      var(--kb-stroke-dark),
+      var(--kb-stroke-hairline) 55%,
+      transparent
+    );
+  }
+
+  @media (min-width: 64rem) {
+    .collection-head__grid {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 26rem);
+      gap: var(--kb-space-10);
+      align-items: end;
+    }
+  }
+</style>

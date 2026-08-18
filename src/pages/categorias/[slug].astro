@@ -1,10 +1,12 @@
 ---
 import CollectionCatalog from '../../components/collection/CollectionCatalog.astro';
+import CollectionCategoryNav from '../../components/collection/CollectionCategoryNav.astro';
+import CollectionPageHead from '../../components/collection/CollectionPageHead.astro';
 import Footer from '../../components/layout/Footer.astro';
 import Header from '../../components/layout/Header.astro';
-import Breadcrumbs from '../../components/ui/Breadcrumbs.astro';
 import { site, siteUrl } from '@config/site';
 import { catalogProvider } from '@commerce/catalog';
+import { CATALOG_INDEX_PATH } from '@commerce/application/paths';
 import { resolveCollectionPageHead, type CommercePageHead } from '@commerce/application/seo';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 
@@ -24,198 +26,16 @@ const categories = await catalogProvider.getCollections();
 <BaseLayout seo={pageHead.seo} schema={pageHead.schema}>
   <Header slot="header" initialTheme="light" scrolledTheme="light" compactThreshold={32} />
 
-  <section class="collection-head" aria-labelledby="collection-title">
-    <div class="collection-head__inner kb-shell-wide">
-      <Breadcrumbs
-        items={[{ label: 'Colección', href: '/#coleccion' }, { label: category.title }]}
-      />
-
-      <div class="collection-head__grid">
-        <div class="collection-head__title-block">
-          <p class="collection-head__eyebrow kb-eyebrow text-king-accent">Colección KingBelt</p>
-          <h1 id="collection-title" class="collection-head__title font-display">
-            {category.title}
-          </h1>
-        </div>
-
-        <div class="collection-head__side">
-          <p class="collection-head__description text-king-muted">{category.description}</p>
-
-          <nav class="collection-head__nav" aria-label="Todas las categorías">
-            <ul class="collection-head__nav-list">
-              {categories.map((item) => (
-                <li class="collection-head__nav-item">
-                  <a
-                    href={`/categorias/${item.handle}`}
-                    class:list={[
-                      'collection-head__nav-link kb-meta-label',
-                      item.handle === category.handle && 'is-current',
-                    ]}
-                    aria-current={item.handle === category.handle ? 'page' : undefined}
-                  >
-                    {item.title}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </nav>
-        </div>
-      </div>
-    </div>
-  </section>
+  <CollectionPageHead
+    eyebrow="Colección KingBelt"
+    title={category.title}
+    description={category.description}
+    breadcrumbs={[{ label: 'Productos', href: CATALOG_INDEX_PATH }, { label: category.title }]}
+  >
+    <CollectionCategoryNav categories={categories} currentHandle={category.handle} />
+  </CollectionPageHead>
 
   <CollectionCatalog category={category} products={products} facets={facets} />
 
   <Footer slot="footer" connected />
 </BaseLayout>
-
-<style>
-  .collection-head {
-    padding-top: clamp(7.5rem, 10vw, 9.5rem);
-    padding-bottom: var(--kb-space-8);
-  }
-
-  .collection-head__inner {
-    display: grid;
-    gap: var(--kb-space-6);
-  }
-
-  .collection-head__grid {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--kb-space-6);
-  }
-
-  .collection-head__title-block {
-    display: grid;
-    gap: var(--kb-space-4);
-    min-width: 0;
-  }
-
-  .collection-head__eyebrow {
-    margin: 0;
-  }
-
-  .collection-head__title {
-    margin: 0;
-    font-size: clamp(2.75rem, 6vw, 4.5rem);
-    font-weight: var(--kb-w-heading-light);
-    line-height: 0.95;
-    letter-spacing: -0.035em;
-    text-wrap: balance;
-    color: var(--color-king-text);
-  }
-
-  .collection-head__side {
-    display: grid;
-    gap: var(--kb-space-5);
-    align-content: start;
-    min-width: 0;
-  }
-
-  .collection-head__description {
-    margin: 0;
-    max-width: 44ch;
-    font-size: var(--kb-text-body);
-    line-height: 1.65;
-    text-wrap: pretty;
-  }
-
-  /* ---------- Conmutador de categorías ---------- */
-
-  .collection-head__nav-list {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: var(--kb-space-2) var(--kb-space-4);
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  .collection-head__nav-item {
-    display: flex;
-    align-items: center;
-    gap: var(--kb-space-4);
-    min-width: 0;
-  }
-
-  .collection-head__nav-item + .collection-head__nav-item::before {
-    content: '';
-    width: 1px;
-    height: 0.75rem;
-    background: var(--kb-stroke-dark);
-  }
-
-  .collection-head__nav-link {
-    position: relative;
-    padding: var(--kb-space-2) 0;
-    color: var(--color-king-muted);
-    text-decoration: none;
-    transition: color var(--kb-dur-fast) var(--kb-ease-out);
-  }
-
-  .collection-head__nav-link::after {
-    content: '';
-    position: absolute;
-    inset-inline: 0;
-    bottom: 0;
-    height: 1px;
-    background: var(--color-king-accent);
-    transform: scaleX(0);
-    transform-origin: left center;
-    transition: transform var(--kb-dur-med) var(--kb-ease-out);
-  }
-
-  .collection-head__nav-link.is-current {
-    color: var(--color-king-accent);
-  }
-
-  .collection-head__nav-link.is-current::after {
-    transform: scaleX(1);
-  }
-
-  .collection-head__nav-link:focus-visible {
-    outline: 2px solid var(--color-king-accent);
-    outline-offset: 4px;
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .collection-head__nav-link:hover {
-      color: var(--color-king-accent);
-    }
-
-    .collection-head__nav-link:hover::after {
-      transform: scaleX(1);
-    }
-  }
-
-  .collection-head__inner::after {
-    content: '';
-    display: block;
-    width: 100%;
-    height: 1px;
-    margin-top: var(--kb-space-2);
-    background: linear-gradient(
-      90deg,
-      var(--kb-stroke-dark),
-      var(--kb-stroke-hairline) 55%,
-      transparent
-    );
-  }
-
-  @media (min-width: 64rem) {
-    .collection-head__grid {
-      grid-template-columns: minmax(0, 1fr) minmax(0, 26rem);
-      gap: var(--kb-space-10);
-      align-items: end;
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .collection-head__nav-link,
-    .collection-head__nav-link::after {
-      transition: none;
-    }
-  }
-</style>

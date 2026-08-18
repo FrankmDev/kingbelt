@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+import astroConfiguration from '../astro.config.mjs';
 import {
   getShopifyStorefrontConfig,
   ShopifyConfigurationError,
@@ -82,6 +83,17 @@ describe('configuración Shopify Storefront', () => {
     const example = readFileSync(join(root, '.env.example'), 'utf8');
     const astroConfig = readFileSync(join(root, 'astro.config.mjs'), 'utf8');
 
+    expect(example).toContain('COMMERCE_SOURCE=demo');
+    expect(astroConfig).toContain('COMMERCE_SOURCE: envField.enum({');
+    expect(astroConfig).toContain("context: 'client'");
+    expect(astroConfig).toContain("values: ['demo', 'shopify']");
+    expect(astroConfig).not.toContain('PUBLIC_COMMERCE_SOURCE');
+    expect(astroConfiguration.env.schema.COMMERCE_SOURCE).toEqual({
+      context: 'client',
+      access: 'public',
+      values: ['demo', 'shopify'],
+      type: 'enum',
+    });
     expect(example).toContain('SHOPIFY_STORE_DOMAIN=');
     expect(example).toContain(`SHOPIFY_API_VERSION=${SHOPIFY_STOREFRONT_API_VERSION}`);
     expect(example).toContain('SHOPIFY_STOREFRONT_PRIVATE_TOKEN=');
@@ -95,17 +107,26 @@ describe('configuración Shopify Storefront', () => {
     expect(astroConfig).toContain('MAX_SHOPIFY_STOREFRONT_TOKEN_LENGTH');
   });
 
-  test('el catálogo y el carrito tienen fallback demo y proveedor Shopify server-side', () => {
+  test('el catálogo y el carrito comparten una selección explícita', () => {
     const catalogRoot = readFileSync(join(root, 'src/commerce/catalog.ts'), 'utf8');
     const cartRoot = readFileSync(join(root, 'src/commerce/cart.ts'), 'utf8');
+    const sourceRoot = readFileSync(join(root, 'src/commerce/commerce-source.ts'), 'utf8');
     const smoke = readFileSync(join(root, 'scripts/shopify-storefront-smoke.mjs'), 'utf8');
 
+    expect(sourceRoot).toContain("import { COMMERCE_SOURCE } from 'astro:env/client'");
+    expect(sourceRoot).toContain("export type CommerceSource = 'demo' | 'shopify'");
+    expect(catalogRoot).toContain('selectCommerceProvider');
     expect(catalogRoot).toContain('demoCatalogAdapter');
     expect(catalogRoot).toContain('createShopifyCatalogAdapter');
-    expect(catalogRoot).toContain('shopifyCatalogEnabled');
+    expect(catalogRoot).not.toContain('shopifyCatalogEnabled');
+    expect(catalogRoot).not.toContain('SHOPIFY_STORE_DOMAIN');
+    expect(catalogRoot).not.toContain('SHOPIFY_STOREFRONT_PRIVATE_TOKEN');
+    expect(cartRoot).toContain('selectCommerceProvider');
     expect(cartRoot).toContain('createDemoCartAdapter()');
     expect(cartRoot).toContain('createShopifyCartAdapter');
-    expect(cartRoot).toContain('createHybridCartAdapter');
+    expect(sourceRoot).not.toContain('Boolean(');
+    expect(catalogRoot).not.toContain('Boolean(');
+    expect(cartRoot).not.toContain('Boolean(');
     expect(cartRoot).not.toContain('astro:env');
     expect(smoke).toContain('PUBLIC_SHOPIFY_STOREFRONT_TOKEN');
     expect(() => createShopifyStorefrontGateway({})).toThrow(ShopifyConfigurationError);

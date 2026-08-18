@@ -1,4 +1,4 @@
-import { defineConfig } from 'astro/config';
+import { defineConfig, envField } from 'astro/config';
 import tailwindcss from '@tailwindcss/vite';
 import { fileURLToPath } from 'node:url';
 
@@ -9,6 +9,15 @@ export default defineConfig({
   publicDir: fileURLToPath(new URL('../../../public/', import.meta.url)),
   compressHTML: true,
   fetchFile: null,
+  env: {
+    schema: {
+      COMMERCE_SOURCE: envField.enum({
+        context: 'client',
+        access: 'public',
+        values: ['demo', 'shopify'],
+      }),
+    },
+  },
   build: {
     inlineStylesheets: 'never',
   },

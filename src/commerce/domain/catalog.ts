@@ -19,6 +19,9 @@ export interface ProductMediaGroup {
   imageIds: string[];
 }
 
+/** Cardinalidad objetivo de una galería estructurada: portada, detalle y contexto. */
+export const COLOR_GALLERY_IMAGE_COUNT = 3;
+
 export interface ProductOptionValue {
   id: string;
   label: string;

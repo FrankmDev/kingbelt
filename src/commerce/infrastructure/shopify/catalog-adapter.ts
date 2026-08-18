@@ -94,5 +94,9 @@ export const createShopifyCatalogAdapter = (
         .slice(0, limit)
         .flatMap((candidate) => summaryFor(candidate, loaded) ?? []);
     },
+    async getProductSummaries() {
+      const loaded = await load();
+      return loaded.products.flatMap((product) => summaryFor(product, loaded) ?? []);
+    },
   };
 };

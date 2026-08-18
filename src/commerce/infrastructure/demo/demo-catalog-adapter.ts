@@ -102,6 +102,12 @@ export const createDemoCatalogAdapter = (
           return primary ? [toProductSummary(candidate, toCollectionReference(primary))] : [];
         });
     },
+    async getProductSummaries() {
+      return source.products.flatMap((product) => {
+        const primary = indexes.collectionsById.get(product.primaryCollectionId);
+        return primary ? [toProductSummary(product, toCollectionReference(primary))] : [];
+      });
+    },
   };
 };
 

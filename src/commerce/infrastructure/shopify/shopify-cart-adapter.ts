@@ -6,6 +6,8 @@ class ShopifyCartHttpError extends Error {
   constructor(readonly status: number, message: string) { super(message); }
 }
 
+const CART_REQUEST_TIMEOUT_MS = 20_000;
+
 interface CartResponse extends Partial<CartOperationResult> {
   success?: boolean;
   cart?: Cart;
@@ -19,6 +21,17 @@ interface CartResponse extends Partial<CartOperationResult> {
   priceChanged?: boolean;
 }
 
+const toOperationResult = (response: CartResponse): CartOperationResult => {
+  if (!response.cart) throw new Error('cart_response_missing');
+  return {
+    success: Boolean(response.success),
+    cart: response.cart,
+    ...(response.error ? { error: response.error } : {}),
+    ...(response.notice ? { notice: response.notice } : {}),
+    ...(response.adjustedQuantity === undefined ? {} : { adjustedQuantity: response.adjustedQuantity }),
+  };
+};
+
 const request = async (command: Record<string, unknown>): Promise<CartResponse> => {
   const response = await fetch('/api/cart', {
     method: 'POST',
@@ -26,44 +39,33 @@ const request = async (command: Record<string, unknown>): Promise<CartResponse> 
     cache: 'no-store',
     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
     body: JSON.stringify(command),
+    signal: AbortSignal.timeout(CART_REQUEST_TIMEOUT_MS),
   });
   let body: CartResponse;
   try { body = await response.json(); } catch { throw new ShopifyCartHttpError(response.status, 'invalid_response'); }
-  if (!response.ok && response.status !== 410) throw new ShopifyCartHttpError(response.status, body.message ?? 'cart_request_failed');
+  if (!response.ok && response.status !== 410 && response.status !== 422) {
+    throw new ShopifyCartHttpError(response.status, body.message ?? 'cart_request_failed');
+  }
   return body;
 };
 
+const loadCart = async (): Promise<Cart> => {
+  const response = await request({ command: 'refresh' });
+  if (!response.cart) throw new Error('cart_response_missing');
+  return response.cart;
+};
+
 export const createShopifyCartAdapter = (): CartProvider => ({
-  async initialize() {
-    const response = await request({ command: 'refresh' });
-    if (!response.cart) throw new Error('cart_response_missing');
-    return response.cart;
-  },
-  async refresh() {
-    const response = await request({ command: 'refresh' });
-    if (!response.cart) throw new Error('cart_response_missing');
-    return response.cart;
-  },
+  initialize: loadCart,
+  refresh: loadCart,
   async addItem(input: AddToCartInput) {
-    const response = await request({ command: 'add', variantId: input.variantId, quantity: input.quantity });
-    if (!response.cart) throw new Error('cart_response_missing');
-    return {
-      success: Boolean(response.success),
-      cart: response.cart,
-      ...(response.error ? { error: response.error } : {}),
-      ...(response.notice ? { notice: response.notice } : {}),
-      ...(response.adjustedQuantity === undefined ? {} : { adjustedQuantity: response.adjustedQuantity }),
-    };
+    return toOperationResult(await request({ command: 'add', variantId: input.variantId, quantity: input.quantity }));
   },
   async updateItem(lineId: string, quantity: number) {
-    const response = await request({ command: 'update', lineId, quantity });
-    if (!response.cart) throw new Error('cart_response_missing');
-    return { success: Boolean(response.success), cart: response.cart, ...(response.error ? { error: response.error } : {}) };
+    return toOperationResult(await request({ command: 'update', lineId, quantity }));
   },
   async removeItem(lineId: string) {
-    const response = await request({ command: 'remove', lineId });
-    if (!response.cart) throw new Error('cart_response_missing');
-    return { success: Boolean(response.success), cart: response.cart, ...(response.error ? { error: response.error } : {}) };
+    return toOperationResult(await request({ command: 'remove', lineId }));
   },
   async checkout() {
     const response = await request({ command: 'checkout' });
@@ -77,28 +79,3 @@ export const createShopifyCartAdapter = (): CartProvider => ({
     } satisfies CheckoutResult;
   },
 });
-
-export const createHybridCartAdapter = (
-  remote: CartProvider,
-  fallback: CartProvider,
-): CartProvider => {
-  let active = remote;
-  return {
-    async initialize() {
-      try { return await active.initialize(); }
-      catch (error) {
-        if (error instanceof ShopifyCartHttpError && error.status === 503) {
-          active = fallback;
-          return active.initialize();
-        }
-        throw error;
-      }
-    },
-    refresh: () => active.refresh(),
-    addItem: (input) => active.addItem(input),
-    updateItem: (lineId, quantity) => active.updateItem(lineId, quantity),
-    removeItem: (lineId) => active.removeItem(lineId),
-    checkout: (cart) => active.checkout(cart),
-    subscribeToExternalChanges: (listener) => active.subscribeToExternalChanges?.(listener) ?? (() => undefined),
-  };
-};

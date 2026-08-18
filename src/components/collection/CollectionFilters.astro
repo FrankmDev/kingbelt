@@ -1,15 +1,18 @@
 ---
 import Icon from '../ui/Icon.astro';
 import type { CollectionFacets } from '@commerce/domain/catalog';
+import { resolveColorSwatch } from '@commerce/domain/color-swatch';
 
 interface Props {
   facets: CollectionFacets;
   /** Prefijo único para los ids de los controles. */
   idPrefix: string;
+  /** Id del formulario; permite asociar radios de categoría fuera del aside. */
+  formId?: string;
   class?: string;
 }
 
-const { facets, idPrefix, class: className } = Astro.props;
+const { facets, idPrefix, formId = `${idPrefix}-form`, class: className } = Astro.props;
 
 const filterGroups = [
   { id: 'type', index: '01', title: 'Subcategoría', kind: 'checkbox' as const, name: 'tipo', items: facets.productTypes },
@@ -48,9 +51,10 @@ const filterGroups = [
     </header>
 
     <form
+      id={formId}
       class="collection-filters__form"
       data-collection-filters-form
-      aria-label="Filtrar productos de la categoría"
+      aria-label="Filtrar productos"
     >
       <div class="collection-filters__groups">
         {filterGroups.map((group) => (
@@ -121,7 +125,7 @@ const filterGroups = [
                           {group.kind === 'color' ? (
                             <span
                               class="collection-filters__marker collection-filters__marker--swatch"
-                              style={`background: ${facet.swatch ?? 'transparent'}`}
+                              style={`background: ${resolveColorSwatch(facet.value, facet.swatch)}`}
                               aria-hidden="true"
                             />
                           ) : (

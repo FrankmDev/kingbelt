@@ -231,11 +231,36 @@ const bindProductAddForm = (form: HTMLFormElement): void => {
     return input ? [{ optionId: option.id, valueId: input.value }] : [];
   });
 
+  const getColorValueId = (variant: PublicVariant | undefined): string | undefined =>
+    variant?.optionValues.find((selection) =>
+      payload.options.some((option) =>
+        option.id === selection.optionId && option.values.some((value) => value.id === selection.valueId)
+      )
+    )?.valueId;
+
+  const syncGallerySet = (variant: PublicVariant | undefined) => {
+    const page = form.closest<HTMLElement>('[data-product-page]') ?? document.body;
+    const gallerySets = [...page.querySelectorAll<HTMLElement>('[data-gallery-set]')];
+    if (gallerySets.length <= 1) return;
+    const colorValueId = getColorValueId(variant) ?? gallerySets[0]?.dataset.gallerySet;
+    gallerySets.forEach((set) => {
+      set.hidden = set.dataset.gallerySet !== colorValueId;
+    });
+  };
+
   const syncVariantImage = (variant: PublicVariant | undefined) => {
+    syncGallerySet(variant);
     if (!variant?.imageId) return;
     const page = form.closest<HTMLElement>('[data-product-page]') ?? document.body;
-    const choice = [...page.querySelectorAll<HTMLInputElement>('[data-gallery-image-id]')]
-      .find((input) => input.dataset.galleryImageId === variant.imageId);
+    const colorValueId = getColorValueId(variant);
+    const gallerySets = [...page.querySelectorAll<HTMLElement>('[data-gallery-set]')];
+    const gallerySet = colorValueId
+      ? gallerySets.find((set) => set.dataset.gallerySet === colorValueId)
+      : gallerySets[0];
+    const choice = gallerySet
+      ? [...gallerySet.querySelectorAll<HTMLInputElement>('[data-gallery-image-id]')]
+        .find((input) => input.dataset.galleryImageId === variant.imageId)
+      : undefined;
     if (choice && !choice.checked) {
       choice.checked = true;
     }
@@ -433,10 +458,14 @@ const bindProductAddForm = (form: HTMLFormElement): void => {
         setFeedback(result.error.message, true);
         return;
       }
-      const variantSummary = formatVariantSummary(selection);
-      setFeedback(
-        variantSummary ? `Añadido al carrito: ${variantSummary}.` : 'Producto añadido al carrito.'
-      );
+      if (result.notice) {
+        setFeedback(result.notice.message);
+      } else {
+        const variantSummary = formatVariantSummary(selection);
+        setFeedback(
+          variantSummary ? `Añadido al carrito: ${variantSummary}.` : 'Producto añadido al carrito.'
+        );
+      }
       drawerWrap?.removeAttribute('hidden');
       openCartDrawer(submitBtn);
     } finally {

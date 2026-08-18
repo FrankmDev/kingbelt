@@ -1,0 +1,86 @@
+---
+import HomeSectionHead from '../home/HomeSectionHead.astro';
+import FeatureCard from '../../ui/FeatureCard.astro';
+import type { IconName } from '../../ui/icon-paths';
+
+interface HubItem {
+  label: string;
+  href: string;
+  description: string;
+  icon?: IconName;
+}
+
+interface SectionCopy {
+  index: string;
+  eyebrow: string;
+  meta: string;
+  title: string;
+  body: string;
+}
+
+interface Props {
+  section: SectionCopy;
+  items: readonly HubItem[];
+  class?: string;
+}
+
+const { section, items, class: className = '' } = Astro.props;
+const titleId = 'help-hub-resources-title';
+---
+
+<section
+  id="otros-recursos"
+  class:list={['help-hub-resources', className]}
+  aria-labelledby={titleId}
+>
+  <div class="help-hub-resources__inner kb-shell-wide">
+    <HomeSectionHead
+      index={section.index}
+      eyebrow={section.eyebrow}
+      meta={section.meta}
+      titleId={titleId}
+      body={section.body}
+      class="help-hub-resources__header"
+    >
+      <Fragment slot="title">{section.title}</Fragment>
+    </HomeSectionHead>
+
+    <div class="help-hub-resources__grid">
+      {items.map((item, index) => (
+        <FeatureCard
+          number={String(index + 1).padStart(2, '0')}
+          title={item.label}
+          description={item.description}
+          icon={item.icon}
+          href={item.href}
+          class="help-hub-resources__card"
+        />
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .help-hub-resources {
+    padding-block: var(--kb-space-section);
+    background: var(--color-king-bg);
+    border-top: 1px solid var(--kb-stroke-hairline);
+  }
+
+  .help-hub-resources__header:global(.section-header-home) {
+    width: 100%;
+    margin-bottom: var(--kb-space-gap);
+  }
+
+  .help-hub-resources__grid {
+    display: grid;
+    gap: var(--kb-space-gap);
+    align-items: stretch;
+  }
+
+  @media (min-width: 40rem) {
+    .help-hub-resources__grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+</style>

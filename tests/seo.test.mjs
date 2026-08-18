@@ -1,11 +1,12 @@
 import { describe, expect, test } from 'bun:test';
 import { siteUrl } from '../src/config/site.ts';
-import { productPath, resolveCanonicalUrl } from '../src/commerce/application/paths.ts';
 import {
   getRobotsForQuery,
+  resolveCatalogIndexHead,
   resolveCollectionPageHead,
   resolveProductPageHead,
 } from '../src/commerce/application/seo.ts';
+import { CATALOG_INDEX_PATH, productPath, resolveCanonicalUrl } from '../src/commerce/application/paths.ts';
 import {
   COLLECTION_SCHEMA_MAX_ITEMS,
   createCollectionStructuredData,
@@ -89,6 +90,7 @@ describe('SEO canónico y robots', () => {
   test('bloquea indexación de filtros, variantes y paginación futura', () => {
     expect(getRobotsForQuery(new URLSearchParams('tipo=piel'))).toBe('noindex,follow');
     expect(getRobotsForQuery(new URLSearchParams('disponible=1'))).toBe('noindex,follow');
+    expect(getRobotsForQuery(new URLSearchParams('categoria=vestir'))).toBe('noindex,follow');
     expect(getRobotsForQuery(new URLSearchParams('variant=variant:abc'))).toBe('noindex,follow');
     expect(getRobotsForQuery(new URLSearchParams('page=2'))).toBe('noindex,follow');
     expect(getRobotsForQuery(new URLSearchParams('page=1'))).toBeUndefined();
@@ -130,6 +132,29 @@ describe('cabecera de páginas de comercio', () => {
     );
     expect(seo.canonicalUrl).toBe('https://kingbelt.com/categorias/piel-lisa');
     expect(seo.ogType).toBe('website');
+  });
+
+  test('resuelve SEO del índice de catálogo en /productos', () => {
+    const { seo, schema } = resolveCatalogIndexHead(
+      {
+        title: 'Colección — KingBelt',
+        description: 'Colección completa.',
+        products: [],
+        collections: [{
+          id: 'collection:vestir',
+          handle: 'vestir',
+          title: 'Vestir',
+          description: 'Cinturones de vestir.',
+          featured: true,
+        }],
+      },
+      site,
+      siteUrl
+    );
+    expect(CATALOG_INDEX_PATH).toBe('/productos');
+    expect(seo.canonicalUrl).toBe('https://kingbelt.com/productos');
+    expect(seo.ogType).toBe('website');
+    expect(schema['@type']).toBe('CollectionPage');
   });
 });
 
@@ -226,6 +251,7 @@ describe('sitemap y redirecciones', () => {
     expect(isSitemapExcluded('/guia-de-tallas')).toBe(true);
     expect(isSitemapExcluded('/aviso-legal')).toBe(true);
     expect(isSitemapExcluded('/')).toBe(false);
+    expect(isSitemapExcluded('/productos')).toBe(false);
     expect(isSitemapExcluded('/productos/cinturon-bandera')).toBe(false);
     expect(getLegalSitemapExcludedPaths()).toContain('/desistimiento');
   });

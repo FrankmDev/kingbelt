@@ -23,6 +23,7 @@ src/
     infrastructure/
       demo/                 # adaptadores locales y persistencia de demostración
       shopify/              # gateway, importador y adaptador Storefront server-side
+    commerce-source.ts      # selección explícita y tipada: demo | shopify
     catalog.ts              # composición del proveedor de catálogo activo
     cart.ts                 # composición del proveedor de carrito activo
   components/
@@ -105,12 +106,20 @@ No extraigas wrappers triviales que solo oculten dos clases ni crees variantes c
 Flujos actuales:
 
 ```txt
-pages   → commerce/catalog.ts → CatalogProvider → Shopify bajo demanda con credenciales / demo sin ellas
-scripts → commerce/cart.ts    → CartProvider    → híbrido: BFF `/api/cart` (Cart API) o demo (localStorage + `/cart-catalog.json`)
+COMMERCE_SOURCE=demo
+  pages   → commerce/catalog.ts → CatalogProvider demo
+  scripts → commerce/cart.ts    → CartProvider demo → localStorage + `/cart-catalog.json`
+
+COMMERCE_SOURCE=shopify
+  pages   → commerce/catalog.ts → CatalogProvider Shopify
+  scripts → commerce/cart.ts    → CartProvider Shopify → BFF `/api/cart` → Cart API
+
 components → commerce/domain/* (solo contratos y reglas neutrales)
 ```
 
-Catálogo y carrito tienen puertos distintos: `CatalogProvider` para lectura en servidor y `CartProvider` para estado cliente y checkout. Los componentes importan únicamente contratos o reglas de `commerce/domain`; nunca composition roots, fixtures, respuestas ni clientes externos. `demo-catalog.ts` contiene datos ficticios y solo puede importarlo `commerce/infrastructure/demo`. `localStorage` conserva únicamente ID de variante y cantidad bajo un esquema versionado y limitado; nunca es autoridad para precio, disponibilidad ni checkout.
+`COMMERCE_SOURCE` es una variable pública obligatoria de `astro:env/client`; solo admite `demo` y `shopify`. `commerce/commerce-source.ts` es la única fuente tipada de esa decisión. El composition root del carrito importa en diferido el adaptador elegido para no meter el otro en el bundle del navegador. La presencia de credenciales valida la rama Shopify, pero nunca la selecciona. Una configuración Shopify incompleta falla cerrada y no conecta con demo.
+
+Catálogo y carrito tienen puertos distintos: `CatalogProvider` para lectura en servidor y `CartProvider` para estado cliente y checkout. Los componentes importan únicamente contratos o reglas de `commerce/domain`; nunca composition roots, fixtures, respuestas ni clientes externos. `demo-catalog.ts` contiene datos ficticios y solo puede importarlo `commerce/infrastructure/demo`. En modo demo, `localStorage` conserva únicamente ID de variante y cantidad bajo un esquema versionado y limitado; nunca es autoridad para precio, disponibilidad ni checkout. En modo Shopify no se usa `localStorage`: el estado persistente depende de la cookie `HttpOnly`, `/api/cart` y Cart API.
 
 El store cliente termina su inicialización antes de ejecutar comandos, serializa mutaciones distintas, deduplica envíos equivalentes y coalesce cambios de cantidad por línea. El adaptador demo carga el snapshot `/cart-catalog.json` —servido bajo demanda desde el catálogo vigente, sin dependencia de builds— antes de restaurar líneas, relee y reconcilia la persistencia dentro de un bloqueo compartido entre pestañas cuando el navegador ofrece Web Locks; los eventos de `storage` actualizan el mismo store consumido por drawer y página. Cada reconciliación reconstruye título, imagen, precio, disponibilidad y stock desde ese catálogo. Una excepción de almacenamiento degrada el carrito a memoria con aviso, sin reemplazar el último estado válido.
 
@@ -153,7 +162,7 @@ Al conectar Shopify:
 - normaliza `Money`, producto, variante y líneas dentro del adaptador;
 - conserva las credenciales privadas y tokens no públicos exclusivamente en código servidor mediante `astro:env/server`;
 - no pases secretos por `PUBLIC_*`, `define:vars`, HTML, atributos `data-*`, eventos DOM ni almacenamiento del navegador;
-- toda operación de carrito pasa por la frontera servidor/BFF same-origin `src/pages/api/cart.ts`, activa cuando existen credenciales y `SHOPIFY_CART_COOKIE_SECRET`;
+- con `COMMERCE_SOURCE=shopify`, toda operación de carrito pasa por la frontera servidor/BFF same-origin `src/pages/api/cart.ts`; una configuración incompleta devuelve un error cerrado y nunca activa demo;
 - el navegador envía únicamente identificadores públicos de variante, cantidades y comandos cerrados; nunca recibe la parte secreta del ID de carrito, tokens, credenciales, respuestas administrativas ni identidad sensible del comprador;
 - el servicio servidor conserva el carrito remoto y es autoridad para precios, cantidades aceptadas, stock, identidad del comprador, checkout, errores y avisos;
 - devuelve la URL de checkout junto con una lista exacta de hosts permitidos; la UI exige HTTPS, sin credenciales embebidas ni hosts por sufijo;

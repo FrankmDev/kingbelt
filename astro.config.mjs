@@ -24,6 +24,11 @@ export default defineConfig({
   site: siteUrl,
   env: {
     schema: {
+      COMMERCE_SOURCE: envField.enum({
+        context: 'client',
+        access: 'public',
+        values: ['demo', 'shopify'],
+      }),
       SHOPIFY_STORE_DOMAIN: envField.string({
         context: 'server',
         access: 'public',

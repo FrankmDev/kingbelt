@@ -1,6 +1,7 @@
 ---
-import SectionHeader from '@components/ui/SectionHeader.astro';
+import HomeSectionHead from '../home/HomeSectionHead.astro';
 import FAQ from '@components/faq/FAQ.astro';
+import Icon from '../../ui/Icon.astro';
 import MediaFrame from '../../ui/MediaFrame.astro';
 import type { FAQItem } from '@content/faq';
 import type { FAQSidebar } from '@content/contact';
@@ -15,97 +16,175 @@ const { items, sidebar } = Astro.props;
 
 <FAQ
   id="preguntas-frecuentes"
-  class="contact-faq section-spacing-chapter"
+  class="contact-faq"
   items={items}
   tone="light"
-  stickySidebar={false}
+  stickySidebar={true}
+  itemVariant="editorial"
 >
-  <SectionHeader
+  <HomeSectionHead
     slot="header"
+    index="03"
     eyebrow="Preguntas frecuentes"
-    body="Respuestas a dudas habituales. Si no encuentras lo que buscas, escríbenos desde la página de contacto."
-    align="center"
-    tone="light"
-    class="contact-faq-header mb-12 md:mb-16"
+    meta="Ayuda"
+    titleId="contact-faq-title"
+    body="Respuestas a dudas habituales. Si no encuentras lo que buscas, escríbenos desde el formulario."
+    class="contact-faq__header"
   >
     <Fragment slot="title">
       Resolvemos las dudas <em>antes de que surjan</em>.
     </Fragment>
-  </SectionHeader>
+  </HomeSectionHead>
 
-  <Fragment slot="sidebar">
-    <div class="faq-media-sidebar">
-      <MediaFrame
-        src={sidebar.image}
-        alt={sidebar.imageAlt}
-        ratio="3/4"
-        label={sidebar.label}
-        caption={sidebar.caption}
-        width={800}
-        height={1067}
-        loading="lazy"
-        class="faq-media-frame"
-      />
+  <aside slot="sidebar" class="contact-faq__sidebar" aria-label="Soporte">
+    <MediaFrame
+      src={sidebar.image}
+      alt={sidebar.imageAlt}
+      ratio="3/4"
+      label={sidebar.label}
+      caption={sidebar.caption}
+      captionNumber="03"
+      width={800}
+      height={1067}
+      loading="lazy"
+      class="contact-faq__media"
+    />
+
+    <div class="contact-faq__support">
+      <span class="contact-faq__support-label kb-micro-label">Soporte</span>
+      <div class="contact-faq__support-card">
+        <span class="contact-faq__support-icon" aria-hidden="true">
+          <Icon name="clock" />
+        </span>
+        <span class="contact-faq__support-text">Respuesta en menos de 24h laborables.</span>
+      </div>
     </div>
-  </Fragment>
+  </aside>
 </FAQ>
 
 <style>
   .contact-faq:global(.faq-section) {
-    padding-top: var(--kb-space-section);
-    padding-bottom: clamp(2rem, 3.5vw, 3.5rem);
+    padding-block: var(--kb-space-section);
+    border-top: 1px solid var(--kb-stroke-hairline);
+    background: var(--color-king-bg);
   }
 
-  .contact-faq :global(.faq-layout) {
-    align-items: stretch;
+  .contact-faq:global(.faq-section--light)::before {
+    opacity: 0.18;
   }
 
-  .contact-faq :global(.faq-sidebar--static) {
-    height: 100%;
-    min-height: 100%;
+  .contact-faq__header:global(.section-header-home) {
+    width: 100%;
+    margin-bottom: var(--kb-space-gap);
   }
 
-  .faq-media-sidebar {
+  .contact-faq__header :global(.shh-title em) {
+    color: var(--color-king-accent);
+    font-style: italic;
+    font-weight: var(--kb-w-heading-strong);
+  }
+
+  .contact-faq__sidebar {
     display: flex;
     flex-direction: column;
+    gap: var(--kb-space-5);
+    min-width: 0;
     height: 100%;
-    min-height: 100%;
   }
 
-  .contact-faq :global(.faq-media-sidebar .media-frame.media-frame--ratio-3-4) {
+  .contact-faq :global(.contact-faq__media.media-frame--ratio-3-4) {
     flex: 1 1 auto;
     min-height: 0;
-    width: 100%;
-    height: 100%;
-    aspect-ratio: auto;
     border-radius: var(--kb-panel-radius);
-    content-visibility: visible;
   }
 
-  .contact-faq :global(.faq-media-sidebar .media-frame__stage) {
-    height: 100%;
-  }
-
-  .contact-faq :global(.faq-media-sidebar .media-frame__image) {
+  .contact-faq :global(.contact-faq__media .media-frame__image) {
     object-position: center 35%;
   }
 
-  .contact-faq-header {
-    --sh-max-copy: 36rem;
-    --sh-gap-head-copy: 0.85rem;
+  .contact-faq__support {
+    display: flex;
+    flex-direction: column;
+    gap: var(--kb-space-3);
+    flex-shrink: 0;
+  }
+
+  .contact-faq__support-label {
+    display: block;
+    color: var(--color-king-steel);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .contact-faq__support-card {
+    display: flex;
+    align-items: center;
+    gap: var(--kb-space-3);
+    padding: var(--kb-space-4);
+    border: 1px solid var(--kb-stroke-hairline);
+    border-radius: var(--kb-radius-sm);
+    background: var(--color-king-surface);
+  }
+
+  .contact-faq__support-icon {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: var(--kb-radius-xs);
+    border: 1px solid rgba(138, 90, 43, 0.14);
+    background: rgba(138, 90, 43, 0.08);
+    color: var(--color-king-accent);
+  }
+
+  .contact-faq__support-icon :global(svg) {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  .contact-faq__support-text {
+    font-size: var(--kb-text-xs);
+    line-height: 1.5;
+    color: var(--color-king-muted);
+  }
+
+  .contact-faq :global(.faq-list) {
+    gap: var(--kb-space-3);
+  }
+
+  @media (min-width: 64rem) {
+    .contact-faq :global(.faq-layout) {
+      grid-template-columns: minmax(16rem, 0.34fr) minmax(0, 0.66fr);
+      gap: var(--kb-space-10);
+      align-items: stretch;
+    }
+
+    .contact-faq :global(.faq-sidebar) {
+      align-self: stretch;
+    }
+
+    .contact-faq__sidebar {
+      position: sticky;
+      top: 7rem;
+      height: auto;
+    }
+
+    .contact-faq :global(.contact-faq__media.media-frame--ratio-3-4) {
+      aspect-ratio: auto;
+      height: auto;
+      max-height: none;
+    }
   }
 
   @media (max-width: 63.99rem) {
-    .faq-media-sidebar {
-      min-height: clamp(24rem, 60vw, 34rem);
+    .contact-faq__sidebar {
+      min-height: auto;
     }
 
-    .contact-faq :global(.faq-media-sidebar .media-frame) {
-      aspect-ratio: 16 / 9;
-    }
-
-    .contact-faq :global(.faq-media-sidebar .media-frame__stage) {
-      height: auto;
+    .contact-faq :global(.contact-faq__media) {
+      aspect-ratio: 16 / 10;
     }
   }
 </style>

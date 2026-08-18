@@ -1,0 +1,58 @@
+---
+import CollectionCatalog from '../../components/collection/CollectionCatalog.astro';
+import CollectionPageHead from '../../components/collection/CollectionPageHead.astro';
+import Footer from '../../components/layout/Footer.astro';
+import Header from '../../components/layout/Header.astro';
+import { catalogPage } from '@content/catalog';
+import { site, siteUrl } from '@config/site';
+import { catalogProvider } from '@commerce/catalog';
+import { getCollectionFacets } from '@commerce/domain/catalog-filters';
+import { resolveCatalogIndexHead, type CommercePageHead } from '@commerce/application/seo';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+const [products, collections] = await Promise.all([
+  catalogProvider.getProductSummaries(),
+  catalogProvider.getCollections(),
+]);
+Astro.response.headers.set('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=600');
+
+const facets = getCollectionFacets(products);
+const groups = collections
+  .map((collection) => ({
+    collection,
+    products: products.filter((product) => product.primaryCollection.id === collection.id),
+  }))
+  .filter((group) => group.products.length > 0);
+
+const pageHead: CommercePageHead = resolveCatalogIndexHead(
+  {
+    title: catalogPage.seo.title,
+    description: catalogPage.seo.description,
+    products,
+    collections,
+  },
+  site,
+  siteUrl
+);
+---
+
+<BaseLayout seo={pageHead.seo} schema={pageHead.schema}>
+  <Header slot="header" initialTheme="light" scrolledTheme="light" compactThreshold={32} />
+
+  <CollectionPageHead
+    eyebrow={catalogPage.eyebrow}
+    title={catalogPage.title}
+    description={catalogPage.description}
+    breadcrumbs={[{ label: 'Productos' }]}
+  />
+
+  <CollectionCatalog
+    products={products}
+    facets={facets}
+    groups={groups}
+    scope={catalogPage.scope}
+    pageSize={Math.max(products.length, 1)}
+  />
+
+  <Footer slot="footer" connected />
+</BaseLayout>

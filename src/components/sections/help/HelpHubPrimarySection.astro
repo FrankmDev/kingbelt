@@ -1,0 +1,94 @@
+---
+import HomeSectionHead from '../home/HomeSectionHead.astro';
+import FeatureCard from '../../ui/FeatureCard.astro';
+import type { IconName } from '../../ui/icon-paths';
+
+interface HubItem {
+  label: string;
+  href: string;
+  description: string;
+  icon?: IconName;
+}
+
+interface SectionCopy {
+  index: string;
+  eyebrow: string;
+  meta: string;
+  title: string;
+  body: string;
+}
+
+interface Props {
+  section: SectionCopy;
+  items: readonly HubItem[];
+  class?: string;
+}
+
+const { section, items, class: className = '' } = Astro.props;
+const titleId = 'help-hub-primary-title';
+---
+
+<section
+  id="accesos-principales"
+  class:list={['help-hub-primary', className]}
+  aria-labelledby={titleId}
+>
+  <div class="help-hub-primary__inner kb-shell-wide">
+    <HomeSectionHead
+      index={section.index}
+      eyebrow={section.eyebrow}
+      meta={section.meta}
+      titleId={titleId}
+      body={section.body}
+      class="help-hub-primary__header"
+    >
+      <Fragment slot="title">{section.title}</Fragment>
+    </HomeSectionHead>
+
+    <div class="help-hub-primary__grid">
+      {items.map((item, index) => (
+        <FeatureCard
+          number={String(index + 1).padStart(2, '0')}
+          title={item.label}
+          description={item.description}
+          icon={item.icon}
+          href={item.href}
+          variant={index === 0 ? 'steel' : 'default'}
+          class:list={[
+            'help-hub-primary__card',
+            index === 0 && 'help-hub-primary__card--featured',
+          ]}
+        />
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .help-hub-primary {
+    padding-block: var(--kb-space-section);
+    background: var(--color-king-surface);
+    border-top: 1px solid var(--kb-stroke-hairline);
+  }
+
+  .help-hub-primary__header:global(.section-header-home) {
+    width: 100%;
+    margin-bottom: var(--kb-space-gap);
+  }
+
+  .help-hub-primary__grid {
+    display: grid;
+    gap: var(--kb-space-gap);
+    align-items: stretch;
+  }
+
+  @media (min-width: 48rem) {
+    .help-hub-primary__grid {
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    }
+
+    .help-hub-primary__card--featured:global(.feature-card) {
+      min-height: clamp(18rem, 28vw, 22rem);
+    }
+  }
+</style>

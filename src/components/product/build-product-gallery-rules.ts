@@ -1,49 +1,52 @@
-import type { ProductImage, ProductMediaGroup } from '@commerce/domain/catalog';
+import type { ProductImage } from '@commerce/domain/catalog';
 import {
   escapeCssAttributeValue,
   escapeCssIdentifier,
   escapeStyleElementContent,
 } from '@shared/css/css-identifier';
 
+export interface ColorGalleryRulesInput {
+  optionValueId: string;
+  images: readonly ProductImage[];
+}
+
 export interface ProductGalleryRulesInput {
   idPrefix: string;
-  images: readonly ProductImage[];
-  mediaGroups?: readonly ProductMediaGroup[];
+  colorGalleries: readonly ColorGalleryRulesInput[];
 }
 
 /** Reglas CSS por producto, generadas en build (sin runtime en cliente). */
 export const buildProductGalleryRules = ({
   idPrefix,
-  images,
-  mediaGroups = [],
+  colorGalleries,
 }: ProductGalleryRulesInput): string => {
   const safePrefix = escapeCssIdentifier(idPrefix);
-  const groupName = `gallery-${safePrefix}`;
   const galleryClass = `product-gallery--${safePrefix}`;
+  const rules: string[] = [];
 
-  const slideRules = images.map((_, index) => {
-    const inputId = `${groupName}-${index + 1}`;
-    return `.${galleryClass}:has(#${inputId}:checked) .product-gallery__stage .product-gallery__slide:nth-child(${index + 1}){opacity:1;visibility:visible}`;
+  rules.push(`.${galleryClass} .product-gallery__slide{opacity:0;visibility:hidden}`);
+
+  colorGalleries.forEach((gallery, setIndex) => {
+    const setId = escapeCssAttributeValue(gallery.optionValueId);
+    const setName = `gallery-${safePrefix}-set-${setIndex + 1}`;
+    const setSelector = `[data-gallery-set="${setId}"]`;
+
+    gallery.images.forEach((_, index) => {
+      const inputId = `${setName}-${index + 1}`;
+      const escapedInputId = escapeCssIdentifier(inputId);
+      const escapedFor = escapeCssAttributeValue(inputId);
+      rules.push(
+        `.${galleryClass}:has(#${escapedInputId}:checked) ${setSelector} .product-gallery__stage .product-gallery__slide:nth-child(${index + 1}){opacity:1;visibility:visible}`,
+        `.${galleryClass}:has(#${escapedInputId}:checked) ${setSelector} .product-gallery__thumb[for="${escapedFor}"]{border-color:var(--color-king-accent);box-shadow:0 0 0 1px var(--color-king-accent)}`,
+        `.${galleryClass}:has(#${escapedInputId}:checked) ${setSelector} .product-gallery__thumb[for="${escapedFor}"] img{opacity:1}`,
+        `.${galleryClass}:has(#${escapedInputId}:focus-visible) ${setSelector} .product-gallery__thumb[for="${escapedFor}"]{outline:2px solid var(--color-king-accent);outline-offset:3px}`
+      );
+    });
+
+    rules.push(
+      `.${galleryClass} ${setSelector}:not(:has(.product-gallery__input:checked)) .product-gallery__stage .product-gallery__slide:first-child{opacity:1;visibility:visible}`
+    );
   });
 
-  const thumbRules = images.flatMap((_, index) => {
-    const inputId = `${groupName}-${index + 1}`;
-    const escapedFor = escapeCssAttributeValue(inputId);
-    return [
-      `.${galleryClass}:has(#${inputId}:checked) .product-gallery__thumb[for="${escapedFor}"]{border-color:var(--color-king-accent);box-shadow:inset 0 0 0 1px var(--color-king-accent)}`,
-      `.${galleryClass}:has(#${inputId}:checked) .product-gallery__thumb[for="${escapedFor}"] img{opacity:1}`,
-      `.${galleryClass}:has(#${inputId}:focus-visible) .product-gallery__thumb[for="${escapedFor}"]{outline:2px solid var(--color-king-accent);outline-offset:3px}`,
-    ];
-  });
-
-  const mediaGroupRules = mediaGroups.flatMap((group) => {
-    const optionValue = escapeCssAttributeValue(group.optionValueId);
-    const mediaGroupId = escapeCssAttributeValue(group.id);
-    return [
-      `[data-product-page]:has([data-product-option][value="${optionValue}"]:checked) .${galleryClass} [data-gallery-media-group="${mediaGroupId}"]{display:revert}`,
-      `[data-product-page]:has([data-product-option][value="${optionValue}"]:checked) .${galleryClass} [data-gallery-media-group]:not([data-gallery-media-group="${mediaGroupId}"]){display:none}`,
-    ];
-  });
-
-  return escapeStyleElementContent(slideRules.concat(thumbRules, mediaGroupRules).join(''));
+  return escapeStyleElementContent(rules.join(''));
 };

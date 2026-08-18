@@ -2,12 +2,12 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Footer from '../components/layout/Footer.astro';
 import Header from '../components/layout/Header.astro';
+import PageHeader from '../components/ui/PageHeader.astro';
 import ContactCollectionCtaSection from '../components/sections/contact/ContactCollectionCtaSection.astro';
 import ContactEmailBanner from '../components/sections/contact/ContactEmailBanner.astro';
 import ContactFaqSection from '../components/sections/contact/ContactFaqSection.astro';
 import ContactFormSection from '../components/sections/contact/ContactFormSection.astro';
 import PurchaseInfo from '../components/sections/contact/PurchaseInfo.astro';
-import PageHeader from '../components/ui/PageHeader.astro';
 import { contactData } from '@content/contact';
 import { site } from '@config/site';
 
@@ -51,28 +51,39 @@ const contactSchema = {
     <Fragment slot="title">Hablemos de lo que <em>necesitas</em>.</Fragment>
   </PageHeader>
 
-  <ContactFormSection channels={contactData.channels} inquiryTypes={contactData.inquiryTypes} />
+  <div class="contact-page">
+    <ContactFormSection channels={contactData.channels} inquiryTypes={contactData.inquiryTypes} />
 
-  <PurchaseInfo
-    eyebrow={contactData.purchaseInfo.eyebrow}
-    title={contactData.purchaseInfo.title}
-    description={contactData.purchaseInfo.description}
-    items={contactData.purchaseInfo.items}
-    badge={contactData.purchaseInfo.badge}
-    cta={contactData.purchaseInfo.cta}
-    image={contactData.purchaseInfo.image}
-  />
+    <PurchaseInfo
+      eyebrow={contactData.purchaseInfo.eyebrow}
+      title={contactData.purchaseInfo.title}
+      description={contactData.purchaseInfo.description}
+      items={contactData.purchaseInfo.items}
+      badge={contactData.purchaseInfo.badge}
+      cta={contactData.purchaseInfo.cta}
+      image={contactData.purchaseInfo.image}
+    />
 
-  <ContactCollectionCtaSection />
-  <ContactFaqSection items={contactData.faqs} sidebar={contactData.faqSidebar} />
+    <ContactFaqSection items={contactData.faqs} sidebar={contactData.faqSidebar} />
 
-  <ContactEmailBanner
-    eyebrow={contactData.emailBanner.eyebrow}
-    title={contactData.emailBanner.title}
-    description={contactData.emailBanner.description}
-    email={emailChannel.value}
-    ctaLabel={contactData.emailBanner.ctaLabel}
-  />
+    <ContactCollectionCtaSection />
+
+    <ContactEmailBanner
+      eyebrow={contactData.emailBanner.eyebrow}
+      title={contactData.emailBanner.title}
+      description={contactData.emailBanner.description}
+      email={emailChannel.value}
+      ctaLabel={contactData.emailBanner.ctaLabel}
+    />
+  </div>
 
   <Footer slot="footer" connected />
 </BaseLayout>
+
+<style>
+  .contact-page {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+</style>

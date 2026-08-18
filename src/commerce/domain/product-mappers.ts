@@ -5,6 +5,7 @@ import {
   TECHNICAL_LINE_QUANTITY_LIMIT,
 } from './inventory';
 import type { AvailabilityStatus, LineAvailability } from './inventory';
+import { formatMoney, type PriceRange } from './money';
 import { calculatePriceRange } from './variants';
 import { getPrimaryProductImage, getVariantImage } from './product-media';
 import type { CartProduct, SelectedOptionLabel } from './cart';
@@ -13,6 +14,7 @@ import type {
   CollectionReference,
   OptionSelection,
   Product,
+  ProductOptionValue,
   ProductSummary,
   ProductVariant,
 } from './catalog';
@@ -231,6 +233,14 @@ export const toProductSummary = (
   colors: product.options.find((option) => option.purpose === 'color')?.values ?? [],
   badge: product.badge,
 });
+
+export const formatProductPriceLabel = (priceRange: PriceRange): string =>
+  priceRange.min.amountMinor !== priceRange.max.amountMinor
+    ? `Desde ${formatMoney(priceRange.min)}`
+    : formatMoney(priceRange.min);
+
+export const formatProductColorLabel = (colors: readonly ProductOptionValue[]): string =>
+  colors.length === 1 ? colors[0].label : `${colors.length} colores`;
 
 export const getSelectedOptionLabels = (
   product: Pick<Product, 'options'>,

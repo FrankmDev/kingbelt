@@ -1,30 +1,45 @@
 ---
-import SectionHeader from '@components/ui/SectionHeader.astro';
+import SectionHeaderHome from '../home/SectionHeaderHome.astro';
 import CTABox from '../../ui/CTABox.astro';
 ---
 
-<section class="contact-collection-cta section-spacing-tight" aria-labelledby="contact-collection-title">
-  <div class="cta-section-inner kb-shell-wide">
+<section class="contact-collection-cta" aria-labelledby="contact-collection-title">
+  <div class="contact-collection-cta__inner kb-shell-wide">
     <CTABox
       eyebrow="Colección"
       title="Piezas pensadas para durar."
       description="Cuero vegetal, herrajes macizos y diseño español. Explora la colección antes de escribirnos."
       buttonLabel="Ver colección"
-      buttonHref="/#coleccion"
+      buttonHref="/productos"
       buttonVariant="secondary"
       backgroundImage="/images/brand/cinturones-en-taller.jpg"
       backgroundAlt="Cinturón KingBelt de cuero"
       backgroundPosition="center 40%"
+      titleTag="h2"
     >
-      <SectionHeader
+      <SectionHeaderHome
         slot="header"
+        index="04"
         eyebrow="Colección"
-        title="Piezas pensadas para durar."
+        meta="Catálogo"
         titleId="contact-collection-title"
         body="Cuero vegetal, herrajes macizos y diseño español. Explora la colección antes de escribirnos."
-        align="left"
         tone="dark"
-      />
+        density="compact"
+      >
+        <Fragment slot="title">Piezas pensadas para durar.</Fragment>
+      </SectionHeaderHome>
     </CTABox>
   </div>
 </section>
+
+<style>
+  .contact-collection-cta {
+    padding-block: var(--kb-space-section);
+    border-top: 1px solid var(--kb-stroke-hairline);
+  }
+
+  .contact-collection-cta :global(.section-header-home) {
+    margin-bottom: 0;
+  }
+</style>

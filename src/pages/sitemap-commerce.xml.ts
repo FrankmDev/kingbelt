@@ -18,6 +18,7 @@ export const GET: APIRoute = async () => {
     catalogProvider.getCollectionHandles(),
   ]);
   const urls = [
+    new URL('/productos', siteUrl).href,
     ...collectionHandles.map((handle) => new URL(`/categorias/${handle}`, siteUrl).href),
     ...productHandles.map((handle) => new URL(`/productos/${handle}`, siteUrl).href),
   ];

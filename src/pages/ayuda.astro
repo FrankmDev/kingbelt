@@ -1,117 +1,96 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import Header from '../components/layout/Header.astro';
 import Footer from '../components/layout/Footer.astro';
-import HelpPageLayout from '../components/help/HelpPageLayout.astro';
-import HelpCard from '../components/help/HelpCard.astro';
-import SectionHeader from '@components/ui/SectionHeader.astro';
-import Prose from '../components/ui/Prose.astro';
-import { helpNavItems, helpMeta } from '@content/help';
+import Header from '../components/layout/Header.astro';
+import PageHeader from '../components/ui/PageHeader.astro';
+import CTABox from '../components/ui/CTABox.astro';
+import SectionHeaderHome from '../components/sections/home/SectionHeaderHome.astro';
+import HelpHubPrimarySection from '../components/sections/help/HelpHubPrimarySection.astro';
+import HelpHubResourcesSection from '../components/sections/help/HelpHubResourcesSection.astro';
+import HelpHubGuideSection from '../components/sections/help/HelpHubGuideSection.astro';
+import { helpHub, helpMeta, helpNavItems } from '@content/help';
 
 const { title, description } = helpMeta.ayuda;
 const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href;
 
 const primaryItems = helpNavItems.filter((item) => item.priority === 'primary');
 const secondaryItems = helpNavItems.filter((item) => item.priority === 'secondary');
+const { hero, primary, resources, guide, cta } = helpHub;
 ---
 
 <BaseLayout title={title} description={description} canonicalURL={canonicalURL}>
-  <Header slot="header" initialTheme="light" scrolledTheme="light" compactThreshold={32} />
+  <Header slot="header" initialTheme="dark" scrolledTheme="light" compactThreshold={32} />
 
-  <HelpPageLayout
-    title="Centro de ayuda"
-    description="Información útil antes y después de comprar: tallaje, cuidados, envíos y atención."
+  <PageHeader
+    eyebrow={hero.eyebrow}
+    description={hero.description}
+    image={hero.image}
+    imageAlt={hero.imageAlt}
+    imagePosition={hero.imagePosition}
+    meta={hero.meta}
     breadcrumbs={[{ label: 'Ayuda' }]}
-    showNav={false}
   >
-    <div class="help-hub">
-      <section class="help-hub__primary" aria-labelledby="help-primary-title">
-        <h2 id="help-primary-title" class="sr-only">Accesos principales</h2>
-        <div class="help-hub__primary-grid">
-          {primaryItems.map((item) => (
-            <HelpCard
-              title={item.label}
-              description={item.description}
-              href={item.href}
-              priority="primary"
-              icon={item.icon}
-            />
-          ))}
-        </div>
-      </section>
+    <Fragment slot="title">
+      <span set:html={hero.title} />
+    </Fragment>
+  </PageHeader>
 
-      <section class="help-hub__secondary" aria-labelledby="help-secondary-title">
-        <SectionHeader
-          eyebrow="También puede interesarte"
-          titleId="help-secondary-title"
-          align="left"
-          tone="light"
-          density="compact"
+  <div class="help-page">
+    <HelpHubPrimarySection section={primary} items={primaryItems} />
+
+    <HelpHubResourcesSection section={resources} items={secondaryItems} />
+
+    <HelpHubGuideSection section={guide} />
+
+    <section class="help-page__cta" aria-labelledby="help-cta-title">
+      <div class="help-page__cta-inner kb-shell-wide">
+        <CTABox
+          eyebrow={cta.eyebrow}
+          title={cta.title}
+          description={cta.description}
+          buttonLabel={cta.buttonLabel}
+          buttonHref={cta.buttonHref}
+          buttonVariant="secondary"
+          backgroundImage={cta.image}
+          backgroundAlt=""
+          backgroundPosition={cta.imagePosition}
+          titleTag="h2"
+          class="help-page__cta-box"
         >
-          <Fragment slot="title">Otros recursos</Fragment>
-        </SectionHeader>
-        <div class="help-hub__secondary-grid">
-          {secondaryItems.map((item) => (
-            <HelpCard
-              title={item.label}
-              description={item.description}
-              href={item.href}
-              priority="secondary"
-              icon={item.icon}
-            />
-          ))}
-        </div>
-      </section>
+          <SectionHeaderHome
+            slot="header"
+            index="04"
+            eyebrow={cta.eyebrow}
+            meta="Contacto"
+            titleId="help-cta-title"
+            body={cta.description}
+            tone="dark"
+            density="compact"
+          >
+            <Fragment slot="title">{cta.title}</Fragment>
+          </SectionHeaderHome>
+        </CTABox>
+      </div>
+    </section>
+  </div>
 
-      <section class="help-hub__guide" aria-labelledby="help-guide-title">
-        <Prose>
-          <h2 id="help-guide-title">Qué encontrarás aquí</h2>
-          <p>
-            Esta sección reúne la información operativa de KingBelt: cómo elegir talla, cuidar las piezas,
-            entender envíos y devoluciones cuando estén confirmados, y resolver dudas habituales.
-          </p>
-          <p>
-            <strong>Antes de comprar</strong>, consulta la guía de tallas y las fichas de producto.
-            <strong> Después de comprar</strong>, podrás revisar políticas de envío y atención cuando estén publicadas.
-          </p>
-          <p>
-            Si tu consulta es concreta — modelo, medida o pedido — escríbenos desde la página de contacto.
-          </p>
-        </Prose>
-      </section>
-    </div>
-  </HelpPageLayout>
-
-  <Footer slot="footer" />
+  <Footer slot="footer" connected />
 </BaseLayout>
 
 <style>
-  .help-hub {
+  .help-page {
     display: flex;
     flex-direction: column;
-    gap: clamp(2.5rem, 5vw, 4rem);
+    gap: 0;
   }
 
-  .help-hub__primary-grid {
-    display: grid;
-    gap: 1rem;
+  .help-page__cta {
+    padding-block: var(--kb-space-section);
+    background: var(--color-king-bg);
+    border-top: 1px solid var(--kb-stroke-hairline);
   }
 
-  @media (min-width: 48rem) {
-    .help-hub__primary-grid {
-      grid-template-columns: 1.15fr 1fr;
-      gap: 1.25rem;
-    }
-  }
-
-  .help-hub__secondary-grid {
-    display: grid;
-    gap: 0.85rem;
-  }
-
-  @media (min-width: 40rem) {
-    .help-hub__secondary-grid {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
+  .help-page__cta-box:global(.cta-box) {
+    min-height: clamp(16rem, 32vw, 22rem);
   }
 </style>

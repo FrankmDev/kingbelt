@@ -7,6 +7,14 @@ Frontend de KingBelt construido con Astro 7.2, TypeScript estricto, Tailwind CSS
 - Bun 1.3.14 o superior.
 - Node.js 22.12 o superior, preferiblemente una versión LTS par.
 
+## Configuración local
+
+1. Copia `.env.example` a `.env`.
+2. Mantén `COMMERCE_SOURCE=demo` para trabajar sin Shopify.
+3. Usa `COMMERCE_SOURCE=shopify` únicamente cuando también hayas configurado las variables Shopify necesarias.
+
+`COMMERCE_SOURCE` es obligatoria y solo acepta `demo` o `shopify`. Las credenciales Shopify no activan ningún proveedor por sí solas.
+
 ## Comandos
 
 ```sh
@@ -32,6 +40,7 @@ src/
 │   ├── application/         Puertos, casos de uso y validación
 │   ├── infrastructure/demo/ Adaptadores del ecommerce de demostración
 │   ├── infrastructure/shopify/ Gateway, catálogo y carrito de Storefront API
+│   ├── commerce-source.ts      Selección explícita y tipada del proveedor
 │   ├── catalog.ts           Proveedor de catálogo activo
 │   ├── cart.ts              Proveedor de carrito activo
 │   └── cart-server.ts       Composición del carrito servidor (BFF)

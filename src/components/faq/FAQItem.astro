@@ -9,11 +9,13 @@ interface Props {
   sectionId: string;
   groupName: string;
   tone: 'dark' | 'light';
+  variant?: 'default' | 'editorial';
 }
 
-const { item, index, sectionId, groupName, tone } = Astro.props;
+const { item, index, sectionId, groupName, tone, variant = 'default' } = Astro.props;
 const number = String(index + 1).padStart(2, '0');
-const isSteel = index % 3 === 2;
+const isSteel = variant === 'editorial' ? false : index % 3 === 2;
+const isEditorial = variant === 'editorial';
 const delayClass = `animate-delay-${(index % 5) + 1}`;
 ---
 
@@ -22,7 +24,7 @@ const delayClass = `animate-delay-${(index % 5) + 1}`;
   class:list={[
     'faq-card group',
     `faq-card--${tone}`,
-    isSteel ? 'kb-card-steel' : 'kb-card',
+    isEditorial ? 'faq-card--editorial' : isSteel ? 'kb-card-steel' : 'kb-card',
     'animate-on-scroll',
     delayClass,
   ]}
@@ -31,25 +33,41 @@ const delayClass = `animate-delay-${(index % 5) + 1}`;
   data-category={item.category}
 >
   <summary class="faq-summary" data-faq-summary>
-    <span class="faq-card-corner kb-corner-bracket kb-corner-bracket-tl" aria-hidden="true"></span>
-    <span class="faq-card-corner kb-corner-bracket kb-corner-bracket-tr" aria-hidden="true"></span>
+    {!isEditorial && (
+      <>
+        <span class="faq-card-corner kb-corner-bracket kb-corner-bracket-tl" aria-hidden="true"></span>
+        <span class="faq-card-corner kb-corner-bracket kb-corner-bracket-tr" aria-hidden="true"></span>
+      </>
+    )}
 
     <div class="faq-summary-main">
       <div class="faq-summary-meta">
         <span class="faq-summary-num" aria-hidden="true">{number}</span>
-        <span class="faq-summary-icon" aria-hidden="true">
-          <Icon name={item.icon} class="w-5 h-5" />
-        </span>
-        <Tag variant={isSteel ? 'brass' : 'accent'} size="sm">
-          {item.category}
-        </Tag>
+        {isEditorial ? (
+          <span class="faq-summary-category kb-meta-label">{item.category}</span>
+        ) : (
+          <>
+            <span class="faq-summary-icon" aria-hidden="true">
+              <Icon name={item.icon} class="w-5 h-5" />
+            </span>
+            <Tag variant={isSteel ? 'brass' : 'accent'} size="sm">
+              {item.category}
+            </Tag>
+          </>
+        )}
       </div>
       <h3 class="faq-summary-q" data-faq-question>{item.question}</h3>
     </div>
 
     <span class="faq-summary-toggle" aria-hidden="true">
-      <span class="faq-summary-toggle-line faq-summary-toggle-h"></span>
-      <span class="faq-summary-toggle-line faq-summary-toggle-v"></span>
+      {isEditorial ? (
+        <Icon name="plus" class="faq-summary-toggle-icon" />
+      ) : (
+        <>
+          <span class="faq-summary-toggle-line faq-summary-toggle-h"></span>
+          <span class="faq-summary-toggle-line faq-summary-toggle-v"></span>
+        </>
+      )}
     </span>
   </summary>
 
@@ -60,8 +78,12 @@ const delayClass = `animate-delay-${(index % 5) + 1}`;
     </div>
   </div>
 
-  <span class="faq-card-corner kb-corner-bracket kb-corner-bracket-bl" aria-hidden="true"></span>
-  <span class="faq-card-corner kb-corner-bracket kb-corner-bracket-br" aria-hidden="true"></span>
+  {!isEditorial && (
+    <>
+      <span class="faq-card-corner kb-corner-bracket kb-corner-bracket-bl" aria-hidden="true"></span>
+      <span class="faq-card-corner kb-corner-bracket kb-corner-bracket-br" aria-hidden="true"></span>
+    </>
+  )}
 </details>
 
 <style>
@@ -103,6 +125,21 @@ const delayClass = `animate-delay-${(index % 5) + 1}`;
     transform: scaleY(1);
   }
 
+  .faq-card--editorial {
+    border: 1px solid var(--kb-stroke-hairline);
+    border-radius: var(--kb-card-radius);
+    background: var(--color-king-surface);
+  }
+
+  .faq-card--editorial::before {
+    display: none;
+  }
+
+  .faq-card--editorial[open] {
+    background: color-mix(in srgb, var(--color-king-bone) 24%, var(--color-king-surface));
+    border-color: color-mix(in srgb, var(--color-king-accent) 22%, var(--kb-stroke-hairline));
+  }
+
   .faq-summary {
     position: relative;
     display: grid;
@@ -119,6 +156,11 @@ const delayClass = `animate-delay-${(index % 5) + 1}`;
     transition:
       background-color var(--kb-dur-fast) var(--kb-ease-out),
       box-shadow var(--kb-dur-fast) var(--kb-ease-out);
+  }
+
+  .faq-card--editorial .faq-summary {
+    padding: clamp(1.125rem, 2.5vw, 1.5rem);
+    padding-left: clamp(1.125rem, 2.5vw, 1.5rem);
   }
 
   .faq-summary::-webkit-details-marker {
@@ -138,7 +180,7 @@ const delayClass = `animate-delay-${(index % 5) + 1}`;
     outline-color: var(--color-king-accent-light);
   }
 
-  .faq-card[open] {
+  .faq-card[open]:not(.faq-card--editorial) {
     background-color: color-mix(in srgb, var(--kb-surface-light) 96%, var(--color-king-accent) 4%);
   }
 
@@ -153,6 +195,10 @@ const delayClass = `animate-delay-${(index % 5) + 1}`;
   @media (hover: hover) and (pointer: fine) {
     .faq-card:not([open]) .faq-summary:hover {
       background-color: rgba(138, 90, 43, 0.035);
+    }
+
+    .faq-card--editorial:not([open]) .faq-summary:hover {
+      background-color: color-mix(in srgb, var(--color-king-bone) 30%, transparent);
     }
 
     .kb-card-steel.faq-card:not([open]) .faq-summary:hover {
@@ -176,6 +222,10 @@ const delayClass = `animate-delay-${(index % 5) + 1}`;
     margin-bottom: var(--kb-space-3);
   }
 
+  .faq-card--editorial .faq-summary-meta {
+    margin-bottom: var(--kb-space-2);
+  }
+
   .faq-summary-num {
     font-family: var(--font-display);
     font-size: clamp(1.5rem, 2.5vw, 2rem);
@@ -185,9 +235,26 @@ const delayClass = `animate-delay-${(index % 5) + 1}`;
     opacity: 0.35;
   }
 
+  .faq-card--editorial .faq-summary-num {
+    font-size: clamp(1.125rem, 1.8vw, 1.375rem);
+    opacity: 0.5;
+  }
+
   .kb-card-steel .faq-summary-num {
     color: var(--color-king-accent-light);
     opacity: 0.45;
+  }
+
+  .faq-summary-category {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.28rem 0.5rem;
+    border: 1px solid var(--kb-stroke-hairline);
+    border-radius: var(--kb-radius-xs);
+    background: color-mix(in srgb, var(--color-king-bone) 70%, transparent);
+    color: var(--color-king-muted);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
   }
 
   .faq-summary-icon {
@@ -213,7 +280,7 @@ const delayClass = `animate-delay-${(index % 5) + 1}`;
   }
 
   @media (hover: hover) and (pointer: fine) {
-    .faq-card:hover .faq-summary-icon {
+    .faq-card:not(.faq-card--editorial):hover .faq-summary-icon {
       transform: scale(1.08) rotate(-4deg);
       background: rgba(138, 90, 43, 0.11);
       border-color: rgba(138, 90, 43, 0.25);
@@ -223,6 +290,11 @@ const delayClass = `animate-delay-${(index % 5) + 1}`;
       background: rgba(183, 138, 79, 0.14);
       border-color: rgba(183, 138, 79, 0.35);
     }
+
+    .faq-card--editorial:hover {
+      transform: translateY(-1px);
+      box-shadow: var(--kb-shadow-xs);
+    }
   }
 
   .faq-summary-q {
@@ -231,6 +303,14 @@ const delayClass = `animate-delay-${(index % 5) + 1}`;
     font-weight: var(--kb-w-medium);
     line-height: 1.25;
     padding-right: var(--kb-space-4);
+  }
+
+  .faq-card--editorial .faq-summary-q {
+    font-size: clamp(1.0625rem, 1.6vw, 1.25rem);
+    font-weight: var(--kb-w-heading-light);
+    line-height: 1.2;
+    letter-spacing: -0.015em;
+    padding-right: 0;
   }
 
   .kb-card-steel .faq-summary-q {
@@ -251,6 +331,19 @@ const delayClass = `animate-delay-${(index % 5) + 1}`;
       border-color var(--kb-dur-med) var(--kb-ease-out),
       background-color var(--kb-dur-med) var(--kb-ease-out),
       transform var(--kb-dur-med) var(--kb-ease-out);
+  }
+
+  .faq-card--editorial .faq-summary-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    margin-top: 0;
+    border-radius: 50%;
+    border-color: var(--kb-stroke-hairline);
+    background: color-mix(in srgb, var(--color-king-bone) 55%, transparent);
+    color: var(--color-king-muted);
   }
 
   .kb-card-steel .faq-summary-toggle {
@@ -279,7 +372,23 @@ const delayClass = `animate-delay-${(index % 5) + 1}`;
     transform: translate(-50%, -50%) rotate(0deg);
   }
 
-  .faq-card[open] .faq-summary-toggle {
+  .faq-summary-toggle-icon {
+    width: 0.875rem;
+    height: 0.875rem;
+    transition: transform var(--kb-dur-med) var(--kb-ease-out);
+  }
+
+  .faq-card--editorial[open] .faq-summary-toggle {
+    border-color: color-mix(in srgb, var(--color-king-accent) 30%, var(--kb-stroke-hairline));
+    background: color-mix(in srgb, var(--color-king-accent) 10%, var(--color-king-bone));
+    color: var(--color-king-accent);
+  }
+
+  .faq-card--editorial[open] .faq-summary-toggle-icon {
+    transform: rotate(45deg);
+  }
+
+  .faq-card[open]:not(.faq-card--editorial) .faq-summary-toggle {
     border-color: rgba(138, 90, 43, 0.35);
     background: rgba(138, 90, 43, 0.08);
   }
@@ -308,12 +417,23 @@ const delayClass = `animate-delay-${(index % 5) + 1}`;
     padding: 0 clamp(1.5rem, 3.5vw, 2rem) clamp(1.5rem, 3vw, 2rem);
   }
 
+  .faq-card--editorial .faq-answer {
+    padding: 0 clamp(1.125rem, 2.5vw, 1.5rem) clamp(1.125rem, 2.5vw, 1.5rem);
+  }
+
   .faq-answer-rule {
     width: 3rem;
     height: 1px;
     margin-bottom: var(--kb-space-4);
     background: linear-gradient(90deg, var(--color-king-accent), transparent);
     opacity: 0.5;
+  }
+
+  .faq-card--editorial .faq-answer-rule {
+    width: 100%;
+    max-width: 12rem;
+    margin-bottom: var(--kb-space-3);
+    opacity: 0.35;
   }
 
   .kb-card-steel .faq-answer-rule {
@@ -325,6 +445,13 @@ const delayClass = `animate-delay-${(index % 5) + 1}`;
     color: var(--color-king-muted);
     font-size: var(--kb-text-body);
     line-height: 1.8;
+  }
+
+  .faq-card--editorial .faq-answer-text {
+    max-width: 58ch;
+    font-size: var(--kb-text-sm);
+    line-height: 1.65;
+    color: color-mix(in srgb, var(--color-king-text) 68%, var(--color-king-muted));
   }
 
   .kb-card-steel .faq-answer-text {
@@ -340,11 +467,11 @@ const delayClass = `animate-delay-${(index % 5) + 1}`;
   }
 
   @media (hover: hover) and (pointer: fine) {
-    .faq-card:hover {
+    .faq-card:not(.faq-card--editorial):hover {
       transform: translateY(-2px);
     }
 
-    .faq-card[open] {
+    .faq-card[open]:not(.faq-card--editorial) {
       border-color: rgba(138, 90, 43, 0.28);
       box-shadow:
         var(--kb-shadow-md),
@@ -370,6 +497,11 @@ const delayClass = `animate-delay-${(index % 5) + 1}`;
       justify-self: start;
       margin-top: var(--kb-space-3);
     }
+
+    .faq-card--editorial .faq-summary-toggle {
+      justify-self: end;
+      margin-top: calc(-1 * var(--kb-space-8));
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -377,6 +509,7 @@ const delayClass = `animate-delay-${(index % 5) + 1}`;
     .faq-card::before,
     .faq-summary-toggle,
     .faq-summary-toggle-line,
+    .faq-summary-toggle-icon,
     .faq-card-corner,
     .faq-answer-wrap,
     .faq-summary-icon {

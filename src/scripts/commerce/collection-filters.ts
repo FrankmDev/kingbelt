@@ -32,6 +32,7 @@ const parseFilterable = (element: HTMLElement): CatalogFilterable => {
     colors: colors.map((label) => ({ label })),
     fromPriceMinor: Number.isFinite(min) ? min : 0,
     purchasable: element.dataset.filterPurchasable === 'true',
+    collectionHandle: element.dataset.filterCollection || undefined,
   };
 };
 
@@ -69,15 +70,18 @@ const bindCollectionCatalog = (root: HTMLElement): void => {
   };
 
   const selectedValues = (name: string): string[] =>
-    [...form.querySelectorAll<HTMLInputElement>(`input[name="${name}"]:checked`)]
-      .map((input) => input.value);
+    [...root.querySelectorAll<HTMLInputElement>(`input[name="${name}"]:checked`)]
+      .map((input) => input.value)
+      .filter(Boolean);
 
   const selectionFromForm = (): CatalogFilterSelection => ({
     productTypes: selectedValues('tipo'),
     colors: selectedValues('color'),
     priceRange:
-      form.querySelector<HTMLInputElement>('input[name="precio"]:checked')?.value ?? undefined,
+      root.querySelector<HTMLInputElement>('input[name="precio"]:checked')?.value ?? undefined,
     availableOnly: selectedValues('disponible').length > 0,
+    collectionHandle:
+      root.querySelector<HTMLInputElement>('input[name="categoria"]:checked')?.value || undefined,
   });
 
   const writeSelectionToUrl = (selection: CatalogFilterSelection): void => {
@@ -95,15 +99,18 @@ const bindCollectionCatalog = (root: HTMLElement): void => {
   ): void => {
     if (!values?.length) return;
     const wanted = new Set(values.map(normalizeFilterValue));
-    form.querySelectorAll<HTMLInputElement>(`input[name="${name}"]`).forEach((input) => {
+    root.querySelectorAll<HTMLInputElement>(`input[name="${name}"]`).forEach((input) => {
       if (wanted.has(normalizeFilterValue(input.value))) input.checked = true;
     });
   };
 
   const setExactChecked = (name: string, value: string | undefined): void => {
-    if (!value) return;
-    form.querySelectorAll<HTMLInputElement>(`input[name="${name}"]`).forEach((input) => {
-      if (input.value === value) input.checked = true;
+    root.querySelectorAll<HTMLInputElement>(`input[name="${name}"]`).forEach((input) => {
+      if (value) {
+        input.checked = input.value === value;
+        return;
+      }
+      if (name === 'categoria') input.checked = input.value === '';
     });
   };
 
@@ -113,6 +120,7 @@ const bindCollectionCatalog = (root: HTMLElement): void => {
     setCheckedByNormalizedValue('color', selection.colors);
     setExactChecked('precio', selection.priceRange);
     if (selection.availableOnly) setExactChecked('disponible', AVAILABLE_ONLY_FACET_VALUE);
+    setExactChecked('categoria', selection.collectionHandle);
   };
 
   const hydrateFromUrl = (): void => {
@@ -121,7 +129,8 @@ const bindCollectionCatalog = (root: HTMLElement): void => {
       !selection.productTypes?.length &&
       !selection.colors?.length &&
       !selection.priceRange &&
-      !selection.availableOnly
+      !selection.availableOnly &&
+      !selection.collectionHandle
     ) {
       return;
     }
@@ -140,10 +149,18 @@ const bindCollectionCatalog = (root: HTMLElement): void => {
       item.element.hidden = false;
     });
 
+    root.querySelectorAll<HTMLElement>('[data-collection-group]').forEach((group) => {
+      const visible = group.querySelector('[data-collection-product]:not([hidden])');
+      group.hidden = !visible;
+    });
+
     count.textContent = resultCountLabel(matches.length);
     empty.hidden = matches.length !== 0;
 
-    const active = form.querySelectorAll<HTMLInputElement>('input:checked').length;
+    const active = [...form.elements].filter(
+      (element): element is HTMLInputElement =>
+        element instanceof HTMLInputElement && element.checked && element.value !== ''
+    ).length;
     if (badge) {
       badge.textContent = String(active);
       badge.hidden = active === 0;
@@ -160,7 +177,8 @@ const bindCollectionCatalog = (root: HTMLElement): void => {
     if (updateUrl) writeSelectionToUrl(selection);
   };
 
-  form.addEventListener('change', () => {
+  root.addEventListener('change', (event) => {
+    if (!(event.target instanceof HTMLInputElement)) return;
     page = 1;
     apply(true);
   });

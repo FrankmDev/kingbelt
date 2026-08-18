@@ -9,18 +9,30 @@ export interface NavItem {
   href: string;
 }
 
+export interface HeaderAccountCta {
+  label: string;
+  href: string;
+  ariaLabel: string;
+}
+
+/** CTA de cuenta en header y menú móvil. Login y registro comparten el mismo flujo alojado. */
+export const headerAccountCta: HeaderAccountCta = {
+  label: 'Iniciar sesión',
+  href: '/cuenta/iniciar',
+  ariaLabel: 'Iniciar sesión o crear cuenta',
+};
+
 export const mainNav: NavItem[] = [
+  { label: 'Productos', href: '/productos' },
   { label: 'La marca', href: '/sobre' },
   { label: 'Revista', href: '/blog' },
-  { label: 'Atención', href: '/ayuda' },
   { label: 'Contacto', href: '/contacto' },
 ];
 
 export const footerNav: NavItem[] = [
+  { label: 'Productos', href: '/productos' },
   { label: 'La marca', href: '/sobre' },
   { label: 'Revista', href: '/blog' },
-  { label: 'Atención', href: '/ayuda' },
-  { label: 'Colección', href: '/#coleccion' },
   { label: 'Contacto', href: '/contacto' },
 ];
 

@@ -4,6 +4,8 @@ import { join, resolve } from 'node:path';
 import astroConfiguration from '../astro.config.mjs';
 import {
   getShopifyStorefrontConfig,
+  inspectShopifyStoreDomain,
+  normalizeShopifyStoreDomain,
   ShopifyConfigurationError,
   SHOPIFY_STOREFRONT_API_VERSION,
 } from '../src/commerce/infrastructure/shopify/config.ts';
@@ -35,24 +37,83 @@ describe('configuración Shopify Storefront', () => {
       ...validConfig,
       storeDomain: '  KingBelt-Test.MyShopify.com  ',
     })).toEqual(validConfig);
+    expect(getShopifyStorefrontConfig({
+      ...validConfig,
+      storeDomain: 'https://kingbelt-test.myshopify.com',
+    })).toEqual(validConfig);
+    expect(getShopifyStorefrontConfig({
+      ...validConfig,
+      storeDomain: 'http://kingbelt-test.myshopify.com/',
+    })).toEqual(validConfig);
+    expect(getShopifyStorefrontConfig({
+      ...validConfig,
+      storeDomain: 'kingbelt-test.myshopify.com/',
+    })).toEqual(validConfig);
+    expect(getShopifyStorefrontConfig({
+      ...validConfig,
+      storeDomain: '"kingbelt-test.myshopify.com"',
+    })).toEqual(validConfig);
+    expect(() => getShopifyStorefrontConfig({ ...validConfig, storeDomain: undefined }))
+      .toThrow('Missing required Shopify configuration: SHOPIFY_STORE_DOMAIN');
   });
 
   test('rechaza dominio ausente o fuera del hostname exacto de Shopify', () => {
     const invalidDomains = [
       undefined,
       '',
-      'https://kingbelt.myshopify.com',
+      'kingbelt.es',
+      'https://kingbelt.es',
+      'admin.shopify.com/store/tienda',
+      'https://admin.shopify.com/store/tienda',
       'kingbelt.myshopify.com/products',
       'kingbelt.myshopify.com?preview=1',
       'kingbelt.myshopify.com#catalog',
       'kingbelt.myshopify.com.evil.test',
       'user@kingbelt.myshopify.com',
+      'https://user:pass@kingbelt.myshopify.com',
       'kingbelt.myshopify.com:443',
+      'host:443',
+      'kingbelt test.myshopify.com',
     ];
 
     invalidDomains.forEach((storeDomain) => {
       expect(() => getShopifyStorefrontConfig({ ...validConfig, storeDomain }))
         .toThrow(ShopifyConfigurationError);
+    });
+  });
+
+  test('documenta la normalización y el rechazo de SHOPIFY_STORE_DOMAIN', () => {
+    expect(normalizeShopifyStoreDomain('tienda.myshopify.com')).toBe('tienda.myshopify.com');
+    expect(normalizeShopifyStoreDomain('https://tienda.myshopify.com')).toBe('tienda.myshopify.com');
+    expect(normalizeShopifyStoreDomain('tienda.myshopify.com/')).toBe('tienda.myshopify.com');
+    expect(() => normalizeShopifyStoreDomain('admin.shopify.com/store/tienda'))
+      .toThrow(ShopifyConfigurationError);
+    expect(() => normalizeShopifyStoreDomain('kingbelt.es'))
+      .toThrow(ShopifyConfigurationError);
+
+    const protocolUrl = 'https://tienda.myshopify.com/';
+    expect(inspectShopifyStoreDomain(protocolUrl)).toEqual({
+      name: 'SHOPIFY_STORE_DOMAIN',
+      exists: true,
+      length: protocolUrl.length,
+      hasProtocol: true,
+      hasSlash: true,
+      hasWhitespace: false,
+      hasQuotes: false,
+    });
+    expect(inspectShopifyStoreDomain(' "kingbelt.es" ')).toMatchObject({
+      exists: true,
+      hasQuotes: true,
+      hasWhitespace: true,
+    });
+    expect(inspectShopifyStoreDomain(undefined)).toEqual({
+      name: 'SHOPIFY_STORE_DOMAIN',
+      exists: false,
+      length: 0,
+      hasProtocol: false,
+      hasSlash: false,
+      hasWhitespace: false,
+      hasQuotes: false,
     });
   });
 
@@ -62,7 +123,7 @@ describe('configuración Shopify Storefront', () => {
     expect(() => getShopifyStorefrontConfig({ ...validConfig, apiVersion: '2026-04' }))
       .toThrow(ShopifyConfigurationError);
     expect(() => getShopifyStorefrontConfig({ ...validConfig, storefrontToken: undefined }))
-      .toThrow('SHOPIFY_STOREFRONT_PRIVATE_TOKEN is required');
+      .toThrow('Missing required Shopify configuration: SHOPIFY_STOREFRONT_PRIVATE_TOKEN');
     expect(() => getShopifyStorefrontConfig({ ...validConfig, storefrontToken: ` ${testToken}` }))
       .toThrow('must not contain whitespace or control characters');
     expect(() => getShopifyStorefrontConfig({
@@ -102,9 +163,44 @@ describe('configuración Shopify Storefront', () => {
     expect(astroConfig).toContain('SHOPIFY_STORE_DOMAIN:');
     expect(astroConfig).toContain('SHOPIFY_API_VERSION:');
     expect(astroConfig).toContain('SHOPIFY_STOREFRONT_PRIVATE_TOKEN:');
+    expect(astroConfig).not.toContain('SHOPIFY_CART_COOKIE_SECRET');
+    expect(astroConfig).toContain('SHOPIFY_WEBHOOK_SECRET:');
+    expect(astroConfig).toContain('sessionDriverConfig');
+    expect(astroConfig).toContain('SESSION_COOKIE_NAME');
+    expect(example).toContain('UPSTASH_REDIS_REST_URL=');
+    expect(example).toContain('UPSTASH_REDIS_REST_TOKEN=');
+    expect(example).not.toContain('SHOPIFY_CART_COOKIE_SECRET');
+    expect(astroConfig).toContain('VERCEL_DEPLOY_HOOK_URL:');
     expect(astroConfig).not.toContain('SHOPIFY_USE_CATALOG');
     expect(astroConfig).toContain("access: 'secret'");
     expect(astroConfig).toContain('MAX_SHOPIFY_STOREFRONT_TOKEN_LENGTH');
+    expect(astroConfiguration.env.schema.SHOPIFY_STOREFRONT_PRIVATE_TOKEN).toMatchObject({
+      context: 'server',
+      access: 'secret',
+      optional: true,
+    });
+    expect(astroConfiguration.env.schema.SHOPIFY_WEBHOOK_SECRET).toMatchObject({
+      context: 'server',
+      access: 'secret',
+      optional: true,
+    });
+    expect(astroConfiguration.env.schema.VERCEL_DEPLOY_HOOK_URL).toMatchObject({
+      context: 'server',
+      access: 'secret',
+      optional: true,
+    });
+    expect(astroConfiguration.env.schema.SHOPIFY_STORE_DOMAIN).toMatchObject({
+      context: 'server',
+      access: 'public',
+      optional: true,
+    });
+    expect(astroConfiguration.env.schema.SHOPIFY_CART_COOKIE_SECRET).toBeUndefined();
+    expect(astroConfiguration.session.cookie.name).toBe('__Host-kingbelt-session');
+    expect(astroConfiguration.session.cookie.secure).toBe(true);
+    expect(astroConfiguration.session.cookie.sameSite).toBe('lax');
+    expect(astroConfiguration.session.cookie.path).toBe('/');
+    expect(astroConfiguration.session.cookie.domain).toBeUndefined();
+    expect(astroConfiguration.session.ttl).toBe(60 * 60 * 24 * 30);
   });
 
   test('el catálogo y el carrito comparten una selección explícita', () => {
@@ -115,9 +211,14 @@ describe('configuración Shopify Storefront', () => {
 
     expect(sourceRoot).toContain("import { COMMERCE_SOURCE } from 'astro:env/client'");
     expect(sourceRoot).toContain("export type CommerceSource = 'demo' | 'shopify'");
+    expect(sourceRoot).toContain('resolveCommerceSource');
+    expect(sourceRoot).toContain('isShopifyCommerce');
+    expect(sourceRoot).not.toContain('VERCEL_ENV');
     expect(catalogRoot).toContain('selectCommerceProvider');
     expect(catalogRoot).toContain('demoCatalogAdapter');
+    expect(catalogRoot).toContain("import('./infrastructure/demo/demo-catalog-adapter')");
     expect(catalogRoot).toContain('createShopifyCatalogAdapter');
+    expect(catalogRoot).toContain("import('./infrastructure/shopify/catalog-adapter')");
     expect(catalogRoot).not.toContain('shopifyCatalogEnabled');
     expect(catalogRoot).not.toContain('SHOPIFY_STORE_DOMAIN');
     expect(catalogRoot).not.toContain('SHOPIFY_STOREFRONT_PRIVATE_TOKEN');

@@ -2,13 +2,13 @@ import type { APIRoute } from 'astro';
 import { catalogProvider } from '@commerce/catalog';
 import { toCartCatalogSnapshot } from '@commerce/application/cart-catalog';
 import type { Product } from '@commerce/domain/catalog';
-import { commerceSource } from '@commerce/commerce-source';
+import { isShopifyCommerce } from '@commerce/commerce-source';
 
 // SSR: esta proyección solo pertenece al carrito demo.
 export const prerender = false;
 
 export const GET: APIRoute = async () => {
-  if (commerceSource === 'shopify') {
+  if (isShopifyCommerce()) {
     return new Response(null, {
       status: 404,
       headers: { 'Cache-Control': 'no-store' },

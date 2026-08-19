@@ -1,35 +1,63 @@
 ---
-import Breadcrumbs from '../ui/Breadcrumbs.astro';
+import SectionHeaderHome from '../sections/home/SectionHeaderHome.astro';
+import EditorialCtaSection from '../sections/EditorialCtaSection.astro';
 import LegalNavigation from './LegalNavigation.astro';
 import LegalStatusNotice from './LegalStatusNotice.astro';
-import type { LegalDocument } from '@content/legal';
+import HelpNavigation from '../help/HelpNavigation.astro';
+import { legalCta, type LegalDocument } from '@content/legal';
+
+interface SectionCopy {
+  index: string;
+  eyebrow: string;
+  title: string;
+  body: string;
+}
 
 interface Props {
   document: LegalDocument;
-  title: string;
-  description?: string;
-  breadcrumbs: { label: string; href?: string }[];
-  showLegalNav?: boolean;
+  section: SectionCopy;
+  relatedNav?: 'legal' | 'help' | 'none';
   showContactCta?: boolean;
+  ctaIndex?: string;
 }
 
 const {
   document,
-  title,
-  description,
-  breadcrumbs,
-  showLegalNav = true,
+  section,
+  relatedNav = 'legal',
   showContactCta = true,
+  ctaIndex = '02',
 } = Astro.props;
 
 const { status, updatedAt, version, sections } = document;
+const titleId = 'legal-document-title';
+const statusMeta =
+  status === 'published' ? 'Vigente' : status === 'inactive' ? 'No operativo' : 'Borrador';
+const hasIntro = Astro.slots.has('intro');
 ---
 
 <div class="legal-page">
-  <header class="legal-page__header kb-shell-wide">
-    <Breadcrumbs items={breadcrumbs} class="mb-5" />
-    <div class="legal-page__meta-row">
-      <h1 class="legal-page__title">{title}</h1>
+  {status !== 'published' && (
+    <div class="legal-page__notice">
+      <div class="legal-page__notice-inner kb-shell-wide">
+        <LegalStatusNotice status={status} />
+      </div>
+    </div>
+  )}
+
+  <section class="legal-page__document" aria-labelledby={titleId}>
+    <div class="legal-page__inner kb-shell-wide">
+      <SectionHeaderHome
+        index={section.index}
+        eyebrow={section.eyebrow}
+        meta={statusMeta}
+        titleId={titleId}
+        body={section.body}
+        class="legal-page__header"
+      >
+        <Fragment slot="title">{section.title}</Fragment>
+      </SectionHeaderHome>
+
       {(version || updatedAt) && (
         <p class="legal-page__version kb-meta-label">
           {version && <span>v{version}</span>}
@@ -37,114 +65,135 @@ const { status, updatedAt, version, sections } = document;
           {updatedAt && <span>Actualizado: {updatedAt}</span>}
         </p>
       )}
+
+      <div class="legal-page__layout">
+        {sections.length > 0 && (
+          <aside class="legal-page__aside" aria-label="Navegación del documento">
+            <div class="kb-reading-panel legal-page__toc-panel">
+              <header class="kb-reading-panel__head">
+                <div class="kb-reading-panel__head-bar">
+                  <p class="kb-eyebrow kb-eyebrow-lined kb-reading-panel__eyebrow">Índice</p>
+                  <span class="kb-reading-panel__folio kb-meta-label" aria-hidden="true">
+                    {String(sections.length).padStart(2, '0')}
+                  </span>
+                </div>
+                <p class="kb-reading-panel__statement">En este documento</p>
+              </header>
+
+              <details class="legal-page__toc-disclosure" open>
+                <summary class="legal-page__toc-summary kb-action-label">
+                  Ver apartados
+                </summary>
+                <nav class="legal-page__toc" aria-label="Índice del documento">
+                  <ol class="kb-reading-panel__layers legal-page__toc-list">
+                    {sections.map((item, index) => (
+                      <li class="kb-reading-panel__layer">
+                        <div class="kb-reading-panel__rail" aria-hidden="true">
+                          <span class="kb-reading-panel__num">
+                            {String(index + 1).padStart(2, '0')}
+                          </span>
+                          {index < sections.length - 1 && (
+                            <span class="kb-reading-panel__rail-line"></span>
+                          )}
+                        </div>
+                        <div class="kb-reading-panel__body">
+                          <a href={`#${item.id}`} class="legal-page__toc-link">
+                            {item.title}
+                          </a>
+                        </div>
+                      </li>
+                    ))}
+                  </ol>
+                </nav>
+              </details>
+
+              {relatedNav === 'legal' && (
+                <div class="legal-page__related">
+                  <p class="legal-page__related-label kb-action-label">Documentos legales</p>
+                  <LegalNavigation currentPath={Astro.url.pathname} />
+                </div>
+              )}
+
+              {relatedNav === 'help' && (
+                <div class="legal-page__related">
+                  <p class="legal-page__related-label kb-action-label">Centro de ayuda</p>
+                  <HelpNavigation currentPath={Astro.url.pathname} />
+                </div>
+              )}
+            </div>
+          </aside>
+        )}
+
+        <div class="legal-page__main">
+          {hasIntro && (
+            <div class="legal-page__intro">
+              <slot name="intro" />
+            </div>
+          )}
+          <article class="legal-page__content">
+            <slot />
+          </article>
+        </div>
+      </div>
     </div>
-    {description && <p class="legal-page__desc">{description}</p>}
-    {status !== 'published' && (
-      <LegalStatusNotice class="legal-page__notice" status={status} />
-    )}
-  </header>
-
-  <div class="legal-page__body kb-shell-wide">
-    {sections.length > 0 && (
-      <aside class="legal-page__toc" aria-label="Navegación del documento">
-        <details class="legal-page__toc-disclosure">
-          <summary class="legal-page__toc-summary kb-action-label">
-            Índice del documento
-          </summary>
-          <div class="legal-page__toc-panel">
-            <nav aria-label="Índice del documento">
-              <p class="legal-page__toc-label kb-action-label">En este documento</p>
-              <ol class="legal-page__toc-list">
-                {sections.map((section) => (
-                  <li>
-                    <a href={`#${section.id}`} class="legal-page__toc-link">
-                      {section.title}
-                    </a>
-                  </li>
-                ))}
-              </ol>
-            </nav>
-            {showLegalNav && (
-              <div class="legal-page__legal-nav">
-                <p class="legal-page__toc-label kb-action-label">Documentos legales</p>
-                <LegalNavigation currentPath={Astro.url.pathname} />
-              </div>
-            )}
-          </div>
-        </details>
-      </aside>
-    )}
-
-    <article class="legal-page__content">
-      <slot />
-    </article>
-  </div>
+  </section>
 
   {showContactCta && (
-    <footer class="legal-page__footer kb-shell-wide">
-      <p class="legal-page__footer-text">
-        Para consultas sobre este documento, escríbenos a{' '}
-        <a href="/contacto">contacto</a>.
-      </p>
-    </footer>
+    <EditorialCtaSection cta={legalCta} index={ctaIndex} meta="Contacto" titleId="legal-cta-title" />
   )}
 </div>
 
 <style>
   .legal-page {
-    padding-top: clamp(6.5rem, 9vw, 8rem);
-    padding-bottom: var(--kb-space-section);
-  }
-
-  .legal-page__header {
-    margin-bottom: clamp(2rem, 4vw, 3rem);
-    max-width: var(--kb-shell-copy);
-  }
-
-  .legal-page__meta-row {
     display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 0.75rem 1.5rem;
-    margin-bottom: 0.75rem;
-  }
-
-  .legal-page__title {
-    font-family: var(--font-display);
-    font-size: clamp(1.75rem, 3.5vw, 2.5rem);
-    font-weight: var(--kb-w-heading-strong);
-    line-height: 1.12;
-    color: var(--color-king-text);
-    margin: 0;
-    text-wrap: balance;
-  }
-
-  .legal-page__version {
-    margin: 0;
-    color: var(--color-king-muted);
-    white-space: nowrap;
-  }
-
-  .legal-page__desc {
-    font-size: var(--kb-text-body);
-    line-height: 1.65;
-    color: var(--color-king-muted);
-    margin: 0;
-    max-width: 58ch;
+    flex-direction: column;
   }
 
   .legal-page__notice {
-    margin-top: 1.25rem;
+    padding-block: var(--kb-space-5);
+    background: var(--color-king-surface);
+    border-top: 1px solid var(--kb-stroke-hairline);
   }
 
-  .legal-page__body {
+  .legal-page__document {
+    padding-block: var(--kb-space-section);
+    background: var(--color-king-bg);
+    border-top: 1px solid var(--kb-stroke-hairline);
+  }
+
+  .legal-page__header:global(.section-header-home) {
+    width: 100%;
+    margin-bottom: var(--kb-space-4);
+  }
+
+  .legal-page__version {
+    margin: 0 0 var(--kb-space-gap);
+    color: var(--color-king-muted);
+  }
+
+  .legal-page__layout {
     display: grid;
-    gap: clamp(2rem, 4vw, 3rem);
+    gap: var(--kb-space-gap);
+    align-items: start;
+  }
+
+  @media (min-width: 64rem) {
+    .legal-page__layout {
+      grid-template-columns: minmax(16rem, 20rem) minmax(0, 1fr);
+    }
+
+    .legal-page__aside {
+      position: sticky;
+      top: 6rem;
+    }
+  }
+
+  .legal-page__toc-panel:global(.kb-reading-panel) {
+    padding-block: var(--kb-space-5);
   }
 
   .legal-page__toc-disclosure {
-    border-block: 1px solid var(--kb-stroke-hairline);
+    border: 0;
   }
 
   .legal-page__toc-summary {
@@ -178,69 +227,35 @@ const { status, updatedAt, version, sections } = document;
     outline-offset: 2px;
   }
 
-  .legal-page__toc-panel {
-    padding-block: var(--kb-space-4) var(--kb-space-5);
-  }
-
   @media (min-width: 64rem) {
-    .legal-page__body {
-      grid-template-columns: minmax(12rem, 15rem) minmax(0, 1fr);
-      align-items: start;
-    }
-
-    .legal-page__toc {
-      position: sticky;
-      top: 6rem;
-    }
-
-    .legal-page__toc-disclosure {
-      border: 0;
-    }
-
     .legal-page__toc-summary {
       display: none;
     }
 
-    .legal-page__toc-disclosure:not([open]) > .legal-page__toc-panel {
+    .legal-page__toc-disclosure:not([open]) > .legal-page__toc {
       display: block;
     }
-
-    .legal-page__toc-panel {
-      padding: 0;
-    }
   }
 
-  .legal-page__toc-label {
-    margin: 0 0 0.75rem;
-    color: var(--color-king-muted);
+  .legal-page__toc-list:global(.kb-reading-panel__layers) {
+    margin: 0;
   }
 
-  .legal-page__toc-list {
-    list-style: none;
-    margin: 0 0 2rem;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.35rem;
+  .legal-page__toc-list :global(.kb-reading-panel__body) {
+    padding-block: 0.35rem;
   }
 
   .legal-page__toc-link {
     display: block;
-    padding: 0.35rem 0;
-    font-size: var(--kb-text-2xs);
+    font-size: var(--kb-text-xs);
     line-height: 1.45;
     color: var(--color-king-muted);
     text-decoration: none;
-    border-left: 2px solid transparent;
-    padding-left: 0.65rem;
-    transition:
-      color var(--kb-dur-fast) var(--kb-ease-out),
-      border-color var(--kb-dur-fast) var(--kb-ease-out);
+    transition: color var(--kb-dur-fast) var(--kb-ease-out);
   }
 
   .legal-page__toc-link:hover {
     color: var(--color-king-text);
-    border-left-color: var(--color-king-accent);
   }
 
   .legal-page__toc-link:focus-visible {
@@ -248,29 +263,34 @@ const { status, updatedAt, version, sections } = document;
     outline-offset: 2px;
   }
 
+  .legal-page__related {
+    margin-top: var(--kb-space-5);
+    padding-top: var(--kb-space-4);
+    border-top: 1px solid var(--kb-stroke-hairline);
+  }
+
+  .legal-page__related-label {
+    margin: 0 0 0.75rem;
+    color: var(--color-king-muted);
+  }
+
+  .legal-page__main {
+    min-width: 0;
+  }
+
+  .legal-page__intro {
+    margin-bottom: var(--kb-space-gap);
+  }
+
   .legal-page__content {
     min-width: 0;
   }
 
-  .legal-page__footer {
-    margin-top: clamp(2rem, 4vw, 3rem);
-    padding-top: 1.5rem;
-    border-top: 1px solid var(--kb-stroke-hairline);
+  .legal-page__content :global(.kb-prose > .legal-section + .legal-section) {
+    margin-top: 0;
   }
 
-  .legal-page__footer-text {
-    font-size: var(--kb-text-xs);
-    color: var(--color-king-muted);
-    margin: 0;
-  }
-
-  .legal-page__footer-text a {
-    color: var(--color-king-accent);
-    font-weight: 500;
-    text-decoration: none;
-  }
-
-  .legal-page__footer-text a:hover {
-    text-decoration: underline;
+  .legal-page__content :global(.kb-prose--document > .legal-section + .legal-section) {
+    margin-top: 0;
   }
 </style>

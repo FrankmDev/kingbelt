@@ -10,6 +10,11 @@ import {
   MAX_SHOPIFY_STOREFRONT_TOKEN_LENGTH,
   SHOPIFY_STOREFRONT_API_VERSION,
 } from './src/commerce/infrastructure/shopify/config.ts';
+import {
+  SESSION_COOKIE_NAME,
+  SESSION_TTL_SECONDS,
+  sessionDriverConfig,
+} from './src/session-driver.ts';
 
 const productRedirects = buildProductRedirectMap();
 
@@ -47,13 +52,30 @@ export default defineConfig({
         optional: true,
         max: MAX_SHOPIFY_STOREFRONT_TOKEN_LENGTH,
       }),
-      SHOPIFY_CART_COOKIE_SECRET: envField.string({
+      SHOPIFY_WEBHOOK_SECRET: envField.string({
         context: 'server',
         access: 'secret',
         optional: true,
         max: 256,
       }),
+      VERCEL_DEPLOY_HOOK_URL: envField.string({
+        context: 'server',
+        access: 'secret',
+        optional: true,
+        max: 512,
+      }),
     },
+  },
+  session: {
+    driver: sessionDriverConfig,
+    cookie: {
+      name: SESSION_COOKIE_NAME,
+      path: '/',
+      sameSite: 'lax',
+      secure: true,
+      maxAge: SESSION_TTL_SECONDS,
+    },
+    ttl: SESSION_TTL_SECONDS,
   },
   // Sin astronauta/Dev Toolbar en desarrollo: menos ruido y superficie JS.
   devToolbar: {

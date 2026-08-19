@@ -1,6 +1,4 @@
 ---
-import Panel from '../ui/Panel.astro';
-
 interface SizeRow {
   size: string;
   waistCm?: string;
@@ -43,13 +41,19 @@ const hasData = rows.length > 0;
       </table>
     </div>
   ) : (
-    <Panel padding="lg" class="size-table__pending">
-      <h3 class="size-table__pending-title">Equivalencias por modelo</h3>
-      <p class="size-table__pending-text">
+    <aside class="kb-reading-panel size-table__pending">
+      <header class="kb-reading-panel__head">
+        <div class="kb-reading-panel__head-bar">
+          <p class="kb-eyebrow kb-eyebrow-lined kb-reading-panel__eyebrow">Pendiente</p>
+          <span class="kb-reading-panel__folio kb-meta-label" aria-hidden="true">—</span>
+        </div>
+        <p class="kb-reading-panel__statement">Equivalencias por modelo</p>
+      </header>
+      <p class="kb-reading-panel__text size-table__pending-text">
         Las tablas de tallaje se publicarán para cada referencia cuando las medidas estén confirmadas.
         Mientras tanto, utiliza los métodos de medición de esta guía y consulta la ficha del producto o escríbenos antes de comprar.
       </p>
-    </Panel>
+    </aside>
   )}
 </div>
 
@@ -57,8 +61,7 @@ const hasData = rows.length > 0;
   .size-table__wrap {
     overflow-x: auto;
     overscroll-behavior-inline: contain;
-    border: 1px solid var(--kb-stroke-hairline);
-    border-radius: var(--kb-panel-radius);
+    border-top: 1px solid var(--kb-stroke-hairline);
   }
 
   .size-table__table {
@@ -70,7 +73,7 @@ const hasData = rows.length > 0;
 
   .size-table__table th,
   .size-table__table td {
-    padding: 0.85rem 1rem;
+    padding: 0.95rem 1rem;
     text-align: left;
     border-bottom: 1px solid var(--kb-stroke-hairline);
   }
@@ -81,13 +84,13 @@ const hasData = rows.length > 0;
     text-transform: uppercase;
     letter-spacing: 0.1em;
     color: var(--color-king-muted);
-    background: var(--kb-surface-light);
+    background: var(--color-king-bg);
   }
 
   .size-table__table tbody th {
-    font-weight: 600;
+    font-family: var(--font-display);
+    font-weight: var(--kb-w-medium);
     color: var(--color-king-text);
-    background: var(--color-king-surface);
   }
 
   .size-table__table tbody td {
@@ -99,19 +102,8 @@ const hasData = rows.length > 0;
     border-bottom: none;
   }
 
-  .size-table__pending-title {
-    font-family: var(--font-display);
-    font-size: clamp(1.1rem, 2vw, 1.25rem);
-    font-weight: var(--kb-w-medium);
-    color: var(--color-king-text);
-    margin: 0 0 0.75rem;
-  }
-
   .size-table__pending-text {
-    font-size: var(--kb-text-xs);
-    line-height: 1.65;
-    color: var(--color-king-muted);
-    margin: 0;
+    padding-top: var(--kb-space-4);
     max-width: 58ch;
   }
 </style>

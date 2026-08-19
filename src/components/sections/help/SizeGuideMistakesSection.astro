@@ -1,0 +1,75 @@
+---
+import HomeSectionHead from '../home/HomeSectionHead.astro';
+import FeatureCard from '../../ui/FeatureCard.astro';
+
+interface Mistake {
+  title: string;
+  text: string;
+}
+
+interface SectionCopy {
+  index: string;
+  eyebrow: string;
+  meta: string;
+  title: string;
+  body: string;
+}
+
+interface Props {
+  section: SectionCopy;
+  items: readonly Mistake[];
+}
+
+const { section, items } = Astro.props;
+const titleId = 'size-guide-mistakes-title';
+---
+
+<section class="size-guide-mistakes" aria-labelledby={titleId}>
+  <div class="size-guide-mistakes__inner kb-shell-wide">
+    <HomeSectionHead
+      index={section.index}
+      eyebrow={section.eyebrow}
+      meta={section.meta}
+      titleId={titleId}
+      body={section.body}
+      class="size-guide-mistakes__header"
+    >
+      <Fragment slot="title">{section.title}</Fragment>
+    </HomeSectionHead>
+
+    <div class="size-guide-mistakes__grid">
+      {items.map((item, index) => (
+        <FeatureCard
+          number={String(index + 1).padStart(2, '0')}
+          title={item.title}
+          description={item.text}
+          variant={index === 0 ? 'steel' : 'default'}
+        />
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .size-guide-mistakes {
+    padding-block: var(--kb-space-section);
+    background: var(--color-king-bg);
+    border-top: 1px solid var(--kb-stroke-hairline);
+  }
+
+  .size-guide-mistakes__header:global(.section-header-home) {
+    width: 100%;
+    margin-bottom: var(--kb-space-gap);
+  }
+
+  .size-guide-mistakes__grid {
+    display: grid;
+    gap: var(--kb-space-gap);
+  }
+
+  @media (min-width: 48rem) {
+    .size-guide-mistakes__grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+</style>

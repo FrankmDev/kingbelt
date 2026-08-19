@@ -2,93 +2,52 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Header from '../components/layout/Header.astro';
 import Footer from '../components/layout/Footer.astro';
-import HelpPageLayout from '../components/help/HelpPageLayout.astro';
-import Prose from '../components/ui/Prose.astro';
-import Panel from '../components/ui/Panel.astro';
-import { careSections, helpMeta } from '@content/help';
+import PageHeader from '../components/ui/PageHeader.astro';
+import EditorialCtaSection from '../components/sections/EditorialCtaSection.astro';
+import CareIntroSection from '../components/sections/help/CareIntroSection.astro';
+import CareTopicsSection from '../components/sections/help/CareTopicsSection.astro';
+import { carePage, careSections, helpHub, helpMeta } from '@content/help';
 
 const { title, description } = helpMeta.care;
 const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href;
+const { hero, intro, chapters } = carePage;
+
+const chapterItems = chapters.map((chapter) => ({
+  chapter,
+  items: chapter.itemIds.map((id) => {
+    const item = careSections.find((section) => section.id === id);
+    if (!item) {
+      throw new Error(`Care topic not found: ${id}`);
+    }
+    return item;
+  }),
+}));
 ---
 
 <BaseLayout title={title} description={description} canonicalURL={canonicalURL}>
-  <Header slot="header" initialTheme="light" scrolledTheme="light" compactThreshold={32} />
+  <Header slot="header" initialTheme="dark" scrolledTheme="light" compactThreshold={32} />
 
-  <HelpPageLayout
-    title="Cuidados del cuero"
-    description="Recomendaciones generales para conservar cinturones y herrajes. Las instrucciones específicas se publicarán por producto."
+  <PageHeader
+    eyebrow={hero.eyebrow}
+    description={hero.description}
+    image={hero.image}
+    imageAlt={hero.imageAlt}
+    imagePosition={hero.imagePosition}
+    meta={hero.meta}
     breadcrumbs={[{ label: 'Ayuda', href: '/ayuda' }, { label: 'Cuidados' }]}
   >
-    <Prose>
-      <p>
-        Estas recomendaciones son de carácter general. La composición del material, el curtido, los tratamientos
-        y la durabilidad concreta de cada pieza se indicarán en la ficha del producto cuando estén confirmados.
-      </p>
-    </Prose>
+    <Fragment slot="title">
+      <span set:html={hero.title} />
+    </Fragment>
+  </PageHeader>
 
-    <div class="care-sections">
-      {careSections.map((section) => (
-        <section id={section.id} class="care-section" aria-labelledby={`care-${section.id}`}>
-          <h2 id={`care-${section.id}`} class="care-section__title">{section.title}</h2>
-          <p class="care-section__text">{section.content}</p>
-        </section>
-      ))}
-    </div>
+  <CareIntroSection section={intro} />
 
-    <Panel padding="md" class="care-note">
-      <p class="care-note__label kb-meta-label">Instrucciones por producto</p>
-      <p class="care-note__text">
-        Cuando un modelo requiera cuidados específicos —productos compatibles, impermeabilidad o reparación—,
-        la información aparecerá en su ficha. Hasta entonces, aplica solo las recomendaciones generales de esta guía.
-      </p>
-    </Panel>
-  </HelpPageLayout>
+  {chapterItems.map(({ chapter, items }) => (
+    <CareTopicsSection chapter={chapter} items={items} />
+  ))}
 
-  <Footer slot="footer" />
+  <EditorialCtaSection cta={helpHub.cta} index="04" titleId="care-cta-title" />
+
+  <Footer slot="footer" connected />
 </BaseLayout>
-
-<style>
-  .care-sections {
-    display: flex;
-    flex-direction: column;
-    gap: clamp(1.75rem, 3vw, 2.5rem);
-    margin-top: 2rem;
-  }
-
-  .care-section {
-    scroll-margin-top: 7rem;
-  }
-
-  .care-section__title {
-    font-family: var(--font-display);
-    font-size: clamp(1.15rem, 2vw, 1.35rem);
-    font-weight: var(--kb-w-medium);
-    color: var(--color-king-text);
-    margin: 0 0 0.65rem;
-  }
-
-  .care-section__text {
-    font-size: var(--kb-text-xs);
-    line-height: 1.7;
-    color: var(--color-king-muted);
-    margin: 0;
-    max-width: 62ch;
-  }
-
-  .care-note {
-    margin-top: 2rem;
-  }
-
-  .care-note__label {
-    margin: 0 0 0.5rem;
-    color: var(--color-king-accent);
-  }
-
-  .care-note__text {
-    font-size: var(--kb-text-xs);
-    line-height: 1.65;
-    color: var(--color-king-muted);
-    margin: 0;
-    max-width: 58ch;
-  }
-</style>

@@ -1,0 +1,68 @@
+---
+import HomeSectionHead from '../home/HomeSectionHead.astro';
+import MediaFrame from '../../ui/MediaFrame.astro';
+
+interface ImageData {
+  src: string;
+  alt: string;
+  label: string;
+  caption: string;
+}
+
+interface SectionCopy {
+  index: string;
+  eyebrow: string;
+  meta: string;
+  title: string;
+  body: string;
+  image: ImageData;
+}
+
+interface Props {
+  section: SectionCopy;
+}
+
+const { section } = Astro.props;
+const titleId = 'size-guide-intro-title';
+---
+
+<section class="size-guide-intro" aria-labelledby={titleId}>
+  <div class="size-guide-intro__inner kb-shell-wide">
+    <HomeSectionHead
+      index={section.index}
+      eyebrow={section.eyebrow}
+      meta={section.meta}
+      titleId={titleId}
+      body={section.body}
+      class="size-guide-intro__header"
+    >
+      <Fragment slot="title">{section.title}</Fragment>
+    </HomeSectionHead>
+
+    <MediaFrame
+      src={section.image.src}
+      alt={section.image.alt}
+      ratio="21/9"
+      label={section.image.label}
+      caption={section.image.caption}
+      captionNumber={section.index}
+      width={1440}
+      height={617}
+      loading="lazy"
+      class="size-guide-intro__media"
+    />
+  </div>
+</section>
+
+<style>
+  .size-guide-intro {
+    padding-block: var(--kb-space-section);
+    background: var(--color-king-surface);
+    border-top: 1px solid var(--kb-stroke-hairline);
+  }
+
+  .size-guide-intro__header:global(.section-header-home) {
+    width: 100%;
+    margin-bottom: var(--kb-space-gap);
+  }
+</style>

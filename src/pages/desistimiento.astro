@@ -2,13 +2,15 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Header from '../components/layout/Header.astro';
 import Footer from '../components/layout/Footer.astro';
+import PageHeader from '../components/ui/PageHeader.astro';
 import LegalPageLayout from '../components/legal/LegalPageLayout.astro';
 import LegalSection from '../components/legal/LegalSection.astro';
 import WithdrawalForm from '../components/legal/WithdrawalForm.astro';
 import Prose from '../components/ui/Prose.astro';
-import { getLegalRobots, legalDocuments } from '@content/legal';
+import { getLegalRobots, legalDocuments, legalPages } from '@content/legal';
 
 const doc = legalDocuments.desistimiento;
+const page = legalPages.desistimiento;
 const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href;
 ---
 
@@ -18,14 +20,26 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin)
   canonicalURL={canonicalURL}
   robots={getLegalRobots(doc)}
 >
-  <Header slot="header" initialTheme="light" scrolledTheme="light" compactThreshold={32} />
+  <Header slot="header" initialTheme="dark" scrolledTheme="light" compactThreshold={32} />
+
+  <PageHeader
+    eyebrow="Legal"
+    description={page.lede}
+    image={page.image}
+    imageAlt={page.imageAlt}
+    imagePosition={page.imagePosition}
+    meta={page.meta}
+    breadcrumbs={[{ label: page.heading }]}
+  >
+    <Fragment slot="title">
+      <span set:html={page.titleHtml} />
+    </Fragment>
+  </PageHeader>
 
   <LegalPageLayout
     document={doc}
-    title="Formulario de desistimiento"
-    description="Vista interna de revisión. El mecanismo electrónico no está activo."
-    breadcrumbs={[{ label: 'Desistimiento' }]}
-    showLegalNav={false}
+    section={page.section}
+    relatedNav="none"
     showContactCta={false}
   >
     <Prose variant="document">
@@ -67,11 +81,11 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin)
     </div>
   </LegalPageLayout>
 
-  <Footer slot="footer" />
+  <Footer slot="footer" connected />
 </BaseLayout>
 
 <style>
   .withdrawal-preview {
-    margin-top: 2rem;
+    margin-top: var(--kb-space-gap);
   }
 </style>

@@ -170,6 +170,95 @@ export const legalDocuments = {
   },
 } satisfies Record<string, LegalDocument>;
 
+export const legalCta = {
+  eyebrow: 'Consultas',
+  title: '¿Tienes una duda sobre este documento?',
+  description:
+    'Si necesitas aclarar un apartado, escríbenos con el documento y el punto concreto. No sustituye la revisión legal pendiente.',
+  buttonLabel: 'Ir a contacto',
+  buttonHref: '/contacto',
+  image: '/images/blog/cinturon-marron.jpg',
+  imagePosition: 'center 40%',
+} as const;
+
+export const legalPages = {
+  avisoLegal: {
+    heading: 'Aviso legal',
+    titleHtml: 'Información del <em>titular</em>.',
+    lede: 'Información legal del titular del sitio web.',
+    image: '/images/brand/cinturones-en-taller.jpg',
+    imageAlt: 'Persona sujetando varios cinturones de cuero en un taller',
+    imagePosition: 'center 52%',
+    meta: 'KingBelt · Aviso legal',
+    section: {
+      index: '01',
+      eyebrow: 'Documento',
+      title: 'Titular, uso del sitio y responsabilidad.',
+      body: 'Los apartados pendientes se completarán cuando la empresa confirme los datos societarios.',
+    },
+  },
+  privacidad: {
+    heading: 'Política de privacidad',
+    titleHtml: 'Cómo tratamos tus <em>datos</em>.',
+    lede: 'Información sobre el tratamiento de datos personales.',
+    image: '/images/blog/cinturon-negro.jpg',
+    imageAlt: 'Cinturón negro de vestir sobre fondo neutro',
+    imagePosition: 'center 55%',
+    meta: 'KingBelt · Privacidad',
+    section: {
+      index: '01',
+      eyebrow: 'Documento',
+      title: 'Tratamiento, derechos y ejercicio.',
+      body: 'El resumen de primera capa recoge lo confirmado. El resto del documento sigue en revisión.',
+    },
+  },
+  cookies: {
+    heading: 'Política de cookies y tecnologías',
+    titleHtml: 'Tecnologías que usa este <em>sitio</em>.',
+    lede: 'Información sobre el almacenamiento local y recursos externos utilizados actualmente.',
+    image: '/images/blog/cinturon-marron-oscuro.jpg',
+    imageAlt: 'Detalle de cinturón de cuero marrón oscuro',
+    imagePosition: 'center 48%',
+    meta: 'KingBelt · Cookies',
+    section: {
+      index: '01',
+      eyebrow: 'Documento',
+      title: 'Solo lo demostrable en el código.',
+      body: 'No hay cookies de analítica, publicidad ni marketing. Esta política describe el almacenamiento local y las tipografías externas.',
+    },
+  },
+  condiciones: {
+    heading: 'Condiciones generales de compra',
+    titleHtml: 'Condiciones de <em>compra</em>.',
+    lede: 'Condiciones contractuales aplicables a las compras en KingBelt.',
+    image: '/images/brand/cinturones-en-taller.jpg',
+    imageAlt: 'Persona sujetando varios cinturones de cuero en un taller',
+    imagePosition: 'center 46%',
+    meta: 'KingBelt · Condiciones',
+    section: {
+      index: '01',
+      eyebrow: 'Documento',
+      title: 'El contrato, cuando el ecommerce esté activo.',
+      body: 'El texto definitivo se publicará antes de activar la venta. Mientras tanto, solo constan los apartados ya redactados.',
+    },
+  },
+  desistimiento: {
+    heading: 'Formulario de desistimiento',
+    titleHtml: 'Desistimiento, <em>aún no operativo</em>.',
+    lede: 'Vista interna de revisión. El mecanismo electrónico no está activo.',
+    image: '/images/blog/cinturon-negro.jpg',
+    imageAlt: 'Cinturón negro de vestir sobre fondo neutro',
+    imagePosition: 'center 62%',
+    meta: 'KingBelt · Desistimiento',
+    section: {
+      index: '01',
+      eyebrow: 'Revisión interna',
+      title: 'El proceso previsto, sin envío.',
+      body: 'Esta ruta no permite presentar solicitudes. Servirá para comunicar el desistimiento cuando el ecommerce esté operativo.',
+    },
+  },
+} as const;
+
 type LegalDocumentKey = keyof typeof legalDocuments;
 const allLegalDocuments: LegalDocument[] = Object.values(legalDocuments);
 

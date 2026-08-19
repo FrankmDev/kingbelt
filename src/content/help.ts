@@ -244,6 +244,144 @@ export const helpHub = {
   },
 } as const;
 
+export const sizeGuidePage = {
+  hero: {
+    eyebrow: 'Ayuda',
+    title: 'Mide antes de <em>elegir</em>.',
+    description:
+      'Un cinturón debe ajustarse con comodidad en el agujero central. La equivalencia final depende del modelo.',
+    image: '/images/blog/cinturon-negro.jpg',
+    imageAlt: 'Cinturón negro de vestir sobre fondo neutro',
+    imagePosition: 'center 58%',
+    meta: 'KingBelt · Guía de tallas',
+  },
+  intro: {
+    index: '01',
+    eyebrow: 'Antes de comprar',
+    meta: 'Criterio',
+    title: 'Por qué medir reduce errores.',
+    body:
+      'La talla correcta depende del modelo, del ancho y del punto de referencia de cada referencia. Toma la medida y contrástala con la ficha del producto.',
+    image: {
+      src: '/images/brand/cinturones-en-taller.jpg',
+      alt: 'Persona sujetando varios cinturones de cuero en un taller',
+      label: 'Ajuste',
+      caption: 'El agujero central debe quedar cómodo, con margen a ambos extremos.',
+    },
+  },
+  methods: {
+    index: '02',
+    eyebrow: 'Métodos',
+    meta: 'Dos lecturas',
+    title: 'Dos formas de tomar la medida.',
+    body: 'Utiliza el método que te resulte más fiable. En ambos casos, verifica el resultado con la ficha del modelo.',
+  },
+  diagram: {
+    index: '03',
+    eyebrow: 'Referencia',
+    meta: 'Conceptual',
+    title: 'De la hebilla al agujero que usas.',
+    body:
+      'El diagrama muestra el recorrido de la medida. No sustituye las equivalencias del modelo concreto.',
+  },
+  table: {
+    index: '04',
+    eyebrow: 'Equivalencias',
+    meta: 'Por modelo',
+    title: 'Tabla de tallas.',
+    body: 'Las medidas definitivas se publicarán por referencia cuando estén confirmadas.',
+  },
+  mistakes: {
+    index: '05',
+    eyebrow: 'Errores habituales',
+    meta: 'Evitar',
+    title: 'Lecturas que suelen fallar.',
+    body: 'La curvatura del cuerpo, la talla de pantalón o redondear sin criterio alteran el resultado.',
+  },
+  faq: {
+    index: '06',
+    eyebrow: 'Preguntas frecuentes',
+    meta: 'Tallaje',
+    title: 'Dudas sobre la medida.',
+    body: 'Si tu caso queda entre dos tallas o el modelo no comparte sistema, escríbenos con la medida exacta.',
+  },
+} as const;
+
+export const carePage = {
+  hero: {
+    eyebrow: 'Ayuda',
+    title: 'Conservar el cuero, <em>sin recetas genéricas</em>.',
+    description:
+      'Recomendaciones generales para cinturones y herrajes. Las instrucciones específicas se publicarán por producto.',
+    image: '/images/blog/cinturon-marron.jpg',
+    imageAlt: 'Cinturón de cuero marrón sobre fondo neutro',
+    imagePosition: 'center 42%',
+    meta: 'KingBelt · Cuidados',
+  },
+  intro: {
+    index: '01',
+    eyebrow: 'Alcance',
+    meta: 'General',
+    title: 'Una guía, no una ficha de material.',
+    body:
+      'La composición, el curtido, los tratamientos y la durabilidad concreta de cada pieza se indicarán en su ficha cuando estén confirmados.',
+    image: {
+      src: '/images/blog/cinturon-marron-oscuro.jpg',
+      alt: 'Detalle de cinturón de cuero marrón oscuro',
+      label: 'Material',
+      caption: 'Aplica solo lo confirmado para el modelo que tienes.',
+    },
+    note: {
+      label: 'Instrucciones por producto',
+      text:
+        'Cuando un modelo requiera cuidados específicos —productos compatibles, impermeabilidad o reparación—, la información aparecerá en su ficha. Hasta entonces, aplica solo las recomendaciones generales de esta guía.',
+    },
+  },
+  chapters: [
+    {
+      id: 'diario',
+      index: '02',
+      eyebrow: 'Uso diario',
+      meta: 'Conservación',
+      title: 'Hábitos que alargan la pieza.',
+      body: 'Limpieza, humedad, secado y almacenamiento: lo que más influye en el día a día.',
+      tone: 'light',
+      itemIds: ['limpieza', 'humedad', 'secado', 'almacenamiento'],
+    },
+    {
+      id: 'material',
+      index: '03',
+      eyebrow: 'Material y herrajes',
+      meta: 'Revisión',
+      title: 'Qué vigilar con el tiempo.',
+      body: 'Hebillas, pátina, prácticas a evitar y cuándo conviene consultar.',
+      tone: 'dark',
+      itemIds: ['herrajes', 'desgaste', 'evitar', 'consulta'],
+    },
+  ],
+} as const;
+
+export const shippingPage = {
+  hero: {
+    eyebrow: 'Ayuda',
+    title: 'Envíos y cambios, <em>cuando estén confirmados</em>.',
+    description:
+      'Política de envío, cambios y devoluciones. Pendiente de validación por la empresa.',
+    image: '/images/brand/cinturones-en-taller.jpg',
+    imageAlt: 'Persona sujetando varios cinturones de cuero en un taller',
+    imagePosition: 'center 48%',
+    meta: 'KingBelt · Envíos',
+  },
+  section: {
+    index: '01',
+    eyebrow: 'Documento',
+    meta: 'Borrador',
+    title: 'Lo que cubrirá esta política.',
+    body:
+      'Zonas, costes, seguimiento, cambios y desistimiento. Cada apartado se completará cuando la empresa confirme los datos.',
+  },
+} as const;
+
 export const helpMeta = {
   ayuda: {
     title: 'Centro de ayuda — KingBelt',

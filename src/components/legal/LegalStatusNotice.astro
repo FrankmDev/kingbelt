@@ -12,6 +12,9 @@ const isInactive = status === 'inactive';
 ---
 
 <aside {...rest} class:list={['legal-notice', className]} role="note">
+  <p class="legal-notice__kicker kb-eyebrow">
+    {isInactive ? 'Mecanismo inactivo' : 'En revisión'}
+  </p>
   <p class="legal-notice__text">
     <strong>{isInactive ? 'Mecanismo no operativo.' : 'Documento pendiente de validación.'}</strong>{' '}
     {isInactive
@@ -22,21 +25,28 @@ const isInactive = status === 'inactive';
 
 <style>
   .legal-notice {
-    padding: 0.85rem 1rem;
-    border-radius: var(--kb-radius-xs);
-    border: 1px solid rgba(138, 90, 43, 0.25);
-    background: rgba(138, 90, 43, 0.06);
+    display: grid;
+    gap: var(--kb-space-3);
+    padding: var(--kb-space-5);
+    border-left: 3px solid var(--color-king-accent);
+    background: var(--color-king-bg);
+  }
+
+  .legal-notice__kicker {
+    margin: 0;
+    color: var(--color-king-accent);
   }
 
   .legal-notice__text {
     margin: 0;
-    font-size: var(--kb-text-2xs);
-    line-height: 1.6;
+    max-width: 68ch;
+    font-size: var(--kb-text-sm);
+    line-height: 1.65;
     color: var(--color-king-muted);
   }
 
   .legal-notice__text strong {
     color: var(--color-king-text);
-    font-weight: 600;
+    font-weight: var(--kb-w-medium);
   }
 </style>

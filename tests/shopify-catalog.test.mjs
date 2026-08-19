@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import { CatalogValidationError } from '../src/commerce/application/catalog-validation.ts';
 import { createShopifyCatalogAdapter } from '../src/commerce/infrastructure/shopify/catalog-adapter.ts';
+import { ShopifyConfigurationError } from '../src/commerce/infrastructure/shopify/config.ts';
 import {
   mapShopifyCatalog,
   ShopifyCatalogMappingError,
@@ -563,6 +564,17 @@ describe('catálogo Shopify', () => {
       throw new Error('storefront_down');
     }, { cacheTtlMs: 0 });
     await expect(adapter.getProductHandles()).rejects.toThrow('storefront_down');
+  });
+
+  test('el adapter no tumba las páginas SSR por una configuración Shopify inválida', async () => {
+    const adapter = createShopifyCatalogAdapter(async () => {
+      throw new ShopifyConfigurationError(
+        'SHOPIFY_STORE_DOMAIN must be a hostname like shop-name.myshopify.com, without protocol, path, query, fragment, credentials, or port.'
+      );
+    });
+    await expect(adapter.getProductHandles()).resolves.toEqual([]);
+    await expect(adapter.getCollections()).resolves.toEqual([]);
+    await expect(adapter.getFeaturedProducts(4)).resolves.toEqual([]);
   });
 
   test('pagina productos y colecciones con cursores internos', async () => {

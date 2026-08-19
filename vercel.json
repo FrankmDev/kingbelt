@@ -1,10 +1,5 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "build": {
-    "env": {
-      "COMMERCE_SOURCE": "shopify"
-    }
-  },
   "headers": [
     {
       "source": "/(.*)",

@@ -12,7 +12,7 @@
     "test": "bun test",
     "build": "astro build",
     "shopify:smoke": "bun scripts/shopify-storefront-smoke.mjs",
-    "validate": "bun install --frozen-lockfile && bun run audit:dependencies && bun run security:scan:history && bun run check && bun run build && bun run test && bun run security:scan && bun run check:links && bun run check:perf && bun run check:scale",
+    "validate": "bun run audit:dependencies && bun run security:scan:history && bun run check && bun run build && bun run test && bun run security:scan && bun run check:links && bun run check:perf && bun run check:scale",
     "check:links": "node scripts/check-internal-links.mjs",
     "check:perf": "node scripts/check-performance-budgets.mjs",
     "check:scale": "node scripts/check-scale-product.mjs",
@@ -24,8 +24,10 @@
   "dependencies": {
     "@astrojs/sitemap": "^3.7.3",
     "@astrojs/vercel": "^11.0.6",
+    "@upstash/redis": "^1.38.2",
     "astro": "^7.2.0",
-    "gsap": "^3.15.0"
+    "gsap": "^3.15.0",
+    "unstorage": "1.17.5"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",

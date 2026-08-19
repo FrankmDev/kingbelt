@@ -7,7 +7,8 @@ mock.module('astro:env/server', () => ({
   SHOPIFY_API_VERSION: '2026-07',
   SHOPIFY_STORE_DOMAIN: fakeStoreDomain,
   SHOPIFY_STOREFRONT_PRIVATE_TOKEN: 'test-private-storefront-token',
-  SHOPIFY_CART_COOKIE_SECRET: 'fake-test-cart-cookie-secret-000000000',
+  SHOPIFY_WEBHOOK_SECRET: undefined,
+  VERCEL_DEPLOY_HOOK_URL: undefined,
 }));
 
 const storage = {
@@ -54,14 +55,18 @@ assert.equal(requests.filter((url) => url === '/api/cart').length, 3);
 assert.equal(requests.includes('/cart-catalog.json'), false);
 assert.equal(storage.reads, 0);
 
-const cookies = { get: () => undefined, set: () => undefined, delete: () => undefined };
+const session = {
+  get: async () => undefined,
+  set() { throw new Error('refresh without a cart must not write a session'); },
+  delete() { throw new Error('refresh without a cart must not delete a session'); },
+};
 const cartResponse = await POST({
   request: new Request('https://kingbelt.test/api/cart', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ command: 'refresh' }),
   }),
-  cookies,
+  session,
   clientAddress: '203.0.113.10',
 });
 assert.equal(cartResponse.status, 200);

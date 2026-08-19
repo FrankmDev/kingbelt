@@ -1,0 +1,73 @@
+---
+import CTABox from '../ui/CTABox.astro';
+import SectionHeaderHome from './home/SectionHeaderHome.astro';
+
+interface CtaData {
+  eyebrow: string;
+  title: string;
+  description: string;
+  buttonLabel: string;
+  buttonHref: string;
+  image: string;
+  imagePosition?: string;
+}
+
+interface Props {
+  cta: CtaData;
+  index?: string;
+  meta?: string;
+  titleId?: string;
+  class?: string;
+}
+
+const {
+  cta,
+  index = '04',
+  meta = 'Contacto',
+  titleId = 'editorial-cta-title',
+  class: className = '',
+} = Astro.props;
+---
+
+<section class:list={['editorial-cta', className]} aria-labelledby={titleId}>
+  <div class="editorial-cta__inner kb-shell-wide">
+    <CTABox
+      eyebrow={cta.eyebrow}
+      title={cta.title}
+      description={cta.description}
+      buttonLabel={cta.buttonLabel}
+      buttonHref={cta.buttonHref}
+      buttonVariant="secondary"
+      backgroundImage={cta.image}
+      backgroundAlt=""
+      backgroundPosition={cta.imagePosition ?? 'center 40%'}
+      titleTag="h2"
+      class="editorial-cta__box"
+    >
+      <SectionHeaderHome
+        slot="header"
+        index={index}
+        eyebrow={cta.eyebrow}
+        meta={meta}
+        titleId={titleId}
+        body={cta.description}
+        tone="dark"
+        density="compact"
+      >
+        <Fragment slot="title">{cta.title}</Fragment>
+      </SectionHeaderHome>
+    </CTABox>
+  </div>
+</section>
+
+<style>
+  .editorial-cta {
+    padding-block: var(--kb-space-section);
+    background: var(--color-king-bg);
+    border-top: 1px solid var(--kb-stroke-hairline);
+  }
+
+  .editorial-cta__box:global(.cta-box) {
+    min-height: clamp(16rem, 32vw, 22rem);
+  }
+</style>

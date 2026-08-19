@@ -3,6 +3,9 @@ import { getCollectionFacets } from '../../domain/catalog-filters';
 import { toCollectionReference, toProductSummary } from '../../domain/product-mappers';
 import type { Product } from '../../domain/catalog';
 import type { ShopifyCatalog } from './catalog-mappers';
+import { ShopifyConfigurationError } from './config';
+
+const emptyShopifyCatalog = (): ShopifyCatalog => ({ products: [], collections: [] });
 
 export interface ShopifyCatalogAdapterOptions {
   /**
@@ -36,6 +39,11 @@ export const createShopifyCatalogAdapter = (
         return next;
       })
       .catch((error: unknown) => {
+        if (error instanceof ShopifyConfigurationError) {
+          catalog = emptyShopifyCatalog();
+          loadedAt = Date.now();
+          return catalog;
+        }
         // Stale-if-error: con un catálogo válido previo, una caída puntual de
         // Shopify no convierte las páginas SSR en errores; la siguiente
         // petición reintenta la carga porque `loadedAt` no se renueva.

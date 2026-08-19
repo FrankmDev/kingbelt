@@ -1,7 +1,13 @@
+import { existsSync } from 'node:fs';
 import { readFile, readdir, stat } from 'node:fs/promises';
 import { join, relative, resolve, sep } from 'node:path';
 
 const distRoot = resolve('dist/client');
+if (!existsSync(distRoot)) {
+  console.error('dist/client no existe. Ejecuta `bun run build` antes de comprobar enlaces internos.');
+  process.exit(1);
+}
+
 const serverBuildExists = await stat(resolve('.vercel/output/_functions/entry.mjs')).then(() => true).catch(() => false);
 const localOrigin = 'https://kingbelt.local';
 const ignoredSchemes = /^(?:mailto:|tel:|javascript:|data:)/i;

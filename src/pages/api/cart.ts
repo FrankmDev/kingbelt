@@ -1,8 +1,10 @@
 import type { APIRoute } from 'astro';
 import { emptyCart } from '@commerce/application/cart-service';
-import { commerceSource } from '@commerce/commerce-source';
+import { isDemoCommerce } from '@commerce/commerce-source';
 
 export const prerender = false;
+
+const SHOPIFY_CART_SESSION_KEY = 'shopifyCartId' as const;
 
 type Command =
   | { command: 'refresh' }
@@ -27,25 +29,33 @@ const isCommand = (value: unknown): value is Command => {
   return true;
 };
 
-export const POST: APIRoute = async ({ request, cookies, clientAddress }) => {
-  if (commerceSource === 'demo') return json({ error: 'not_found' }, 404);
+const withoutRemoteCartId = <T extends { cartId?: string }>(result: T) => {
+  const { cartId: _cartId, ...rest } = result;
+  return rest;
+};
 
-  const {
-    SHOPIFY_CART_COOKIE_NAME,
-    createConfiguredShopifyCartService,
-    getShopifyCartCookieSecret,
-    signCartId,
-    verifyCartCookie,
-  } = await import('@commerce/cart-server');
+const expiredCart = () =>
+  json(
+    {
+      success: false,
+      cart: emptyCart(),
+      error: { code: 'not_found', message: 'El carrito ha caducado.' },
+    },
+    410
+  );
 
+export const POST: APIRoute = async ({ request, session, clientAddress }) => {
+  if (isDemoCommerce()) return json({ error: 'not_found' }, 404);
+
+  const { createConfiguredShopifyCartService } = await import('@commerce/cart-server');
   let service: ReturnType<typeof createConfiguredShopifyCartService>;
-  let cartCookieSecret: string;
   try {
     service = createConfiguredShopifyCartService(clientAddress);
-    cartCookieSecret = getShopifyCartCookieSecret();
   } catch {
     return json({ error: 'commerce_unavailable' }, 503);
   }
+
+  if (!session) return json({ error: 'commerce_unavailable' }, 503);
 
   const origin = request.headers.get('origin');
   if (origin && origin !== new URL(request.url).origin) return json({ error: 'origin_not_allowed' }, 403);
@@ -58,53 +68,51 @@ export const POST: APIRoute = async ({ request, cookies, clientAddress }) => {
   }
   if (!isCommand(body)) return json({ error: 'invalid_command' }, 400);
 
-  const clearCookie = () => {
-    cookies.delete(SHOPIFY_CART_COOKIE_NAME, { path: '/' });
-  };
-  const setCartCookie = (cartId: string | undefined) => {
-    if (!cartId) return clearCookie();
-    const value = signCartId(cartId, cartCookieSecret);
-    if (!value) return clearCookie();
-    cookies.set(SHOPIFY_CART_COOKIE_NAME, value, {
-      httpOnly: true,
-      sameSite: 'lax',
-      secure: import.meta.env.PROD,
-      path: '/',
-      maxAge: 60 * 60 * 24 * 30,
-    });
-  };
+  let shopifyCartId: string | undefined;
+  try {
+    shopifyCartId = await session.get(SHOPIFY_CART_SESSION_KEY);
+  } catch {
+    return json({ error: 'commerce_unavailable' }, 503);
+  }
 
-  const cartId = verifyCartCookie(cookies.get(SHOPIFY_CART_COOKIE_NAME)?.value, cartCookieSecret);
-  const publicBody = <T extends { cartId?: string }>(result: T) => {
-    const { cartId: _cartId, ...rest } = result;
-    return rest;
+  const rememberRemoteCart = (cartId: string | undefined) => {
+    if (!cartId) return;
+    session.set(SHOPIFY_CART_SESSION_KEY, cartId);
+  };
+  const forgetRemoteCart = () => {
+    session.delete(SHOPIFY_CART_SESSION_KEY);
   };
 
   try {
     if (body.command === 'refresh') {
-      if (!cartId) return json({ success: true, cart: emptyCart() });
-      const result = await service.get(cartId);
-      if (!result.cartId) clearCookie();
+      if (!shopifyCartId) return json({ success: true, cart: emptyCart() });
+      const result = await service.get(shopifyCartId);
+      if (!result.cartId) forgetRemoteCart();
       return json({ success: true, cart: result.cart });
     }
+
     if (body.command === 'add') {
-      const result = await service.add(cartId, body.variantId, body.quantity);
-      setCartCookie(result.cartId ?? cartId);
-      return json(publicBody(result), result.success ? 200 : 422);
+      const result = await service.add(shopifyCartId, body.variantId, body.quantity);
+      rememberRemoteCart(result.cartId);
+      return json(withoutRemoteCartId(result), result.success ? 200 : 422);
     }
-    if (!cartId) return json({ success: false, cart: emptyCart(), error: { code: 'not_found', message: 'El carrito ha caducado.' } }, 410);
+
+    if (!shopifyCartId) return expiredCart();
+
     if (body.command === 'update') {
-      const result = await service.update(cartId, body.lineId, body.quantity);
-      return json(publicBody(result), result.success ? 200 : 422);
+      const result = await service.update(shopifyCartId, body.lineId, body.quantity);
+      return json(withoutRemoteCartId(result), result.success ? 200 : 422);
     }
+
     if (body.command === 'remove') {
-      const result = await service.remove(cartId, body.lineId);
-      return json(publicBody(result), result.success ? 200 : 422);
+      const result = await service.remove(shopifyCartId, body.lineId);
+      return json(withoutRemoteCartId(result), result.success ? 200 : 422);
     }
-    const result = await service.checkout(cartId);
-    if (result.status === 'expired') clearCookie();
+
+    const result = await service.checkout(shopifyCartId);
+    if (result.status === 'expired') forgetRemoteCart();
     return json(
-      { success: result.status === 'ready', ...publicBody(result) },
+      { success: result.status === 'ready', ...withoutRemoteCartId(result) },
       result.status === 'ready' ? 200 : 422
     );
   } catch {

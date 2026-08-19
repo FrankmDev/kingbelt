@@ -103,7 +103,7 @@ describe('rebuild de catálogo por webhook', () => {
     expect(requests).toHaveLength(0);
   });
 
-  test('el example documenta el secreto y el hook fuera de astro:env', () => {
+  test('el example documenta el secreto y el hook como secretos de servidor', () => {
     const example = readFileSync(join(root, '.env.example'), 'utf8');
     const astroConfig = readFileSync(join(root, 'astro.config.mjs'), 'utf8');
     const catalogRoot = readFileSync(join(root, 'src/commerce/catalog.ts'), 'utf8');
@@ -111,8 +111,9 @@ describe('rebuild de catálogo por webhook', () => {
     expect(example).toContain('SHOPIFY_WEBHOOK_SECRET=');
     expect(example).toContain('VERCEL_DEPLOY_HOOK_URL=');
     expect(example).not.toMatch(/PUBLIC_SHOPIFY_WEBHOOK/);
-    expect(astroConfig).not.toContain('SHOPIFY_WEBHOOK_SECRET');
-    expect(astroConfig).not.toContain('VERCEL_DEPLOY_HOOK_URL');
+    expect(astroConfig).toContain('SHOPIFY_WEBHOOK_SECRET:');
+    expect(astroConfig).toContain('VERCEL_DEPLOY_HOOK_URL:');
+    expect(astroConfig).toContain("access: 'secret'");
     expect(catalogRoot).toContain('cacheTtlMs: import.meta.env.DEV ? 0');
   });
 });

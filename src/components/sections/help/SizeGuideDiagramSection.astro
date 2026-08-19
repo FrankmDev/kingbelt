@@ -1,0 +1,49 @@
+---
+import SectionHeaderHome from '../home/SectionHeaderHome.astro';
+import BeltMeasurementDiagram from '../../help/BeltMeasurementDiagram.astro';
+
+interface SectionCopy {
+  index: string;
+  eyebrow: string;
+  meta: string;
+  title: string;
+  body: string;
+}
+
+interface Props {
+  section: SectionCopy;
+}
+
+const { section } = Astro.props;
+const titleId = 'size-guide-diagram-title';
+---
+
+<section class="size-guide-diagram section-asphalt" aria-labelledby={titleId}>
+  <div class="size-guide-diagram__inner kb-shell-wide">
+    <SectionHeaderHome
+      index={section.index}
+      eyebrow={section.eyebrow}
+      meta={section.meta}
+      titleId={titleId}
+      body={section.body}
+      tone="dark"
+      class="size-guide-diagram__header"
+    >
+      <Fragment slot="title">{section.title}</Fragment>
+    </SectionHeaderHome>
+
+    <BeltMeasurementDiagram />
+  </div>
+</section>
+
+<style>
+  .size-guide-diagram {
+    padding-block: var(--kb-space-section);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .size-guide-diagram__header:global(.section-header-home) {
+    width: 100%;
+    margin-bottom: var(--kb-space-gap);
+  }
+</style>

@@ -11,30 +11,56 @@ const pending = pendingProp ?? !hasContent;
 ---
 
 <section id={id} class="legal-section">
-  <h2>{title}</h2>
+  <h2 class="legal-section__title">{title}</h2>
   {pending ? (
     <p class="legal-section__pending">
       Esta sección se completará cuando la empresa confirme la información correspondiente.
     </p>
   ) : (
-    <slot />
+    <div class="legal-section__body">
+      <slot />
+    </div>
   )}
 </section>
 
 <style>
   .legal-section {
     scroll-margin-top: 7rem;
+    padding-block: var(--kb-space-6);
+    border-bottom: 1px solid var(--kb-stroke-hairline);
+  }
+
+  .legal-section:first-child {
+    padding-top: 0;
+  }
+
+  .legal-section:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  .legal-section__title {
+    font-family: var(--font-display);
+    font-size: var(--kb-text-h4);
+    font-weight: var(--kb-w-medium);
+    line-height: 1.2;
+    letter-spacing: var(--kb-title-tracking);
+    color: var(--color-king-text);
+    margin: 0 0 var(--kb-space-3);
+    text-wrap: balance;
   }
 
   .legal-section__pending {
-    font-size: var(--kb-text-xs);
+    font-size: var(--kb-text-sm);
     line-height: 1.65;
     color: var(--color-king-muted);
-    font-style: italic;
     margin: 0;
-    padding: 0.75rem 1rem;
-    border-left: 2px solid var(--kb-stroke-hairline);
-    background: var(--kb-surface-light);
-    border-radius: 0 var(--kb-radius-xs) var(--kb-radius-xs) 0;
+    padding: var(--kb-space-4) var(--kb-space-5);
+    border-left: 2px solid var(--color-king-accent);
+    background: var(--color-king-surface);
+  }
+
+  .legal-section__body :global(p:first-child) {
+    margin-top: 0;
   }
 </style>

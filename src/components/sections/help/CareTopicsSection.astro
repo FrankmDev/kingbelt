@@ -1,0 +1,186 @@
+---
+import HomeSectionHead from '../home/HomeSectionHead.astro';
+import SectionHeaderHome from '../home/SectionHeaderHome.astro';
+
+interface Topic {
+  id: string;
+  title: string;
+  content: string;
+}
+
+interface ChapterCopy {
+  id: string;
+  index: string;
+  eyebrow: string;
+  meta: string;
+  title: string;
+  body: string;
+  tone: 'light' | 'dark';
+}
+
+interface Props {
+  chapter: ChapterCopy;
+  items: readonly Topic[];
+}
+
+const { chapter, items } = Astro.props;
+const titleId = `care-chapter-${chapter.id}-title`;
+const isDark = chapter.tone === 'dark';
+---
+
+<section
+  id={chapter.id}
+  class:list={['care-topics', isDark && 'section-asphalt']}
+  aria-labelledby={titleId}
+>
+  <div class="care-topics__inner kb-shell-wide">
+    {isDark ? (
+      <SectionHeaderHome
+        index={chapter.index}
+        eyebrow={chapter.eyebrow}
+        meta={chapter.meta}
+        titleId={titleId}
+        body={chapter.body}
+        tone="dark"
+        class="care-topics__header"
+      >
+        <Fragment slot="title">{chapter.title}</Fragment>
+      </SectionHeaderHome>
+    ) : (
+      <HomeSectionHead
+        index={chapter.index}
+        eyebrow={chapter.eyebrow}
+        meta={chapter.meta}
+        titleId={titleId}
+        body={chapter.body}
+        class="care-topics__header"
+      >
+        <Fragment slot="title">{chapter.title}</Fragment>
+      </HomeSectionHead>
+    )}
+
+    <ol class="care-topics__list">
+      {items.map((item, index) => (
+        <li id={item.id} class="care-topics__item">
+          <span class="care-topics__num" aria-hidden="true">
+            {String(index + 1).padStart(2, '0')}
+          </span>
+          <div class="care-topics__copy">
+            <h3 class="care-topics__title">{item.title}</h3>
+            <p class="care-topics__text">{item.content}</p>
+          </div>
+        </li>
+      ))}
+    </ol>
+  </div>
+</section>
+
+<style>
+  .care-topics {
+    padding-block: var(--kb-space-section);
+    background: var(--color-king-bg);
+    border-top: 1px solid var(--kb-stroke-hairline);
+  }
+
+  .care-topics.section-asphalt {
+    border-top-color: rgba(255, 255, 255, 0.08);
+  }
+
+  .care-topics__header:global(.section-header-home) {
+    width: 100%;
+    margin-bottom: var(--kb-space-gap);
+  }
+
+  .care-topics__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0;
+    border-top: 1px solid var(--kb-stroke-hairline);
+  }
+
+  .section-asphalt .care-topics__list {
+    border-top-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .care-topics__item {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--kb-space-5);
+    padding-block: var(--kb-space-6);
+    border-bottom: 1px solid var(--kb-stroke-hairline);
+    scroll-margin-top: 7rem;
+  }
+
+  .section-asphalt .care-topics__item {
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .care-topics__item:last-child {
+    border-bottom: 0;
+  }
+
+  .care-topics__num {
+    font-family: var(--font-display);
+    font-size: clamp(1.5rem, 2.4vw, 2rem);
+    font-weight: var(--kb-w-heading-light);
+    line-height: 1;
+    letter-spacing: -0.01em;
+    font-variant-numeric: tabular-nums;
+    color: var(--color-king-accent);
+    opacity: 0.55;
+  }
+
+  .section-asphalt .care-topics__num {
+    color: var(--color-king-accent-light);
+  }
+
+  .care-topics__title {
+    margin: 0 0 var(--kb-space-3);
+    font-family: var(--font-display);
+    font-size: var(--kb-text-h4);
+    font-weight: var(--kb-w-medium);
+    line-height: 1.16;
+    color: var(--color-king-text);
+    text-wrap: balance;
+  }
+
+  .section-asphalt .care-topics__title {
+    color: rgba(255, 255, 255, 0.94);
+  }
+
+  .care-topics__text {
+    margin: 0;
+    max-width: 62ch;
+    font-size: var(--kb-text-sm);
+    line-height: 1.7;
+    color: var(--color-king-muted);
+    text-wrap: pretty;
+  }
+
+  .section-asphalt .care-topics__text {
+    color: rgba(255, 255, 255, 0.58);
+  }
+
+  @media (min-width: 48rem) {
+    .care-topics__list {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .care-topics__item {
+      padding: var(--kb-space-6) var(--kb-space-5) var(--kb-space-6) 0;
+      border-right: 1px solid var(--kb-stroke-hairline);
+    }
+
+    .care-topics__item:nth-child(even) {
+      padding-right: 0;
+      padding-left: var(--kb-space-5);
+      border-right: 0;
+    }
+
+    .section-asphalt .care-topics__item {
+      border-right-color: rgba(255, 255, 255, 0.1);
+    }
+  }
+</style>

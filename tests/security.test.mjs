@@ -191,6 +191,32 @@ describe('superficie del navegador y cabeceras', () => {
     expect(accesses).toEqual(['src/commerce/infrastructure/demo/demo-cart-adapter.ts']);
   });
 
+  test('el identificador remoto de carrito Shopify no se expone al navegador', () => {
+    const clientSurfaces = [
+      join(root, 'src/components'),
+      join(root, 'src/layouts'),
+      join(root, 'src/scripts'),
+      join(root, 'src/shared/browser'),
+      join(root, 'src/commerce/cart.ts'),
+      join(root, 'src/commerce/infrastructure/shopify/shopify-cart-adapter.ts'),
+    ].flatMap((path) => (path.endsWith('.ts') ? [path] : walk(path)))
+      .filter((path) => /\.(?:astro|m?[jt]s)$/.test(path));
+    const pageSurfaces = walk(join(root, 'src/pages'))
+      .filter((path) => /\.(?:astro|m?[jt]s)$/.test(path))
+      .filter((path) => !path.slice(root.length + 1).split('/').join('/').startsWith('src/pages/api/'));
+
+    const violations = [...clientSurfaces, ...pageSurfaces]
+      .filter((path) => {
+        const source = readFileSync(path, 'utf8');
+        return source.includes('shopifyCartId')
+          || source.includes('SHOPIFY_CART_SESSION_KEY')
+          || /gid:\/\/shopify\/Cart\//.test(source);
+      })
+      .map((path) => path.slice(root.length + 1));
+
+    expect(violations).toEqual([]);
+  });
+
   test('el formulario limita los campos antes de que exista el endpoint servidor', () => {
     const source = readFileSync(join(root, 'src/components/sections/contact/ContactFormSection.astro'), 'utf8');
     expect(source).toContain('maxlength="100"');
@@ -216,8 +242,44 @@ describe('superficie del navegador y cabeceras', () => {
     expect(headers.get('X-Frame-Options')).toBe('DENY');
     expect(headers.has('Strict-Transport-Security')).toBe(true);
     expect(headers.has('Permissions-Policy')).toBe(true);
+    expect(JSON.stringify(config)).not.toContain('COMMERCE_SOURCE');
+    expect(config.build).toBeUndefined();
+    expect(config.env).toBeUndefined();
     const astroConfig = readFileSync(join(root, 'astro.config.mjs'), 'utf8');
     expect(astroConfig).toContain("inlineStylesheets: 'never'");
     expect(astroConfig).toContain('assetsInlineLimit: 0');
+  });
+
+  test('el example y vercel.json no contienen secretos ni fuerzan Shopify', () => {
+    const example = readFileSync(join(root, '.env.example'), 'utf8');
+    const vercelText = readFileSync(join(root, 'vercel.json'), 'utf8');
+    const clientSurfaces = [
+      join(root, 'src/components'),
+      join(root, 'src/layouts'),
+      join(root, 'src/scripts'),
+      join(root, 'src/shared/browser'),
+    ].flatMap(walk).filter((path) => /\.(?:astro|m?[jt]s)$/.test(path));
+
+    expect(example).toContain('COMMERCE_SOURCE=demo');
+    expect(example).toMatch(/^SHOPIFY_STORE_DOMAIN=\s*$/m);
+    expect(example).toMatch(/^SHOPIFY_STOREFRONT_PRIVATE_TOKEN=\s*$/m);
+    expect(example).not.toMatch(/^SHOPIFY_STORE_DOMAIN=.+\S/m);
+    expect(example).not.toMatch(/shpat_|shpca_|shpss_/);
+    expect(example).not.toContain('PUBLIC_SHOPIFY');
+    expect(example).not.toContain('SHOPIFY_CART_COOKIE_SECRET');
+    expect(example).toContain('UPSTASH_REDIS_REST_URL=');
+    expect(vercelText).not.toContain('COMMERCE_SOURCE');
+    expect(vercelText).not.toMatch(/shpat_|SHOPIFY_STOREFRONT_PRIVATE_TOKEN|VERCEL_DEPLOY_HOOK_URL/);
+
+    const secretImports = clientSurfaces.filter((path) => {
+      const source = readFileSync(path, 'utf8');
+      return source.includes('astro:env/server')
+        || source.includes('SHOPIFY_STOREFRONT_PRIVATE_TOKEN')
+        || source.includes('SHOPIFY_CART_COOKIE_SECRET')
+        || source.includes('SHOPIFY_WEBHOOK_SECRET')
+        || source.includes('VERCEL_DEPLOY_HOOK_URL')
+        || source.includes('UPSTASH_REDIS_REST_TOKEN');
+    });
+    expect(secretImports).toEqual([]);
   });
 });

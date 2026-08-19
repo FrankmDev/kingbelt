@@ -16,10 +16,22 @@ describe('selección explícita de comercio', () => {
     ['Shopify sin fallback ante 502/503', 'commerce-source-shopify.mjs'],
     ['Shopify sin dominio', 'commerce-source-shopify-missing-domain.mjs'],
     ['Shopify sin token privado', 'commerce-source-shopify-missing-token.mjs'],
-    ['Shopify sin secreto de carrito', 'commerce-source-shopify-cart-config.mjs'],
+    ['Shopify con dominio público inválido', 'commerce-source-shopify-invalid-domain.mjs'],
+    ['valor inválido sin fallback a demo', 'commerce-source-invalid.mjs'],
+    ['resolveCommerceSource rechaza valores arbitrarios', 'commerce-source-resolve.mjs'],
   ])('%s', (_label, fixture) => {
     const result = runFixture(fixture);
-    expect(result.stderr).toBe('');
     expect(result.status).toBe(0);
+    expect(result.stderr).not.toContain('test-private-storefront-token');
+    if (
+      fixture === 'commerce-source-shopify-missing-domain.mjs'
+      || fixture === 'commerce-source-shopify-missing-token.mjs'
+      || fixture === 'commerce-source-shopify-invalid-domain.mjs'
+    ) {
+      expect(result.stderr).toContain('shopify_configuration_error');
+      expect(result.stderr).not.toContain('kingbelt.es');
+    } else {
+      expect(result.stderr).toBe('');
+    }
   });
 });

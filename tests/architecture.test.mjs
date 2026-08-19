@@ -11,7 +11,7 @@ const walk = (directory) => readdirSync(directory)
     return statSync(path).isDirectory() ? walk(path) : [path];
   });
 
-const sourceFiles = walk(sourceRoot).filter((path) => /\.(?:astro|m?[jt]s)$/.test(path));
+const sourceFiles = walk(sourceRoot).filter((path) => /\.(?:astro|m?[jt]s)$/.test(path) && !path.endsWith('.d.ts'));
 const sourcePath = (path) => relative(root, path).split(sep).join('/');
 const stripExt = (path) => path.replace(/\.(?:astro|m?[jt]sx?)$/, '');
 
@@ -275,5 +275,135 @@ describe('límites de arquitectura', () => {
     expect(readiness).toContain('exactamente 3, ordenadas');
     expect(readiness).toContain('imagen principal nativa compartida por las variantes');
     expect(readiness).toContain('Nunca se deben repartir imágenes por posición');
+  });
+
+  test('COMMERCE_SOURCE solo se interpreta en commerce-source.ts', () => {
+    const envClientReaders = sourceFiles
+      .filter((path) => {
+        const source = readFileSync(path, 'utf8');
+        return source.includes('COMMERCE_SOURCE') && source.includes('astro:env/client');
+      })
+      .map(sourcePath);
+    expect(envClientReaders).toEqual(['src/commerce/commerce-source.ts']);
+
+    const processEnvReaders = sourceFiles
+      .filter((path) => /process\.env\.COMMERCE_SOURCE/.test(readFileSync(path, 'utf8')))
+      .map(sourcePath);
+    expect(processEnvReaders).toEqual([]);
+
+    const vercelEnvUses = sourceFiles
+      .filter((path) => /\bVERCEL_ENV\b/.test(readFileSync(path, 'utf8')))
+      .map(sourcePath);
+    expect(vercelEnvUses).toEqual([]);
+  });
+
+  test('la fuente de comercio no se infiere de Vercel, hostname ni tokens', () => {
+    const source = readFileSync(join(sourceRoot, 'commerce/commerce-source.ts'), 'utf8');
+    expect(source).not.toContain('VERCEL_ENV');
+    expect(source).not.toContain('process.env');
+    expect(source).not.toMatch(/location\.hostname|url\.hostname|VERCEL_URL/);
+    expect(source).not.toContain('NODE_ENV');
+    expect(source).not.toContain('STOREFRONT_PRIVATE_TOKEN');
+    expect(source).toContain('resolveCommerceSource');
+    expect(source).toContain('isShopifyCommerce');
+
+    const catalog = readFileSync(join(sourceRoot, 'commerce/catalog.ts'), 'utf8');
+    const cart = readFileSync(join(sourceRoot, 'commerce/cart.ts'), 'utf8');
+    expect(catalog).toContain('selectCommerceProvider');
+    expect(catalog).toContain("import('./infrastructure/demo/demo-catalog-adapter')");
+    expect(catalog).toContain("import('./infrastructure/shopify/catalog-adapter')");
+    expect(catalog).not.toMatch(/getConfiguredShopifyStorefrontConfig|getShopifyStorefrontConfig/);
+    expect(cart).toContain('selectCommerceProvider');
+    expect(cart).toContain("import('./infrastructure/shopify/shopify-cart-adapter')");
+  });
+
+  test('vercel.json no selecciona commerce ni contiene secretos', () => {
+    const vercelText = readFileSync(join(root, 'vercel.json'), 'utf8');
+    const vercelJson = JSON.parse(vercelText);
+    expect(vercelText).not.toContain('COMMERCE_SOURCE');
+    expect(vercelText).not.toContain('SHOPIFY_STOREFRONT_PRIVATE_TOKEN');
+    expect(vercelText).not.toContain('SHOPIFY_CART_COOKIE_SECRET');
+    expect(vercelText).not.toContain('SHOPIFY_WEBHOOK_SECRET');
+    expect(vercelText).not.toContain('VERCEL_DEPLOY_HOOK_URL');
+    expect(vercelText).not.toMatch(/shpat_|shpca_|shpss_/);
+    expect(vercelJson.build).toBeUndefined();
+    expect(vercelJson.env).toBeUndefined();
+    expect(Array.isArray(vercelJson.headers)).toBe(true);
+  });
+
+  test('el carrito Shopify persiste el Cart ID solo en la sesión server-side', () => {
+    expect(existsSync(join(sourceRoot, 'commerce/infrastructure/shopify/cart-session.ts'))).toBe(false);
+    const productionSources = [
+      ...sourceFiles,
+      join(root, 'astro.config.mjs'),
+      join(root, '.env.example'),
+    ];
+    const leakedSecret = productionSources.filter((path) => {
+      const text = readFileSync(path, 'utf8');
+      return text.includes('SHOPIFY_CART_COOKIE_SECRET')
+        || text.includes('signCartId')
+        || text.includes('verifyCartCookie')
+        || text.includes('SHOPIFY_CART_COOKIE_NAME');
+    }).map(sourcePath);
+    expect(leakedSecret).toEqual([]);
+
+    const apiCart = readFileSync(join(sourceRoot, 'pages/api/cart.ts'), 'utf8');
+    expect(apiCart).toContain("session.get(SHOPIFY_CART_SESSION_KEY)");
+    expect(apiCart).toContain("session.set(SHOPIFY_CART_SESSION_KEY, cartId)");
+    expect(apiCart).not.toContain('cookies.set');
+    expect(apiCart).not.toContain('cookies.get');
+
+    const cartServer = readFileSync(join(sourceRoot, 'commerce/cart-server.ts'), 'utf8');
+    expect(cartServer).not.toContain('session');
+    expect(cartServer).not.toContain('unstorage');
+    expect(cartServer).not.toContain('@upstash/redis');
+
+    const architecture = readFileSync(join(root, 'docs/ARCHITECTURE.md'), 'utf8');
+    const readiness = readFileSync(join(root, 'docs/SHOPIFY_READINESS.md'), 'utf8');
+    const security = readFileSync(join(root, 'docs/SECURITY.md'), 'utf8');
+    expect(architecture).toContain('browser → opaque session cookie → Astro session store → Shopify cartId');
+    expect(readiness).toContain('browser → opaque session cookie → Astro session store → Shopify cartId');
+    expect(security).toContain('browser → opaque session cookie → Astro session store → Shopify cartId');
+  });
+
+  test('el navegador y el dominio Shopify no importan sesión, Redis ni persistencia', () => {
+    const forbiddenImporters = [
+      'src/components/',
+      'src/scripts/',
+      'src/commerce/cart.ts',
+      'src/commerce/domain/',
+      'src/commerce/application/',
+      'src/commerce/infrastructure/shopify/',
+    ];
+    const forbiddenDependencies = [
+      'src/session-driver',
+      'unstorage',
+      '@upstash/redis',
+    ];
+    const violations = localDependencies.filter(({ importer, dependency }) =>
+      forbiddenImporters.some((prefix) => importer === prefix || importer.startsWith(prefix))
+      && forbiddenDependencies.some((needle) =>
+        dependency === needle
+        || dependency.startsWith(`${needle}.`)
+        || dependency.startsWith(`${needle}/`)
+      )
+    );
+    expect(violations).toEqual([]);
+
+    const shopifySources = sourceFiles.filter((path) =>
+      sourcePath(path).startsWith('src/commerce/infrastructure/shopify/')
+      || sourcePath(path).startsWith('src/commerce/domain/')
+      || sourcePath(path).startsWith('src/commerce/application/')
+    );
+    const sessionCoupling = shopifySources.filter((path) => {
+      const source = readFileSync(path, 'utf8');
+      return source.includes('session-driver')
+        || source.includes('AstroSession')
+        || source.includes('unstorage')
+        || source.includes('@upstash/redis')
+        || source.includes('session.get(')
+        || source.includes('shopifyCartId');
+    }).map(sourcePath);
+    expect(sessionCoupling).toEqual([]);
   });
 });

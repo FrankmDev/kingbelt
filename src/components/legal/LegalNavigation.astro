@@ -49,19 +49,26 @@ const current = normalize(currentPath);
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.4rem 0;
-    font-size: var(--kb-text-2xs);
+    padding: 0.45rem 0.65rem;
+    font-size: var(--kb-text-xs);
     color: var(--color-king-muted);
     text-decoration: none;
-    transition: color var(--kb-dur-fast) var(--kb-ease-out);
+    border-left: 2px solid transparent;
+    transition:
+      color var(--kb-dur-fast) var(--kb-ease-out),
+      border-color var(--kb-dur-fast) var(--kb-ease-out),
+      background-color var(--kb-dur-fast) var(--kb-ease-out);
   }
 
   .legal-nav__link:hover {
     color: var(--color-king-text);
+    background: var(--kb-surface-light);
   }
 
   .legal-nav__link--active {
     color: var(--color-king-accent);
+    border-left-color: var(--color-king-accent);
+    background: rgba(138, 90, 43, 0.06);
     font-weight: 500;
   }
 

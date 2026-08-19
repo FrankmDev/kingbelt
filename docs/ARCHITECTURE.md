@@ -17,6 +17,7 @@ Usa Astro y HTML nativo para contenido y UI estática. Añade JavaScript cliente
 
 ```txt
 src/
+  session-driver.ts         # store de sesiones Astro: Redis/KV en Vercel, disco en local
   commerce/                 # comercio neutral y sustituible
     domain/                 # entidades y reglas puras: catálogo, variantes, stock, dinero y carrito
     application/            # puertos, casos de uso, validación y checkout
@@ -35,6 +36,7 @@ src/
       home/       # composición de portada
       about/      # composición corporativa
       contact/    # composición de contacto
+      help/       # composición del centro de ayuda
     product/      # ficha de producto: galería y compra
     collection/   # catálogo de categoría: grid, tarjetas y filtros
     cart/         # cajón (drawer) y disparador; solo presentación
@@ -117,9 +119,9 @@ COMMERCE_SOURCE=shopify
 components → commerce/domain/* (solo contratos y reglas neutrales)
 ```
 
-`COMMERCE_SOURCE` es una variable pública obligatoria de `astro:env/client`; solo admite `demo` y `shopify`. `commerce/commerce-source.ts` es la única fuente tipada de esa decisión. El composition root del carrito importa en diferido el adaptador elegido para no meter el otro en el bundle del navegador. La presencia de credenciales valida la rama Shopify, pero nunca la selecciona. Una configuración Shopify incompleta falla cerrada y no conecta con demo.
+`COMMERCE_SOURCE` es una variable pública obligatoria de `astro:env/client`; solo admite `demo` y `shopify`. Se declara en las variables de entorno de cada deployment (local, Preview, staging o Production), no en `vercel.json`. `commerce/commerce-source.ts` es la única fuente tipada de esa decisión: el resto de la aplicación consulta `commerceSource`, `isDemoCommerce()` e `isShopifyCommerce()`. El composition root del catálogo y del carrito importa en diferido el adaptador elegido para no meter el otro en el bundle ni validar credenciales Shopify en modo demo. La presencia de credenciales valida la rama Shopify, pero nunca la selecciona. Una configuración Shopify incompleta no conecta con demo: el catálogo SSR sirve vacío y el BFF de carrito responde 503.
 
-Catálogo y carrito tienen puertos distintos: `CatalogProvider` para lectura en servidor y `CartProvider` para estado cliente y checkout. Los componentes importan únicamente contratos o reglas de `commerce/domain`; nunca composition roots, fixtures, respuestas ni clientes externos. `demo-catalog.ts` contiene datos ficticios y solo puede importarlo `commerce/infrastructure/demo`. En modo demo, `localStorage` conserva únicamente ID de variante y cantidad bajo un esquema versionado y limitado; nunca es autoridad para precio, disponibilidad ni checkout. En modo Shopify no se usa `localStorage`: el estado persistente depende de la cookie `HttpOnly`, `/api/cart` y Cart API.
+Catálogo y carrito tienen puertos distintos: `CatalogProvider` para lectura en servidor y `CartProvider` para estado cliente y checkout. Los componentes importan únicamente contratos o reglas de `commerce/domain`; nunca composition roots, fixtures, respuestas ni clientes externos. `demo-catalog.ts` contiene datos ficticios y solo puede importarlo `commerce/infrastructure/demo`. En modo demo, `localStorage` conserva únicamente ID de variante y cantidad bajo un esquema versionado y limitado; nunca es autoridad para precio, disponibilidad ni checkout. En modo Shopify no se usa `localStorage`: el estado persistente sigue `browser → opaque session cookie → Astro session store → Shopify cartId`. El navegador no recibe el Cart ID.
 
 El store cliente termina su inicialización antes de ejecutar comandos, serializa mutaciones distintas, deduplica envíos equivalentes y coalesce cambios de cantidad por línea. El adaptador demo carga el snapshot `/cart-catalog.json` —servido bajo demanda desde el catálogo vigente, sin dependencia de builds— antes de restaurar líneas, relee y reconcilia la persistencia dentro de un bloqueo compartido entre pestañas cuando el navegador ofrece Web Locks; los eventos de `storage` actualizan el mismo store consumido por drawer y página. Cada reconciliación reconstruye título, imagen, precio, disponibilidad y stock desde ese catálogo. Una excepción de almacenamiento degrada el carrito a memoria con aviso, sin reemplazar el último estado válido.
 
@@ -164,7 +166,7 @@ Al conectar Shopify:
 - no pases secretos por `PUBLIC_*`, `define:vars`, HTML, atributos `data-*`, eventos DOM ni almacenamiento del navegador;
 - con `COMMERCE_SOURCE=shopify`, toda operación de carrito pasa por la frontera servidor/BFF same-origin `src/pages/api/cart.ts`; una configuración incompleta devuelve un error cerrado y nunca activa demo;
 - el navegador envía únicamente identificadores públicos de variante, cantidades y comandos cerrados; nunca recibe la parte secreta del ID de carrito, tokens, credenciales, respuestas administrativas ni identidad sensible del comprador;
-- el servicio servidor conserva el carrito remoto y es autoridad para precios, cantidades aceptadas, stock, identidad del comprador, checkout, errores y avisos;
+- el BFF lee el Cart ID completo desde la sesión server-side de Astro (`session.get("shopifyCartId")`) y es autoridad para precios, cantidades aceptadas, stock, identidad del comprador, checkout, errores y avisos;
 - devuelve la URL de checkout junto con una lista exacta de hosts permitidos; la UI exige HTTPS, sin credenciales embebidas ni hosts por sufijo;
 - considera todo precio, stock y cantidad enviados por el navegador datos no confiables y vuelve a validarlos antes de crear o actualizar el carrito remoto.
   - trata como autoridad final la respuesta actual del carrito remoto —líneas, cantidades aceptadas, errores, avisos y URL de checkout—, no el snapshot de ficha, el estado cliente ni `localStorage`.
@@ -178,7 +180,7 @@ Las fronteras por capacidad quedan así; el detalle operativo vive en `docs/SHOP
 | Crear/recuperar carrito, mutar líneas, checkout | `CartProvider` (tiempo real) |
 | Cuenta de cliente futura | puerto propio en `application/`; sin implementar hasta que exista caso de uso real |
 
-El catálogo se lee entero bajo demanda con paginación interna por cursor (productos, variantes e imágenes). En tiempo real, el navegador opera el cliente neutral de carrito, que llama a endpoints same-origin; esos endpoints delegan en un servicio servidor que consulta y muta Shopify. El adaptador remoto normaliza dentro de `infrastructure/`, valida con `assertValidCatalog()` antes de exponer y nunca deja que una respuesta parcial o una caída del catálogo genere páginas corruptas: sin catálogo previo la petición falla cerrada y con uno válido sirve el último conocido (stale-if-error).
+El catálogo se lee entero bajo demanda con paginación interna por cursor (productos, variantes e imágenes). En tiempo real, el navegador opera el cliente neutral de carrito, que llama a endpoints same-origin; esos endpoints delegan en un servicio servidor que consulta y muta Shopify. El adaptador remoto normaliza dentro de `infrastructure/`, valida con `assertValidCatalog()` antes de exponer y nunca deja que una respuesta parcial o una caída del catálogo genere páginas corruptas: un error de configuración Shopify (`SHOPIFY_STORE_DOMAIN` ausente o inválido, token ausente) sirve un catálogo vacío con log de diagnóstico y no HTTP 500; cualquier otro fallo sin catálogo previo sigue fallando cerrado, y con uno válido sirve el último conocido (stale-if-error).
 
 La política de referrer se define en `BaseLayout.astro`; las cabeceras HTTP de Vercel viven en `vercel.json`: CSP, HSTS, `X-Content-Type-Options`, `Permissions-Policy` y política de framing. El build no incrusta módulos ejecutables para ser compatible con `script-src 'self'`. Cualquier servicio o CDN nuevo debe actualizar a la vez la allowlist pública, la directiva CSP mínima y las pruebas descritas en `docs/SECURITY.md`.
 
@@ -255,4 +257,4 @@ Según el cambio, `bun run validate` agrupa sin duplicar:
 
 No declares completada una tarea si el check relevante falla por tus cambios. Distingue claramente errores previos del proyecto.
 
-Antes de integrar cambios, ejecuta `bun run validate` localmente con la versión de Bun fijada en `packageManager`.
+Antes de integrar cambios, ejecuta `bun run validate` con `COMMERCE_SOURCE=demo` y la versión de Bun fijada en `packageManager`. Es la misma suite que el job `quality` de GitHub Actions en Pull Requests.

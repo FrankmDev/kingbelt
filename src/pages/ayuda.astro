@@ -3,8 +3,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import Footer from '../components/layout/Footer.astro';
 import Header from '../components/layout/Header.astro';
 import PageHeader from '../components/ui/PageHeader.astro';
-import CTABox from '../components/ui/CTABox.astro';
-import SectionHeaderHome from '../components/sections/home/SectionHeaderHome.astro';
+import EditorialCtaSection from '../components/sections/EditorialCtaSection.astro';
 import HelpHubPrimarySection from '../components/sections/help/HelpHubPrimarySection.astro';
 import HelpHubResourcesSection from '../components/sections/help/HelpHubResourcesSection.astro';
 import HelpHubGuideSection from '../components/sections/help/HelpHubGuideSection.astro';
@@ -37,41 +36,9 @@ const { hero, primary, resources, guide, cta } = helpHub;
 
   <div class="help-page">
     <HelpHubPrimarySection section={primary} items={primaryItems} />
-
     <HelpHubResourcesSection section={resources} items={secondaryItems} />
-
     <HelpHubGuideSection section={guide} />
-
-    <section class="help-page__cta" aria-labelledby="help-cta-title">
-      <div class="help-page__cta-inner kb-shell-wide">
-        <CTABox
-          eyebrow={cta.eyebrow}
-          title={cta.title}
-          description={cta.description}
-          buttonLabel={cta.buttonLabel}
-          buttonHref={cta.buttonHref}
-          buttonVariant="secondary"
-          backgroundImage={cta.image}
-          backgroundAlt=""
-          backgroundPosition={cta.imagePosition}
-          titleTag="h2"
-          class="help-page__cta-box"
-        >
-          <SectionHeaderHome
-            slot="header"
-            index="04"
-            eyebrow={cta.eyebrow}
-            meta="Contacto"
-            titleId="help-cta-title"
-            body={cta.description}
-            tone="dark"
-            density="compact"
-          >
-            <Fragment slot="title">{cta.title}</Fragment>
-          </SectionHeaderHome>
-        </CTABox>
-      </div>
-    </section>
+    <EditorialCtaSection cta={cta} index="04" titleId="help-cta-title" />
   </div>
 
   <Footer slot="footer" connected />
@@ -81,16 +48,5 @@ const { hero, primary, resources, guide, cta } = helpHub;
   .help-page {
     display: flex;
     flex-direction: column;
-    gap: 0;
-  }
-
-  .help-page__cta {
-    padding-block: var(--kb-space-section);
-    background: var(--color-king-bg);
-    border-top: 1px solid var(--kb-stroke-hairline);
-  }
-
-  .help-page__cta-box:global(.cta-box) {
-    min-height: clamp(16rem, 32vw, 22rem);
   }
 </style>

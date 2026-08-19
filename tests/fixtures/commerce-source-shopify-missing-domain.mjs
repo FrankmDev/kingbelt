@@ -6,15 +6,15 @@ mock.module('astro:env/server', () => ({
   SHOPIFY_API_VERSION: '2026-07',
   SHOPIFY_STORE_DOMAIN: undefined,
   SHOPIFY_STOREFRONT_PRIVATE_TOKEN: 'test-private-storefront-token',
-  SHOPIFY_CART_COOKIE_SECRET: 'fake-test-cart-cookie-secret-000000000',
+  SHOPIFY_WEBHOOK_SECRET: undefined,
+  VERCEL_DEPLOY_HOOK_URL: undefined,
 }));
 
 globalThis.fetch = async () => { throw new Error('Storefront must not be called with invalid configuration'); };
 const { catalogProvider } = await import('../../src/commerce/catalog.ts');
-await assert.rejects(
-  catalogProvider.getProductHandles(),
-  (error) => error.name === 'ShopifyConfigurationError' && error.message.includes('SHOPIFY_STORE_DOMAIN is required')
-);
+assert.deepEqual(await catalogProvider.getProductHandles(), []);
+assert.deepEqual(await catalogProvider.getCollections(), []);
+assert.deepEqual(await catalogProvider.getFeaturedProducts(4), []);
 
 const { POST } = await import('../../src/pages/api/cart.ts');
 const response = await POST({

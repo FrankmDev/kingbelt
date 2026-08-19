@@ -1,0 +1,56 @@
+---
+import HomeSectionHead from '../home/HomeSectionHead.astro';
+import SizeGuideSteps from '../../help/SizeGuideSteps.astro';
+
+interface Method {
+  id: string;
+  title: string;
+  steps: readonly string[];
+}
+
+interface SectionCopy {
+  index: string;
+  eyebrow: string;
+  meta: string;
+  title: string;
+  body: string;
+}
+
+interface Props {
+  section: SectionCopy;
+  methods: readonly Method[];
+}
+
+const { section, methods } = Astro.props;
+const titleId = 'size-guide-methods-title';
+---
+
+<section class="size-guide-methods" aria-labelledby={titleId}>
+  <div class="size-guide-methods__inner kb-shell-wide">
+    <HomeSectionHead
+      index={section.index}
+      eyebrow={section.eyebrow}
+      meta={section.meta}
+      titleId={titleId}
+      body={section.body}
+      class="size-guide-methods__header"
+    >
+      <Fragment slot="title">{section.title}</Fragment>
+    </HomeSectionHead>
+
+    <SizeGuideSteps methods={methods} />
+  </div>
+</section>
+
+<style>
+  .size-guide-methods {
+    padding-block: var(--kb-space-section);
+    background: var(--color-king-bg);
+    border-top: 1px solid var(--kb-stroke-hairline);
+  }
+
+  .size-guide-methods__header:global(.section-header-home) {
+    width: 100%;
+    margin-bottom: var(--kb-space-gap);
+  }
+</style>

@@ -45,7 +45,7 @@ const genericAssignment =
 const placeholderPattern = /^(?:example|placeholder|replace|redacted|changeme|not-a-real|test)[-_]/i;
 const publicPrivateName = /\bPUBLIC_[A-Z0-9_]*(?:PRIVATE|SECRET|PASSWORD|ADMIN)[A-Z0-9_]*\b/;
 const privateBrowserName = /\b(?:SHOPIFY_[A-Z0-9_]*PRIVATE[A-Z0-9_]*|ADMIN_API_[A-Z0-9_]*)\b/;
-const clientPathPattern = /^src\/(?:components|layouts|pages|scripts|shared\/browser)\//;
+const clientPathPattern = /^src\/(?:components|layouts|pages\/(?!api\/)|scripts|shared\/browser)\//;
 const browserCompositionRoots = new Set(['src/commerce/cart.ts']);
 const clientLogPattern = /\bconsole\.(?:debug|info|log|warn|error)\s*\(/;
 
@@ -118,6 +118,12 @@ try {
 }
 
 if (includeHistory) {
+  const shallow = git(['rev-parse', '--is-shallow-repository']).trim() === 'true';
+  if (shallow) {
+    console.error('Security history scan requires a full Git history. Re-run with fetch-depth: 0.');
+    process.exit(1);
+  }
+
   const history = git(['log', '--all', '--reflog', '-p', '--no-ext-diff', '--no-color']);
   tokenRules.forEach(([rule, pattern]) => {
     if (pattern.test(history)) report('[git history]', rule);
@@ -125,6 +131,24 @@ if (includeHistory) {
   const assignment = history.match(genericAssignment);
   if (assignment && !placeholderPattern.test(assignment[1])) {
     report('[git history]', 'credential_assignment');
+  }
+}
+
+const vercelConfigPath = join(root, 'vercel.json');
+if (existsSync(vercelConfigPath)) {
+  const vercelText = readFileSync(vercelConfigPath, 'utf8');
+  if (/\bCOMMERCE_SOURCE\b/.test(vercelText)) {
+    report('vercel.json', 'commerce_source_in_vercel_config');
+  }
+  if (/"build"\s*:\s*\{[^}]*"env"/.test(vercelText) || /\bbuild\.env\b/.test(vercelText)) {
+    report('vercel.json', 'build_env_in_vercel_config');
+  }
+  if (
+    /\b(?:SHOPIFY_STOREFRONT_PRIVATE_TOKEN|SHOPIFY_CART_COOKIE_SECRET|SHOPIFY_WEBHOOK_SECRET|VERCEL_DEPLOY_HOOK_URL|UPSTASH_REDIS_REST_TOKEN)\b/.test(
+      vercelText
+    )
+  ) {
+    report('vercel.json', 'secret_in_vercel_config');
   }
 }
 

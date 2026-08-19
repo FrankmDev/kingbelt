@@ -2,16 +2,18 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Header from '../components/layout/Header.astro';
 import Footer from '../components/layout/Footer.astro';
-import HelpPageLayout from '../components/help/HelpPageLayout.astro';
-import SizeGuideSteps from '../components/help/SizeGuideSteps.astro';
-import SizeGuideTable from '../components/help/SizeGuideTable.astro';
-import BeltMeasurementDiagram from '../components/help/BeltMeasurementDiagram.astro';
-import SectionHeader from '@components/ui/SectionHeader.astro';
-import FAQ from '@components/faq/FAQ.astro';
-import Prose from '../components/ui/Prose.astro';
-import Panel from '../components/ui/Panel.astro';
+import PageHeader from '../components/ui/PageHeader.astro';
+import EditorialCtaSection from '../components/sections/EditorialCtaSection.astro';
+import SizeGuideIntroSection from '../components/sections/help/SizeGuideIntroSection.astro';
+import SizeGuideMethodsSection from '../components/sections/help/SizeGuideMethodsSection.astro';
+import SizeGuideDiagramSection from '../components/sections/help/SizeGuideDiagramSection.astro';
+import SizeGuideTableSection from '../components/sections/help/SizeGuideTableSection.astro';
+import SizeGuideMistakesSection from '../components/sections/help/SizeGuideMistakesSection.astro';
+import SizeGuideFaqSection from '../components/sections/help/SizeGuideFaqSection.astro';
 import {
+  helpHub,
   helpMeta,
+  sizeGuidePage,
   sizeGuideMethods,
   sizeGuideMistakes,
   sizeGuideFaqs,
@@ -20,6 +22,7 @@ import {
 
 const { title, description } = helpMeta.sizeGuide;
 const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href;
+const { hero, intro, methods, diagram, table, mistakes, faq } = sizeGuidePage;
 ---
 
 <BaseLayout
@@ -28,125 +31,30 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin)
   canonicalURL={canonicalURL}
   robots={getHelpRobots(helpMeta.sizeGuide)}
 >
-  <Header slot="header" initialTheme="light" scrolledTheme="light" compactThreshold={32} />
+  <Header slot="header" initialTheme="dark" scrolledTheme="light" compactThreshold={32} />
 
-  <HelpPageLayout
-    title="Guía de tallas"
-    description="Medir antes de elegir reduce errores. La equivalencia final depende del modelo."
+  <PageHeader
+    eyebrow={hero.eyebrow}
+    description={hero.description}
+    image={hero.image}
+    imageAlt={hero.imageAlt}
+    imagePosition={hero.imagePosition}
+    meta={hero.meta}
     breadcrumbs={[{ label: 'Ayuda', href: '/ayuda' }, { label: 'Guía de tallas' }]}
   >
-    <div class="size-guide">
-      <Prose class="size-guide__intro">
-        <h2>Por qué medir antes de elegir</h2>
-        <p>
-          Un cinturón debe ajustarse con comodidad en el agujero central, con margen hacia ambos extremos.
-          La talla correcta depende del modelo, del ancho y del punto de referencia de medición de cada referencia.
-        </p>
-      </Prose>
+    <Fragment slot="title">
+      <span set:html={hero.title} />
+    </Fragment>
+  </PageHeader>
 
-      <section class="size-guide__section" aria-labelledby="methods-title">
-        <SectionHeader eyebrow="Métodos" titleId="methods-title" align="left" density="compact">
-          <Fragment slot="title">Dos formas de tomar la medida</Fragment>
-          <Fragment slot="body">
-            Utiliza el método que te resulte más fiable. En ambos casos, verifica el resultado con la ficha del modelo.
-          </Fragment>
-        </SectionHeader>
-        <SizeGuideSteps methods={sizeGuideMethods} />
-      </section>
+  <SizeGuideIntroSection section={intro} />
+  <SizeGuideMethodsSection section={methods} methods={sizeGuideMethods} />
+  <SizeGuideDiagramSection section={diagram} />
+  <SizeGuideTableSection section={table} />
+  <SizeGuideMistakesSection section={mistakes} items={sizeGuideMistakes} />
+  <SizeGuideFaqSection section={faq} items={sizeGuideFaqs} />
 
-      <section class="size-guide__section" aria-labelledby="diagram-title">
-        <h2 id="diagram-title" class="size-guide__heading">Diagrama de referencia</h2>
-        <BeltMeasurementDiagram />
-      </section>
+  <EditorialCtaSection cta={helpHub.cta} index="07" titleId="size-guide-cta-title" />
 
-      <section class="size-guide__section" aria-labelledby="table-title">
-        <SectionHeader eyebrow="Equivalencias" titleId="table-title" align="left" density="compact">
-          <Fragment slot="title">Tabla de tallas</Fragment>
-        </SectionHeader>
-        <SizeGuideTable />
-      </section>
-
-      <section class="size-guide__section" aria-labelledby="mistakes-title">
-        <SectionHeader eyebrow="Errores habituales" titleId="mistakes-title" align="left" density="compact">
-          <Fragment slot="title">Evita estas lecturas incorrectas</Fragment>
-        </SectionHeader>
-        <div class="size-guide__mistakes">
-          {sizeGuideMistakes.map((item) => (
-            <Panel padding="md">
-              <h3 class="size-guide__mistake-title">{item.title}</h3>
-              <p class="size-guide__mistake-text">{item.text}</p>
-            </Panel>
-          ))}
-        </div>
-      </section>
-
-      <FAQ
-        class="size-guide__faq"
-        items={sizeGuideFaqs}
-        tone="light"
-        stickySidebar={false}
-      >
-        <SectionHeader
-          slot="header"
-          eyebrow="Preguntas frecuentes"
-          align="left"
-          density="compact"
-          class="mb-8"
-        >
-          <Fragment slot="title">Dudas sobre tallaje</Fragment>
-        </SectionHeader>
-      </FAQ>
-    </div>
-  </HelpPageLayout>
-
-  <Footer slot="footer" />
+  <Footer slot="footer" connected />
 </BaseLayout>
-
-<style>
-  .size-guide {
-    display: flex;
-    flex-direction: column;
-    gap: clamp(2.5rem, 5vw, 3.5rem);
-  }
-
-  .size-guide__intro :global(h2) {
-    margin-top: 0;
-  }
-
-  .size-guide__heading {
-    font-family: var(--font-display);
-    font-size: clamp(1.25rem, 2vw, 1.5rem);
-    font-weight: var(--kb-w-medium);
-    color: var(--color-king-text);
-    margin: 0 0 1rem;
-  }
-
-  .size-guide__mistakes {
-    display: grid;
-    gap: 0.85rem;
-  }
-
-  @media (min-width: 48rem) {
-    .size-guide__mistakes {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-  }
-
-  .size-guide__mistake-title {
-    font-size: var(--kb-text-body);
-    font-weight: 600;
-    color: var(--color-king-text);
-    margin: 0 0 0.5rem;
-  }
-
-  .size-guide__mistake-text {
-    font-size: var(--kb-text-xs);
-    line-height: 1.65;
-    color: var(--color-king-muted);
-    margin: 0;
-  }
-
-  .size-guide__faq:global(.faq-section) {
-    padding: 0;
-  }
-</style>

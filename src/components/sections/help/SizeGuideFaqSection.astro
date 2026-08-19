@@ -1,0 +1,55 @@
+---
+import HomeSectionHead from '../home/HomeSectionHead.astro';
+import FAQ from '@components/faq/FAQ.astro';
+import type { FAQItem } from '@content/faq';
+
+interface SectionCopy {
+  index: string;
+  eyebrow: string;
+  meta: string;
+  title: string;
+  body: string;
+}
+
+interface Props {
+  section: SectionCopy;
+  items: readonly FAQItem[];
+}
+
+const { section, items } = Astro.props;
+const titleId = 'size-guide-faq-title';
+---
+
+<FAQ
+  id="dudas-tallaje"
+  class="size-guide-faq"
+  items={items}
+  tone="light"
+  stickySidebar={false}
+  itemVariant="editorial"
+>
+  <HomeSectionHead
+    slot="header"
+    index={section.index}
+    eyebrow={section.eyebrow}
+    meta={section.meta}
+    titleId={titleId}
+    body={section.body}
+    class="size-guide-faq__header"
+  >
+    <Fragment slot="title">{section.title}</Fragment>
+  </HomeSectionHead>
+</FAQ>
+
+<style>
+  .size-guide-faq:global(.faq-section) {
+    padding-block: var(--kb-space-section);
+    border-top: 1px solid var(--kb-stroke-hairline);
+    background: var(--color-king-surface);
+  }
+
+  .size-guide-faq__header:global(.section-header-home) {
+    width: 100%;
+    margin-bottom: var(--kb-space-gap);
+  }
+</style>

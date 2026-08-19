@@ -2,7 +2,7 @@
 
 ## 1. Estado actual
 
-La web usa SSR en Vercel. `COMMERCE_SOURCE` es obligatoria y selecciona de forma determinista `demo` o `shopify` para catálogo y carrito a la vez. Con `demo`, solo se usan los adapters demo, `localStorage` y `/cart-catalog.json`; las credenciales Shopify presentes se ignoran. Con `shopify`, el catálogo consulta Storefront bajo demanda con una caché breve por instancia y el carrito usa el BFF same-origin `/api/cart` y la Cart API. Una configuración Shopify incompleta produce un error y nunca activa demo. El webhook de catálogo puede reconstruir Vercel como respaldo.
+La web usa SSR en Vercel. `COMMERCE_SOURCE` es obligatoria y selecciona de forma determinista `demo` o `shopify` para catálogo y carrito a la vez. Con `demo`, solo se usan los adapters demo, `localStorage` y `/cart-catalog.json`; las credenciales Shopify presentes se ignoran. Con `shopify`, el catálogo consulta Storefront bajo demanda con una caché breve por instancia y el carrito usa el BFF same-origin `/api/cart` y la Cart API. Una configuración Shopify incompleta no activa demo: las páginas de catálogo se renderizan vacías y el BFF responde `503`. El webhook de catálogo puede reconstruir Vercel como respaldo.
 
 La Storefront API está fijada en `2026-07` y usa exclusivamente el token privado. El importador consulta y pagina productos, colecciones, variantes, opciones, imágenes, SEO y metafields; normaliza la respuesta al dominio neutral y falla antes de emitir páginas si el catálogo es parcial. `bun run shopify:smoke` continúa siendo la comprobación mínima `shop { name }`.
 
@@ -33,7 +33,7 @@ Es responsable de colecciones, resúmenes para grids, fichas completas, handles,
 
 ## 4. Proveedor de carrito
 
-El contrato neutral es responsable de inicializar, añadir una variante, modificar cantidades, eliminar líneas y obtener checkout. La identidad pública de entrada es `variantId`; título, precio, imagen, opciones, stock y cantidad aceptada se vuelven a resolver contra el origen autoritativo. En modo demo, el adapter resuelve desde `/cart-catalog.json` y conserva líneas en `localStorage`. En modo Shopify, el cliente solo habla con `/api/cart`; la persistencia real depende de la cookie `HttpOnly` y de Shopify, nunca de `localStorage` ni del snapshot demo.
+El contrato neutral es responsable de inicializar, añadir una variante, modificar cantidades, eliminar líneas y obtener checkout. La identidad pública de entrada es `variantId`; título, precio, imagen, opciones, stock y cantidad aceptada se vuelven a resolver contra el origen autoritativo. En modo demo, el adapter resuelve desde `/cart-catalog.json` y conserva líneas en `localStorage`. En modo Shopify, el cliente solo habla con `/api/cart`; la persistencia real sigue `browser → opaque session cookie → Astro session store → Shopify cartId`, nunca `localStorage` ni el snapshot demo.
 
 ## 5. Producto y variante
 
@@ -119,7 +119,7 @@ La autoridad depende del momento del flujo:
 - Después de crear, añadir, actualizar o eliminar líneas, el `Cart` retornado por Shopify es la autoridad absoluta: KingBelt no reconstruye cantidades pedidas por el navegador ni el estado local previo. Las mutaciones consultan `cart`, `userErrors { field message code }` y `warnings { code message target }`. `CartUserError.code` (`CartErrorCode`) bloquea la operación correspondiente; `CartWarning.code` (`CartWarningCode`) representa un ajuste automático o una incidencia no bloqueante y no convierte `success` en `false`. El estado adoptado es siempre `payload.cart`. `cart = null` en una mutación sin error explícito es un error de proveedor, no un carrito vacío exitoso. Consulta [`cartLinesAdd`](https://shopify.dev/docs/api/storefront/latest/mutations/cartLinesAdd) y [`CartWarning`](https://shopify.dev/docs/api/storefront/latest/objects/CartWarning).
 - La disponibilidad de cada línea del carrito se deriva del `ProductVariant` embebido (`availableForSale`, `currentlyNotInStock`, `quantityRule { minimum, increment, maximum }`), no de valores fijos. No se inventa `inventoryPolicy` ni stock exacto en Cart: `quantityKnown` permanece `false` hasta conceder e importar `quantityAvailable`. `currentlyNotInStock` con `availableForSale` permite comprar en backorder. Una línea no comprable o una cantidad fuera de `quantityRule` bloquea `canCheckout`; un `severity: notice` no lo hace.
 - Inmediatamente antes de checkout, el servicio vuelve a leer el carrito remoto. Solo un carrito con líneas comprables, cantidades válidas, sin errores bloqueantes y con `Cart.checkoutUrl` válida (host y HTTPS) habilita la redirección. Consulta el contrato de [`Cart`](https://shopify.dev/docs/api/storefront/latest/objects/cart).
-- Solo el carrito demo guarda IDs y cantidades solicitadas en `localStorage`. En Shopify, el DOM, cualquier snapshot y cualquier cantidad enviada por el navegador son datos no confiables; el carrito remoto y su cookie `HttpOnly` son autoritativos.
+- Solo el carrito demo guarda IDs y cantidades solicitadas en `localStorage`. En Shopify, el DOM, cualquier snapshot y cualquier cantidad enviada por el navegador son datos no confiables; el carrito remoto y la sesión server-side de Astro son autoritativos (`browser → opaque session cookie → Astro session store → Shopify cartId`).
 
 Una variante «eliminada» significa que el origen autoritativo ya no puede resolver su identidad y Shopify no devuelve una línea válida para ella; se retira del carrito con aviso. Una variante que todavía se resuelve pero no puede venderse se conserva como no disponible y bloquea checkout. Si la Storefront API elegida no permite distinguir ambos casos para una variante no publicada, el adaptador no inventará la causa: usará el estado seguro no comprable y la respuesta del carrito remoto como decisión final.
 
@@ -151,15 +151,15 @@ El SEO consume el dominio neutral. La ficha genera `Product`, marca, imágenes, 
 4. Añadir alt contextual a todas las imágenes, completar imágenes/SKU pendientes y corregir cualquier relación variante-color. Mientras un producto no esté listo, retirarlo del canal Headless en vez de depender de un filtro local.
 5. Mantener activos `unauthenticated_read_product_listings` y `unauthenticated_read_metaobjects`. Habilitar `unauthenticated_read_product_inventory` si se quiere importar `quantityAvailable`; mientras no esté autorizado, el adaptador conserva inventario `unknown` sin inventar cifras. Los scopes futuros de carrito siguen siendo `unauthenticated_read_checkouts` y `unauthenticated_write_checkouts`.
 6. Ejecutar `bun run shopify:smoke`, `bun run build` y `bun run validate`; al superar el contrato, las rutas se generarán desde Shopify sin cambios de UI.
-7. Mantener desplegado el adapter de Vercel y el BFF same-origin para carrito.
-8. Configurar `SHOPIFY_CART_COOKIE_SECRET` con un secreto aleatorio de al menos 32 caracteres.
+7. Mantener desplegado el adapter de Vercel, el BFF same-origin para carrito y Redis/KV persistente (Upstash) para el store de sesiones de Astro.
+8. Configurar `UPSTASH_REDIS_REST_URL` y `UPSTASH_REDIS_REST_TOKEN` en Vercel. El navegador solo recibe una cookie de sesión opaca; el Cart ID completo vive en el session store.
 9. Ejecutar pruebas de variantes, carrito, checkout, seguridad y validación visual.
 10. Configurar `SHOPIFY_WEBHOOK_SECRET`, `VERCEL_DEPLOY_HOOK_URL` y los webhooks de catálogo hacia `/api/shopify-catalog-rebuild` como respaldo opcional (el catálogo ya se actualiza solo vía SSR).
 11. Verificar checkout, secretos, CSP/cabeceras y rollback explícito antes de publicar.
 
 El flujo de carrito queda fijado: BFF same-origin. Ningún token Storefront se expone al navegador. La versión API debe fijarse explícitamente y nunca ser `latest`.
 
-En Vercel, Production debe declarar `COMMERCE_SOURCE=shopify`. Preview puede declarar `shopify` o `demo`, pero debe hacerlo conscientemente; no se deriva de `VERCEL_ENV`, hostname, rama ni credenciales.
+`COMMERCE_SOURCE` se configura en las variables de entorno de cada deployment, no en `vercel.json`. Local y Preview de PR no conectados a staging usan `COMMERCE_SOURCE=demo` sin credenciales de producción. Staging y Production usan `COMMERCE_SOURCE=shopify` con secretos exclusivos de cada tienda. El valor no se deriva de `VERCEL_ENV`, hostname, rama ni credenciales.
 
 ## 15. Vuelta temporal al adaptador demo
 
@@ -194,7 +194,7 @@ Regla general: las respuestas GraphQL y los tipos de Shopify viven exclusivament
 
 Durante cada ciclo de caché SSR se obtiene todo el catálogo: colecciones, productos completos (opciones, variantes, imágenes, grupos de medios, especificaciones, SEO y pertenencia a colecciones) y las proyecciones de grid `ProductSummary`. Destacados y relacionados se derivan desde el dominio en servidor; el sitio no consulta Shopify desde el navegador.
 
-En tiempo real el navegador solo envía al BFF identificadores públicos, cantidades y comandos permitidos. Un identificador opaco de sesión same-origin puede ir en cookie `HttpOnly`; la parte secreta del identificador de carrito Shopify no entra en HTML, JavaScript, almacenamiento ni respuestas públicas. El servicio servidor crea o recupera el carrito, muta líneas y obtiene checkout. Después de cada operación devuelve una proyección neutral reconstruida desde la respuesta remota (§9.1), nunca desde `localStorage` ni desde el snapshot de ficha. La tienda no muta el catálogo desde el cliente.
+En tiempo real el navegador solo envía al BFF identificadores públicos, cantidades y comandos permitidos. El flujo de persistencia es `browser → opaque session cookie → Astro session store → Shopify cartId`. La cookie `HttpOnly` contiene únicamente un identificador de sesión aleatorio; la parte secreta del identificador de carrito Shopify no entra en HTML, JavaScript, almacenamiento, JSON público ni cookies decodificables. El servicio servidor crea o recupera el carrito, muta líneas y obtiene checkout. Después de cada operación devuelve una proyección neutral reconstruida desde la respuesta remota (§9.1), nunca desde `localStorage` ni desde el snapshot de ficha. La tienda no muta el catálogo desde el cliente.
 
 El servidor es autoridad para carrito remoto, precios, cantidades aceptadas, stock, identidad del comprador, checkout, `userErrors` y `warnings`. No devuelve credenciales, respuesta GraphQL completa, identidad sensible ni campos administrativos.
 
@@ -249,9 +249,9 @@ Se conservan `src/demo-catalog.ts` y `commerce/infrastructure/demo/`. La reversi
 
 ### 17.11 Evitar páginas corruptas por caída del catálogo
 
-- Fail-closed en runtime: si la obtención o la validación del catálogo falla sin un catálogo válido previo, la petición falla y la página no se renderiza vacía ni corrupta; el despliegue anterior de Vercel sigue publicando el sitio.
+- Fail-closed en runtime: si la obtención o la validación del catálogo falla sin un catálogo válido previo, la petición falla y la página no se renderiza vacía ni corrupta; el despliegue anterior de Vercel sigue publicando el sitio. Una excepción son los errores de configuración (`ShopifyConfigurationError`): faltan o son inválidos `SHOPIFY_STORE_DOMAIN` o `SHOPIFY_STOREFRONT_PRIVATE_TOKEN`. En ese caso las páginas SSR sirven un catálogo vacío, registran un diagnóstico sin secretos y no responden HTTP 500.
 - Stale-if-error: con un catálogo válido en memoria, una caída puntual de Shopify sirve el último catálogo conocido y la siguiente petición reintenta la carga; el sitio no se apaga por una incidencia ajena.
-- El adaptador no degrada a un «catálogo vacío» silencioso: un resultado vacío o parcial se trata como anomalía del import y se resuelve antes de publicar.
+- El adaptador no degrada a un «catálogo vacío» silencioso por una respuesta parcial de Storefront: ese resultado se trata como anomalía del import. El catálogo vacío solo cubre configuración inválida, con log `shopify_configuration_error`.
 - En el navegador, un fallo del carrito Shopify conserva el último estado válido o expone un error temporal; nunca activa el adapter demo, `localStorage`, `/cart-catalog.json` ni un checkout ficticio.
 - El rollback al adaptador demo (§17.10) es la vía operativa rápida y no exige cambios de UI.
 
@@ -259,6 +259,6 @@ Se conservan `src/demo-catalog.ts` y `commerce/infrastructure/demo/`. La reversi
 
 Existe un gateway propio exclusivamente servidor en `infrastructure/shopify/` con `fetch`, versión `2026-07`, autenticación privada, timeout y una función `graphql()` genérica y tipada. Distingue fallos HTTP, JSON inválido y errores GraphQL sin devolver respuestas parciales ni registrar cuerpos o credenciales. No usa Hydrogen ni SDK adicional y no conoce el dominio; las queries de catálogo viven separadas en `catalog-query.ts`.
 
-`COMMERCE_SOURCE` es `client/public` y selecciona el proveedor sin contener secretos. `SHOPIFY_STORE_DOMAIN` y `SHOPIFY_API_VERSION` son variables `server/public`; `SHOPIFY_STOREFRONT_PRIVATE_TOKEN` y `SHOPIFY_CART_COOKIE_SECRET` son `server/secret`. Con `COMMERCE_SOURCE=shopify`, la ausencia o invalidez de cualquier requisito usado falla cerrada; con `COMMERCE_SOURCE=demo`, las credenciales presentes no cambian el proveedor. Catálogo y carrito nunca degradan automáticamente entre ramas.
+`COMMERCE_SOURCE` es `client/public` y selecciona el proveedor sin contener secretos. `SHOPIFY_STORE_DOMAIN` y `SHOPIFY_API_VERSION` son variables `server/public`; `SHOPIFY_STOREFRONT_PRIVATE_TOKEN`, `SHOPIFY_WEBHOOK_SECRET` y `VERCEL_DEPLOY_HOOK_URL` son `server/secret`. El store de sesiones usa `UPSTASH_REDIS_REST_URL` y `UPSTASH_REDIS_REST_TOKEN` en runtime, fuera de `astro:env`. Con `COMMERCE_SOURCE=shopify`, un dominio o token ausente/inválido no degrada a demo: el catálogo SSR queda vacío y el carrito responde 503; con `COMMERCE_SOURCE=demo`, las credenciales presentes no cambian el proveedor ni se validan al arrancar. Catálogo y carrito nunca degradan automáticamente entre ramas. `SHOPIFY_STORE_DOMAIN` debe ser el hostname `tu-tienda.myshopify.com`; el Storefront API rechaza el dominio público del sitio, `admin.shopify.com` y URLs con protocolo o ruta.
 
 El gateway acepta `buyerIp` opcional y, si existe, envía `Shopify-Storefront-Buyer-IP` con una IPv4/IPv6 validada. El smoke test y las lecturas de catálogo durante un static build no corresponden a tráfico de comprador y no deben inventar esa IP. Cuando una petición server-side nazca de tráfico real —carrito, checkout u otra operación dinámica— el BFF deberá pasarla. Las peticiones autenticadas no siguen redirects y no reutilizan caché HTTP.

@@ -2,17 +2,19 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Header from '../components/layout/Header.astro';
 import Footer from '../components/layout/Footer.astro';
-import HelpPageLayout from '../components/help/HelpPageLayout.astro';
-import LegalStatusNotice from '../components/legal/LegalStatusNotice.astro';
+import PageHeader from '../components/ui/PageHeader.astro';
+import LegalPageLayout from '../components/legal/LegalPageLayout.astro';
 import LegalSection from '../components/legal/LegalSection.astro';
 import Prose from '../components/ui/Prose.astro';
 import { getLegalRobots, legalDocuments } from '@content/legal';
+import { shippingPage } from '@content/help';
 import { confirmed, businessFacts } from '@config/business';
 import { site } from '@config/site';
 
 const doc = legalDocuments.envios;
 const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href;
 const email = confirmed(businessFacts.email) ?? site.contact.email;
+const { hero, section } = shippingPage;
 ---
 
 <BaseLayout
@@ -21,24 +23,31 @@ const email = confirmed(businessFacts.email) ?? site.contact.email;
   canonicalURL={canonicalURL}
   robots={getLegalRobots(doc)}
 >
-  <Header slot="header" initialTheme="light" scrolledTheme="light" compactThreshold={32} />
+  <Header slot="header" initialTheme="dark" scrolledTheme="light" compactThreshold={32} />
 
-  <HelpPageLayout
-    title="Envíos y devoluciones"
-    description="Política de envío, cambios y devoluciones. Pendiente de validación por la empresa."
+  <PageHeader
+    eyebrow={hero.eyebrow}
+    description={hero.description}
+    image={hero.image}
+    imageAlt={hero.imageAlt}
+    imagePosition={hero.imagePosition}
+    meta={hero.meta}
     breadcrumbs={[{ label: 'Ayuda', href: '/ayuda' }, { label: 'Envíos y devoluciones' }]}
-    cta={true}
   >
-    <LegalStatusNotice class="mb-8" status={doc.status} />
+    <Fragment slot="title">
+      <span set:html={hero.title} />
+    </Fragment>
+  </PageHeader>
 
+  <LegalPageLayout document={doc} section={section} relatedNav="help" ctaIndex="02">
     <Prose variant="document">
-      {doc.sections.map((section) => (
+      {doc.sections.map((item) => (
         <LegalSection
-          id={section.id}
-          title={section.title}
-          pending={section.id !== 'contacto'}
+          id={item.id}
+          title={item.title}
+          pending={item.id !== 'contacto'}
         >
-          {section.id === 'contacto' && (
+          {item.id === 'contacto' && (
             <p>
               Para consultas sobre envíos o devoluciones, escríbenos a{' '}
               <a href={`mailto:${email}`}>{email}</a> o visita la página de{' '}
@@ -48,7 +57,7 @@ const email = confirmed(businessFacts.email) ?? site.contact.email;
         </LegalSection>
       ))}
     </Prose>
-  </HelpPageLayout>
+  </LegalPageLayout>
 
-  <Footer slot="footer" />
+  <Footer slot="footer" connected />
 </BaseLayout>

@@ -1,6 +1,8 @@
 import { createShopifyStorefrontGateway } from '../src/commerce/infrastructure/shopify/storefront-gateway.ts';
 import { SHOPIFY_STOREFRONT_API_VERSION } from '../src/commerce/infrastructure/shopify/config.ts';
 
+// Comprobación ligera de conectividad Storefront. No sustituye a shopify:preflight.
+
 if (process.env.PUBLIC_SHOPIFY_STOREFRONT_TOKEN) {
   console.error(
     'Shopify Storefront smoke test failed: PUBLIC_SHOPIFY_STOREFRONT_TOKEN is not used. Use SHOPIFY_STOREFRONT_PRIVATE_TOKEN only.'

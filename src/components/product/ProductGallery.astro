@@ -1,5 +1,5 @@
 ---
-import type { ProductImage, ProductMediaGroup, ProductVariant } from '@commerce/domain/catalog';
+import type { ProductImage, ProductMediaGroup, ProductOption, ProductVariant } from '@commerce/domain/catalog';
 import {
   getColorGalleries,
   getInitialColorValueId,
@@ -11,20 +11,21 @@ import { buildSlideSource, buildThumbnailUrl } from '@shared/image-source';
 interface Props {
   images: ProductImage[];
   mediaGroups?: ProductMediaGroup[];
+  options?: ProductOption[];
   initialVariant?: Pick<ProductVariant, 'imageId' | 'optionValues'>;
   idPrefix: string;
   class?: string;
 }
 
-const { images, mediaGroups = [], initialVariant, idPrefix, class: className } = Astro.props;
+const { images, mediaGroups = [], options = [], initialVariant, idPrefix, class: className } = Astro.props;
 
 const colorGalleries = getColorGalleries({ images, mediaGroups });
-const initialColorValueId = getInitialColorValueId(initialVariant, colorGalleries);
+const initialColorValueId = getInitialColorValueId(initialVariant, colorGalleries, options);
 const multiColor = colorGalleries.length > 1;
 const safePrefix = escapeCssIdentifier(idPrefix);
 const galleryClass = `product-gallery--${safePrefix}`;
 const galleryRules = buildProductGalleryRules({ idPrefix, colorGalleries });
-const slideSizes = '(min-width: 90rem) 32rem, (min-width: 64rem) 28vw, (min-width: 48rem) 36vw, calc(100vw - 8.5rem)';
+const slideSizes = '(min-width: 90rem) 32rem, (min-width: 64rem) 28vw, (min-width: 48rem) 36vw, calc(100vw - 3rem)';
 ---
 
 <div
@@ -119,7 +120,7 @@ const slideSizes = '(min-width: 90rem) 32rem, (min-width: 64rem) 28vw, (min-widt
   .product-gallery {
     --gallery-thumb-width: 4.5rem;
     --gallery-gutter: var(--kb-space-3);
-    width: fit-content;
+    width: 100%;
     max-width: 100%;
     min-width: 0;
   }
@@ -228,10 +229,65 @@ const slideSizes = '(min-width: 90rem) 32rem, (min-width: 64rem) 28vw, (min-widt
     transition: opacity var(--kb-dur-fast) var(--kb-ease-out);
   }
 
+  @media (max-width: 47.99rem) {
+    .product-gallery {
+      --gallery-thumb-width: 3.25rem;
+    }
+
+    .product-gallery__layout {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      max-width: 100%;
+      align-items: stretch;
+    }
+
+    .product-gallery__stage {
+      order: 1;
+      grid-column: unset;
+      grid-row: unset;
+      width: 100%;
+      max-width: 100%;
+      height: auto;
+    }
+
+    .product-gallery__thumbs {
+      display: flex;
+      flex-direction: row;
+      order: 2;
+      gap: var(--kb-space-2);
+      overflow-x: auto;
+      overscroll-behavior-x: contain;
+      scroll-snap-type: x proximity;
+      padding-block: 2px;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+
+    .product-gallery__thumbs::-webkit-scrollbar {
+      display: none;
+    }
+
+    .product-gallery__thumb {
+      flex: 0 0 var(--gallery-thumb-width);
+      width: var(--gallery-thumb-width);
+      grid-column: unset;
+      scroll-snap-align: start;
+    }
+  }
+
   @media (min-width: 48rem) {
     .product-gallery {
       --gallery-thumb-width: 7.5rem;
       --gallery-gutter: var(--kb-space-4);
+      width: fit-content;
+    }
+
+    .product-gallery__layout {
+      display: grid;
+      grid-template-columns: var(--gallery-thumb-width) auto;
+      grid-template-rows: repeat(var(--gallery-thumb-count, 3), auto);
+      width: fit-content;
     }
   }
 

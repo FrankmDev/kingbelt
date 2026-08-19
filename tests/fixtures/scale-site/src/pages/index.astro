@@ -20,6 +20,7 @@ const initialVariant = getFirstAvailableVariant(scaleProduct) ?? scaleProduct.va
       <ProductGallery
         images={scaleProduct.images}
         mediaGroups={scaleProduct.mediaGroups}
+        options={scaleProduct.options}
         initialVariant={initialVariant}
         idPrefix={scaleProduct.handle}
       />

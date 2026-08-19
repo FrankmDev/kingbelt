@@ -3,6 +3,11 @@ import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { createShopifyCartService } from '../src/commerce/infrastructure/shopify/shopify-cart.ts';
 import {
+  SHOPIFY_IN_CONTEXT_DIRECTIVE,
+  SHOPIFY_MARKET_CONTEXT,
+  shopifyCartBuyerIdentity,
+} from '../src/commerce/infrastructure/shopify/config.ts';
+import {
   interpretShopifyCartMutation,
   mapShopifyCart,
   mapShopifyCartAvailability,
@@ -78,9 +83,11 @@ const remoteCart = ({
   lines = [remoteLine(LINE_A, VARIANT_A, 1)],
   checkoutUrl = CHECKOUT_URL,
   totalQuantity,
+  buyerIdentity = { countryCode: SHOPIFY_MARKET_CONTEXT.country },
 } = {}) => ({
   id: CART_ID,
   checkoutUrl,
+  buyerIdentity,
   totalQuantity: totalQuantity ?? lines.reduce((sum, line) => sum + line.quantity, 0),
   cost: { subtotalAmount: money(lines.reduce((sum, line) => sum + (89 * line.quantity), 0).toFixed(2)) },
   lines: { nodes: lines },
@@ -97,6 +104,7 @@ const operationName = (query) => {
   if (query.includes('mutation CartLinesAdd')) return 'add';
   if (query.includes('mutation CartLinesUpdate')) return 'update';
   if (query.includes('mutation CartLinesRemove')) return 'remove';
+  if (query.includes('mutation CartBuyerIdentityUpdate')) return 'identity';
   if (query.includes('query CartLineQuantities')) return 'quantities';
   if (query.includes('query Cart(')) return 'get';
   return 'unknown';
@@ -158,6 +166,37 @@ describe('consulta GraphQL del carrito Shopify', () => {
     expect(quantityReads[0].query).not.toContain('availableForSale');
     expect(quantityReads[0].query).not.toContain('image');
     expect(quantityReads[0].query).not.toContain('checkoutUrl');
+    expect(quantityReads[0].query).not.toContain(SHOPIFY_IN_CONTEXT_DIRECTIVE);
+  });
+
+  test('añadir al carrito usa ProductVariant.id como merchandiseId, nunca el SKU', async () => {
+    const sku = '0001008-100-CU-NA';
+    const { gateway, ...service } = createService({
+      create: (_query, variables) => {
+        expect(variables.input.lines[0].merchandiseId).toBe(VARIANT_A);
+        expect(variables.input.lines[0].merchandiseId).not.toBe(sku);
+        return { cartCreate: payload({ cart: remoteCart({ lines: [remoteLine(LINE_A, VARIANT_A, 1)] }) }) };
+      },
+      quantities: () => ({ cart: remoteCart({ lines: [remoteLine(LINE_A, VARIANT_A, 1)] }) }),
+      add: (_query, variables) => {
+        expect(variables.lines[0].merchandiseId).toBe(VARIANT_A);
+        expect(variables.lines[0].merchandiseId).not.toBe(sku);
+        return { cartLinesAdd: payload({ cart: remoteCart({ lines: [remoteLine(LINE_A, VARIANT_A, 2)] }) }) };
+      },
+    });
+
+    const created = await service.add(undefined, VARIANT_A, 1);
+    const added = await service.add(CART_ID, VARIANT_A, 1);
+
+    expect(created.success).toBe(true);
+    expect(created.cart.lines[0].variantId).toBe(VARIANT_A);
+    expect(added.success).toBe(true);
+    expect(added.cart.lines[0].variantId).toBe(VARIANT_A);
+    const cartVariables = gateway.queries
+      .filter((item) => item.name === 'create' || item.name === 'add')
+      .map((item) => JSON.stringify(item.variables));
+    expect(cartVariables.every((value) => value.includes(VARIANT_A))).toBe(true);
+    expect(cartVariables.some((value) => value.includes(sku))).toBe(false);
   });
 
   test('el código no clasifica errores Shopify parseando el texto del mensaje', () => {
@@ -705,5 +744,78 @@ describe('checkout preflight contra el Cart remoto', () => {
       get: () => ({ cart: null }),
     }), checkoutHosts).checkout(CART_ID);
     expect(result.status).toBe('expired');
+  });
+
+  test('checkout usa el checkoutUrl del carrito sin parámetros de mercado', async () => {
+    const { gateway, ...service } = createService({
+      get: () => ({ cart: remoteCart() }),
+    });
+    const result = await service.checkout(CART_ID);
+    expect(result.status).toBe('ready');
+    expect(result.url).toBe(CHECKOUT_URL);
+    const url = new URL(result.url);
+    expect(url.searchParams.has('country')).toBe(false);
+    expect(url.searchParams.has('currency')).toBe(false);
+    expect(url.searchParams.has('language')).toBe(false);
+    expect(gateway.queries.every((item) => item.name !== 'identity')).toBe(true);
+  });
+});
+
+describe('contexto de mercado del carrito Shopify', () => {
+  test('cartCreate envía buyerIdentity.countryCode del contexto central', async () => {
+    const { gateway, ...service } = createService({
+      create: () => ({ cartCreate: payload() }),
+    });
+    await service.add(undefined, VARIANT_A, 1);
+    const create = gateway.queries.find((item) => item.name === 'create');
+    expect(create.query).toContain(SHOPIFY_IN_CONTEXT_DIRECTIVE);
+    expect(create.variables.input.buyerIdentity).toEqual(shopifyCartBuyerIdentity());
+    expect(create.variables.country).toBe(SHOPIFY_MARKET_CONTEXT.country);
+    expect(create.variables.language).toBe(SHOPIFY_MARKET_CONTEXT.language);
+    expect(create.variables.input.buyerIdentity).not.toHaveProperty('email');
+    expect(create.variables.input.buyerIdentity).not.toHaveProperty('customerAccessToken');
+    expect(gateway.queries.some((item) => item.name === 'identity')).toBe(false);
+  });
+
+  test('un carrito ya alineado con ES no dispara cartBuyerIdentityUpdate', async () => {
+    const { gateway, ...service } = createService({
+      get: () => ({ cart: remoteCart() }),
+      quantities: () => ({ cart: remoteCart() }),
+      add: () => ({ cartLinesAdd: payload() }),
+      update: () => ({ cartLinesUpdate: payload() }),
+      remove: () => ({ cartLinesRemove: payload() }),
+    });
+    await service.get(CART_ID);
+    await service.add(CART_ID, VARIANT_A, 1);
+    await service.update(CART_ID, LINE_A, 2);
+    await service.remove(CART_ID, LINE_A);
+    expect(gateway.queries.some((item) => item.name === 'identity')).toBe(false);
+  });
+
+  test('un carrito con otro país se alinea con cartBuyerIdentityUpdate', async () => {
+    const foreign = remoteCart({ buyerIdentity: { countryCode: 'US' } });
+    const aligned = remoteCart();
+    const { gateway, ...service } = createService({
+      get: () => ({ cart: foreign }),
+      identity: (_query, variables) => {
+        expect(variables.buyerIdentity).toEqual(shopifyCartBuyerIdentity());
+        expect(variables.cartId).toBe(CART_ID);
+        expect(variables.country).toBe(SHOPIFY_MARKET_CONTEXT.country);
+        return { cartBuyerIdentityUpdate: payload({ cart: aligned }) };
+      },
+    });
+    const result = await service.get(CART_ID);
+    expect(result.cart.lines).toHaveLength(1);
+    expect(gateway.queries.map((item) => item.name)).toEqual(['get', 'identity']);
+  });
+
+  test('catálogo y carrito consumen el mismo país central', async () => {
+    const { gateway, ...service } = createService({
+      create: () => ({ cartCreate: payload() }),
+    });
+    await service.add(undefined, VARIANT_A, 1);
+    const create = gateway.queries.find((item) => item.name === 'create');
+    expect(create.variables.input.buyerIdentity.countryCode).toBe(SHOPIFY_MARKET_CONTEXT.country);
+    expect(create.variables.country).toBe(SHOPIFY_MARKET_CONTEXT.country);
   });
 });

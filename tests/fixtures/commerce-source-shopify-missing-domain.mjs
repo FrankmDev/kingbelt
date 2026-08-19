@@ -12,9 +12,9 @@ mock.module('astro:env/server', () => ({
 
 globalThis.fetch = async () => { throw new Error('Storefront must not be called with invalid configuration'); };
 const { catalogProvider } = await import('../../src/commerce/catalog.ts');
-assert.deepEqual(await catalogProvider.getProductHandles(), []);
-assert.deepEqual(await catalogProvider.getCollections(), []);
-assert.deepEqual(await catalogProvider.getFeaturedProducts(4), []);
+await assert.rejects(() => catalogProvider.getProductHandles());
+await assert.rejects(() => catalogProvider.getCollections());
+await assert.rejects(() => catalogProvider.getFeaturedProducts(4));
 
 const { POST } = await import('../../src/pages/api/cart.ts');
 const response = await POST({

@@ -368,6 +368,57 @@ const scopeCopy = scope
     margin-top: var(--kb-space-4);
   }
 
+  @media (max-width: 47.99rem) {
+    .collection-catalog {
+      padding-top: var(--kb-space-6);
+    }
+
+    .collection-catalog__layout {
+      gap: var(--kb-space-5);
+    }
+
+    .collection-catalog__toolbar {
+      gap: var(--kb-space-2);
+      margin-bottom: var(--kb-space-6);
+      padding-bottom: var(--kb-space-4);
+    }
+
+    .collection-catalog__heading {
+      font-size: clamp(1.5rem, 7vw, 2rem);
+    }
+
+    .collection-catalog__scope {
+      max-width: none;
+      font-size: var(--kb-text-xs);
+    }
+
+    .collection-catalog__grid {
+      gap: var(--kb-space-6) var(--kb-space-3);
+    }
+
+    .collection-catalog__group {
+      padding-top: var(--kb-space-6);
+    }
+
+    .collection-catalog__group + .collection-catalog__group {
+      margin-top: var(--kb-space-6);
+      padding-top: var(--kb-space-6);
+    }
+
+    .collection-catalog__group-head {
+      gap: var(--kb-space-3);
+      margin-bottom: var(--kb-space-4);
+    }
+
+    .collection-catalog__group-title {
+      font-size: clamp(1.5rem, 7vw, 2rem);
+    }
+
+    .collection-catalog__group-tagline {
+      max-width: none;
+    }
+  }
+
   @media (min-width: 40rem) {
     .collection-catalog__grid {
       gap: var(--kb-space-8) var(--kb-space-5);

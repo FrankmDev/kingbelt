@@ -263,6 +263,8 @@ describe('superficie del navegador y cabeceras', () => {
     expect(example).toContain('COMMERCE_SOURCE=demo');
     expect(example).toMatch(/^SHOPIFY_STORE_DOMAIN=\s*$/m);
     expect(example).toMatch(/^SHOPIFY_STOREFRONT_PRIVATE_TOKEN=\s*$/m);
+    expect(example).toMatch(/^SHOPIFY_CUSTOMER_ACCOUNT_URL=\s*$/m);
+    expect(example).not.toContain('SHOPIFY_CHECKOUT_URL');
     expect(example).not.toMatch(/^SHOPIFY_STORE_DOMAIN=.+\S/m);
     expect(example).not.toMatch(/shpat_|shpca_|shpss_/);
     expect(example).not.toContain('PUBLIC_SHOPIFY');

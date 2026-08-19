@@ -108,7 +108,7 @@ const cartSchema = {
 
 <style>
   .cart-page {
-    padding-top: clamp(7.5rem, 10vw, 9.5rem);
+    padding-top: clamp(5.5rem, 14vw, 9.5rem);
     padding-bottom: var(--kb-space-12);
   }
 
@@ -254,6 +254,25 @@ const cartSchema = {
   .cart-page__summary-actions :global(.kb-btn) {
     width: 100%;
     justify-content: center;
+  }
+
+  @media (max-width: 47.99rem) {
+    .cart-page__head {
+      gap: var(--kb-space-4);
+      padding-bottom: var(--kb-space-6);
+    }
+
+    .cart-page__title {
+      font-size: clamp(1.875rem, 8vw, 2.25rem);
+    }
+
+    .cart-page__layout {
+      gap: var(--kb-space-6);
+    }
+
+    .cart-page__summary-panel {
+      padding: var(--kb-space-4);
+    }
   }
 
   @media (min-width: 64rem) {

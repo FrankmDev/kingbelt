@@ -140,6 +140,7 @@ describe('límites de arquitectura', () => {
       'src/commerce/cart',
       'src/commerce/cart-server',
       'src/commerce/commerce-source',
+      'src/commerce/commerce-navigation',
     ]);
     const allowed = ['src/commerce/application/', 'src/commerce/domain/'];
     const violations = localDependencies.filter(({ importer, dependency }) =>
@@ -266,14 +267,20 @@ describe('límites de arquitectura', () => {
       'kingbelt.material',
       'kingbelt.width_mm',
       'kingbelt.buckle_finish',
+      'kingbelt.primary_collection',
       'kingbelt.color_galleries',
     ];
     requiredProductMetafields.forEach((key) => {
       expect(readiness).toContain(`\`${key}\``);
     });
     expect(readiness).toContain('list.metaobject_reference');
+    expect(readiness).toContain('collection_reference');
+    expect(readiness).toContain('Type: Collection reference');
     expect(readiness).toContain('exactamente 3, ordenadas');
-    expect(readiness).toContain('imagen principal nativa compartida por las variantes');
+    expect(readiness).toContain('products with Color option');
+    expect(readiness).toContain('variant.image');
+    expect(readiness).not.toContain('imagen principal nativa compartida por las variantes');
+    expect(readiness).not.toMatch(/si el archivo nombra|nombre de archivo contiene|detalles nativos inequívocos/);
     expect(readiness).toContain('Nunca se deben repartir imágenes por posición');
   });
 
@@ -405,5 +412,226 @@ describe('límites de arquitectura', () => {
         || source.includes('shopifyCartId');
     }).map(sourcePath);
     expect(sessionCoupling).toEqual([]);
+  });
+
+  test('el contexto de mercado Shopify tiene una única fuente autoritativa', () => {
+    const configPath = 'src/commerce/infrastructure/shopify/config.ts';
+    const config = readFileSync(join(root, configPath), 'utf8');
+    expect(config).toContain('export const SHOPIFY_MARKET_CONTEXT');
+    expect(config).toMatch(/country:\s*SHOPIFY_MARKET_COUNTRY/);
+    expect(config).toMatch(/language:\s*SHOPIFY_MARKET_LANGUAGE/);
+    expect(config).toMatch(/currency:\s*SHOPIFY_MARKET_CURRENCY/);
+    expect(config).toContain("export const SHOPIFY_MARKET_COUNTRY = 'ES'");
+    expect(config).toContain("export const SHOPIFY_MARKET_LANGUAGE = 'ES'");
+    expect(config).toContain("export const SHOPIFY_MARKET_CURRENCY = 'EUR'");
+    expect(config).not.toContain('SHOPIFY_COUNTRY');
+    expect(config).not.toContain('process.env');
+
+    const independentCountry = /countryCode:\s*['"]ES['"]|@inContext\(\s*country:\s*ES\b/;
+    const independentCurrency = /\[[^\]]*'EUR'[^\]]*\]/;
+    const commercialInfra = sourceFiles
+      .map(sourcePath)
+      .filter((path) =>
+        path.startsWith('src/commerce/infrastructure/shopify/') && path !== configPath
+      );
+    const violations = [...commercialInfra, 'scripts/shopify-preflight.ts'].flatMap((path) => {
+      const source = readFileSync(join(root, path), 'utf8');
+      const hits = [];
+      if (independentCountry.test(source)) hits.push(`${path}: country hardcoded`);
+      if (independentCurrency.test(source)) hits.push(`${path}: EUR list hardcoded`);
+      return hits;
+    });
+    expect(violations).toEqual([]);
+
+    const catalogQuery = readFileSync(join(sourceRoot, 'commerce/infrastructure/shopify/catalog-query.ts'), 'utf8');
+    const cartService = readFileSync(join(sourceRoot, 'commerce/infrastructure/shopify/shopify-cart.ts'), 'utf8');
+    const mapper = readFileSync(join(sourceRoot, 'commerce/infrastructure/shopify/catalog-mappers.ts'), 'utf8');
+    expect(catalogQuery).toContain('withShopifyInContextVariables');
+    expect(catalogQuery).toContain('SHOPIFY_IN_CONTEXT_DIRECTIVE');
+    const runtimeQuery = readFileSync(
+      join(sourceRoot, 'commerce/infrastructure/shopify/catalog-runtime-query.ts'),
+      'utf8'
+    );
+    expect(runtimeQuery).toContain('withShopifyInContextVariables');
+    expect(runtimeQuery).toContain('SHOPIFY_IN_CONTEXT_DIRECTIVE');
+    expect(cartService).toContain('shopifyCartBuyerIdentity');
+    expect(cartService).toContain('SHOPIFY_MARKET_CONTEXT');
+    expect(mapper).toContain('SHOPIFY_SUPPORTED_CURRENCIES');
+  });
+
+  test('el contexto de mercado no procede de hostname, Accept-Language ni geolocalización', () => {
+    const scoped = [
+      ...sourceFiles.map(sourcePath).filter((path) =>
+        path.startsWith('src/commerce/infrastructure/shopify/')
+        || path === 'src/pages/api/cart.ts'
+        || path === 'src/commerce/catalog.ts'
+        || path === 'src/commerce/cart.ts'
+        || path === 'src/commerce/cart-server.ts'
+      ),
+      'scripts/shopify-preflight.ts',
+    ];
+    const forbidden = [
+      'Accept-Language',
+      'accept-language',
+      'cf-ipcountry',
+      'x-vercel-ip-country',
+      'x-country',
+      'geolocation',
+      'geoip',
+    ];
+    const violations = scoped.flatMap((path) => {
+      const source = readFileSync(join(root, path), 'utf8');
+      return forbidden
+        .filter((needle) => source.toLowerCase().includes(needle.toLowerCase()))
+        .map((needle) => `${path}: ${needle}`);
+    });
+    expect(violations).toEqual([]);
+
+    const config = readFileSync(join(sourceRoot, 'commerce/infrastructure/shopify/config.ts'), 'utf8');
+    const marketStart = config.indexOf('export const SHOPIFY_MARKET_COUNTRY');
+    const marketEnd = config.indexOf('export interface ShopifyStorefrontConfigInput');
+    const marketBlock = config.slice(marketStart, marketEnd);
+    expect(marketBlock.length).toBeGreaterThan(100);
+    expect(marketBlock).not.toMatch(/hostname|Accept-Language|headers|buyerIp|geolocation|process\.env/i);
+    const apiCart = readFileSync(join(sourceRoot, 'pages/api/cart.ts'), 'utf8');
+    expect(apiCart).not.toMatch(/countryCode|language|currency/);
+    expect(apiCart).not.toMatch(/clientAddress.*country|country.*clientAddress/);
+  });
+
+  test('el mapper Shopify exige el SKU comercial y no fabrica uno técnico', () => {
+    const mapper = readFileSync(
+      join(sourceRoot, 'commerce/infrastructure/shopify/catalog-mappers.ts'),
+      'utf8'
+    );
+    const query = readFileSync(
+      join(sourceRoot, 'commerce/infrastructure/shopify/catalog-query.ts'),
+      'utf8'
+    );
+    const preflight = readFileSync(join(root, 'scripts/shopify-preflight.ts'), 'utf8');
+    const catalogDomain = readFileSync(join(sourceRoot, 'commerce/domain/catalog.ts'), 'utf8');
+    const apiCart = readFileSync(join(sourceRoot, 'pages/api/cart.ts'), 'utf8');
+    const syntheticSkuFn = /\b(?:generateSku|fallbackSku|syntheticSku|technicalSku)\b/;
+
+    expect(mapper).toMatch(/sku\(\s*requiredText\(\s*variant\.sku/);
+    expect(mapper).not.toMatch(/optionalText\(\s*variant\.sku\s*\)/);
+    expect(mapper).not.toMatch(syntheticSkuFn);
+    expect(query).toMatch(/\bsku\b/);
+    expect(query).toContain('export const PRODUCT_SUMMARY_FIELDS');
+    const summaryFields = query.match(/export const PRODUCT_SUMMARY_FIELDS = `([\s\S]*?)`;/)?.[1] ?? '';
+    expect(summaryFields).toContain('handle');
+    expect(summaryFields).not.toMatch(/\bsku\b/);
+    expect(preflight).toContain('mapShopifyCatalog');
+    expect(preflight).toContain('assertValidCatalog');
+    expect(preflight).not.toMatch(syntheticSkuFn);
+    expect(preflight).not.toMatch(/variant\.sku\s*\?\.trim/);
+    expect(catalogDomain).toMatch(/export interface ProductVariant \{[\s\S]*?\bsku:\s*Sku;/);
+    const summary = catalogDomain.match(/export interface ProductSummary \{[\s\S]*?\n\}/)?.[0] ?? '';
+    expect(summary).toContain('export interface ProductSummary');
+    expect(summary).not.toMatch(/\bsku\b/);
+    expect(apiCart).toContain('service.add(shopifyCartId, body.variantId, body.quantity)');
+    expect(apiCart).not.toMatch(/body\.sku/);
+  });
+
+  test('Shopify deriva Product.mediaGroups solo desde kingbelt.color_galleries', () => {
+    const mapper = readFileSync(
+      join(sourceRoot, 'commerce/infrastructure/shopify/catalog-mappers.ts'),
+      'utf8'
+    );
+    const query = readFileSync(
+      join(sourceRoot, 'commerce/infrastructure/shopify/catalog-query.ts'),
+      'utf8'
+    );
+    const runtimeQuery = readFileSync(
+      join(sourceRoot, 'commerce/infrastructure/shopify/catalog-runtime-query.ts'),
+      'utf8'
+    );
+    const readiness = readFileSync(join(root, 'docs/SHOPIFY_READINESS.md'), 'utf8');
+    const planDocs = walk(join(root, 'docs'))
+      .filter((path) => path.endsWith('.md'))
+      .map((path) => readFileSync(path, 'utf8'))
+      .join('\n');
+
+    expect(query).toContain('key: "color_galleries"');
+    expect(runtimeQuery).toContain('FULL_PRODUCT_FIELDS');
+    expect(runtimeQuery).toContain('PRODUCT_SUMMARY_FIELDS');
+    const summaryFields = query.match(/export const PRODUCT_SUMMARY_FIELDS = `([\s\S]*?)`;/)?.[1] ?? '';
+    expect(summaryFields).not.toContain('color_galleries');
+    expect(mapper).toContain('mapRequiredColorGalleries');
+    expect(mapper).toContain('list.metaobject_reference');
+    expect(mapper).toContain('COLOR_GALLERY_IMAGE_COUNT');
+    expect(mapper).not.toMatch(/::native-color::/);
+    expect(mapper).not.toMatch(
+      /FILENAME_COLOR_TOKEN_MIN|foldFilenameKey|filenameToken|tokensFromImageUrl|nativeDetailImageIdsByColor|mapNativeColorMediaGroups/
+    );
+    expect(mapper).not.toMatch(/new URL\([^)]*\)\.pathname/);
+    expect(mapper).not.toMatch(/decodeURIComponent\(/);
+    expect(readiness).toContain('kingbelt.color_galleries');
+    expect(readiness).toContain('color_value');
+    expect(planDocs).not.toMatch(/si el archivo nombra ese color|token de color|fallback nativo de galería/);
+  });
+
+  test('la colección principal Shopify no se deriva del orden de collections', () => {
+    const stripComments = (source) =>
+      source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
+    const mapper = stripComments(
+      readFileSync(join(sourceRoot, 'commerce/infrastructure/shopify/catalog-mappers.ts'), 'utf8')
+    );
+    const query = readFileSync(
+      join(sourceRoot, 'commerce/infrastructure/shopify/catalog-query.ts'),
+      'utf8'
+    );
+    const runtimeQuery = readFileSync(
+      join(sourceRoot, 'commerce/infrastructure/shopify/catalog-runtime-query.ts'),
+      'utf8'
+    );
+    const summaryFields = query.match(/export const PRODUCT_SUMMARY_FIELDS = `([\s\S]*?)`;/)?.[1] ?? '';
+    const fullMetafields = query.match(/const FULL_PRODUCT_METAFIELDS = `([\s\S]*?)`;/)?.[1] ?? '';
+
+    expect(mapper).toContain('PRIMARY_COLLECTION_KEY');
+    expect(mapper).toContain("'primary_collection'");
+    expect(mapper).toContain('collection_reference');
+    expect(mapper).not.toMatch(/collections\.nodes\[0\]/);
+    expect(mapper).not.toMatch(/primaryCollectionId\s*=\s*[\s\S]{0,120}\?\?/);
+    expect(fullMetafields).toContain('key: "primary_collection"');
+    expect(fullMetafields).toContain('COLLECTION_REFERENCE_SELECTION');
+    expect(summaryFields).toContain('key: "primary_collection"');
+    expect(summaryFields).toContain('COLLECTION_REFERENCE_SELECTION');
+    expect(summaryFields).not.toMatch(/collections\(first:\s*1\)/);
+    expect(query).toMatch(/\.\.\.\s*on Collection\s*\{\s*id handle title\s*\}/);
+    expect(runtimeQuery).toContain('PRODUCT_SUMMARY_FIELDS');
+    expect(runtimeQuery).toContain('FULL_PRODUCT_FIELDS');
+  });
+
+  test('el runtime de catálogo no descarga el catálogo Shopify completo', () => {
+    const adapter = readFileSync(
+      join(sourceRoot, 'commerce/infrastructure/shopify/catalog-adapter.ts'),
+      'utf8'
+    );
+    const runtime = readFileSync(
+      join(sourceRoot, 'commerce/infrastructure/shopify/catalog-runtime-query.ts'),
+      'utf8'
+    );
+    const composition = readFileSync(join(sourceRoot, 'commerce/catalog.ts'), 'utf8');
+    const preflight = readFileSync(join(root, 'scripts/shopify-preflight.ts'), 'utf8');
+    const fullCatalogQuery = readFileSync(
+      join(sourceRoot, 'commerce/infrastructure/shopify/catalog-query.ts'),
+      'utf8'
+    );
+
+    expect(adapter).not.toContain('fetchShopifyCatalog');
+    expect(adapter).not.toContain('loadConfiguredShopifyCatalog');
+    expect(adapter).not.toContain('KingBeltCatalogPage');
+    expect(runtime).not.toContain('fetchShopifyCatalog');
+    expect(runtime).not.toContain('KingBeltCatalogPage');
+    expect(runtime).toContain('product(handle:');
+    expect(runtime).toContain('collection(handle:');
+    expect(composition).not.toContain('fetchShopifyCatalog');
+    expect(composition).not.toContain('loadConfiguredShopifyCatalog');
+    expect(composition).toContain('createShopifyCatalogQueries');
+    expect(fullCatalogQuery).toContain('export const fetchShopifyCatalog');
+    expect(fullCatalogQuery).toContain('KingBeltCatalogPage');
+    expect(preflight).toContain('fetchShopifyCatalog');
+    expect(preflight).toContain('mapShopifyCatalog');
+    expect(preflight).toContain('assertValidCatalog');
   });
 });

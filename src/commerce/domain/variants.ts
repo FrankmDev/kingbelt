@@ -15,7 +15,7 @@ interface VariantSelectionShape {
 }
 
 interface ProductSelectionShape<TVariant extends VariantSelectionShape = VariantSelectionShape> {
-  options: ProductOption[];
+  options: readonly ProductOption[];
   variants: TVariant[];
 }
 
@@ -76,6 +76,15 @@ export const getCompatibleOptionValues = <TVariant extends VariantSelectionShape
     .filter((valueId) => values.has(valueId)) ?? [];
 };
 
+export const getSelectedColorValueId = (
+  product: { readonly options: readonly ProductOption[] },
+  selection: readonly OptionSelection[]
+): string | undefined => {
+  const colorOptions = product.options.filter((option) => option.purpose === 'color');
+  if (colorOptions.length !== 1) return undefined;
+  return selection.find((item) => item.optionId === colorOptions[0].id)?.valueId;
+};
+
 /** Conserva el valor recién cambiado y descarta selecciones incompatibles. */
 export const reconcileSelectedOptions = (
   product: ProductSelectionShape,
@@ -85,19 +94,54 @@ export const reconcileSelectedOptions = (
   const changed = selection.find((option) => option.optionId === changedOptionId);
   if (!changed || !isValidSelection(product, [changed])) return [];
 
+  const remaining = selection
+    .filter((item) => item.optionId !== changedOptionId)
+    .slice()
+    .sort((left, right) => left.optionId.localeCompare(right.optionId));
+
   const reconciled: OptionSelection[] = [changed];
-  product.options.forEach((option) => {
-    if (option.id === changedOptionId) return;
-    const selected = selection.find((item) => item.optionId === option.id);
-    if (!selected) return;
+  remaining.forEach((selected) => {
+    if (!isValidSelection(product, [selected])) return;
     if (product.variants.some((variant) => selectionMatches(variant, [...reconciled, selected]))) {
       reconciled.push(selected);
     }
   });
 
-  return product.options
-    .map((option) => reconciled.find((selected) => selected.optionId === option.id))
-    .filter((selected): selected is OptionSelection => Boolean(selected));
+  const kept = new Map(reconciled.map((selected) => [selected.optionId, selected]));
+  return product.options.flatMap((option) => {
+    const selected = kept.get(option.id);
+    return selected ? [selected] : [];
+  });
+};
+
+export interface ProductBuyBoxSelectionState<TVariant extends VariantSelectionShape> {
+  selection: OptionSelection[];
+  selectedVariant: TVariant | undefined;
+  colorValueId: string | undefined;
+  compatibleValueIds: ReadonlyMap<string, readonly string[]>;
+}
+
+export const applyProductBuyBoxSelection = <TVariant extends VariantSelectionShape>(
+  product: ProductSelectionShape<TVariant>,
+  selection: readonly OptionSelection[],
+  changedOptionId?: string
+): ProductBuyBoxSelectionState<TVariant> => {
+  const nextSelection = changedOptionId
+    ? reconcileSelectedOptions(product, selection, changedOptionId)
+    : [...selection];
+  const compatibleValueIds = new Map(
+    product.options.map((option) => [
+      option.id,
+      getCompatibleOptionValues(product, nextSelection, option.id),
+    ])
+  );
+
+  return {
+    selection: nextSelection,
+    selectedVariant: getVariantBySelectedOptions(product, nextSelection),
+    colorValueId: getSelectedColorValueId(product, nextSelection),
+    compatibleValueIds,
+  };
 };
 
 export const calculatePriceRange = (

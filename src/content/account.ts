@@ -1,24 +1,24 @@
 export const accountAccessPage = {
   title: 'Acceder — KingBelt',
   description:
-    'Inicia sesión o crea tu cuenta con tu correo para consultar pedidos y agilizar tus compras.',
+    'Vista de demostración del acceso a cuenta. En producción, login y registro ocurren en Shopify Customer Accounts.',
   intents: {
     login: {
       id: 'login',
       label: 'Iniciar sesión',
       heading: 'Iniciar sesión',
-      lede: 'Introduce tu correo. Te enviaremos un código de un solo uso.',
-      submit: 'Entrar',
+      lede: 'Panel visual de demostración. En Shopify, el acceso ocurre en Customer Accounts.',
+      submit: 'Continuar',
     },
     register: {
       id: 'register',
       label: 'Crear cuenta',
       heading: 'Crear cuenta',
-      lede: 'Usa tu correo. Si ya tienes cuenta, entrarás con el mismo código.',
-      submit: 'Crear cuenta',
+      lede: 'Misma vista de demostración. En Shopify, el alta usa el mismo flujo alojado.',
+      submit: 'Continuar',
     },
   },
-  note: 'Sin contraseña. Si no hay cuenta, se crea al verificar el correo.',
+  note: 'Modo demo: este formulario no autentica, no envía correo y no crea sesión.',
   helpLabel: '¿Necesitas ayuda?',
   helpHref: '/contacto',
 } as const;

@@ -425,6 +425,39 @@ const cards = featured ? [
     outline-offset: 2px;
   }
 
+  @media (max-width: 47.99rem) {
+    .home-categories__caption,
+    .home-categories__caption--hero {
+      padding: var(--kb-space-4);
+      gap: var(--kb-space-2);
+    }
+
+    .home-categories__caption--hero {
+      padding-inline: var(--kb-space-4);
+    }
+
+    .home-categories__top,
+    .home-categories__top--hero {
+      padding: var(--kb-space-3);
+    }
+
+    .home-categories__title {
+      font-size: clamp(1.5rem, 7vw, 2rem);
+    }
+
+    .home-categories__folio {
+      font-size: clamp(1.75rem, 8vw, 2.25rem);
+    }
+
+    .home-categories__card {
+      min-height: clamp(16rem, 52vw, 22rem);
+    }
+
+    .home-categories__card--hero {
+      min-height: clamp(18rem, 58vw, 24rem);
+    }
+  }
+
   @media (min-width: 40rem) {
     .home-categories__grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));

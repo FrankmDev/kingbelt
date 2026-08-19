@@ -68,6 +68,7 @@ describe('contrato de CI quality', () => {
     expect(source).not.toContain('continue-on-error');
     expect(source).not.toContain('|| true');
     expect(source).not.toContain('shopify:smoke');
+    expect(source).not.toContain('shopify:preflight');
     expect(source).not.toMatch(/\$\{\{\s*secrets\./);
     expect(source).not.toMatch(/\b(?:shpat|shpca|shpss)_[A-Za-z0-9]{20,}\b/);
   });
@@ -79,6 +80,8 @@ describe('contrato de CI quality', () => {
     expect(scripts.validate.split(/\s*&&\s*/)).toEqual(VALIDATE_STEPS);
     expect(scripts.validate).not.toContain('bun install');
     expect(scripts.validate).not.toContain('shopify:smoke');
+    expect(scripts.validate).not.toContain('shopify:preflight');
+    expect(scripts['shopify:preflight']).toBe('bun scripts/shopify-preflight.mjs');
     expect(scripts.validate).not.toContain('|| true');
     expect(scripts['audit:dependencies']).toBe('bun audit');
     expect(scripts['security:scan:history']).toContain('--history');
@@ -95,5 +98,6 @@ describe('contrato de CI quality', () => {
     expect(historyScan).toContain('fetch-depth: 0');
     expect(validate).not.toMatch(/\/Users\/|\/home\/[^/]+/);
     expect(validate).not.toContain('shopify:smoke');
+    expect(validate).not.toContain('shopify:preflight');
   });
 });

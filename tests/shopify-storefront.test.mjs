@@ -158,11 +158,17 @@ describe('configuración Shopify Storefront', () => {
     expect(example).toContain('SHOPIFY_STORE_DOMAIN=');
     expect(example).toContain(`SHOPIFY_API_VERSION=${SHOPIFY_STOREFRONT_API_VERSION}`);
     expect(example).toContain('SHOPIFY_STOREFRONT_PRIVATE_TOKEN=');
+    expect(example).toContain('SHOPIFY_CUSTOMER_ACCOUNT_URL=');
+    expect(example).not.toContain('SHOPIFY_CHECKOUT_URL');
     expect(example).not.toMatch(/PUBLIC_SHOPIFY/);
     expect(example).not.toContain('SHOPIFY_USE_CATALOG');
     expect(astroConfig).toContain('SHOPIFY_STORE_DOMAIN:');
     expect(astroConfig).toContain('SHOPIFY_API_VERSION:');
     expect(astroConfig).toContain('SHOPIFY_STOREFRONT_PRIVATE_TOKEN:');
+    expect(astroConfig).toContain('SHOPIFY_CUSTOMER_ACCOUNT_URL:');
+    expect(astroConfig).toContain('MAX_HOSTED_URL_LENGTH');
+    expect(astroConfig).not.toContain('SHOPIFY_CHECKOUT_URL');
+    expect(astroConfig).not.toContain('PUBLIC_SHOPIFY_CUSTOMER_ACCOUNT_URL');
     expect(astroConfig).not.toContain('SHOPIFY_CART_COOKIE_SECRET');
     expect(astroConfig).toContain('SHOPIFY_WEBHOOK_SECRET:');
     expect(astroConfig).toContain('sessionDriverConfig');
@@ -190,6 +196,11 @@ describe('configuración Shopify Storefront', () => {
       optional: true,
     });
     expect(astroConfiguration.env.schema.SHOPIFY_STORE_DOMAIN).toMatchObject({
+      context: 'server',
+      access: 'public',
+      optional: true,
+    });
+    expect(astroConfiguration.env.schema.SHOPIFY_CUSTOMER_ACCOUNT_URL).toMatchObject({
       context: 'server',
       access: 'public',
       optional: true,
@@ -259,6 +270,8 @@ describe('gateway Shopify Storefront', () => {
       query: 'query Test($handle: String!) { shop { name } }',
       variables,
     });
+    expect(requests[0].init.headers).not.toHaveProperty('Shopify-Storefront-Buyer-Country');
+    expect(JSON.stringify(requests[0].init.headers)).not.toMatch(/CountryCode|LanguageCode/i);
   });
 
   test('envía Buyer-IP solo cuando es una dirección válida', async () => {

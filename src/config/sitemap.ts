@@ -6,6 +6,7 @@ const STATIC_SITEMAP_EXCLUDED = new Set([
   '/404',
   '/carrito',
   '/cart-catalog.json',
+  '/cuenta/iniciar',
 ]);
 
 export const isSitemapExcluded = (pathname: string): boolean => {

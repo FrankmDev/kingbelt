@@ -41,7 +41,7 @@
   --kb-shell-narrow: 74rem;
   --kb-shell-copy: 60rem;
 
-  --kb-gutter: clamp(1.5rem, 2.4vw, 3rem);
+  --kb-gutter: clamp(1rem, 4vw, 3rem);
   /* --- Radii — finer granular scale --- */
   --kb-radius-xs: 0.375rem;
   --kb-radius-sm: 0.5625rem;

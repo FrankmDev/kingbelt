@@ -6,6 +6,7 @@ import vercel from '@astrojs/vercel';
 import { siteUrl } from './src/config/site.ts';
 import { isSitemapExcluded } from './src/config/sitemap.ts';
 import { buildProductRedirectMap } from './src/commerce/application/product-redirects.ts';
+import { MAX_HOSTED_URL_LENGTH } from './src/commerce/application/hosted-url.ts';
 import {
   MAX_SHOPIFY_STOREFRONT_TOKEN_LENGTH,
   SHOPIFY_STOREFRONT_API_VERSION,
@@ -45,6 +46,12 @@ export default defineConfig({
         access: 'public',
         values: [SHOPIFY_STOREFRONT_API_VERSION],
         default: SHOPIFY_STOREFRONT_API_VERSION,
+      }),
+      SHOPIFY_CUSTOMER_ACCOUNT_URL: envField.string({
+        context: 'server',
+        access: 'public',
+        optional: true,
+        max: MAX_HOSTED_URL_LENGTH,
       }),
       SHOPIFY_STOREFRONT_PRIVATE_TOKEN: envField.string({
         context: 'server',

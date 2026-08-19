@@ -4,6 +4,13 @@ import type { CheckoutResult } from '../../application/checkout';
 import { emptyCart } from '../../application/cart-service';
 import type { Cart, CartOperationResult } from '../../domain/cart';
 import { TECHNICAL_LINE_QUANTITY_LIMIT } from '../../domain/inventory';
+import {
+  SHOPIFY_IN_CONTEXT_DIRECTIVE,
+  SHOPIFY_IN_CONTEXT_VARIABLE_DEFINITIONS,
+  SHOPIFY_MARKET_CONTEXT,
+  shopifyCartBuyerIdentity,
+  withShopifyInContextVariables,
+} from './config';
 import type { ShopifyStorefrontGateway } from './storefront-gateway';
 import {
   interpretShopifyCartMutation,
@@ -24,6 +31,7 @@ const CART_FIELDS = `
   fragment CartFields on Cart {
     id
     checkoutUrl
+    buyerIdentity { countryCode }
     cost { subtotalAmount { amount currencyCode } }
     lines(first: ${CART_LINE_PAGE_SIZE}) {
       nodes {
@@ -62,7 +70,7 @@ const CART_MUTATION_RESULT = `
 `;
 
 const CART_QUERY = `#graphql
-  query Cart($id: ID!) {
+  query Cart($id: ID!, ${SHOPIFY_IN_CONTEXT_VARIABLE_DEFINITIONS}) ${SHOPIFY_IN_CONTEXT_DIRECTIVE} {
     cart(id: $id) {
       ...CartFields
     }
@@ -86,7 +94,7 @@ const CART_LINE_QUANTITIES_QUERY = `#graphql
 `;
 
 const CART_CREATE_MUTATION = `#graphql
-  mutation CartCreate($input: CartInput!) {
+  mutation CartCreate($input: CartInput!, ${SHOPIFY_IN_CONTEXT_VARIABLE_DEFINITIONS}) ${SHOPIFY_IN_CONTEXT_DIRECTIVE} {
     cartCreate(input: $input) {
       ${CART_MUTATION_RESULT}
     }
@@ -95,7 +103,7 @@ const CART_CREATE_MUTATION = `#graphql
 `;
 
 const CART_LINES_ADD_MUTATION = `#graphql
-  mutation CartLinesAdd($cartId: ID!, $lines: [CartLineInput!]!) {
+  mutation CartLinesAdd($cartId: ID!, $lines: [CartLineInput!]!, ${SHOPIFY_IN_CONTEXT_VARIABLE_DEFINITIONS}) ${SHOPIFY_IN_CONTEXT_DIRECTIVE} {
     cartLinesAdd(cartId: $cartId, lines: $lines) {
       ${CART_MUTATION_RESULT}
     }
@@ -104,7 +112,7 @@ const CART_LINES_ADD_MUTATION = `#graphql
 `;
 
 const CART_LINES_UPDATE_MUTATION = `#graphql
-  mutation CartLinesUpdate($cartId: ID!, $lines: [CartLineUpdateInput!]!) {
+  mutation CartLinesUpdate($cartId: ID!, $lines: [CartLineUpdateInput!]!, ${SHOPIFY_IN_CONTEXT_VARIABLE_DEFINITIONS}) ${SHOPIFY_IN_CONTEXT_DIRECTIVE} {
     cartLinesUpdate(cartId: $cartId, lines: $lines) {
       ${CART_MUTATION_RESULT}
     }
@@ -113,8 +121,17 @@ const CART_LINES_UPDATE_MUTATION = `#graphql
 `;
 
 const CART_LINES_REMOVE_MUTATION = `#graphql
-  mutation CartLinesRemove($cartId: ID!, $lineIds: [ID!]!) {
+  mutation CartLinesRemove($cartId: ID!, $lineIds: [ID!]!, ${SHOPIFY_IN_CONTEXT_VARIABLE_DEFINITIONS}) ${SHOPIFY_IN_CONTEXT_DIRECTIVE} {
     cartLinesRemove(cartId: $cartId, lineIds: $lineIds) {
+      ${CART_MUTATION_RESULT}
+    }
+  }
+  ${CART_FIELDS}
+`;
+
+const CART_BUYER_IDENTITY_UPDATE_MUTATION = `#graphql
+  mutation CartBuyerIdentityUpdate($cartId: ID!, $buyerIdentity: CartBuyerIdentityInput!, ${SHOPIFY_IN_CONTEXT_VARIABLE_DEFINITIONS}) ${SHOPIFY_IN_CONTEXT_DIRECTIVE} {
+    cartBuyerIdentityUpdate(cartId: $cartId, buyerIdentity: $buyerIdentity) {
       ${CART_MUTATION_RESULT}
     }
   }
@@ -135,7 +152,10 @@ interface CartIdVariables {
 }
 
 interface CartCreateVariables {
-  input: { lines: Array<{ merchandiseId: string; quantity: number }> };
+  input: {
+    lines: Array<{ merchandiseId: string; quantity: number }>;
+    buyerIdentity: ReturnType<typeof shopifyCartBuyerIdentity>;
+  };
 }
 
 interface CartLinesAddVariables {
@@ -153,6 +173,11 @@ interface CartLinesRemoveVariables {
   lineIds: string[];
 }
 
+interface CartBuyerIdentityUpdateVariables {
+  cartId: string;
+  buyerIdentity: ReturnType<typeof shopifyCartBuyerIdentity>;
+}
+
 export interface ShopifyCartService {
   get(cartId: string): Promise<{ cart: Cart; cartId?: string }>;
   add(cartId: string | undefined, variantId: string, quantity: number): Promise<CartOperationResult & { cartId?: string }>;
@@ -166,13 +191,38 @@ export const createShopifyCartService = (
   checkoutHosts: readonly string[],
 ): ShopifyCartService => {
   const read = async (cartId: string) =>
-    gateway.graphql<{ cart: ShopifyCart | null }, CartIdVariables>(CART_QUERY, { id: cartId });
+    gateway.graphql<{ cart: ShopifyCart | null }, CartIdVariables>(
+      CART_QUERY,
+      withShopifyInContextVariables({ id: cartId })
+    );
 
   const readLineQuantities = async (cartId: string) =>
     gateway.graphql<{ cart: ShopifyCartQuantitySnapshot | null }, CartIdVariables>(
       CART_LINE_QUANTITIES_QUERY,
       { id: cartId }
     );
+
+  const hasExpectedMarket = (cart: ShopifyCart): boolean =>
+    cart.buyerIdentity?.countryCode === SHOPIFY_MARKET_CONTEXT.country;
+
+  const syncCartMarketIfNeeded = async (cart: ShopifyCart): Promise<ShopifyCart> => {
+    if (hasExpectedMarket(cart)) return cart;
+    const response = await gateway.graphql<
+      { cartBuyerIdentityUpdate: ShopifyCartPayload },
+      CartBuyerIdentityUpdateVariables
+    >(
+      CART_BUYER_IDENTITY_UPDATE_MUTATION,
+      withShopifyInContextVariables({
+        cartId: cart.id,
+        buyerIdentity: shopifyCartBuyerIdentity(),
+      })
+    );
+    const updated = response.cartBuyerIdentityUpdate;
+    if (!updated?.cart || updated.userErrors.length) {
+      throw new Error('Shopify rejected the cart market context update.');
+    }
+    return updated.cart;
+  };
 
   const withCartId = (
     result: CartOperationResult,
@@ -186,30 +236,42 @@ export const createShopifyCartService = (
     async get(cartId) {
       const response = await read(cartId);
       if (!response.cart) return { cart: emptyCart() };
-      return { cart: mapShopifyCart(response.cart), cartId };
+      const cart = await syncCartMarketIfNeeded(response.cart);
+      return { cart: mapShopifyCart(cart), cartId };
     },
     async add(cartId, merchandiseId, quantity) {
       if (!isValidQuantity(quantity)) return invalidQuantityResult();
       if (!cartId) {
         const response = await gateway.graphql<{ cartCreate: ShopifyCartPayload }, CartCreateVariables>(
           CART_CREATE_MUTATION,
-          { input: { lines: [{ merchandiseId, quantity }] } }
+          withShopifyInContextVariables({
+            input: {
+              lines: [{ merchandiseId, quantity }],
+              buyerIdentity: shopifyCartBuyerIdentity(),
+            },
+          })
         );
-        const result = interpretShopifyCartMutation(response.cartCreate, {
+        const created = response.cartCreate?.cart
+          ? { ...response.cartCreate, cart: await syncCartMarketIfNeeded(response.cartCreate.cart) }
+          : response.cartCreate;
+        const result = interpretShopifyCartMutation(created, {
           kind: 'create',
           merchandiseId,
           requestedQuantity: quantity,
         });
-        return withCartId(result, response.cartCreate?.cart?.id);
+        return withCartId(result, created?.cart?.id);
       }
 
       const previous = await readLineQuantities(cartId);
       const response = await gateway.graphql<{ cartLinesAdd: ShopifyCartPayload }, CartLinesAddVariables>(
         CART_LINES_ADD_MUTATION,
-        { cartId, lines: [{ merchandiseId, quantity }] }
+        withShopifyInContextVariables({ cartId, lines: [{ merchandiseId, quantity }] })
       );
+      const added = response.cartLinesAdd?.cart
+        ? { ...response.cartLinesAdd, cart: await syncCartMarketIfNeeded(response.cartLinesAdd.cart) }
+        : response.cartLinesAdd;
       return withCartId(
-        interpretShopifyCartMutation(response.cartLinesAdd, {
+        interpretShopifyCartMutation(added, {
           kind: 'add',
           merchandiseId,
           requestedQuantity: quantity,
@@ -222,10 +284,13 @@ export const createShopifyCartService = (
       if (!isValidQuantity(quantity)) return invalidQuantityResult();
       const response = await gateway.graphql<{ cartLinesUpdate: ShopifyCartPayload }, CartLinesUpdateVariables>(
         CART_LINES_UPDATE_MUTATION,
-        { cartId, lines: [{ id: lineId, quantity }] }
+        withShopifyInContextVariables({ cartId, lines: [{ id: lineId, quantity }] })
       );
+      const updated = response.cartLinesUpdate?.cart
+        ? { ...response.cartLinesUpdate, cart: await syncCartMarketIfNeeded(response.cartLinesUpdate.cart) }
+        : response.cartLinesUpdate;
       return withCartId(
-        interpretShopifyCartMutation(response.cartLinesUpdate, {
+        interpretShopifyCartMutation(updated, {
           kind: 'update',
           lineId,
           requestedQuantity: quantity,
@@ -236,10 +301,13 @@ export const createShopifyCartService = (
     async remove(cartId, lineId) {
       const response = await gateway.graphql<{ cartLinesRemove: ShopifyCartPayload }, CartLinesRemoveVariables>(
         CART_LINES_REMOVE_MUTATION,
-        { cartId, lineIds: [lineId] }
+        withShopifyInContextVariables({ cartId, lineIds: [lineId] })
       );
+      const removed = response.cartLinesRemove?.cart
+        ? { ...response.cartLinesRemove, cart: await syncCartMarketIfNeeded(response.cartLinesRemove.cart) }
+        : response.cartLinesRemove;
       return withCartId(
-        interpretShopifyCartMutation(response.cartLinesRemove, {
+        interpretShopifyCartMutation(removed, {
           kind: 'remove',
           lineId,
         }),
@@ -251,13 +319,14 @@ export const createShopifyCartService = (
       if (!response.cart) {
         return { status: 'expired', message: 'El carrito ha caducado; vuelve a añadir tus productos.' };
       }
-      const cart = mapShopifyCart(response.cart);
+      const remote = await syncCartMarketIfNeeded(response.cart);
+      const cart = mapShopifyCart(remote);
       if (!cart.canCheckout) {
         return { status: 'blocked', cart, message: buildCheckoutBlockedMessage(cart) };
       }
       const safeUrl = getSafeCheckoutUrl({
         status: 'ready',
-        url: response.cart.checkoutUrl ?? undefined,
+        url: remote.checkoutUrl ?? undefined,
         allowedHosts: checkoutHosts,
       });
       if (!safeUrl) {

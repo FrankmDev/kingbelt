@@ -94,6 +94,30 @@ const {
     text-wrap: pretty;
   }
 
+  @media (max-width: 47.99rem) {
+    .collection-head {
+      padding-top: clamp(5.5rem, 14vw, 7.5rem);
+      padding-bottom: var(--kb-space-6);
+    }
+
+    .collection-head__inner {
+      gap: var(--kb-space-4);
+    }
+
+    .collection-head__grid {
+      gap: var(--kb-space-4);
+    }
+
+    .collection-head__title {
+      font-size: clamp(2rem, 9.5vw, 2.75rem);
+    }
+
+    .collection-head__description {
+      max-width: none;
+      font-size: var(--kb-text-sm);
+    }
+  }
+
   .collection-head__inner::after {
     content: '';
     display: block;

@@ -4,7 +4,11 @@ import AccountAccessPanel from '../../components/account/AccountAccessPanel.astr
 import Footer from '../../components/layout/Footer.astro';
 import Header from '../../components/layout/Header.astro';
 import Breadcrumbs from '../../components/ui/Breadcrumbs.astro';
+import { getAccountAccessResponse } from '@commerce/commerce-navigation';
 import { accountAccessPage } from '@content/account';
+
+const shopifyAccountResponse = getAccountAccessResponse();
+if (shopifyAccountResponse) return shopifyAccountResponse;
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href;
 ---

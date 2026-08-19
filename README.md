@@ -32,12 +32,14 @@ Crea las variables en el proyecto de Vercel (Settings → Environment Variables)
 | --- | --- | --- | --- | --- |
 | `COMMERCE_SOURCE` | `import.meta.env` vía `astro:env/client` | Build (pública de cliente) | `demo` o `shopify` | Todos. Production y staging: `shopify`. Preview/local sin tienda: `demo` |
 | `SHOPIFY_STORE_DOMAIN` | `astro:env/server` | Build y runtime (pública de servidor) | hostname `tu-tienda.myshopify.com` | Production y Preview/staging con `COMMERCE_SOURCE=shopify` |
+| `SHOPIFY_CUSTOMER_ACCOUNT_URL` | `astro:env/server` | Build y runtime (pública de servidor) | URL HTTPS alojada de Customer Accounts | Los mismos que Shopify |
 | `SHOPIFY_API_VERSION` | `astro:env/server` | Build y runtime | `2026-07` (valor por defecto) | Los mismos que Shopify |
 | `SHOPIFY_STOREFRONT_PRIVATE_TOKEN` | `astro:env/server` | Runtime (secreto) | token privado Headless, sin espacios ni comillas | Los mismos que Shopify |
 | `UPSTASH_REDIS_REST_URL` | `process.env` en el session driver | Runtime | URL REST de Upstash | Production y Preview en Vercel |
 | `UPSTASH_REDIS_REST_TOKEN` | `process.env` en el session driver | Runtime | token REST de Upstash | Production y Preview en Vercel |
 | `SHOPIFY_WEBHOOK_SECRET` | `astro:env/server` | Runtime (secreto, opcional) | secreto HMAC del webhook | Solo si activas el rebuild |
 | `VERCEL_DEPLOY_HOOK_URL` | `astro:env/server` | Runtime (secreto, opcional) | URL del Deploy Hook | Solo si activas el rebuild |
+| `SHOPIFY_PREFLIGHT_REQUIRED_PRODUCT_HANDLES` | `process.env` en `shopify:preflight` | Preflight (no secreto, opcional) | `handle-1,handle-2` | Staging/Production si hay productos piloto |
 
 `SHOPIFY_STORE_DOMAIN` es el hostname de la tienda en Shopify, no el dominio público del sitio:
 
@@ -59,6 +61,7 @@ bun run dev
 bun run check
 bun run test
 bun run build
+bun run shopify:preflight
 bun run check:links
 bun run check:perf
 bun run validate
@@ -71,7 +74,9 @@ Antes de integrar cambios:
 bun run validate
 ```
 
-`bun run validate` es la suite autoritativa: auditoría de dependencias, escaneo de secretos en fuentes e historial, check de Astro/TypeScript, build, tests, escaneo del build, enlaces internos, presupuestos de rendimiento y la ficha renderizada de 76 variantes. El job `quality` de GitHub Actions ejecuta la misma suite en cada Pull Request y en `push` a `main`, con `COMMERCE_SOURCE=demo` y sin credenciales Shopify. Instala dependencias una sola vez con `bun install --frozen-lockfile` y después corre `bun run validate`.
+`bun run validate` es la suite autoritativa de calidad: auditoría de dependencias, escaneo de secretos en fuentes e historial, check de Astro/TypeScript, build, tests, escaneo del build, enlaces internos, presupuestos de rendimiento y la ficha renderizada de 76 variantes. El job `quality` de GitHub Actions ejecuta la misma suite en cada Pull Request y en `push` a `main`, con `COMMERCE_SOURCE=demo` y sin credenciales Shopify. Instala dependencias una sola vez con `bun install --frozen-lockfile` y después corre `bun run validate`.
+
+`bun run build` valida la compilación. No llama a Shopify. Un despliegue staging/Production con `COMMERCE_SOURCE=shopify` debe ejecutar antes `COMMERCE_SOURCE=shopify bun run shopify:preflight` para validar configuración, Storefront API, catálogo, mapping e invariantes. `bun run shopify:smoke` solo comprueba conectividad mínima. El preflight no forma parte de `validate` ni del job `quality`.
 
 ## Estructura
 

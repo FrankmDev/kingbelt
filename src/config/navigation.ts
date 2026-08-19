@@ -11,15 +11,15 @@ export interface NavItem {
 
 export interface HeaderAccountCta {
   label: string;
-  href: string;
   ariaLabel: string;
+  unavailableAriaLabel: string;
 }
 
-/** CTA de cuenta en header y menú móvil. Login y registro comparten el mismo flujo alojado. */
+/** Copy del CTA de cuenta. El href lo resuelve `commerce-navigation` según el origen. */
 export const headerAccountCta: HeaderAccountCta = {
   label: 'Iniciar sesión',
-  href: '/cuenta/iniciar',
   ariaLabel: 'Iniciar sesión o crear cuenta',
+  unavailableAriaLabel: 'Iniciar sesión no disponible',
 };
 
 export const mainNav: NavItem[] = [

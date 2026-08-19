@@ -1,4 +1,5 @@
-import type { Product, ProductImage, ProductVariant } from './catalog';
+import type { Product, ProductImage, ProductOption, ProductVariant } from './catalog';
+import { getSelectedColorValueId } from './variants';
 
 export interface ColorGallery {
   optionValueId: string;
@@ -75,11 +76,15 @@ export const getColorGalleries = (
 
 export const getInitialColorValueId = (
   variant: Pick<ProductVariant, 'optionValues'> | undefined,
-  galleries: readonly ColorGallery[]
+  galleries: readonly ColorGallery[],
+  options: readonly ProductOption[] = []
 ): string | undefined => {
   const galleryIds = new Set(galleries.map((gallery) => gallery.optionValueId));
-  return variant?.optionValues.find((selection) => galleryIds.has(selection.valueId))?.valueId
-    ?? galleries[0]?.optionValueId;
+  const colorValueId = options.length
+    ? getSelectedColorValueId({ options }, variant?.optionValues ?? [])
+    : variant?.optionValues.find((selection) => galleryIds.has(selection.valueId))?.valueId;
+  if (colorValueId && galleryIds.has(colorValueId)) return colorValueId;
+  return galleries[0]?.optionValueId;
 };
 
 export const getVariantGallery = (

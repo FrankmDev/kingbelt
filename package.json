@@ -12,6 +12,7 @@
     "test": "bun test",
     "build": "astro build",
     "shopify:smoke": "bun scripts/shopify-storefront-smoke.mjs",
+    "shopify:preflight": "bun scripts/shopify-preflight.mjs",
     "validate": "bun run audit:dependencies && bun run security:scan:history && bun run check && bun run build && bun run test && bun run security:scan && bun run check:links && bun run check:perf && bun run check:scale",
     "check:links": "node scripts/check-internal-links.mjs",
     "check:perf": "node scripts/check-performance-budgets.mjs",

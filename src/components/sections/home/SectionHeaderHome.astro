@@ -172,6 +172,42 @@ const hasAside = Astro.slots.has('aside');
     align-items: stretch;
   }
 
+  @media (max-width: 47.99rem) {
+    .shh-chapter {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--kb-space-2) var(--kb-space-3);
+    }
+
+    .shh-rule {
+      display: none;
+    }
+
+    .shh-eyebrow,
+    .shh-meta {
+      white-space: normal;
+    }
+
+    .shh-meta {
+      width: 100%;
+      justify-self: auto;
+    }
+
+    .shh-title {
+      max-width: none;
+      font-size: clamp(1.625rem, 7vw, 2.25rem);
+    }
+
+    .shh-body {
+      max-width: none;
+    }
+
+    .section-header-home--with-aside .shh-row {
+      gap: var(--kb-space-4);
+    }
+  }
+
   @media (min-width: 48rem) {
     .section-header-home--with-aside .shh-row {
       grid-template-columns: minmax(0, 1fr) auto;

@@ -3,6 +3,7 @@ import {
   type Collection,
   type Product,
   type ProductImage,
+  type ProductSummary,
 } from '../domain/catalog';
 import type {
   CurrencyCode,
@@ -272,6 +273,13 @@ export const validateCatalog = (
     if (!collectionIds.has(product.primaryCollectionId)) {
       issue(issues, 'unknown_primary_collection', `${productPath}.primaryCollectionId`, `Colección principal inexistente: ${product.primaryCollectionId}.`);
     }
+    validateIdentifier(
+      product.primaryCollectionId,
+      `${productPath}.primaryCollectionId`,
+      'invalid_primary_collection',
+      'La colección principal',
+      issues
+    );
 
     const optionIds = product.options.map((option) => option.id);
     const optionNames = product.options.map((option) => option.name);
@@ -361,12 +369,12 @@ export const validateCatalog = (
       }
       if (!group.imageIds.length) {
         issue(issues, 'empty_media_group', `${groupPath}.imageIds`, 'El grupo de medios debe contener al menos una imagen.');
-      } else if (colorOption && group.imageIds.length > COLOR_GALLERY_IMAGE_COUNT) {
+      } else if (colorOption && group.imageIds.length !== COLOR_GALLERY_IMAGE_COUNT) {
         issue(
           issues,
           'invalid_color_gallery_cardinality',
           `${groupPath}.imageIds`,
-          `Cada galería de color puede contener como máximo ${COLOR_GALLERY_IMAGE_COUNT} imágenes.`
+          `Cada galería de color debe contener exactamente ${COLOR_GALLERY_IMAGE_COUNT} imágenes.`
         );
       }
       duplicateValues(group.imageIds).forEach((id) =>
@@ -575,5 +583,93 @@ export const assertValidCatalog = (
     supportedCurrencies,
     allowedRemoteImageHosts
   );
+  if (issues.length) throw new CatalogValidationError(issues);
+};
+
+/** Valida una lista de colecciones sin exigir productos ni catálogo completo. */
+export const assertValidCollections = (
+  collections: readonly Collection[],
+  allowedRemoteImageHosts: readonly string[] = []
+): void => {
+  const issues: CatalogValidationIssue[] = [];
+  if (collections.length > MAX_CATALOG_COLLECTIONS) {
+    issue(issues, 'catalog_too_large', 'collections', `El catálogo supera ${MAX_CATALOG_COLLECTIONS} colecciones.`);
+  }
+  duplicateValues(collections.map((collection) => collection.handle)).forEach((handle) =>
+    issue(issues, 'duplicate_collection_handle', 'collections', `Handle de colección duplicado: ${handle}.`)
+  );
+  duplicateValues(collections.map((collection) => collection.id)).forEach((id) =>
+    issue(issues, 'duplicate_collection_id', 'collections', `ID de colección duplicado: ${id}.`)
+  );
+  collections.forEach((collection, collectionIndex) => {
+    const path = `collections[${collectionIndex}]`;
+    validateIdentifier(collection.id, `${path}.id`, 'invalid_collection_id', 'El ID de colección', issues);
+    validateHandle(collection.handle, `${path}.handle`, issues);
+    validateRequiredText(collection.title, `${path}.title`, 'empty_collection_title', 'El título de colección', issues);
+    validateRequiredText(collection.description, `${path}.description`, 'empty_collection_description', 'La descripción de colección', issues);
+    validateOptionalText(collection.badge, `${path}.badge`, 'empty_collection_badge', 'El distintivo de colección', issues);
+    validateOptionalText(collection.tagline, `${path}.tagline`, 'empty_collection_tagline', 'El tagline de colección', issues);
+    if (collection.image) {
+      validateImage(collection.image, `${path}.image`, issues, allowedRemoteImageHosts);
+    }
+  });
+  if (issues.length) throw new CatalogValidationError(issues);
+};
+
+/** Valida la proyección de tarjeta sin exigir el producto completo. */
+export const assertValidProductSummary = (
+  product: ProductSummary,
+  supportedCurrencies: readonly CurrencyCode[] = ['EUR'],
+  allowedRemoteImageHosts: readonly string[] = []
+): void => {
+  const issues: CatalogValidationIssue[] = [];
+  const supported = new Set(supportedCurrencies);
+  const path = `summaries.${product.handle || product.id || 'product'}`;
+  validateIdentifier(product.id, `${path}.id`, 'invalid_product_id', 'El ID de producto', issues);
+  validateIdentifier(product.reference, `${path}.reference`, 'invalid_product_reference', 'La referencia comercial', issues);
+  validateHandle(product.handle, `${path}.handle`, issues);
+  validateRequiredText(product.title, `${path}.title`, 'empty_product_title', 'El título de producto', issues);
+  validateRequiredText(product.productType, `${path}.productType`, 'empty_product_type', 'El tipo de producto', issues);
+  validateRequiredText(product.summary, `${path}.summary`, 'empty_product_summary', 'El resumen', issues);
+  validateOptionalText(product.badge, `${path}.badge`, 'empty_product_badge', 'El distintivo de producto', issues);
+  validateIdentifier(
+    product.primaryCollection.id,
+    `${path}.primaryCollection.id`,
+    'invalid_collection_id',
+    'El ID de colección',
+    issues
+  );
+  validateHandle(product.primaryCollection.handle, `${path}.primaryCollection.handle`, issues);
+  validateRequiredText(
+    product.primaryCollection.title,
+    `${path}.primaryCollection.title`,
+    'empty_collection_title',
+    'El título de colección',
+    issues
+  );
+  if (product.primaryImage) {
+    validateImage(product.primaryImage, `${path}.primaryImage`, issues, allowedRemoteImageHosts);
+  }
+  validateMoney(product.priceRange.min, `${path}.priceRange.min`, supported, issues);
+  validateMoney(product.priceRange.max, `${path}.priceRange.max`, supported, issues);
+  if (product.priceRange.min.currency !== product.priceRange.max.currency) {
+    issue(issues, 'mixed_product_currencies', `${path}.priceRange`, 'El rango de precio debe usar una sola moneda.');
+  } else if (product.priceRange.min.amountMinor > product.priceRange.max.amountMinor) {
+    issue(issues, 'invalid_money', `${path}.priceRange`, 'El precio mínimo no puede superar el máximo.');
+  }
+  if (typeof product.purchasable !== 'boolean') {
+    issue(issues, 'invalid_inventory', `${path}.purchasable`, 'La disponibilidad de la tarjeta debe ser un booleano.');
+  }
+  duplicateValues(product.colors.map((color) => color.id)).forEach((id) =>
+    issue(issues, 'duplicate_option_value_id', `${path}.colors`, `ID de valor duplicado: ${id}.`)
+  );
+  product.colors.forEach((color, colorIndex) => {
+    const colorPath = `${path}.colors[${colorIndex}]`;
+    validateIdentifier(color.id, `${colorPath}.id`, 'invalid_option_value_id', 'El ID de valor', issues);
+    validateRequiredText(color.label, `${colorPath}.label`, 'empty_option_value_label', 'La etiqueta de valor', issues);
+    if (color.swatch && !/^#[0-9a-f]{3,8}$/i.test(color.swatch) && !/^linear-gradient\([^;{}]+\)$/i.test(color.swatch)) {
+      issue(issues, 'invalid_option_swatch', `${colorPath}.swatch`, 'La muestra debe ser un color hexadecimal o un gradiente lineal seguro.');
+    }
+  });
   if (issues.length) throw new CatalogValidationError(issues);
 };

@@ -4,9 +4,11 @@ import { headerAccountCta, type NavItem } from '@config/navigation';
 
 interface Props {
   links: readonly NavItem[];
+  accountHref: string | null;
 }
 
-const { links } = Astro.props;
+const { links, accountHref } = Astro.props;
+const AccountCta = accountHref ? 'a' : 'span';
 ---
 
 <nav
@@ -62,14 +64,21 @@ const { links } = Astro.props;
       Carrito <span data-cart-count class="tabular-nums" aria-hidden="true"></span>
     </a>
 
-    <a
-      href={headerAccountCta.href}
-      class="mobile-nav-cta kb-action-label group mt-3 inline-flex items-center gap-3 border border-white/15 px-5 py-3 text-white/60 transition-[background-color,border-color,color,opacity,transform] duration-[var(--kb-dur-med)] hover:border-king-accent hover:bg-king-accent/10 hover:text-white"
-      aria-label={headerAccountCta.ariaLabel}
+    <AccountCta
+      class:list={[
+        'mobile-nav-cta kb-action-label group mt-3 inline-flex items-center gap-3 border border-white/15 px-5 py-3',
+        accountHref
+          ? 'text-white/60 transition-[background-color,border-color,color,opacity,transform] duration-[var(--kb-dur-med)] hover:border-king-accent hover:bg-king-accent/10 hover:text-white'
+          : 'text-white/40',
+      ]}
+      aria-label={accountHref ? headerAccountCta.ariaLabel : headerAccountCta.unavailableAriaLabel}
+      {...(accountHref
+        ? { href: accountHref }
+        : { 'aria-disabled': 'true' })}
     >
       <Icon name="user" class="h-3.5 w-3.5" strokeWidth={1.75} />
       {headerAccountCta.label}
-    </a>
+    </AccountCta>
   </div>
 </nav>
 

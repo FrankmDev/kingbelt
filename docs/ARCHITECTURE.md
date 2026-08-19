@@ -25,6 +25,7 @@ src/
       demo/                 # adaptadores locales y persistencia de demostración
       shopify/              # gateway, importador y adaptador Storefront server-side
     commerce-source.ts      # selección explícita y tipada: demo | shopify
+    commerce-navigation.ts  # URL autoritativa de Customer Accounts alojadas
     catalog.ts              # composición del proveedor de catálogo activo
     cart.ts                 # composición del proveedor de carrito activo
   components/
@@ -70,7 +71,7 @@ La estructura es una guía, no un motivo para crear carpetas vacías. Coloca cad
 - **Domain:** modelos y reglas comerciales puras; no importa aplicación, infraestructura ni presentación.
 - **Application:** define puertos y coordina casos de uso; solo depende del dominio.
 - **Infrastructure:** implementa puertos y traduce un origen concreto al dominio. Nunca es importada por componentes.
-- **Composition root:** `commerce/catalog.ts`, `commerce/cart.ts` y `commerce/cart-server.ts` eligen adaptadores. Solo rutas y scripts de entrada consumen estas fronteras.
+- **Composition root:** `commerce/catalog.ts`, `commerce/cart.ts`, `commerce/cart-server.ts` y `commerce/commerce-navigation.ts` eligen adaptadores o resuelven superficies alojadas. Solo rutas y scripts de entrada consumen estas fronteras.
 - **Content/config:** contenido editorial y configuración estable, separados de fixtures y transformación comercial.
 - **Scripts:** comportamiento del navegador. Pueden consumir dominio, aplicación, composition roots y utilidades compartidas, no adaptadores concretos.
 
@@ -119,17 +120,17 @@ COMMERCE_SOURCE=shopify
 components → commerce/domain/* (solo contratos y reglas neutrales)
 ```
 
-`COMMERCE_SOURCE` es una variable pública obligatoria de `astro:env/client`; solo admite `demo` y `shopify`. Se declara en las variables de entorno de cada deployment (local, Preview, staging o Production), no en `vercel.json`. `commerce/commerce-source.ts` es la única fuente tipada de esa decisión: el resto de la aplicación consulta `commerceSource`, `isDemoCommerce()` e `isShopifyCommerce()`. El composition root del catálogo y del carrito importa en diferido el adaptador elegido para no meter el otro en el bundle ni validar credenciales Shopify en modo demo. La presencia de credenciales valida la rama Shopify, pero nunca la selecciona. Una configuración Shopify incompleta no conecta con demo: el catálogo SSR sirve vacío y el BFF de carrito responde 503.
+`COMMERCE_SOURCE` es una variable pública obligatoria de `astro:env/client`; solo admite `demo` y `shopify`. Se declara en las variables de entorno de cada deployment (local, Preview, staging o Production), no en `vercel.json`. `commerce/commerce-source.ts` es la única fuente tipada de esa decisión: el resto de la aplicación consulta `commerceSource`, `isDemoCommerce()` e `isShopifyCommerce()`. El composition root del catálogo y del carrito importa en diferido el adaptador elegido para no meter el otro en el bundle ni validar credenciales Shopify en modo demo. La presencia de credenciales valida la rama Shopify, pero nunca la selecciona. Una configuración Shopify incompleta no conecta con demo: el catálogo SSR falla cerrado y el BFF de carrito responde 503.
 
 Catálogo y carrito tienen puertos distintos: `CatalogProvider` para lectura en servidor y `CartProvider` para estado cliente y checkout. Los componentes importan únicamente contratos o reglas de `commerce/domain`; nunca composition roots, fixtures, respuestas ni clientes externos. `demo-catalog.ts` contiene datos ficticios y solo puede importarlo `commerce/infrastructure/demo`. En modo demo, `localStorage` conserva únicamente ID de variante y cantidad bajo un esquema versionado y limitado; nunca es autoridad para precio, disponibilidad ni checkout. En modo Shopify no se usa `localStorage`: el estado persistente sigue `browser → opaque session cookie → Astro session store → Shopify cartId`. El navegador no recibe el Cart ID.
 
 El store cliente termina su inicialización antes de ejecutar comandos, serializa mutaciones distintas, deduplica envíos equivalentes y coalesce cambios de cantidad por línea. El adaptador demo carga el snapshot `/cart-catalog.json` —servido bajo demanda desde el catálogo vigente, sin dependencia de builds— antes de restaurar líneas, relee y reconcilia la persistencia dentro de un bloqueo compartido entre pestañas cuando el navegador ofrece Web Locks; los eventos de `storage` actualizan el mismo store consumido por drawer y página. Cada reconciliación reconstruye título, imagen, precio, disponibilidad y stock desde ese catálogo. Una excepción de almacenamiento degrada el carrito a memoria con aviso, sin reemplazar el último estado válido.
 
-Todo adaptador valida el catálogo normalizado antes de exponerlo. `assertValidCatalog()` falla con rutas y códigos concretos para identidades, relaciones, opciones, variantes, dinero, inventario, medios y colecciones; los adaptadores demo y Shopify ejecutan la misma frontera. El importador Shopify pagina internamente y solo corre en servidor; cada instancia conserva el catálogo en una caché breve (30 s en producción) y, si Shopify falla con un catálogo válido previo, sirve ese último catálogo (stale-if-error) en vez de convertir las páginas en errores.
+Todo adaptador valida el catálogo normalizado antes de exponerlo. `assertValidCatalog()` falla con rutas y códigos concretos para identidades, relaciones, opciones, variantes, dinero, inventario, medios y colecciones; el adaptador demo y el preflight Shopify ejecutan esa frontera sobre el catálogo completo. El runtime Shopify consulta por recurso (producto, colección, resúmenes) y valida la proyección correspondiente. Cada instancia conserva esas respuestas en una caché breve (30 s en producción) y, si Shopify falla con una respuesta válida previa del mismo recurso, sirve esa versión (stale-if-error) en vez de convertir las páginas en errores. El mapper Shopify exige el SKU comercial de cada variante: no lo fabrica a partir de handle, GID, índice ni opciones.
 
 `Product`, `ProductVariant`, `ProductOption`, `ProductImage`, `Collection`, `Money`, `Cart` y `CartLine` son nombres de dominio. Interfaces y tipos usan `PascalCase`; funciones, valores y archivos usan `camelCase` y `kebab-case`; una implementación externa termina en `-adapter.ts`. No se usan barrels `index.ts`: cada import declara su dependencia concreta.
 
-`Product` es el agregado canónico y no almacena precio mínimo/máximo, disponibilidad global, colores para grid, referencias expandidas de colección ni objetos de imagen dentro de variantes. Esos datos se derivan en `ProductSummary`, carrito y ficha mediante funciones puras. La pertenencia a colecciones vive solo en `Product.collectionIds`; `Collection` no mantiene una lista inversa de productos.
+`Product` es el agregado canónico y no almacena precio mínimo/máximo, disponibilidad global, colores para grid, referencias expandidas de colección ni objetos de imagen dentro de variantes. Esos datos se derivan en `ProductSummary`, carrito y ficha mediante funciones puras. La pertenencia a colecciones vive solo en `Product.collectionIds`; `Collection` no mantiene una lista inversa de productos. `Product.primaryCollectionId` es un atributo comercial explícito: en Shopify proviene de `kingbelt.primary_collection`. El orden de las colecciones del producto no es autoridad; si el metafield falta y el producto pertenece a exactamente una colección publicada, esa colección es la primaria.
 
 Una variante selecciona IDs de valores de opción existentes. El inventario es una unión explícita `known` | `unknown`, separada de `inventoryPolicy` (`deny` | `continue`), `salesStatus` y la regla `quantityRule` (`minimum`, `increment`, `maximum?`) declarada por el origen. La disponibilidad se deriva exclusivamente con `getVariantAvailability()`: una variante agotada continúa existiendo, una combinación no declarada no produce variante, una variante eliminada deja de resolverse y la venta sin stock solo ocurre con política `continue`.
 
@@ -147,7 +148,7 @@ Los rangos de precio son declarativos y disjuntos (`COLLECTION_PRICE_RANGES`), c
 
 El controlador revela la primera página (por defecto 24) con «Mostrar más» y mantiene ocultas las tarjetas fuera de la ventana para aligerar el coste de render. El grid SSR conserva todas las tarjetas para SEO y funcionamiento sin JavaScript, con `content-visibility` para colecciones grandes. Al conectar Shopify, el adaptador traducirá `CatalogFilterSelection` a sus filtros y devolverá `CollectionPage` (productos y facets) ya filtrado y paginado; los componentes y su contrato no cambian.
 
-Los importes usan unidades mínimas y un código ISO 4217; las conversiones respetan la precisión de la moneda. El despliegue decide mediante validación qué monedas acepta (EUR en la demo), sin cerrar el contrato de dominio a esa moneda.
+Los importes usan unidades mínimas y un código ISO 4217; las conversiones respetan la precisión de la moneda. El catálogo demo valida `EUR`. En Shopify, país, idioma y moneda operativos (`ES` / `ES` / `EUR`) viven en `SHOPIFY_MARKET_CONTEXT`: el catálogo consulta Storefront con `@inContext` y el carrito crea con `buyerIdentity.countryCode`. No se infieren de hostname, `Accept-Language` ni geolocalización IP. El dominio no está cerrado a esa moneda.
 
 Dirección permitida:
 
@@ -167,6 +168,7 @@ Al conectar Shopify:
 - con `COMMERCE_SOURCE=shopify`, toda operación de carrito pasa por la frontera servidor/BFF same-origin `src/pages/api/cart.ts`; una configuración incompleta devuelve un error cerrado y nunca activa demo;
 - el navegador envía únicamente identificadores públicos de variante, cantidades y comandos cerrados; nunca recibe la parte secreta del ID de carrito, tokens, credenciales, respuestas administrativas ni identidad sensible del comprador;
 - el BFF lee el Cart ID completo desde la sesión server-side de Astro (`session.get("shopifyCartId")`) y es autoridad para precios, cantidades aceptadas, stock, identidad del comprador, checkout, errores y avisos;
+- la identidad anónima del comprador Shopify es solo `buyerIdentity.countryCode` del contexto de mercado servidor (`ES`); el navegador no puede enviarla ni arbitrarla;
 - devuelve la URL de checkout junto con una lista exacta de hosts permitidos; la UI exige HTTPS, sin credenciales embebidas ni hosts por sufijo;
 - considera todo precio, stock y cantidad enviados por el navegador datos no confiables y vuelve a validarlos antes de crear o actualizar el carrito remoto.
   - trata como autoridad final la respuesta actual del carrito remoto —líneas, cantidades aceptadas, errores, avisos y URL de checkout—, no el snapshot de ficha, el estado cliente ni `localStorage`.
@@ -178,9 +180,10 @@ Las fronteras por capacidad quedan así; el detalle operativo vive en `docs/SHOP
 | Catálogo, colecciones, producto por handle, destacados, relacionados | `CatalogProvider` (build) |
 | Resolución de variantes | dentro del adaptador; mappers a `ProductVariant` |
 | Crear/recuperar carrito, mutar líneas, checkout | `CartProvider` (tiempo real) |
-| Cuenta de cliente futura | puerto propio en `application/`; sin implementar hasta que exista caso de uso real |
+| Acceso a cuenta (alojado) | `commerce-navigation` + `SHOPIFY_CUSTOMER_ACCOUNT_URL` |
+| Cuenta de cliente (API, perfil, pedidos) | puerto futuro; no implementado |
 
-El catálogo se lee entero bajo demanda con paginación interna por cursor (productos, variantes e imágenes). En tiempo real, el navegador opera el cliente neutral de carrito, que llama a endpoints same-origin; esos endpoints delegan en un servicio servidor que consulta y muta Shopify. El adaptador remoto normaliza dentro de `infrastructure/`, valida con `assertValidCatalog()` antes de exponer y nunca deja que una respuesta parcial o una caída del catálogo genere páginas corruptas: un error de configuración Shopify (`SHOPIFY_STORE_DOMAIN` ausente o inválido, token ausente) sirve un catálogo vacío con log de diagnóstico y no HTTP 500; cualquier otro fallo sin catálogo previo sigue fallando cerrado, y con uno válido sirve el último conocido (stale-if-error).
+El runtime consulta Storefront por recurso —producto, colección o resúmenes— con paginación interna por cursor. La descarga completa del catálogo queda reservada a `shopify:preflight`. En tiempo real, el navegador opera el cliente neutral de carrito, que llama a endpoints same-origin; esos endpoints delegan en un servicio servidor que consulta y muta Shopify. El adaptador remoto normaliza dentro de `infrastructure/`, valida la proyección de dominio antes de exponer y nunca deja que una respuesta parcial o una caída del catálogo genere páginas corruptas: un error de configuración Shopify (`SHOPIFY_STORE_DOMAIN` ausente o inválido, token ausente) falla cerrado, registra un diagnóstico sin secretos y no sirve un catálogo vacío; cualquier otro fallo sin una respuesta válida previa del mismo recurso sigue fallando cerrado, y con una válida sirve la última conocida (stale-if-error).
 
 La política de referrer se define en `BaseLayout.astro`; las cabeceras HTTP de Vercel viven en `vercel.json`: CSP, HSTS, `X-Content-Type-Options`, `Permissions-Policy` y política de framing. El build no incrusta módulos ejecutables para ser compatible con `script-src 'self'`. Cualquier servicio o CDN nuevo debe actualizar a la vez la allowlist pública, la directiva CSP mínima y las pruebas descritas en `docs/SECURITY.md`.
 
@@ -238,7 +241,7 @@ Promueve un patrón a global o a componente cuando se repita con la misma intenc
 - Imágenes con dimensiones para evitar CLS, `alt` contextual y lazy loading salvo contenido crítico/hero.
 - Un H1 por página, `title`, description, canonical y schema cuando corresponda.
 - `BaseLayout` acepta `robots`, `ogImageAlt` (vía `imageAlt`), `publishedAt` y `updatedAt`.
-- Sitemap: `@astrojs/sitemap` con filtro en `isSitemapExcluded()` (`src/config/sitemap.ts`). Excluye `/carrito` y `/cart-catalog.json`.
+- Sitemap: `@astrojs/sitemap` con filtro en `isSitemapExcluded()` (`src/config/sitemap.ts`). Excluye `/carrito`, `/cart-catalog.json` y `/cuenta/iniciar`.
 - `robots.txt`: endpoint en `src/pages/robots.txt.ts`; `Disallow` del snapshot de catálogo del carrito y de `/api/`.
 - Documentos legales en `draft` usan `noindex,follow` y quedan fuera del sitemap hasta publicación.
 - No añadas dependencias, hydration o JavaScript para resolver algo que Astro/CSS/HTML ya cubre.
@@ -250,11 +253,18 @@ Según el cambio, `bun run validate` agrupa sin duplicar:
 
 1. `bun run check` para tipos y diagnósticos Astro.
 2. `bun run test` para contratos de comercio, persistencia y límites entre capas.
-3. `bun run build` para cambios estructurales, rutas, datos o integración.
+3. `bun run build` para cambios estructurales, rutas, datos o integración. El build valida compilación y no llama a Shopify.
 4. `bun run check:links` para comprobar enlaces internos contra el `dist` generado.
 5. Inspección visual de móvil y escritorio para UI.
 6. Comprobación de overflow, focus, reduced motion, estados hover/active/disabled y contenido largo cuando apliquen.
 
+Un catálogo Shopify inválido no hace fallar `bun run build`. La barrera autenticada contra Storefront es `bun run shopify:preflight`, exclusiva de entornos confiables con `COMMERCE_SOURCE=shopify`. No forma parte del job `quality` de Pull Requests.
+
 No declares completada una tarea si el check relevante falla por tus cambios. Distingue claramente errores previos del proyecto.
 
-Antes de integrar cambios, ejecuta `bun run validate` con `COMMERCE_SOURCE=demo` y la versión de Bun fijada en `packageManager`. Es la misma suite que el job `quality` de GitHub Actions en Pull Requests.
+Antes de integrar cambios, ejecuta `bun run validate` con `COMMERCE_SOURCE=demo` y la versión de Bun fijada en `packageManager`. Es la misma suite que el job `quality` de GitHub Actions en Pull Requests. Un despliegue Shopify de staging o Production añade, con credenciales de ese entorno:
+
+```sh
+COMMERCE_SOURCE=shopify bun run shopify:preflight
+bun run build
+```

@@ -1,18 +1,38 @@
 ---
 import Button from '../ui/Button.astro';
 import { headerAccountCta } from '@config/navigation';
+
+interface Props {
+  href: string | null;
+}
+
+const { href } = Astro.props;
+const className = 'header-account-btn hidden lg:inline-flex';
 ---
 
-<Button
-  href={headerAccountCta.href}
-  id="header-cta"
-  variant="outline"
-  size="sm"
-  class="header-account-btn hidden lg:inline-flex"
-  aria-label={headerAccountCta.ariaLabel}
->
-  {headerAccountCta.label}
-</Button>
+{href ? (
+  <Button
+    href={href}
+    id="header-cta"
+    variant="outline"
+    size="sm"
+    class={className}
+    aria-label={headerAccountCta.ariaLabel}
+  >
+    {headerAccountCta.label}
+  </Button>
+) : (
+  <Button
+    disabled
+    id="header-cta"
+    variant="outline"
+    size="sm"
+    class={className}
+    aria-label={headerAccountCta.unavailableAriaLabel}
+  >
+    {headerAccountCta.label}
+  </Button>
+)}
 
 <style>
   .header-account-btn:global(.kb-btn) {

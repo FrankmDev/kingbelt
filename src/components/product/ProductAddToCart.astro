@@ -85,6 +85,7 @@ const variantsJson = serializeJsonForHtml(toCompactPublicBuyBoxPayload(product))
           aria-describedby={errorId}
           data-product-option-group={option.id}
           data-product-option-name={option.name}
+          data-product-option-purpose={option.purpose}
         >
           <div class:list={[isSize && 'product-buy__option-row']}>
             <legend class="product-buy__legend">
@@ -292,6 +293,36 @@ const variantsJson = serializeJsonForHtml(toCompactPublicBuyBoxPayload(product))
     .product-buy__panel {
       margin-top: auto;
     }
+
+    .product-buy__checkout {
+      grid-template-columns: auto minmax(0, 1fr);
+      align-items: end;
+    }
+  }
+
+  @media (max-width: 47.99rem) {
+    .product-buy__header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--kb-space-2);
+    }
+
+    .product-buy__availability {
+      text-align: start;
+    }
+
+    .product-buy__panel {
+      padding: var(--kb-space-3);
+    }
+
+    .product-buy__checkout {
+      grid-template-columns: 1fr;
+    }
+
+    .product-buy__size-chip {
+      min-height: 2.75rem;
+      font-size: var(--kb-text-xs);
+    }
   }
 
   .product-buy__option {
@@ -498,14 +529,6 @@ const variantsJson = serializeJsonForHtml(toCompactPublicBuyBoxPayload(product))
   .product-buy__checkout {
     display: grid;
     gap: var(--kb-space-3);
-  }
-
-  @media (min-width: 30rem) {
-    .product-buy__checkout {
-      grid-template-columns: auto minmax(0, 1fr);
-      align-items: end;
-      gap: var(--kb-space-3);
-    }
   }
 
   .product-buy__option--qty {

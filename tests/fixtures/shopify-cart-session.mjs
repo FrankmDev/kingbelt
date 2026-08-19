@@ -55,6 +55,7 @@ const remoteCart = ({
 } = {}) => ({
   id,
   checkoutUrl,
+  buyerIdentity: { countryCode: 'ES' },
   totalQuantity: lines.reduce((sum, line) => sum + line.quantity, 0),
   cost: { subtotalAmount: money(lines.reduce((sum, line) => sum + (89 * line.quantity), 0).toFixed(2)) },
   lines: { nodes: lines, pageInfo: { hasNextPage: false } },
@@ -67,6 +68,7 @@ const operationName = (query) => {
   if (query.includes('mutation CartLinesAdd')) return 'add';
   if (query.includes('mutation CartLinesUpdate')) return 'update';
   if (query.includes('mutation CartLinesRemove')) return 'remove';
+  if (query.includes('mutation CartBuyerIdentityUpdate')) return 'identity';
   if (query.includes('query CartLineQuantities')) return 'quantities';
   if (query.includes('query Cart(')) return 'get';
   return 'unknown';
@@ -102,6 +104,12 @@ const installStorefront = () => {
       const cart = remoteCart();
       carts.set(cart.id, cart);
       return Response.json({ data: { cartCreate: payload(cart) } });
+    }
+    if (name === 'identity') {
+      const current = carts.get(variables.cartId) ?? remoteCart({ id: variables.cartId, lines: [] });
+      const next = { ...current, buyerIdentity: variables.buyerIdentity };
+      carts.set(next.id, next);
+      return Response.json({ data: { cartBuyerIdentityUpdate: payload(next) } });
     }
     const cartId = variables.id ?? variables.cartId;
     if (name === 'get') {
@@ -231,12 +239,38 @@ installStorefront();
 installStorefront();
 {
   const session = createMemorySession();
+  const { response, text, body } = await postCart(session, {
+    command: 'add',
+    variantId: VARIANT_A,
+    quantity: 1,
+    countryCode: 'US',
+    country: 'FR',
+    language: 'EN',
+    currency: 'USD',
+  });
+  assert.equal(response.status, 200);
+  assert.equal(body.success, true);
+  assert.equal(graphqlCalls[0].name, 'create');
+  assert.equal(graphqlCalls[0].variables.input.buyerIdentity.countryCode, 'ES');
+  assert.equal(graphqlCalls[0].variables.country, 'ES');
+  assert.equal(graphqlCalls[0].variables.language, 'ES');
+  assert.equal(JSON.stringify(graphqlCalls[0].variables).includes('US'), false);
+  assert.equal(JSON.stringify(graphqlCalls[0].variables).includes('USD'), false);
+  assertNoCartIdLeak(text, body);
+}
+
+installStorefront();
+{
+  const session = createMemorySession();
   await postCart(session, { command: 'add', variantId: VARIANT_A, quantity: 1 });
   const { body, text, response } = await postCart(session, { command: 'checkout' });
   assert.equal(response.status, 200);
   assert.equal(body.success, true);
   assert.equal(body.status, 'ready');
   assert.equal(body.url, CHECKOUT_URL);
+  assert.equal(new URL(body.url).searchParams.has('country'), false);
+  assert.equal(new URL(body.url).searchParams.has('currency'), false);
+  assert.equal(new URL(body.url).searchParams.has('language'), false);
   assert.equal(graphqlCalls.at(-1).variables.id, CART_ID);
   assert.equal(session.store.shopifyCartId, CART_ID);
   assertNoCartIdLeak(text, body);

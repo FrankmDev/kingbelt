@@ -64,6 +64,7 @@ export interface ShopifyCartLine {
 export interface ShopifyCart {
   id: string;
   checkoutUrl?: string | null;
+  buyerIdentity?: { countryCode?: string | null } | null;
   cost: { subtotalAmount: ShopifyCartMoney };
   lines: { nodes: ShopifyCartLine[]; pageInfo?: { hasNextPage: boolean } };
 }

@@ -1,5 +1,6 @@
 ---
 import { mainNav } from '@config/navigation';
+import { getCustomerAccountHref } from '@commerce/commerce-navigation';
 import HeaderAccountCta from '../account/HeaderAccountCta.astro';
 import CartDrawer from '../cart/CartDrawer.astro';
 import CartTrigger from '../cart/CartTrigger.astro';
@@ -21,6 +22,7 @@ const {
 } = Astro.props;
 
 const links = mainNav;
+const accountHref = getCustomerAccountHref();
 ---
 
 <header
@@ -57,7 +59,7 @@ const links = mainNav;
           </>
         ))}
         <span class="header-divider mx-2.5 h-3.5 w-px lg:mx-3.5" aria-hidden="true"></span>
-        <HeaderAccountCta />
+        <HeaderAccountCta href={accountHref} />
         <span class="header-divider mx-2.5 h-3.5 w-px lg:mx-3.5" aria-hidden="true"></span>
         <CartTrigger />
       </div>
@@ -86,7 +88,7 @@ const links = mainNav;
   </div>
 </header>
 
-<MobileNavigation links={links} />
+<MobileNavigation links={links} accountHref={accountHref} />
 
 <CartDrawer />
 

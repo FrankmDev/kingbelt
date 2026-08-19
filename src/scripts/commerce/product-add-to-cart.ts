@@ -5,14 +5,18 @@ import { formatMoney } from '@commerce/domain/money';
 import { variantId } from '@commerce/domain/identifiers';
 import { getQuantityLimitMessage, isQuantityAllowed } from '@commerce/domain/inventory';
 import {
+  expandCompactPublicBuyBoxPayload,
   getPublicBuyBoxMessage,
   isPublicBuyBoxPurchasable,
+  parseCompactPublicBuyBoxPayload,
+  parseProductOptionPurpose,
+  toPublicBuyBoxOptions,
   type PublicBuyBoxAvailability,
+  type PublicBuyBoxVariant,
 } from '@commerce/domain/product-mappers';
 import {
-  getCompatibleOptionValues,
+  applyProductBuyBoxSelection,
   getVariantBySelectedOptions,
-  reconcileSelectedOptions,
 } from '@commerce/domain/variants';
 import type { Money } from '@commerce/domain/money';
 import type {
@@ -31,128 +35,50 @@ interface PublicVariant {
   availability: PublicBuyBoxAvailability;
 }
 
-interface VariantPayload {
-  c: string;
-  o: string[];
-  v: unknown[];
-}
+const toClientVariant = (variant: PublicBuyBoxVariant, currency: string): PublicVariant => ({
+  id: variant.id,
+  optionValues: variant.optionValues,
+  price: { amountMinor: variant.price, currency },
+  ...(variant.compareAtPrice === undefined
+    ? {}
+    : { compareAtPrice: { amountMinor: variant.compareAtPrice, currency } }),
+  ...(variant.imageId ? { imageId: variant.imageId } : {}),
+  availability: variant.availability,
+});
 
-const availabilityStatuses = {
-  a: 'available',
-  l: 'limited',
-  o: 'out_of_stock',
-  u: 'unavailable',
-} as const;
-
-const limitReasons = {
-  i: 'inventory',
-  q: 'quantity_rule',
-  t: 'technical',
-  u: 'unavailable',
-} as const;
-
-const isPublicAvailability = (value: unknown): value is PublicBuyBoxAvailability => {
-  if (!value || typeof value !== 'object') return false;
-  const availability = value as Partial<PublicBuyBoxAvailability>;
-  return (
-    ['available', 'limited', 'out_of_stock', 'unavailable'].includes(availability.status ?? '') &&
-    Number.isSafeInteger(availability.maxQuantity) &&
-    Number(availability.maxQuantity) >= 0 &&
-    Number.isSafeInteger(availability.minimum) &&
-    Number(availability.minimum) >= 1 &&
-    Number.isSafeInteger(availability.increment) &&
-    Number(availability.increment) >= 1 &&
-    ['inventory', 'quantity_rule', 'technical', 'unavailable'].includes(availability.limitReason ?? '') &&
-    (availability.backorder === undefined || availability.backorder === true)
+const readOptions = (form: HTMLFormElement, optionIds: readonly string[]): ProductOption[] | null =>
+  toPublicBuyBoxOptions(
+    optionIds,
+    [...form.querySelectorAll<HTMLElement>('[data-product-option-group]')].flatMap((fieldset) => {
+      if (!fieldset.dataset.productOptionGroup || !fieldset.dataset.productOptionName) return [];
+      const values = [...fieldset.querySelectorAll<HTMLInputElement>('[data-product-option]')]
+        .flatMap((input) => input.dataset.optionValueLabel
+          ? [{ id: input.value, label: input.dataset.optionValueLabel }]
+          : []);
+      return values.length
+        ? [{
+          id: fieldset.dataset.productOptionGroup,
+          name: fieldset.dataset.productOptionName,
+          purpose: parseProductOptionPurpose(fieldset.dataset.productOptionPurpose),
+          values,
+        }]
+        : [];
+    })
   );
-};
-
-const readOptions = (form: HTMLFormElement, optionIds: readonly string[]): ProductOption[] =>
-  optionIds.flatMap((optionId) => {
-    const fieldset = [...form.querySelectorAll<HTMLElement>('[data-product-option-group]')]
-      .find((candidate) => candidate.dataset.productOptionGroup === optionId);
-    if (!fieldset?.dataset.productOptionName) return [];
-    const values = [...fieldset.querySelectorAll<HTMLInputElement>('[data-product-option]')]
-      .flatMap((input) => input.dataset.optionValueLabel
-        ? [{ id: input.value, label: input.dataset.optionValueLabel }]
-        : []);
-    return values.length
-      ? [{ id: optionId, name: fieldset.dataset.productOptionName, values }]
-      : [];
-  });
-
-const toPublicVariant = (
-  value: unknown,
-  optionIds: readonly string[],
-  currency: string
-): PublicVariant | null => {
-  if (!Array.isArray(value) || value.length !== 11) return null;
-  const [id, optionValueIds, price, compareAtPrice, imageId, status, max, minimum, increment, limit, backorder] = value;
-  if (
-    typeof id !== 'string' ||
-    !Array.isArray(optionValueIds) ||
-    optionValueIds.length !== optionIds.length ||
-    optionValueIds.some((item) => typeof item !== 'string') ||
-    !Number.isSafeInteger(price) ||
-    (compareAtPrice !== null && !Number.isSafeInteger(compareAtPrice)) ||
-    (imageId !== null && typeof imageId !== 'string') ||
-    typeof status !== 'string' ||
-    !(status in availabilityStatuses) ||
-    !Number.isSafeInteger(max) ||
-    !Number.isSafeInteger(minimum) ||
-    !Number.isSafeInteger(increment) ||
-    typeof limit !== 'string' ||
-    !(limit in limitReasons) ||
-    (backorder !== 0 && backorder !== 1)
-  ) return null;
-
-  const availability: PublicBuyBoxAvailability = {
-    status: availabilityStatuses[status as keyof typeof availabilityStatuses],
-    maxQuantity: Number(max),
-    minimum: Number(minimum),
-    increment: Number(increment),
-    limitReason: limitReasons[limit as keyof typeof limitReasons],
-    ...(backorder === 1 ? { backorder: true } : {}),
-  };
-  if (!isPublicAvailability(availability)) return null;
-  return {
-    id,
-    optionValues: optionIds.map((optionId, index) => ({
-      optionId,
-      valueId: optionValueIds[index] as string,
-    })),
-    price: { amountMinor: Number(price), currency },
-    ...(compareAtPrice === null
-      ? {}
-      : { compareAtPrice: { amountMinor: Number(compareAtPrice), currency } }),
-    ...(imageId === null ? {} : { imageId }),
-    availability,
-  };
-};
 
 const parsePayload = (form: HTMLFormElement): { options: ProductOption[]; variants: PublicVariant[] } | null => {
   const script = form.querySelector<HTMLScriptElement>('[data-product-variants]');
   if (!script?.textContent || script.textContent.length > 500_000) return null;
   try {
-    const value: unknown = JSON.parse(script.textContent);
-    if (!value || typeof value !== 'object') return null;
-    const payload = value as Partial<VariantPayload>;
-    if (
-      typeof payload.c !== 'string' ||
-      !Array.isArray(payload.o) ||
-      payload.o.some((optionId) => typeof optionId !== 'string') ||
-      !Array.isArray(payload.v) ||
-      payload.v.length > 2_048
-    ) {
-      return null;
-    }
-    const options = readOptions(form, payload.o);
-    if (options.length !== payload.o.length) return null;
-    const variants = payload.v.map((variant) => toPublicVariant(variant, payload.o!, payload.c!));
-    if (variants.some((variant) => variant === null)) return null;
+    const compact = parseCompactPublicBuyBoxPayload(JSON.parse(script.textContent));
+    if (!compact) return null;
+    const options = readOptions(form, compact.o);
+    if (!options || options.length !== compact.o.length) return null;
     return {
       options,
-      variants: variants as PublicVariant[],
+      variants: expandCompactPublicBuyBoxPayload(compact).map((variant) =>
+        toClientVariant(variant, compact.c)
+      ),
     };
   } catch {
     return null;
@@ -231,32 +157,25 @@ const bindProductAddForm = (form: HTMLFormElement): void => {
     return input ? [{ optionId: option.id, valueId: input.value }] : [];
   });
 
-  const getColorValueId = (variant: PublicVariant | undefined): string | undefined =>
-    variant?.optionValues.find((selection) =>
-      payload.options.some((option) =>
-        option.id === selection.optionId && option.values.some((value) => value.id === selection.valueId)
-      )
-    )?.valueId;
-
-  const syncGallerySet = (variant: PublicVariant | undefined) => {
+  const syncGallerySet = (colorValueId: string | undefined) => {
+    if (!colorValueId) return;
     const page = form.closest<HTMLElement>('[data-product-page]') ?? document.body;
     const gallerySets = [...page.querySelectorAll<HTMLElement>('[data-gallery-set]')];
     if (gallerySets.length <= 1) return;
-    const colorValueId = getColorValueId(variant) ?? gallerySets[0]?.dataset.gallerySet;
     gallerySets.forEach((set) => {
       set.hidden = set.dataset.gallerySet !== colorValueId;
     });
   };
 
-  const syncVariantImage = (variant: PublicVariant | undefined) => {
-    syncGallerySet(variant);
+  const syncVariantImage = (variant: PublicVariant | undefined, colorValueId: string | undefined) => {
     if (!variant?.imageId) return;
     const page = form.closest<HTMLElement>('[data-product-page]') ?? document.body;
-    const colorValueId = getColorValueId(variant);
     const gallerySets = [...page.querySelectorAll<HTMLElement>('[data-gallery-set]')];
     const gallerySet = colorValueId
       ? gallerySets.find((set) => set.dataset.gallerySet === colorValueId)
-      : gallerySets[0];
+      : gallerySets.length === 1
+        ? gallerySets[0]
+        : gallerySets.find((set) => !set.hidden);
     const choice = gallerySet
       ? [...gallerySet.querySelectorAll<HTMLInputElement>('[data-gallery-image-id]')]
         .find((input) => input.dataset.galleryImageId === variant.imageId)
@@ -299,26 +218,26 @@ const bindProductAddForm = (form: HTMLFormElement): void => {
   };
 
   const syncSelection = (changedOptionId?: string) => {
-    let selection = getSelection();
+    const resolved = applyProductBuyBoxSelection(payload, getSelection(), changedOptionId);
     if (changedOptionId) {
-      selection = reconcileSelectedOptions(payload, selection, changedOptionId);
       optionInputs.forEach((input) => {
-        if (input.dataset.optionId !== changedOptionId && input.checked) {
-          input.checked = selection.some((selected) =>
-            selected.optionId === input.dataset.optionId && selected.valueId === input.value
-          );
+        if (input.dataset.optionId === changedOptionId) return;
+        const kept = resolved.selection.some((selected) =>
+          selected.optionId === input.dataset.optionId && selected.valueId === input.value
+        );
+        if (input.checked !== kept) input.checked = kept;
+      });
+      payload.options.forEach((option) => {
+        if (option.id === changedOptionId) return;
+        if (!resolved.selection.some((selected) => selected.optionId === option.id)) {
+          setOptionError(option.id);
         }
       });
     }
 
-    selection = getSelection();
     optionInputs.forEach((input) => {
       const optionId = input.dataset.optionId ?? '';
-      const optionIndex = payload.options.findIndex((option) => option.id === optionId);
-      const upstreamSelection = selection.filter((selected) =>
-        payload.options.findIndex((option) => option.id === selected.optionId) < optionIndex
-      );
-      const compatible = getCompatibleOptionValues(payload, upstreamSelection, optionId).includes(input.value);
+      const compatible = resolved.compatibleValueIds.get(optionId)?.includes(input.value) ?? false;
       input.disabled = submitting || !compatible;
       const label = input.closest('label');
       label?.toggleAttribute('data-impossible', !compatible);
@@ -326,15 +245,16 @@ const bindProductAddForm = (form: HTMLFormElement): void => {
       if (hint) hint.hidden = compatible;
     });
 
-    selectedVariant = getVariantBySelectedOptions(payload, selection) as PublicVariant | undefined;
-    const complete = selection.length === payload.options.length;
+    selectedVariant = resolved.selectedVariant;
+    const complete = resolved.selection.length === payload.options.length;
+    syncGallerySet(resolved.colorValueId);
     if (selectedVariant) {
       if (price) price.textContent = formatMoney(selectedVariant.price);
       if (compare) {
         compare.textContent = selectedVariant.compareAtPrice ? formatMoney(selectedVariant.compareAtPrice) : '';
         compare.hidden = !selectedVariant.compareAtPrice;
       }
-      syncVariantImage(selectedVariant);
+      syncVariantImage(selectedVariant, resolved.colorValueId);
     }
 
     const availability = selectedVariant?.availability;
@@ -429,8 +349,9 @@ const bindProductAddForm = (form: HTMLFormElement): void => {
         setOptionError(option.id, `Selecciona ${option.name.toLocaleLowerCase('es')}.`);
       }
     });
+    const resolvedVariant = getVariantBySelectedOptions(payload, selection);
     const quantity = qtyInput.valueAsNumber;
-    const availability = selectedVariant?.availability;
+    const availability = resolvedVariant?.availability;
     const availabilityMessage = availability ? getPublicBuyBoxMessage(availability) : undefined;
     const purchasable = availability ? isPublicBuyBoxPurchasable(availability) : false;
     if (availability && !isQuantityAllowed(quantity, availability)) {
@@ -440,9 +361,9 @@ const bindProductAddForm = (form: HTMLFormElement): void => {
           : `La cantidad debe comenzar en ${availability.minimum} y avanzar de ${availability.increment} en ${availability.increment}.`
       );
     }
-    if (!selectedVariant || !purchasable || !availability || !isQuantityAllowed(quantity, availability)) {
+    if (!resolvedVariant || !purchasable || !availability || !isQuantityAllowed(quantity, availability)) {
       setFeedback(
-        selectedVariant
+        resolvedVariant
           ? availabilityMessage ?? 'La variante seleccionada no está disponible.'
           : 'Revisa las opciones antes de añadir el producto.',
         true
@@ -452,7 +373,7 @@ const bindProductAddForm = (form: HTMLFormElement): void => {
 
     setSubmitting(true);
     try {
-      const result = await addProductToCart({ variantId: variantId(selectedVariant.id), quantity });
+      const result = await addProductToCart({ variantId: variantId(resolvedVariant.id), quantity });
       if (!result.success && result.error) {
         if (result.error.field === 'quantity') setQuantityError(result.error.message);
         setFeedback(result.error.message, true);

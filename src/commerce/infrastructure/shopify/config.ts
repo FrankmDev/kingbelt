@@ -1,6 +1,51 @@
 export const SHOPIFY_STOREFRONT_API_VERSION = '2026-07' as const;
 export const MAX_SHOPIFY_STOREFRONT_TOKEN_LENGTH = 512;
 
+/** Mercado operativo actual de KingBelt. Decisión de producto versionada en servidor. */
+export const SHOPIFY_MARKET_COUNTRY = 'ES' as const;
+export const SHOPIFY_MARKET_LANGUAGE = 'ES' as const;
+export const SHOPIFY_MARKET_CURRENCY = 'EUR' as const;
+
+export interface ShopifyMarketContext {
+  country: typeof SHOPIFY_MARKET_COUNTRY;
+  language: typeof SHOPIFY_MARKET_LANGUAGE;
+  currency: typeof SHOPIFY_MARKET_CURRENCY;
+}
+
+export const SHOPIFY_MARKET_CONTEXT: ShopifyMarketContext = {
+  country: SHOPIFY_MARKET_COUNTRY,
+  language: SHOPIFY_MARKET_LANGUAGE,
+  currency: SHOPIFY_MARKET_CURRENCY,
+};
+
+export const SHOPIFY_SUPPORTED_CURRENCIES: readonly [typeof SHOPIFY_MARKET_CURRENCY] = [
+  SHOPIFY_MARKET_CURRENCY,
+];
+
+export const SHOPIFY_IN_CONTEXT_VARIABLE_DEFINITIONS =
+  '$country: CountryCode!, $language: LanguageCode!' as const;
+export const SHOPIFY_IN_CONTEXT_DIRECTIVE =
+  '@inContext(country: $country, language: $language)' as const;
+
+export const shopifyInContextVariables = (): {
+  country: ShopifyMarketContext['country'];
+  language: ShopifyMarketContext['language'];
+} => ({
+  country: SHOPIFY_MARKET_CONTEXT.country,
+  language: SHOPIFY_MARKET_CONTEXT.language,
+});
+
+export const withShopifyInContextVariables = <T extends object>(variables: T) => ({
+  ...variables,
+  ...shopifyInContextVariables(),
+});
+
+export const shopifyCartBuyerIdentity = (): {
+  countryCode: ShopifyMarketContext['country'];
+} => ({
+  countryCode: SHOPIFY_MARKET_CONTEXT.country,
+});
+
 export interface ShopifyStorefrontConfigInput {
   storeDomain?: string;
   apiVersion?: string;

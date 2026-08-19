@@ -74,6 +74,12 @@ const { products } = Astro.props;
     min-width: 0;
   }
 
+  @media (max-width: 47.99rem) {
+    .home-featured__grid {
+      gap: var(--kb-space-5) var(--kb-space-3);
+    }
+  }
+
   @media (min-width: 40rem) {
     .home-featured__grid {
       gap: var(--kb-space-gap) var(--kb-space-5);

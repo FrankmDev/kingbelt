@@ -12,6 +12,7 @@ const initial = intents.login;
   class="account-access"
   aria-labelledby="account-access-title"
   data-account-access
+  data-demo-account-access
   data-login-heading={intents.login.heading}
   data-login-lede={intents.login.lede}
   data-login-submit={intents.login.submit}
@@ -177,6 +178,17 @@ const initial = intents.login;
     margin: 0;
     padding: 0;
     border-bottom: 1px solid var(--kb-stroke-dark);
+  }
+
+  @media (max-width: 29.99rem) {
+    .account-access__intents {
+      grid-template-columns: 1fr;
+    }
+
+    .account-access__intent {
+      padding-inline: 0.5rem;
+      letter-spacing: 0.1em;
+    }
   }
 
   .account-access__intent {

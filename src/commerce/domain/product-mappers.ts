@@ -14,6 +14,7 @@ import type {
   CollectionReference,
   OptionSelection,
   Product,
+  ProductOption,
   ProductOptionValue,
   ProductSummary,
   ProductVariant,
@@ -186,6 +187,169 @@ export const toCompactPublicBuyBoxPayload = (
       ];
     }),
   };
+};
+
+const availabilityFromCode: Record<PublicAvailabilityCode, AvailabilityStatus> = {
+  a: 'available',
+  l: 'limited',
+  o: 'out_of_stock',
+  u: 'unavailable',
+};
+
+const limitFromCode: Record<PublicLimitCode, LineAvailability['limitReason']> = {
+  i: 'inventory',
+  q: 'quantity_rule',
+  t: 'technical',
+  u: 'unavailable',
+};
+
+export const parseProductOptionPurpose = (
+  value: string | undefined
+): ProductOption['purpose'] =>
+  value === 'color' || value === 'size' ? value : undefined;
+
+export const toPublicBuyBoxOptions = (
+  optionIds: readonly string[],
+  groups: ReadonlyArray<{
+    id: string;
+    name: string;
+    purpose?: string;
+    values: ReadonlyArray<{ id: string; label: string }>;
+  }>
+): ProductOption[] | null => {
+  const byId = new Map(groups.map((group) => [group.id, group]));
+  const options: ProductOption[] = [];
+  for (const id of optionIds) {
+    const group = byId.get(id);
+    if (!group?.name || !group.values.length) return null;
+    if (group.values.some((value) => !value.id || !value.label)) return null;
+    const purpose = parseProductOptionPurpose(group.purpose);
+    options.push({
+      id,
+      name: group.name,
+      ...(purpose ? { purpose } : {}),
+      values: group.values.map((value) => ({ id: value.id, label: value.label })),
+    });
+  }
+  return options;
+};
+
+export const expandCompactPublicBuyBoxVariant = (
+  tuple: CompactPublicBuyBoxVariant,
+  optionIds: readonly string[]
+): PublicBuyBoxVariant => {
+  const [
+    id,
+    optionValueIds,
+    price,
+    compareAtPrice,
+    imageId,
+    status,
+    maxQuantity,
+    minimum,
+    increment,
+    limitReason,
+    backorder,
+  ] = tuple;
+  const projection: PublicBuyBoxVariant = {
+    id,
+    optionValues: optionIds.map((optionId, index) => ({
+      optionId,
+      valueId: optionValueIds[index] ?? '',
+    })),
+    price,
+    availability: {
+      status: availabilityFromCode[status],
+      maxQuantity,
+      minimum,
+      increment,
+      limitReason: limitFromCode[limitReason],
+      ...(backorder === 1 ? { backorder: true as const } : {}),
+    },
+  };
+  if (compareAtPrice !== null) projection.compareAtPrice = compareAtPrice;
+  if (imageId !== null) projection.imageId = imageId;
+  return projection;
+};
+
+export const expandCompactPublicBuyBoxPayload = (
+  payload: CompactPublicBuyBoxPayload
+): PublicBuyBoxVariant[] =>
+  payload.v.map((tuple) => expandCompactPublicBuyBoxVariant(tuple, payload.o));
+
+const isAvailabilityCode = (value: unknown): value is PublicAvailabilityCode =>
+  value === 'a' || value === 'l' || value === 'o' || value === 'u';
+
+const isLimitCode = (value: unknown): value is PublicLimitCode =>
+  value === 'i' || value === 'q' || value === 't' || value === 'u';
+
+export const parseCompactPublicBuyBoxPayload = (
+  value: unknown
+): CompactPublicBuyBoxPayload | null => {
+  if (!value || typeof value !== 'object') return null;
+  const payload = value as Partial<CompactPublicBuyBoxPayload>;
+  if (
+    typeof payload.c !== 'string' ||
+    !Array.isArray(payload.o) ||
+    payload.o.some((optionId) => typeof optionId !== 'string') ||
+    !Array.isArray(payload.v) ||
+    payload.v.length > 2_048
+  ) {
+    return null;
+  }
+
+  const variants: CompactPublicBuyBoxVariant[] = [];
+  for (const tuple of payload.v) {
+    if (!Array.isArray(tuple) || tuple.length !== 11) return null;
+    const [
+      id,
+      optionValueIds,
+      price,
+      compareAtPrice,
+      imageId,
+      status,
+      max,
+      minimum,
+      increment,
+      limit,
+      backorder,
+    ] = tuple;
+    if (
+      typeof id !== 'string' ||
+      !Array.isArray(optionValueIds) ||
+      optionValueIds.length !== payload.o.length ||
+      optionValueIds.some((item) => typeof item !== 'string') ||
+      !Number.isSafeInteger(price) ||
+      (compareAtPrice !== null && !Number.isSafeInteger(compareAtPrice)) ||
+      (imageId !== null && typeof imageId !== 'string') ||
+      !isAvailabilityCode(status) ||
+      !Number.isSafeInteger(max) ||
+      Number(max) < 0 ||
+      !Number.isSafeInteger(minimum) ||
+      Number(minimum) < 1 ||
+      !Number.isSafeInteger(increment) ||
+      Number(increment) < 1 ||
+      !isLimitCode(limit) ||
+      (backorder !== 0 && backorder !== 1)
+    ) {
+      return null;
+    }
+    variants.push([
+      id as ProductVariant['id'],
+      optionValueIds,
+      Number(price),
+      compareAtPrice === null ? null : Number(compareAtPrice),
+      imageId === null ? null : imageId,
+      status,
+      Number(max),
+      Number(minimum),
+      Number(increment),
+      limit,
+      backorder,
+    ]);
+  }
+
+  return { c: payload.c, o: [...payload.o], v: variants };
 };
 
 /** Mensaje de ficha derivado de la proyección pública (sin cifrar stock). */

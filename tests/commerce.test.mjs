@@ -9,6 +9,7 @@ import {
   SHOPIFY_MAX_PRODUCT_VARIANTS,
   validateCatalog,
 } from '../src/commerce/application/catalog-validation.ts';
+import { COLOR_GALLERY_IMAGE_COUNT } from '../src/commerce/domain/catalog.ts';
 import { getSafeCheckoutUrl } from '../src/commerce/application/checkout.ts';
 import {
   createDemoCatalogAdapter,
@@ -308,16 +309,11 @@ describe('medios canónicos por color y variante', () => {
     ]));
   });
 
-  test('admite galerías nativas reducidas y limita a tres imágenes por color', () => {
+  test('exige exactamente COLOR_GALLERY_IMAGE_COUNT imágenes por galería de color', () => {
     const tooFew = structuredClone(asymmetricProduct);
     tooFew.mediaGroups[0].imageIds = tooFew.mediaGroups[0].imageIds.slice(0, 2);
     expect(validateCatalog([tooFew], [collection]).map((entry) => entry.code))
-      .not.toContain('invalid_color_gallery_cardinality');
-
-    const nativeOnly = structuredClone(asymmetricProduct);
-    nativeOnly.mediaGroups[0].imageIds = nativeOnly.mediaGroups[0].imageIds.slice(0, 1);
-    expect(validateCatalog([nativeOnly], [collection]).map((entry) => entry.code))
-      .not.toContain('invalid_color_gallery_cardinality');
+      .toContain('invalid_color_gallery_cardinality');
 
     const tooMany = structuredClone(asymmetricProduct);
     const extra = productImage('image:extra');
@@ -325,6 +321,10 @@ describe('medios canónicos por color y variante', () => {
     tooMany.mediaGroups[0].imageIds.push(extra.id);
     expect(validateCatalog([tooMany], [collection]).map((entry) => entry.code))
       .toContain('invalid_color_gallery_cardinality');
+
+    expect(asymmetricProduct.mediaGroups[0].imageIds).toHaveLength(COLOR_GALLERY_IMAGE_COUNT);
+    expect(validateCatalog([asymmetricProduct], [collection]).map((entry) => entry.code))
+      .not.toContain('invalid_color_gallery_cardinality');
   });
 });
 
@@ -403,6 +403,33 @@ describe('validación exhaustiva de catálogo', () => {
     expect(validateCatalog(demoProducts, demoCollections)).toEqual([]);
   });
 
+  test('exige una colección principal existente y asignada al producto', () => {
+    const emptyPrimary = structuredClone(asymmetricProduct);
+    emptyPrimary.primaryCollectionId = '';
+    const emptyCodes = validateCatalog([emptyPrimary], [collection]).map((entry) => entry.code);
+    expect(emptyCodes).toEqual(expect.arrayContaining([
+      'invalid_primary_collection',
+      'primary_collection_not_assigned',
+      'unknown_primary_collection',
+    ]));
+
+    const unassigned = structuredClone(asymmetricProduct);
+    unassigned.primaryCollectionId = 'collection:otra';
+    const unassignedCodes = validateCatalog([unassigned], [collection]).map((entry) => entry.code);
+    expect(unassignedCodes).toEqual(expect.arrayContaining([
+      'primary_collection_not_assigned',
+      'unknown_primary_collection',
+    ]));
+
+    const other = { ...collection, id: 'collection:otra', handle: 'otra' };
+    const assignedButUnknown = structuredClone(asymmetricProduct);
+    assignedButUnknown.collectionIds = [collection.id, other.id];
+    assignedButUnknown.primaryCollectionId = other.id;
+    const unknownCodes = validateCatalog([assignedButUnknown], [collection]).map((entry) => entry.code);
+    expect(unknownCodes).toContain('unknown_primary_collection');
+    expect(unknownCodes).toContain('unknown_product_collection');
+  });
+
   test('detecta identidades, combinaciones, SKU y referencias duplicadas', () => {
     const duplicateCombination = {
       ...asymmetricProduct.variants[1],
@@ -435,6 +462,40 @@ describe('validación exhaustiva de catálogo', () => {
     expect(codes).toContain('duplicate_product_handle');
     expect(codes).toContain('duplicate_product_reference');
     expect(codes).toContain('product_variant_identity_collision');
+  });
+
+  test('rechaza SKU vacío y duplicados entre productos distintos', () => {
+    const missing = makeProduct({
+      variants: [variant({ id: 'variant:missing-sku', sku: '', color: 'Negro', size: '95' })],
+    });
+    expect(validateCatalog([missing], [collection]).map((entry) => entry.code)).toContain('invalid_sku');
+
+    const first = makeProduct({
+      id: 'product:sku-a',
+      handle: 'producto-sku-a',
+      reference: 'KB-SKU-A',
+      variants: [variant({ id: 'variant:sku-cross-a', sku: 'SKU-SHARED', color: 'Negro', size: '95' })],
+    });
+    const second = makeProduct({
+      id: 'product:sku-b',
+      handle: 'producto-sku-b',
+      reference: 'KB-SKU-B',
+      variants: [variant({ id: 'variant:sku-cross-b', sku: 'sku-shared', color: 'Negro', size: '95' })],
+    });
+    expect(validateCatalog([first, second], [collection]).map((entry) => entry.code)).toContain('duplicate_sku');
+
+    const distinct = makeProduct({
+      id: 'product:sku-ok',
+      handle: 'producto-sku-ok',
+      reference: 'KB-SKU-OK',
+      variants: [
+        variant({ id: 'variant:sku-ok-a', sku: 'SKU-OK-A', color: 'Negro', size: '95' }),
+        variant({ id: 'variant:sku-ok-b', sku: 'SKU-OK-B', color: 'Negro', size: '100' }),
+      ],
+    });
+    const distinctCodes = validateCatalog([distinct], [collection]).map((entry) => entry.code);
+    expect(distinctCodes).not.toContain('duplicate_sku');
+    expect(distinctCodes).not.toContain('invalid_sku');
   });
 
   test('detecta opciones incompletas, medios rotos, inventario, precio, peso y moneda inválidos', () => {
@@ -517,6 +578,34 @@ describe('validación exhaustiva de catálogo', () => {
         variants: variants.slice(0, SHOPIFY_MAX_PRODUCT_VARIANTS),
       }),
     ], [collection]).map((entry) => entry.code)).not.toContain('too_many_product_variants');
+  });
+
+  test('rechaza más de una opción color o más de una opción talla', () => {
+    const twoColors = structuredClone(asymmetricProduct);
+    twoColors.options = [
+      ...twoColors.options,
+      {
+        id: 'option:color-extra',
+        name: 'Tono',
+        purpose: 'color',
+        values: [{ id: 'color:extra', label: 'Extra', swatch: '#222222' }],
+      },
+    ];
+    expect(validateCatalog([twoColors], [collection]).map((entry) => entry.code))
+      .toContain('duplicate_option_purpose');
+
+    const twoSizes = structuredClone(asymmetricProduct);
+    twoSizes.options = [
+      ...twoSizes.options,
+      {
+        id: 'option:size-extra',
+        name: 'Largo',
+        purpose: 'size',
+        values: [{ id: 'size:extra', label: '110' }],
+      },
+    ];
+    expect(validateCatalog([twoSizes], [collection]).map((entry) => entry.code))
+      .toContain('duplicate_option_purpose');
   });
 
   test('rechaza reglas de cantidad parciales o distintas de la política 1/1', () => {

@@ -6,12 +6,18 @@ export const catalogProvider: CatalogProvider = await selectCommerceProvider({
   demo: () =>
     import('./infrastructure/demo/demo-catalog-adapter').then((mod) => mod.demoCatalogAdapter),
   shopify: async () => {
-    const [{ createShopifyCatalogAdapter }, { loadConfiguredShopifyCatalog }] = await Promise.all([
+    const [
+      { createShopifyCatalogAdapter },
+      { createShopifyCatalogQueries },
+      { createConfiguredShopifyStorefrontGateway },
+    ] = await Promise.all([
       import('./infrastructure/shopify/catalog-adapter'),
-      import('./infrastructure/shopify/catalog'),
+      import('./infrastructure/shopify/catalog-runtime-query'),
+      import('./infrastructure/shopify/storefront'),
     ]);
-    return createShopifyCatalogAdapter(loadConfiguredShopifyCatalog, {
-      cacheTtlMs: import.meta.env.DEV ? 0 : 30_000,
-    });
+    return createShopifyCatalogAdapter(
+      createShopifyCatalogQueries(() => createConfiguredShopifyStorefrontGateway()),
+      { cacheTtlMs: import.meta.env.DEV ? 0 : 30_000 }
+    );
   },
 });

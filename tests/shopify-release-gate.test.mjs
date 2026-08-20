@@ -8,6 +8,7 @@ import {
   assertHomeSecurityHeaders,
   assertNoPublicCartId,
   assertNoSensitiveValue,
+  AUTOMATED_GATE_PASSED,
   BLOCKED_STATUS,
   CART_GID,
   CART_ID_PUBLIC_ERROR,
@@ -15,7 +16,8 @@ import {
   formatReleaseGateSuccess,
   FULL_GIT_HISTORY_ERROR,
   LOCAL_DEPLOYMENT_ERROR,
-  READY_STATUS,
+  MANUAL_ADMIN_GATE_REQUIRED,
+  PAYMENT_QA_READINESS_LABEL,
   RELEASE_GATE_COMMANDS,
   ReleaseGateError,
   runHttpDeploymentChecks,
@@ -133,7 +135,11 @@ describe('orquestación del release gate', () => {
   test('ejecuta validate, session, preflight, cart smoke y HTTP en ese orden', async () => {
     const io = passingIO();
     const result = await runReleaseGate(validEnv(), io);
-    expect(result).toEqual({ status: 'READY_FOR_PAYMENT_QA' });
+    expect(result).toEqual({
+      automatedPrePaymentGate: 'PASSED',
+      manualShopifyAdminGate: 'REQUIRED',
+      paymentQaReadiness: 'BLOCKED',
+    });
     expect(io.commands.map((item) => item.script)).toEqual([
       'validate',
       'session:preflight',
@@ -365,28 +371,31 @@ describe('comprobaciones HTTP', () => {
 });
 
 describe('resultado final', () => {
-  test('todos los gates PASS producen READY FOR PAYMENT QA', async () => {
+  test('todos los gates automáticos PASS dejan Payment QA BLOCKED', async () => {
     const io = captureIO();
     const code = await runReleaseGateCli(validEnv(), { ...passingIO(), ...io });
     expect(code).toBe(0);
     expect(io.success()).toContain('KingBelt pre-payment release gate passed');
-    expect(io.success()).toContain(READY_STATUS);
+    expect(io.success()).toContain(AUTOMATED_GATE_PASSED);
+    expect(io.success()).toContain(MANUAL_ADMIN_GATE_REQUIRED);
+    expect(io.success()).toContain(`${PAYMENT_QA_READINESS_LABEL}\n${BLOCKED_STATUS}`);
     expect(io.success()).toContain('Order created: NO');
     expect(io.success()).toContain('Payment attempted: NO');
-    expect(io.success()).toContain('Manual Shopify Admin gate: REQUIRED');
+    expect(io.success()).not.toContain('READY FOR PAYMENT QA');
     expect(io.success()).not.toContain('PARTIAL_READY');
     expect(io.failure()).toBe('');
   });
 
-  test('cualquier blocker produce BLOCKED', async () => {
+  test('un fallo automático produce STATUS BLOCKED', async () => {
     const formatted = formatReleaseGateFailure(
       new ReleaseGateError('shopify:cart-smoke', 'command exited with status 1')
     );
     expect(formatted).toContain('KingBelt pre-payment release gate failed');
     expect(formatted).toContain('Shopify cart smoke');
     expect(formatted).toContain('command exited with status 1');
-    expect(formatted).toContain(BLOCKED_STATUS);
-    expect(formatReleaseGateSuccess()).not.toContain(BLOCKED_STATUS);
+    expect(formatted).toContain(`STATUS:\n${BLOCKED_STATUS}`);
+    expect(formatted).not.toContain('READY FOR PAYMENT QA');
+    expect(formatted).not.toContain(AUTOMATED_GATE_PASSED);
   });
 });
 
@@ -422,6 +431,9 @@ describe('contrato del comando shopify:release-gate', () => {
     expect(gate).not.toContain('vercel --prod');
     expect(gate).not.toContain('Playwright');
     expect(gate).not.toContain('Admin API');
+    expect(gate).not.toContain('READY FOR PAYMENT QA');
+    expect(gate).not.toContain('SHIPPING_READY');
+    expect(gate).not.toContain('TAX_READY');
     expect(gate).not.toContain('deliveryAddress');
     expect(gate).not.toContain("command: 'add'");
     expect(gate).toContain("command: 'refresh'");

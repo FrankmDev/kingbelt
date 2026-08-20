@@ -78,10 +78,6 @@ export default defineConfig({
     cookie: {
       name: SESSION_COOKIE_NAME,
       path: '/',
-      // Astro always sets HttpOnly on session cookies and omits the option from the type.
-      // Keep it explicit so the cart session contract stays visible in configuration.
-      // @ts-expect-error httpOnly is omitted from Astro session cookie options
-      httpOnly: true,
       sameSite: 'lax',
       secure: true,
       maxAge: SESSION_TTL_SECONDS,

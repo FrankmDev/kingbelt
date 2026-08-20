@@ -15,7 +15,7 @@ import type {
   CartLineError,
   CartOperationResult,
 } from '../domain/cart';
-import { MAX_CART_LINES } from '../domain/cart';
+import { MAX_CART_LINES, MAX_CART_LINES_MESSAGE } from '../domain/cart';
 import type {
   Product,
   CollectionReference,
@@ -190,7 +190,7 @@ const addToCart = (catalog: CartCatalog, cart: Cart, input: AddToCartInput): Car
       cart,
       error: {
         code: 'validation',
-        message: `El carrito admite un máximo de ${MAX_CART_LINES} productos distintos.`,
+        message: MAX_CART_LINES_MESSAGE,
         field: 'variant',
       },
     };

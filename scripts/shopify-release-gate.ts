@@ -17,7 +17,9 @@ export const CART_ID_PUBLIC_ERROR = 'Remote Shopify Cart ID leaked through a pub
 export const FULL_GIT_HISTORY_ERROR = 'full Git history required for secret history scan.';
 export const LOCAL_DEPLOYMENT_ERROR = 'SHOPIFY_SMOKE_BASE_URL must be a real HTTPS deployment origin.';
 export const SHOPIFY_SOURCE_ERROR = 'Shopify release gate requires COMMERCE_SOURCE=shopify.';
-export const READY_STATUS = 'READY FOR PAYMENT QA';
+export const AUTOMATED_GATE_PASSED = 'AUTOMATED PRE-PAYMENT GATE: PASSED';
+export const MANUAL_ADMIN_GATE_REQUIRED = 'MANUAL SHOPIFY ADMIN GATE: REQUIRED';
+export const PAYMENT_QA_READINESS_LABEL = 'PAYMENT QA READINESS:';
 export const BLOCKED_STATUS = 'BLOCKED';
 
 const REQUIRED_SECURITY_HEADERS = [
@@ -78,7 +80,9 @@ export interface ReleaseGateIO {
 }
 
 export interface ReleaseGateSummary {
-  status: 'READY_FOR_PAYMENT_QA';
+  automatedPrePaymentGate: 'PASSED';
+  manualShopifyAdminGate: 'REQUIRED';
+  paymentQaReadiness: 'BLOCKED';
 }
 
 export const RELEASE_GATE_COMMANDS = [
@@ -384,10 +388,13 @@ export const formatReleaseGateSuccess = (): string =>
     'Public secret exposure: OK',
     'Order created: NO',
     'Payment attempted: NO',
-    'Manual Shopify Admin gate: REQUIRED',
     '',
-    'STATUS:',
-    READY_STATUS,
+    AUTOMATED_GATE_PASSED,
+    '',
+    MANUAL_ADMIN_GATE_REQUIRED,
+    '',
+    PAYMENT_QA_READINESS_LABEL,
+    BLOCKED_STATUS,
   ].join('\n');
 
 export const formatReleaseGateFailure = (error: unknown): string => {
@@ -507,7 +514,11 @@ export const runReleaseGate = async (
   }
 
   await runHttpDeploymentChecks(env, io);
-  return { status: 'READY_FOR_PAYMENT_QA' };
+  return {
+    automatedPrePaymentGate: 'PASSED',
+    manualShopifyAdminGate: 'REQUIRED',
+    paymentQaReadiness: 'BLOCKED',
+  };
 };
 
 export const runReleaseGateCli = async (

@@ -42,6 +42,9 @@ export const SHOPIFY_COLOR_GALLERIES_METAFIELD = {
 export const SHOPIFY_COLOR_GALLERIES_METAFIELD_IDENTIFIER =
   `${SHOPIFY_COLOR_GALLERIES_METAFIELD.namespace}.${SHOPIFY_COLOR_GALLERIES_METAFIELD.key}` as const;
 
+/** Tipo real del metaobject referenciado por la definición publicada. */
+export const SHOPIFY_COLOR_GALLERY_METAOBJECT_TYPE = 'galerias_por_color' as const;
+
 /** Catálogo: país e idioma del mercado. El país del Cart no usa este helper. */
 export const SHOPIFY_IN_CONTEXT_VARIABLE_DEFINITIONS =
   '$country: CountryCode!, $language: LanguageCode!' as const;
@@ -106,8 +109,6 @@ const SHOPIFY_STORE_DOMAIN_PATTERN = /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.myshopif
 const APP_SECRET_TOKEN_PATTERN = /^(?:shpca|shpss)_/;
 const TOKEN_WHITESPACE_PATTERN = /\s/;
 const TOKEN_CONTROL_PATTERN = /[\u0000-\u001f\u007f]/;
-const ABSOLUTE_URL_PATTERN = /^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//;
-const HOSTNAME_FORBIDDEN_CHAR_PATTERN = /[/?#@:\\]/;
 const SHOPIFY_STORE_DOMAIN_MESSAGE =
   'SHOPIFY_STORE_DOMAIN must be a hostname like shop-name.myshopify.com, without protocol, path, query, fragment, credentials, or port.';
 
@@ -125,23 +126,6 @@ const invalidStoreDomain = (): never => {
   throw new ShopifyConfigurationError(SHOPIFY_STORE_DOMAIN_MESSAGE);
 };
 
-const stripWrappingQuotes = (value: string): string => {
-  if (value.length < 2) return value;
-  const first = value[0];
-  const last = value.at(-1);
-  if ((first === '"' && last === '"') || (first === "'" && last === "'")) {
-    return value.slice(1, -1).trim();
-  }
-  return value;
-};
-
-const hostnameFromUrl = (url: URL): string => {
-  if (url.protocol !== 'https:' && url.protocol !== 'http:') invalidStoreDomain();
-  if (url.username || url.password || url.port || url.search || url.hash) invalidStoreDomain();
-  if (url.pathname !== '/' && url.pathname !== '') invalidStoreDomain();
-  return url.hostname;
-};
-
 /** Diagnóstico seguro: nunca incluye el valor ni secretos. */
 export const inspectShopifyStoreDomain = (raw: unknown): ShopifyStoreDomainInspection => {
   const value = typeof raw === 'string' ? raw : '';
@@ -156,43 +140,25 @@ export const inspectShopifyStoreDomain = (raw: unknown): ShopifyStoreDomainInspe
   };
 };
 
-const hostnameFromRawDomain = (value: string): string => {
-  if (ABSOLUTE_URL_PATTERN.test(value)) {
-    return hostnameFromUrl(new URL(value));
-  }
-  const withoutTrailingSlashes = value.replace(/\/+$/, '');
-  if (!withoutTrailingSlashes || HOSTNAME_FORBIDDEN_CHAR_PATTERN.test(withoutTrailingSlashes)) {
-    invalidStoreDomain();
-  }
-  return hostnameFromUrl(new URL(`https://${withoutTrailingSlashes}`));
-};
-
 /**
- * Acepta el hostname de Storefront. Normaliza recorte, comillas envolventes,
- * protocolo http(s) accidental y barra final. Rechaza el dominio público del
- * sitio, admin.shopify.com, rutas, query, fragmento, puerto y credenciales.
+ * Acepta exclusivamente el hostname myshopify. No corrige formatos ambiguos:
+ * una URL, una barra o espacios indican una configuración inválida.
  */
 export const normalizeShopifyStoreDomain = (raw: unknown): string => {
-  if (typeof raw !== 'string' || !raw.trim()) {
+  if (typeof raw !== 'string' || !raw) {
     throw new ShopifyConfigurationError('Missing required Shopify configuration: SHOPIFY_STORE_DOMAIN');
   }
-
-  const strippedQuotes = stripWrappingQuotes(raw.trim());
-  if (!strippedQuotes) {
-    throw new ShopifyConfigurationError('Missing required Shopify configuration: SHOPIFY_STORE_DOMAIN');
-  }
-  if (TOKEN_WHITESPACE_PATTERN.test(strippedQuotes) || TOKEN_CONTROL_PATTERN.test(strippedQuotes)) {
+  if (
+    raw !== raw.trim()
+    || TOKEN_WHITESPACE_PATTERN.test(raw)
+    || TOKEN_CONTROL_PATTERN.test(raw)
+    || /[/?#@:\\'"]/.test(raw)
+  ) {
     invalidStoreDomain();
   }
-
-  try {
-    const storeDomain = hostnameFromRawDomain(strippedQuotes).toLowerCase();
-    if (!SHOPIFY_STORE_DOMAIN_PATTERN.test(storeDomain)) invalidStoreDomain();
-    return storeDomain;
-  } catch (error) {
-    if (error instanceof ShopifyConfigurationError) throw error;
-    return invalidStoreDomain();
-  }
+  const storeDomain = raw.toLowerCase();
+  if (!SHOPIFY_STORE_DOMAIN_PATTERN.test(storeDomain)) invalidStoreDomain();
+  return storeDomain;
 };
 
 export const reportShopifyConfigurationError = (

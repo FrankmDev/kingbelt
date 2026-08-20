@@ -32,26 +32,10 @@ const captureRequest = () => {
 };
 
 describe('configuración Shopify Storefront', () => {
-  test('normaliza el host y fija la versión soportada', () => {
+  test('normaliza solo mayúsculas del hostname y fija la versión soportada', () => {
     expect(getShopifyStorefrontConfig({
       ...validConfig,
-      storeDomain: '  KingBelt-Test.MyShopify.com  ',
-    })).toEqual(validConfig);
-    expect(getShopifyStorefrontConfig({
-      ...validConfig,
-      storeDomain: 'https://kingbelt-test.myshopify.com',
-    })).toEqual(validConfig);
-    expect(getShopifyStorefrontConfig({
-      ...validConfig,
-      storeDomain: 'http://kingbelt-test.myshopify.com/',
-    })).toEqual(validConfig);
-    expect(getShopifyStorefrontConfig({
-      ...validConfig,
-      storeDomain: 'kingbelt-test.myshopify.com/',
-    })).toEqual(validConfig);
-    expect(getShopifyStorefrontConfig({
-      ...validConfig,
-      storeDomain: '"kingbelt-test.myshopify.com"',
+      storeDomain: 'KingBelt-Test.MyShopify.com',
     })).toEqual(validConfig);
     expect(() => getShopifyStorefrontConfig({ ...validConfig, storeDomain: undefined }))
       .toThrow('Missing required Shopify configuration: SHOPIFY_STORE_DOMAIN');
@@ -76,6 +60,12 @@ describe('configuración Shopify Storefront', () => {
       'kingbelt.myshopify.com:443',
       'host:443',
       'kingbelt test.myshopify.com',
+      ' kingbelt.myshopify.com',
+      'kingbelt.myshopify.com ',
+      'https://kingbelt.myshopify.com',
+      'http://kingbelt.myshopify.com/',
+      'kingbelt.myshopify.com/',
+      '"kingbelt.myshopify.com"',
     ];
 
     invalidDomains.forEach((storeDomain) => {
@@ -86,8 +76,10 @@ describe('configuración Shopify Storefront', () => {
 
   test('documenta la normalización y el rechazo de SHOPIFY_STORE_DOMAIN', () => {
     expect(normalizeShopifyStoreDomain('tienda.myshopify.com')).toBe('tienda.myshopify.com');
-    expect(normalizeShopifyStoreDomain('https://tienda.myshopify.com')).toBe('tienda.myshopify.com');
-    expect(normalizeShopifyStoreDomain('tienda.myshopify.com/')).toBe('tienda.myshopify.com');
+    expect(() => normalizeShopifyStoreDomain('https://tienda.myshopify.com'))
+      .toThrow(ShopifyConfigurationError);
+    expect(() => normalizeShopifyStoreDomain('tienda.myshopify.com/'))
+      .toThrow(ShopifyConfigurationError);
     expect(normalizeShopifyStoreDomain('kingbelt-store.myshopify.com')).toBe('kingbelt-store.myshopify.com');
     expect(() => normalizeShopifyStoreDomain('admin.shopify.com/store/tienda'))
       .toThrow(ShopifyConfigurationError);
@@ -212,7 +204,7 @@ describe('configuración Shopify Storefront', () => {
     });
     expect(astroConfiguration.env.schema.SHOPIFY_CART_COOKIE_SECRET).toBeUndefined();
     expect(astroConfiguration.session.cookie.name).toBe('__Host-kingbelt-session');
-    expect(astroConfiguration.session.cookie.httpOnly).toBe(true);
+    expect(astroConfiguration.session.cookie.httpOnly).toBeUndefined();
     expect(astroConfiguration.session.cookie.secure).toBe(true);
     expect(astroConfiguration.session.cookie.sameSite).toBe('lax');
     expect(astroConfiguration.session.cookie.path).toBe('/');
@@ -220,7 +212,8 @@ describe('configuración Shopify Storefront', () => {
     expect(astroConfiguration.session.cookie.maxAge).toBe(60 * 60 * 24 * 30);
     expect(astroConfiguration.session.ttl).toBe(60 * 60 * 24 * 30);
     expect(astroConfiguration.session.cookie.maxAge).toBe(astroConfiguration.session.ttl);
-    expect(astroConfig).toContain('httpOnly: true');
+    expect(astroConfig).not.toContain('httpOnly: true');
+    expect(astroConfig).not.toContain('@ts-expect-error');
     expect(astroConfig).toContain('sessionDriverConfig');
     expect(astroConfig).not.toContain('process.env.UPSTASH_REDIS_REST_URL');
     expect(astroConfig).not.toContain('process.env.UPSTASH_REDIS_REST_TOKEN');

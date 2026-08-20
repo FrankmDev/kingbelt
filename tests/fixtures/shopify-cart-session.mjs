@@ -24,7 +24,7 @@ const merchandise = (id) => ({
   quantityRule: { minimum: 1, increment: 1, maximum: null },
   selectedOptions: [{ name: 'Color', value: 'Negro' }, { name: 'Talla', value: '90' }],
   image: {
-    id: `gid://shopify/MediaImage/${id}`,
+    id: `gid://shopify/MediaImage/${id.split('/').at(-1)}`,
     url: 'https://cdn.shopify.com/s/files/1/test.jpg',
     width: 800,
     height: 1000,

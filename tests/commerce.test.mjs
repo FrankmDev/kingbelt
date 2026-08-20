@@ -826,6 +826,47 @@ describe('dimensiones de imagen obligatorias', () => {
   });
 });
 
+describe('productos relacionados del catálogo demo', () => {
+  test('getRelatedProducts solo usa la colección principal, no las secundarias', async () => {
+    const sport = { id: 'collection:sport', handle: 'sport', title: 'Sport', description: 'Colección sport.' };
+    const casual = { id: 'collection:casual', handle: 'casual', title: 'Casual', description: 'Colección casual.' };
+    const variantsFor = (prefix) => [
+      variant({ id: `${prefix}:variant`, sku: `${prefix}-SKU`, color: 'Negro', size: '95' }),
+    ];
+    const productA = {
+      ...makeProduct({
+        id: 'product:a',
+        handle: 'producto-a',
+        reference: 'KB-A',
+        collectionId: sport.id,
+        variants: variantsFor('a'),
+      }),
+      collectionIds: [sport.id, casual.id],
+    };
+    const productB = makeProduct({
+      id: 'product:b',
+      handle: 'producto-b',
+      reference: 'KB-B',
+      collectionId: casual.id,
+      variants: variantsFor('b'),
+    });
+    const productC = makeProduct({
+      id: 'product:c',
+      handle: 'producto-c',
+      reference: 'KB-C',
+      collectionId: sport.id,
+      variants: variantsFor('c'),
+    });
+    const provider = createDemoCatalogAdapter({
+      products: [productA, productB, productC],
+      collections: [sport, casual],
+    });
+    const related = await provider.getRelatedProducts(productA, 4);
+    expect(related.map((item) => item.handle)).toEqual(['producto-c']);
+    expect(related.every((item) => item.primaryCollection.handle === 'sport')).toBe(true);
+  });
+});
+
 describe('catálogo sintético de escala prevista', () => {
   test('opera con 70 productos, 272 colores, 816 imágenes y 1.565 variantes', async () => {
     const source = buildSyntheticCatalog();

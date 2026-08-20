@@ -8,6 +8,7 @@ import {
 } from './config';
 import {
   SHOPIFY_PAGE_SIZE,
+  SHOPIFY_MAX_CONNECTION_PAGES,
   collectConnectionPages,
   completedConnection,
   requireNextCursor,
@@ -22,6 +23,7 @@ export {
   completedConnection,
   requireNextCursor,
   shopifyPageSize,
+  SHOPIFY_MAX_CONNECTION_PAGES,
 } from './catalog-pagination';
 export type { ShopifyConnection, ShopifyPageInfo };
 
@@ -238,10 +240,6 @@ export const FULL_PRODUCT_FIELDS = `
 export const PRODUCT_SUMMARY_FIELDS = `
   id handle title description productType availableForSale
   featuredImage { ${IMAGE_FIELDS} }
-  collections(first: ${SHOPIFY_PAGE_SIZE}) {
-    nodes { id handle title }
-    pageInfo { hasNextPage endCursor }
-  }
   options(first: 3) {
     id name
     optionValues { id name swatch { color } }
@@ -536,8 +534,13 @@ export const fetchShopifyCatalog = async (
   let collectionsDone = false;
   const seenProductCursors = new Set<string>();
   const seenCollectionCursors = new Set<string>();
+  let pages = 0;
 
   while (!productsDone || !collectionsDone) {
+    if (pages >= SHOPIFY_MAX_CONNECTION_PAGES) {
+      throw new Error('Shopify superó el límite de páginas del catálogo completo.');
+    }
+    pages += 1;
     const data = await gateway.graphql<{
       products: Connection<ShopifyProductNode>;
       collections: Connection<ShopifyCollectionNode>;

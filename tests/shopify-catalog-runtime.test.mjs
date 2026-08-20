@@ -22,6 +22,7 @@ import {
 import {
   pageInfo,
   productSummaryNode,
+  sportCollection,
   SHOPIFY_CATALOG_TEST_HOSTS as HOSTS,
   validShopifyCatalogPayload as validPayload,
 } from './fixtures/shopify-catalog-payload.mjs';
@@ -90,7 +91,7 @@ describe('consultas runtime Shopify por recurso', () => {
     expect(gateway.calls[0].variables.language).toBe(SHOPIFY_MARKET_CONTEXT.language);
   });
 
-  test('getProductByHandle sirve un producto con Color si color_galleries no llega por Storefront', async () => {
+  test('getProductByHandle falla si un producto con Color no trae color_galleries', async () => {
     const payload = validPayload();
     payload.products[0].metafields = payload.products[0].metafields.filter((item) =>
       item?.key !== SHOPIFY_COLOR_GALLERIES_METAFIELD.key
@@ -99,14 +100,10 @@ describe('consultas runtime Shopify por recurso', () => {
       if (query.includes('KingBeltProductByHandle')) return { product: payload.products[0] };
       throw new Error(`consulta inesperada: ${query.slice(0, 80)}`);
     });
-    const product = await createShopifyCatalogQueries(gateway, HOSTS)
-      .getProductByHandle('cinturon-atlas');
-    expect(product?.handle).toBe('cinturon-atlas');
-    expect(product?.mediaGroups.map((group) => group.optionValueId)).toEqual(
-      product?.options.find((option) => option.purpose === 'color')?.values.map((value) => value.id)
-    );
-    expect(product?.mediaGroups.every((group) => group.imageIds.length === 1)).toBe(true);
-    expect(product?.primaryImageId).toBe(payload.products[0].featuredImage.id);
+    await expect(createShopifyCatalogQueries(gateway, HOSTS).getProductByHandle('cinturon-atlas'))
+      .rejects.toThrow(ShopifyCatalogMappingError);
+    await expect(createShopifyCatalogQueries(gateway, HOSTS).getProductByHandle('cinturon-atlas'))
+      .rejects.toThrow(`metafields.custom.${SHOPIFY_COLOR_GALLERIES_METAFIELD.key}`);
   });
 
   test('getProductByHandle pagina variantes e imágenes del producto solicitado', async () => {
@@ -368,7 +365,7 @@ describe('consultas runtime Shopify por recurso', () => {
       expect(query).not.toContain('weight weightUnit');
       expect(query).not.toContain('quantityRule');
       expect(query).not.toContain('color_galleries');
-      expect(query).toMatch(/collections\s*\(/);
+      expect(query).not.toMatch(/collections\s*\(/);
       expect(query).toContain(`namespace: "${SHOPIFY_PRIMARY_COLLECTION_METAFIELD.namespace}"`);
       expect(query).toContain(`key: "${SHOPIFY_PRIMARY_COLLECTION_METAFIELD.key}"`);
       expect(query).not.toMatch(/namespace:\s*"kingbelt",\s*key:\s*"primary_collection"/);
@@ -474,9 +471,13 @@ describe('consultas runtime Shopify por recurso', () => {
   });
 
   test('getRelatedProducts excluye, deduplica, respeta el límite y no produce N+1', async () => {
-    const catalog = mapShopifyCatalog(validPayload(), HOSTS);
-    const product = catalog.products[0];
     const payload = validPayload();
+    const product = {
+      id: payload.products[0].id,
+      handle: payload.products[0].handle,
+      primaryCollectionId: sportCollection.id,
+      collectionIds: [sportCollection.id],
+    };
     const relatedA = extraSummary(payload, {
       id: 'gid://shopify/Product/2',
       handle: 'cinturon-beta',
@@ -492,17 +493,14 @@ describe('consultas runtime Shopify por recurso', () => {
       expect(query).toContain(SHOPIFY_IN_CONTEXT_DIRECTIVE);
       expect(variables.country).toBe(SHOPIFY_MARKET_CONTEXT.country);
       expect(variables.language).toBe(SHOPIFY_MARKET_CONTEXT.language);
+      expect(variables.id0).toBe(product.primaryCollectionId);
+      expect(variables).not.toHaveProperty('id1');
+      expect(query).not.toContain('$id1');
       expect(query).not.toContain('variants(first:');
       return {
         c0: {
           products: {
             nodes: [productSummaryNode(payload.products[0]), relatedA, relatedA, relatedB],
-            pageInfo,
-          },
-        },
-        c1: {
-          products: {
-            nodes: [relatedB],
             pageInfo,
           },
         },
@@ -600,10 +598,10 @@ describe('caché granular del catálogo Shopify', () => {
     const adapter = createShopifyCatalogAdapter({
       async getProductByHandle(handle) {
         if (handle !== 'cinturon-atlas') {
-          throw new Error('storefront_down');
+          throw new ShopifyStorefrontRequestError('network', 'storefront_down');
         }
         atlasLoads += 1;
-        if (atlasLoads > 1) throw new Error('storefront_down');
+        if (atlasLoads > 1) throw new ShopifyStorefrontRequestError('network', 'storefront_down');
         return catalog.products[0];
       },
       async getCollections() { return []; },
@@ -669,6 +667,25 @@ describe('caché granular del catálogo Shopify', () => {
     await adapter.getProductByHandle('cinturon-atlas');
     await expect(adapter.getProductByHandle('cinturon-atlas'))
       .rejects.toBeInstanceOf(error.constructor);
+  });
+
+  test.each([
+    ['respuesta JSON inválida', new ShopifyStorefrontRequestError('invalid_json', 'invalid json')],
+    ['respuesta semántica inválida', new ShopifyStorefrontRequestError('invalid_response', 'invalid response')],
+    ['error interno de paginación', new Error('cursor does not advance')],
+  ])('%s no reutiliza stale cache', async (_label, error) => {
+    const catalog = mapShopifyCatalog(validPayload(), HOSTS);
+    let loads = 0;
+    const cache = createResourceCache(0);
+    await cache.load('product:atlas', async () => {
+      loads += 1;
+      return catalog.products[0];
+    });
+    await expect(cache.load('product:atlas', async () => {
+      loads += 1;
+      throw error;
+    })).rejects.toBe(error);
+    expect(loads).toBe(2);
   });
 
   test('errores de configuración no se ocultan mediante stale cache', async () => {

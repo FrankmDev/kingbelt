@@ -1,4 +1,8 @@
-import { SHOPIFY_COLOR_GALLERIES_METAFIELD, SHOPIFY_PRIMARY_COLLECTION_METAFIELD } from '../../src/commerce/infrastructure/shopify/config.ts';
+import {
+  SHOPIFY_COLOR_GALLERIES_METAFIELD,
+  SHOPIFY_COLOR_GALLERY_METAOBJECT_TYPE,
+  SHOPIFY_PRIMARY_COLLECTION_METAFIELD,
+} from '../../src/commerce/infrastructure/shopify/config.ts';
 
 export const pageInfo = { hasNextPage: false, endCursor: null };
 export const SHOPIFY_CATALOG_TEST_HOSTS = ['cdn.shopify.com'];
@@ -36,11 +40,11 @@ export const metafield = (key, type, value) => ({
 
 export const mediaImage = (productImage) => ({
   __typename: 'MediaImage',
-  id: `gid://shopify/MediaImage/${productImage.id}`,
+  id: `gid://shopify/MediaImage/${productImage.id.split('/').at(-1)}`,
   image: productImage,
 });
 
-export const colorGallery = (color, images, type = 'color_gallery') => ({
+export const colorGallery = (color, images, type = SHOPIFY_COLOR_GALLERY_METAOBJECT_TYPE) => ({
   __typename: 'Metaobject',
   id: `gid://shopify/Metaobject/${color.id}`,
   type,

@@ -15,19 +15,20 @@ import {
   mapShopifyCartAvailability,
   mapShopifyCartErrorCode,
   previousLinesFromQuantitySnapshot,
+  wouldExceedShopifyCartLineLimit,
   SHOPIFY_CART_OVERFLOW_MESSAGE,
   SHOPIFY_CART_UPDATED_NOTICE,
   SHOPIFY_NOT_ENOUGH_STOCK_NOTICE,
   SHOPIFY_OUT_OF_STOCK_NOTICE,
   SHOPIFY_UNAVAILABLE_IN_LOCATION_NOTICE,
-  SHOPIFY_UNAVAILABLE_LINE_TITLE,
 } from '../src/commerce/infrastructure/shopify/shopify-cart-mappers.ts';
+import { MAX_CART_LINES, MAX_CART_LINES_MESSAGE } from '../src/commerce/domain/cart.ts';
 import { TECHNICAL_LINE_QUANTITY_LIMIT } from '../src/commerce/domain/inventory.ts';
 import { isQuantityAllowed } from '../src/commerce/domain/inventory.ts';
 import { ShopifyStorefrontRequestError } from '../src/commerce/infrastructure/shopify/storefront-gateway.ts';
 
 const root = resolve(import.meta.dir, '..');
-const checkoutHosts = ['kingbelt.myshopify.com', 'checkout.shopify.com'];
+const checkoutHosts = ['kingbelt.myshopify.com'];
 const VARIANT_A = 'gid://shopify/ProductVariant/111';
 const VARIANT_B = 'gid://shopify/ProductVariant/222';
 const VARIANT_C = 'gid://shopify/ProductVariant/333';
@@ -67,7 +68,7 @@ const merchandise = (id, {
   quantityRule,
   selectedOptions: [{ name: 'Color', value: 'Negro' }, { name: 'Talla', value: '90' }],
   image: {
-    id: `gid://shopify/MediaImage/${id}`,
+    id: `gid://shopify/MediaImage/${id.split('/').at(-1)}`,
     url: 'https://cdn.shopify.com/s/files/1/test.jpg',
     width: 800,
     height: 1000,
@@ -93,6 +94,14 @@ const remoteLine = (id, variantId, quantity, options = {}) => ({
   },
   merchandise: merchandise(variantId, options),
 });
+
+const numberedVariantId = (n) => `gid://shopify/ProductVariant/${n}`;
+const numberedLineId = (n) => `gid://shopify/CartLine/line-${n}`;
+const remoteLines = (count, start = 1) =>
+  Array.from({ length: count }, (_, index) => {
+    const n = start + index;
+    return remoteLine(numberedLineId(n), numberedVariantId(n), 1);
+  });
 
 const remoteCart = ({
   lines = [remoteLine(LINE_A, VARIANT_A, 1)],
@@ -242,6 +251,55 @@ describe('consulta GraphQL del carrito Shopify', () => {
       expect(source).not.toMatch(/includes\(['"]inventory['"]\)/);
       expect(source).not.toMatch(/includes\(['"]available['"]\)/);
     });
+  });
+});
+
+describe('máximo de líneas distintas en el provider Shopify', () => {
+  test('add rechaza una variante nueva cuando ya hay 50 líneas y no llama a cartLinesAdd', async () => {
+    const lines = remoteLines(MAX_CART_LINES);
+    const { gateway, ...service } = createService({
+      quantities: () => ({ cart: remoteCart({ lines }) }),
+      get: () => ({ cart: remoteCart({ lines }) }),
+      add: () => {
+        throw new Error('cartLinesAdd must not run when the distinct-line limit is reached');
+      },
+    });
+
+    const result = await service.add(CART_ID, numberedVariantId(MAX_CART_LINES + 1), 1);
+
+    expect(result.success).toBe(false);
+    expect(result.error).toMatchObject({
+      code: 'validation',
+      field: 'variant',
+      message: MAX_CART_LINES_MESSAGE,
+    });
+    expect(result.cart.lines).toHaveLength(MAX_CART_LINES);
+    expect(gateway.queries.map((item) => item.name)).toEqual(['quantities', 'get']);
+  });
+
+  test('add sigue permitiendo incrementar una variante ya presente en un Cart de 50 líneas', async () => {
+    const lines = remoteLines(MAX_CART_LINES);
+    const existingVariant = numberedVariantId(1);
+    const { gateway, ...service } = createService({
+      quantities: () => ({ cart: remoteCart({ lines }) }),
+      add: () => ({
+        cartLinesAdd: payload({
+          cart: remoteCart({
+            lines: [
+              remoteLine(numberedLineId(1), existingVariant, 2),
+              ...lines.slice(1),
+            ],
+          }),
+        }),
+      }),
+    });
+
+    const result = await service.add(CART_ID, existingVariant, 1);
+
+    expect(result.success).toBe(true);
+    expect(result.cart.lines).toHaveLength(MAX_CART_LINES);
+    expect(result.cart.lines[0].quantity).toBe(2);
+    expect(gateway.queries.map((item) => item.name)).toEqual(['quantities', 'add']);
   });
 });
 
@@ -511,6 +569,21 @@ describe('warnings de mutación', () => {
 });
 
 describe('disponibilidad real del ProductVariant en Cart', () => {
+  test('acepta ImageSource como GID de Image devuelto por Storefront', () => {
+    const line = remoteLine(LINE_A, VARIANT_A, 1);
+    line.merchandise.image.id = 'gid://shopify/ImageSource/real-storefront-image-1';
+    expect(mapShopifyCart(remoteCart({ lines: [line] })).lines[0].product.image.id)
+      .toBe(line.merchandise.image.id);
+  });
+
+  test('un Image ID no Shopify hace fallar el Cart completo', () => {
+    const line = remoteLine(LINE_A, VARIANT_A, 1);
+    line.merchandise.image.id = 'image-local-1';
+    expect(() => mapShopifyCart(remoteCart({ lines: [line] }))).toThrow(
+      'line.merchandise.image.id'
+    );
+  });
+
   test('availableForSale false no es comprable y bloquea checkout', () => {
     const availability = mapShopifyCartAvailability({
       availableForSale: false,
@@ -614,77 +687,48 @@ describe('disponibilidad real del ProductVariant en Cart', () => {
     expect(cart.canCheckout).toBe(true);
   });
 
-  test('una custom.kingbelt_primary_collection inválida degrada la línea y bloquea checkout', () => {
-    const expectUnavailable = (cart) => {
-      expect(cart.lines).toHaveLength(1);
-      expect(cart.lines[0]).toMatchObject({
-        id: LINE_A,
-        product: { title: SHOPIFY_UNAVAILABLE_LINE_TITLE, collection: 'KingBelt', href: '/' },
-      });
-      expect(cart.canCheckout).toBe(false);
-      expect(cart.lineErrors[0]).toMatchObject({ lineId: LINE_A, code: 'unavailable', severity: 'error' });
-      expect(JSON.stringify(cart)).not.toContain('kingbelt.primary_collection');
-      expect(JSON.stringify(cart)).not.toContain('custom.kingbelt_primary_collection');
-    };
-
-    expectUnavailable(mapShopifyCart(remoteCart({
+  test('una custom.kingbelt_primary_collection inválida hace fallar el Cart completo', () => {
+    const invalidLines = [
+    {
       lines: [remoteLine(LINE_A, VARIANT_A, 1, { primaryCollection: null })],
-    })));
-    expectUnavailable(mapShopifyCart(remoteCart({
+    }, {
       lines: [remoteLine(LINE_A, VARIANT_A, 1, { primaryCollection: { type: 'single_line_text_field', reference: PRIMARY_COLLECTION.reference } })],
-    })));
-    expectUnavailable(mapShopifyCart(remoteCart({
+    }, {
       lines: [remoteLine(LINE_A, VARIANT_A, 1, { primaryCollection: { type: 'collection_reference', reference: null } })],
-    })));
-    expectUnavailable(mapShopifyCart(remoteCart({
+    }, {
       lines: [remoteLine(LINE_A, VARIANT_A, 1, {
         primaryCollection: {
           type: 'collection_reference',
           reference: { __typename: 'Product', id: 'gid://shopify/Product/1', handle: 'sport', title: 'Sport' },
         },
       })],
-    })));
-    expectUnavailable(mapShopifyCart(remoteCart({
+    }, {
       lines: [remoteLine(LINE_A, VARIANT_A, 1, {
         primaryCollection: {
           type: 'collection_reference',
           reference: { ...PRIMARY_COLLECTION.reference, title: '' },
         },
       })],
-    })));
+    }];
+    invalidLines.forEach((input) => expect(() => mapShopifyCart(remoteCart(input))).toThrow());
   });
 
-  test('una línea sin merchandise se conserva como no disponible y bloquea checkout', () => {
-    const cart = mapShopifyCart(remoteCart({
+  test('una línea sin merchandise hace fallar el mapping completo', () => {
+    expect(() => mapShopifyCart(remoteCart({
       lines: [{
         id: LINE_A,
         quantity: 2,
         cost: { amountPerQuantity: money(), totalAmount: money('178.00') },
         merchandise: null,
       }],
-    }));
-    expect(cart.lines).toHaveLength(1);
-    expect(cart.lines[0]).toMatchObject({
-      id: LINE_A,
-      product: { title: SHOPIFY_UNAVAILABLE_LINE_TITLE, href: '/' },
-      quantity: 2,
-      availability: { status: 'unavailable' },
-    });
-    expect(cart.canCheckout).toBe(false);
-    expect(cart.lineErrors[0]).toMatchObject({ lineId: LINE_A, code: 'unavailable', severity: 'error' });
+    }))).toThrow('merchandise is missing');
   });
 
-  test('un producto malformado conserva la línea como no disponible', () => {
+  test('un producto malformado hace fallar el mapping completo', () => {
     const line = remoteLine(LINE_A, VARIANT_A, 1);
     line.merchandise.product.id = '';
-    const cart = mapShopifyCart(remoteCart({ lines: [line] }));
-    expect(cart.lines).toHaveLength(1);
-    expect(cart.lines[0]).toMatchObject({
-      id: LINE_A,
-      product: { title: SHOPIFY_UNAVAILABLE_LINE_TITLE },
-      availability: { status: 'unavailable' },
-    });
-    expect(cart.canCheckout).toBe(false);
+    expect(() => mapShopifyCart(remoteCart({ lines: [line] })))
+      .toThrow('line.merchandise.product.id');
   });
 
   test('una línea remota sin id utilizable hace fallar el mapping completo', () => {
@@ -698,7 +742,7 @@ describe('disponibilidad real del ProductVariant en Cart', () => {
           merchandise: null,
         },
       ],
-    }))).toThrow('Shopify cart line is missing a usable id.');
+    }))).toThrow('line.id');
   });
 
   test('un carrito truncado por paginación bloquea checkout', () => {
@@ -709,6 +753,20 @@ describe('disponibilidad real del ProductVariant en Cart', () => {
     expect(cart.lines).toHaveLength(1);
     expect(cart.canCheckout).toBe(false);
     expect(cart.globalError).toBe(SHOPIFY_CART_OVERFLOW_MESSAGE);
+  });
+
+  test('el máximo comercial de líneas no bloquea un Cart con exactamente 50', () => {
+    const cart = mapShopifyCart(remoteCart({ lines: remoteLines(MAX_CART_LINES) }));
+    expect(cart.lines).toHaveLength(MAX_CART_LINES);
+    expect(cart.canCheckout).toBe(true);
+    expect(cart.globalError).toBeUndefined();
+  });
+
+  test('un Cart remoto con más de 50 líneas bloquea checkout aunque no esté truncado', () => {
+    const cart = mapShopifyCart(remoteCart({ lines: remoteLines(MAX_CART_LINES + 1) }));
+    expect(cart.lines).toHaveLength(MAX_CART_LINES + 1);
+    expect(cart.canCheckout).toBe(false);
+    expect(cart.globalError).toBe(MAX_CART_LINES_MESSAGE);
   });
 
   test('un snapshot de cantidades truncado no se usa para detectar ajustes', () => {
@@ -725,6 +783,33 @@ describe('disponibilidad real del ProductVariant en Cart', () => {
         pageInfo: { hasNextPage: true },
       },
     })).toBeUndefined();
+  });
+
+  test('el snapshot impide una variante nueva al llegar a 50 líneas, no una ya presente', () => {
+    const atLimit = {
+      lines: {
+        nodes: remoteLines(MAX_CART_LINES).map((line) => ({
+          id: line.id,
+          quantity: line.quantity,
+          merchandise: { id: line.merchandise.id },
+        })),
+        pageInfo: { hasNextPage: false },
+      },
+    };
+    expect(wouldExceedShopifyCartLineLimit(atLimit, numberedVariantId(MAX_CART_LINES + 1))).toBe(true);
+    expect(wouldExceedShopifyCartLineLimit(atLimit, numberedVariantId(1))).toBe(false);
+    expect(wouldExceedShopifyCartLineLimit({
+      lines: {
+        nodes: [{ id: LINE_A, quantity: 1, merchandise: { id: VARIANT_A } }],
+        pageInfo: { hasNextPage: false },
+      },
+    }, VARIANT_C)).toBe(false);
+    expect(wouldExceedShopifyCartLineLimit({
+      lines: {
+        nodes: [{ id: LINE_A, quantity: 1, merchandise: { id: VARIANT_A } }],
+        pageInfo: { hasNextPage: true },
+      },
+    }, VARIANT_C)).toBe(true);
   });
 });
 
@@ -743,32 +828,12 @@ describe('quantityRule autoritativa', () => {
     });
   });
 
-  test('respeta mínimo, incremento y máximo reales', () => {
-    const stepped = mapShopifyCartAvailability({
+  test('rechaza reglas que el contrato 1/1 no soporta', () => {
+    expect(() => mapShopifyCartAvailability({
       availableForSale: true,
       currentlyNotInStock: false,
       quantityRule: { minimum: 2, increment: 2, maximum: 10 },
-    });
-    expect(stepped).toMatchObject({
-      minimum: 2,
-      increment: 2,
-      maxQuantity: 10,
-      limitReason: 'quantity_rule',
-    });
-    expect(isQuantityAllowed(2, stepped)).toBe(true);
-    expect(isQuantityAllowed(4, stepped)).toBe(true);
-    expect(isQuantityAllowed(10, stepped)).toBe(true);
-    expect(isQuantityAllowed(1, stepped)).toBe(false);
-    expect(isQuantityAllowed(3, stepped)).toBe(false);
-
-    const triple = mapShopifyCartAvailability({
-      availableForSale: true,
-      currentlyNotInStock: false,
-      quantityRule: { minimum: 3, increment: 3, maximum: 12 },
-    });
-    expect(triple).toMatchObject({ minimum: 3, increment: 3, maxQuantity: 12, limitReason: 'quantity_rule' });
-    expect(isQuantityAllowed(6, triple)).toBe(true);
-    expect(isQuantityAllowed(4, triple)).toBe(false);
+    })).toThrow('minimum=1 and increment=1');
   });
 
   test('un máximo superior al límite técnico no se presenta como stock', () => {
@@ -783,10 +848,10 @@ describe('quantityRule autoritativa', () => {
     });
   });
 
-  test('una cantidad fuera de quantityRule bloquea checkout', () => {
+  test('un máximo de quantityRule válido bloquea cantidades superiores', () => {
     const cart = mapShopifyCart(remoteCart({
-      lines: [remoteLine(LINE_A, VARIANT_A, 5, {
-        quantityRule: { minimum: 2, increment: 2, maximum: 10 },
+      lines: [remoteLine(LINE_A, VARIANT_A, 6, {
+        quantityRule: { minimum: 1, increment: 1, maximum: 5 },
       })],
     }));
     expect(cart.canCheckout).toBe(false);
@@ -877,7 +942,7 @@ describe('checkout preflight contra el Cart remoto', () => {
     expect(gateway.queries.map((item) => item.name)).toEqual(['get']);
   });
 
-  test('una línea unavailable bloquea checkout', async () => {
+  test('una variante no disponible bloquea la preparación de checkout', async () => {
     const result = await createShopifyCartService(createGateway({
       get: () => ({
         cart: remoteCart({
@@ -889,8 +954,8 @@ describe('checkout preflight contra el Cart remoto', () => {
     expect(result.cart.canCheckout).toBe(false);
   });
 
-  test('una línea con merchandise nulo bloquea checkout y no expone checkoutUrl', async () => {
-    const result = await createShopifyCartService(createGateway({
+  test('una línea con merchandise nulo hace fallar cerrado checkout', async () => {
+    const result = createShopifyCartService(createGateway({
       get: () => ({
         cart: remoteCart({
           lines: [{
@@ -902,14 +967,11 @@ describe('checkout preflight contra el Cart remoto', () => {
         }),
       }),
     }), checkoutHosts).checkout(CART_ID);
-    expect(result.status).toBe('blocked');
-    expect(result.url).toBeUndefined();
-    expect(result.cart.lines[0].availability.status).toBe('unavailable');
-    expect(result.cart.canCheckout).toBe(false);
+    await expect(result).rejects.toThrow('merchandise is missing');
   });
 
-  test('una cantidad fuera de quantityRule bloquea checkout', async () => {
-    const result = await createShopifyCartService(createGateway({
+  test('una quantityRule no soportada hace fallar la preparación de checkout', async () => {
+    const result = createShopifyCartService(createGateway({
       get: () => ({
         cart: remoteCart({
           lines: [remoteLine(LINE_A, VARIANT_A, 5, {
@@ -918,7 +980,7 @@ describe('checkout preflight contra el Cart remoto', () => {
         }),
       }),
     }), checkoutHosts).checkout(CART_ID);
-    expect(result.status).toBe('blocked');
+    await expect(result).rejects.toThrow('minimum=1 and increment=1');
   });
 
   test('un warning ya resuelto no impide checkout si el cart es comprable', async () => {
@@ -949,6 +1011,15 @@ describe('checkout preflight contra el Cart remoto', () => {
       }),
     }), checkoutHosts).checkout(CART_ID);
     expect(result.status).not.toBe('ready');
+    expect(result.url).toBeUndefined();
+  });
+
+  test('un Cart remoto con más de 50 líneas queda blocked', async () => {
+    const result = await createShopifyCartService(createGateway({
+      get: () => ({ cart: remoteCart({ lines: remoteLines(MAX_CART_LINES + 1) }) }),
+    }), checkoutHosts).checkout(CART_ID);
+    expect(result.status).toBe('blocked');
+    expect(result.cart.canCheckout).toBe(false);
     expect(result.url).toBeUndefined();
   });
 

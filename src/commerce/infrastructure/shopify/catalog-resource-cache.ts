@@ -21,12 +21,12 @@ export const isNonTransientShopifyError = (error: unknown): boolean => {
   ) {
     return true;
   }
-  if (!(error instanceof ShopifyStorefrontRequestError)) return false;
-  if (error.kind === 'graphql') return true;
-  return error.kind === 'http'
-    && error.status !== undefined
-    && error.status < 500
-    && error.status !== 429;
+  if (!(error instanceof ShopifyStorefrontRequestError)) return true;
+  if (error.kind === 'network' || error.kind === 'timeout') return false;
+  if (error.kind === 'http') {
+    return error.status !== 429 && (error.status === undefined || error.status < 500);
+  }
+  return true;
 };
 
 export const createResourceCache = (

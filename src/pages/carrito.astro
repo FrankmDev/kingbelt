@@ -5,8 +5,10 @@ import Header from '../components/layout/Header.astro';
 import Breadcrumbs from '../components/ui/Breadcrumbs.astro';
 import Button from '../components/ui/Button.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { formatMoney, zeroMoney } from '../commerce/domain/money';
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href;
+const emptySubtotal = formatMoney(zeroMoney());
 
 const cartSchema = {
   '@context': 'https://schema.org',
@@ -70,7 +72,7 @@ const cartSchema = {
             </div>
             <div class="cart-page__summary-row cart-page__summary-row--total">
               <dt class="kb-meta-label text-king-muted">Subtotal</dt>
-              <dd class="cart-page__summary-total font-display" data-cart-page-subtotal>0 €</dd>
+              <dd class="cart-page__summary-total font-display" data-cart-page-subtotal>{emptySubtotal}</dd>
             </div>
           </dl>
 

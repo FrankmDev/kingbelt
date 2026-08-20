@@ -3,6 +3,7 @@ import { getSafeCheckoutUrl } from '../../application/checkout-redirect';
 import type { CheckoutResult } from '../../application/checkout';
 import { emptyCart } from '../../application/cart-service';
 import type { Cart, CartOperationResult } from '../../domain/cart';
+import { MAX_CART_LINES_MESSAGE } from '../../domain/cart';
 import { isTechnicalLineQuantity } from '../../domain/inventory';
 import {
   SHOPIFY_CART_IN_CONTEXT_DIRECTIVE,
@@ -18,6 +19,7 @@ import {
   mapShopifyCart,
   previousLinesFromQuantitySnapshot,
   publicCartOperationError,
+  wouldExceedShopifyCartLineLimit,
   type ShopifyCart,
   type ShopifyCartPayload,
   type ShopifyCartQuantitySnapshot,
@@ -284,6 +286,19 @@ export const createShopifyCartService = (
       const previous = cartId ? await readLineQuantities(cartId) : undefined;
       if (!cartId || !previous?.cart) {
         return createCartWithLine(merchandiseId, quantity);
+      }
+
+      if (wouldExceedShopifyCartLineLimit(previous.cart, merchandiseId)) {
+        const current = await readRemoteCart(cartId);
+        return withCartId({
+          success: false,
+          cart: current ? mapShopifyCart(current) : emptyCart(),
+          error: {
+            code: 'validation',
+            message: MAX_CART_LINES_MESSAGE,
+            field: 'variant',
+          },
+        }, cartId);
       }
 
       const response = await gateway.graphql<{ cartLinesAdd: ShopifyCartPayload }, CartLinesAddVariables>(

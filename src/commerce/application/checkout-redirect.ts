@@ -37,7 +37,7 @@ export const normalizeAllowedCheckoutHosts = (
 export const buildShopifyCheckoutHosts = (storeDomain: string): readonly string[] => {
   const normalizedStore = normalizeCheckoutHost(storeDomain);
   return normalizeAllowedCheckoutHosts(
-    [normalizedStore, 'checkout.shopify.com'].filter((host): host is string => Boolean(host))
+    [normalizedStore].filter((host): host is string => Boolean(host))
   );
 };
 

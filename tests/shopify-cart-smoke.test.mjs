@@ -35,7 +35,7 @@ const COOKIE_PAIR = `${SESSION_COOKIE_NAME}=${COOKIE_VALUE}`;
 const SET_COOKIE = `${COOKIE_PAIR}; Path=/; HttpOnly; Secure; SameSite=Lax`;
 const CHECKOUT_HOST = 'kingbelt-test.myshopify.com';
 const CHECKOUT_URL = `https://${CHECKOUT_HOST}/checkouts/cn/secret-session`;
-const ALLOWED_HOSTS = [CHECKOUT_HOST, 'checkout.shopify.com'];
+const ALLOWED_HOSTS = [CHECKOUT_HOST];
 
 const validEnv = (overrides = {}) => ({
   COMMERCE_SOURCE: 'shopify',

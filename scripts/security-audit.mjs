@@ -1,6 +1,7 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { basename, join, relative, resolve, sep } from 'node:path';
+import { findCredentialAssignment } from './security-patterns.mjs';
 
 const root = resolve(import.meta.dirname, '..');
 const includeHistory = process.argv.includes('--history');
@@ -40,9 +41,6 @@ const tokenRules = [
   ['google_api_key', /\bAIza[A-Za-z0-9_-]{30,}\b/],
 ];
 
-const genericAssignment =
-  /(?:api[_-]?key|access[_-]?token|auth[_-]?token|client[_-]?secret|private[_-]?token|password)\s*[:=]\s*["']?([A-Za-z0-9_./+=-]{16,})/i;
-const placeholderPattern = /^(?:example|placeholder|replace|redacted|changeme|not-a-real|test)[-_]/i;
 const publicPrivateName = /\bPUBLIC_[A-Z0-9_]*(?:PRIVATE|SECRET|PASSWORD|ADMIN)[A-Z0-9_]*\b/;
 const privateBrowserName = /\b(?:SHOPIFY_[A-Z0-9_]*PRIVATE[A-Z0-9_]*|ADMIN_API_[A-Z0-9_]*)\b/;
 const clientPathPattern = /^src\/(?:components|layouts|pages\/(?!api\/)|scripts|shared\/browser)\//;
@@ -57,8 +55,7 @@ const scanText = (text, path, { generic = true } = {}) => {
     if (pattern.test(text)) report(path, rule);
   });
   if (generic) {
-    const match = text.match(genericAssignment);
-    if (match && !placeholderPattern.test(match[1])) report(path, 'credential_assignment');
+    if (findCredentialAssignment(text)) report(path, 'credential_assignment');
   }
   if (publicPrivateName.test(text)) report(path, 'private_name_with_public_prefix');
 };
@@ -128,8 +125,7 @@ if (includeHistory) {
   tokenRules.forEach(([rule, pattern]) => {
     if (pattern.test(history)) report('[git history]', rule);
   });
-  const assignment = history.match(genericAssignment);
-  if (assignment && !placeholderPattern.test(assignment[1])) {
+  if (findCredentialAssignment(history)) {
     report('[git history]', 'credential_assignment');
   }
 }

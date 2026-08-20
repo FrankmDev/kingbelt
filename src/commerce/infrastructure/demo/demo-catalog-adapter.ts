@@ -94,7 +94,7 @@ export const createDemoCatalogAdapter = (
         .filter(
           (candidate) =>
             candidate.handle !== product.handle &&
-            candidate.collectionIds.some((collectionId) => product.collectionIds.includes(collectionId))
+            candidate.collectionIds.includes(product.primaryCollectionId)
         )
         .slice(0, limit)
         .flatMap((candidate) => {

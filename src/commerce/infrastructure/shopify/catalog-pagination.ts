@@ -1,5 +1,5 @@
 export const SHOPIFY_PAGE_SIZE = 250;
-const MAX_CONNECTION_PAGES = 40;
+export const SHOPIFY_MAX_CONNECTION_PAGES = 40;
 
 export interface ShopifyPageInfo {
   hasNextPage: boolean;
@@ -52,7 +52,7 @@ export const collectConnectionPages = async <T>(
   let pages = 1;
 
   while (pageInfo.hasNextPage) {
-    if (pages >= MAX_CONNECTION_PAGES) {
+    if (pages >= SHOPIFY_MAX_CONNECTION_PAGES) {
       throw new Error(`Shopify superó el límite de páginas de ${label}.`);
     }
     const cursor = requireNextCursor(pageInfo, label);
@@ -87,7 +87,7 @@ export const collectLimitedConnectionPages = async <T>(
   let pages = 1;
 
   while (nodes.length < limit && pageInfo.hasNextPage) {
-    if (pages >= MAX_CONNECTION_PAGES) {
+    if (pages >= SHOPIFY_MAX_CONNECTION_PAGES) {
       throw new Error(`Shopify superó el límite de páginas de ${label}.`);
     }
     const cursor = requireNextCursor(pageInfo, label);

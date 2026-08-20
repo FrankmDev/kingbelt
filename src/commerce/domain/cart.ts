@@ -47,6 +47,8 @@ export interface CartLineError {
 }
 
 export const MAX_CART_LINES = commerceRules.cart.maximumDistinctLines;
+export const MAX_CART_LINES_MESSAGE =
+  `El carrito admite un máximo de ${MAX_CART_LINES} productos distintos.`;
 
 export type CartStatus =
   | 'idle'

@@ -14,18 +14,21 @@ import {
 import {
   FULL_PRODUCT_FIELDS,
   PRODUCT_SUMMARY_FIELDS,
+  SHOPIFY_MAX_CONNECTION_PAGES,
   fetchShopifyCatalog,
 } from '../src/commerce/infrastructure/shopify/catalog-query.ts';
 import { createShopifyCatalogQueries } from '../src/commerce/infrastructure/shopify/catalog-runtime-query.ts';
 import {
   SHOPIFY_COLOR_GALLERIES_METAFIELD,
   SHOPIFY_COLOR_GALLERIES_METAFIELD_IDENTIFIER,
+  SHOPIFY_COLOR_GALLERY_METAOBJECT_TYPE,
   SHOPIFY_IN_CONTEXT_DIRECTIVE,
   SHOPIFY_MARKET_CONTEXT,
   SHOPIFY_PRIMARY_COLLECTION_METAFIELD,
   SHOPIFY_PRIMARY_COLLECTION_METAFIELD_IDENTIFIER,
   ShopifyConfigurationError,
 } from '../src/commerce/infrastructure/shopify/config.ts';
+import { ShopifyStorefrontRequestError } from '../src/commerce/infrastructure/shopify/storefront-gateway.ts';
 import {
   COLORS,
   assignProductCollections,
@@ -147,34 +150,29 @@ describe('catálogo Shopify', () => {
   });
 
   test('el runtime usa las tres imágenes de custom.kingbelt_color_galleries cuando llegan', () => {
-    const product = mapShopifyProduct(validPayload().products[0], HOSTS, { requireStructuredMetafields: false });
+    const product = mapShopifyProduct(validPayload().products[0], HOSTS);
     expect(product.mediaGroups.every((group) => group.imageIds.length === COLOR_GALLERY_IMAGE_COUNT)).toBe(true);
     expect(product.mediaGroups[0].imageIds).toEqual(colorImages('Cuero').map((image) => image.id));
   });
 
-  test('el runtime usa las tres imágenes de la galería aunque la variante no use la portada', () => {
+  test('el runtime falla si la imagen de la variante no es la portada de su galería', () => {
     const payload = validPayload();
     payload.products[0].variants.nodes[0].image = colorImages('Cuero')[1];
-    const product = mapShopifyProduct(payload.products[0], HOSTS, { requireStructuredMetafields: false });
-    expect(product.mediaGroups[0].imageIds).toEqual(colorImages('Cuero').map((image) => image.id));
-    expect(product.variants[0].imageId).toBe(colorImages('Cuero')[0].id);
+    expect(() => mapShopifyProduct(payload.products[0], HOSTS))
+      .toThrow('la imagen de la variante no coincide con la portada de su galería de color');
   });
 
-  test('el runtime aplica galerías completas y cae a la imagen de variante si un color no tiene images', () => {
+  test('el runtime falla si un color no tiene images en el metaobject', () => {
     const payload = validPayload();
     const negroGallery = galleriesOf(payload).references.nodes.find((item) =>
       galleryField(item, 'color_value').value === 'Negro'
     );
     negroGallery.fields = negroGallery.fields.filter((field) => field.key !== 'images');
-    const product = mapShopifyProduct(payload.products[0], HOSTS, { requireStructuredMetafields: false });
-    expect(product.mediaGroups.map((group) => group.imageIds)).toEqual([
-      colorImages('Cuero').map((item) => item.id),
-      colorImages('Marrón').map((item) => item.id),
-      [colorImages('Negro')[0].id],
-    ]);
+    expect(() => mapShopifyProduct(payload.products[0], HOSTS))
+      .toThrow('falta el campo list.file_reference');
   });
 
-  test('el runtime no importa galerías de otro producto y usa la familia de la portada de variante', () => {
+  test('el runtime no infiere galerías por filename si las referencias no coinciden con la portada', () => {
     const payload = validPayload();
     payload.products[0].images.nodes.forEach((item) => {
       const stem = item.id.replace('gid://shopify/ProductImage/', '');
@@ -186,42 +184,26 @@ describe('catálogo Shopify', () => {
         mediaImage(image(`ajena-${galleryIndex}-${sequence}`, `ajeno-${galleryIndex}-${sequence}.jpg`))
       );
     });
-    const product = mapShopifyProduct(payload.products[0], HOSTS, { requireStructuredMetafields: false });
-    expect(product.images.some((item) => item.id.includes('ajena'))).toBe(false);
-    expect(product.mediaGroups.map((group) => group.imageIds)).toEqual([
-      colorImages('Cuero').map((item) => item.id),
-      colorImages('Marrón').map((item) => item.id),
-      colorImages('Negro').map((item) => item.id),
-    ]);
-    expect(product.primaryImageId).toBe(colorImages('Cuero')[0].id);
+    expect(() => mapShopifyProduct(payload.products[0], HOSTS))
+      .toThrow('la imagen de la variante no coincide con la portada de su galería de color');
   });
 
-  test('el runtime sirve un producto con Color sin color_galleries usando media nativa', () => {
+  test('el runtime también falla si un producto con Color no tiene color_galleries', () => {
     const payload = validPayload();
     payload.products[0].metafields = payload.products[0].metafields.filter((item) =>
       item?.key !== SHOPIFY_COLOR_GALLERIES_METAFIELD.key
     );
     expectMappingError(payload, `metafields.${SHOPIFY_COLOR_GALLERIES_METAFIELD_IDENTIFIER}`);
-    const product = mapShopifyProduct(payload.products[0], HOSTS, { requireStructuredMetafields: false });
-    expect(product.mediaGroups.map((group) => group.optionValueId)).toEqual(
-      product.options[0].values.map((value) => value.id)
-    );
-    expect(product.mediaGroups.map((group) => group.imageIds)).toEqual([
-      [colorImages('Cuero')[0].id],
-      [colorImages('Marrón')[0].id],
-      [colorImages('Negro')[0].id],
-    ]);
-    expect(product.primaryImageId).toBe(colorImages('Cuero')[0].id);
-    expect(product.variants[0].imageId).toBe(colorImages('Cuero')[0].id);
-    expect(product.variants.every((variant) => Boolean(variant.imageId))).toBe(true);
+    expect(() => mapShopifyProduct(payload.products[0], HOSTS))
+      .toThrow(`metafields.${SHOPIFY_COLOR_GALLERIES_METAFIELD_IDENTIFIER}`);
   });
 
-  test('el runtime sigue fallando si color_galleries llega con tipo incorrecto', () => {
+  test('el runtime también falla si color_galleries llega con tipo incorrecto', () => {
     const payload = validPayload();
     payload.products[0].metafields = payload.products[0].metafields.map((item) =>
       item?.key === SHOPIFY_COLOR_GALLERIES_METAFIELD.key ? { ...item, type: 'single_line_text_field' } : item
     );
-    expect(() => mapShopifyProduct(payload.products[0], HOSTS, { requireStructuredMetafields: false }))
+    expect(() => mapShopifyProduct(payload.products[0], HOSTS))
       .toThrow('se esperaba list.metaobject_reference');
   });
 
@@ -237,6 +219,48 @@ describe('catálogo Shopify', () => {
       expect(error).toBeInstanceOf(CatalogValidationError);
       expect(error.issues.some((issue) => issue.code === 'unsupported_currency')).toBe(true);
     }
+  });
+
+  test('un compareAtPrice presente no se omite si contradice el precio o la moneda', () => {
+    const notHigher = validPayload();
+    notHigher.products[0].variants.nodes[0].compareAtPrice = {
+      amount: '59.90',
+      currencyCode: 'EUR',
+    };
+    expectMappingError(notHigher, 'compareAtPrice.amount');
+
+    const wrongCurrency = validPayload();
+    wrongCurrency.products[0].variants.nodes[0].compareAtPrice = {
+      amount: '69.90',
+      currencyCode: 'USD',
+    };
+    expectMappingError(wrongCurrency, 'compareAtPrice.currencyCode');
+  });
+
+  test('rechaza IDs de Image que no sean GID Shopify', () => {
+    const payload = validPayload();
+    payload.products[0].images.nodes[0].id = 'image-local-1';
+    expectMappingError(payload, 'se esperaba un GID Shopify de imagen');
+  });
+
+  test('acepta ImageSource, el recurso real de Image en referencias MediaImage', () => {
+    const payload = validPayload();
+    const referencedImage = galleryImagesOf(payload).references.nodes[0].image;
+    const previousId = referencedImage.id;
+    const imageSourceId = 'gid://shopify/ImageSource/real-storefront-image-1';
+    galleryImagesOf(payload).references.nodes[0].image = { ...referencedImage, id: imageSourceId };
+    const product = mapShopifyCatalog(payload, HOSTS).products[0];
+
+    expect(product.mediaGroups[0].imageIds[0]).toBe(previousId);
+    expect(product.images.filter((image) => image.url === referencedImage.url)).toHaveLength(1);
+    expect(product.images.some((image) => image.id === imageSourceId)).toBe(false);
+  });
+
+  test('un width_mm presente pero inválido falla en vez de omitir la especificación', () => {
+    const payload = validPayload();
+    payload.products[0].metafields.find((item) => item?.key === 'width_mm').value = '35.5';
+    expectMappingError(payload, 'width_mm.value');
+    expectMappingError(payload, 'entero positivo');
   });
 
   test('un metafield color_galleries vacío falla', () => {
@@ -267,6 +291,12 @@ describe('catálogo Shopify', () => {
       image: image('cuero-1'),
     };
     expectMappingError(payload, 'la referencia no es un metaobject de galería publicado');
+  });
+
+  test('un metaobject de otro type falla aunque sus fields coincidan', () => {
+    const payload = validPayload();
+    galleriesOf(payload).references.nodes[0].type = 'otra_definicion';
+    expectMappingError(payload, `se esperaba ${SHOPIFY_COLOR_GALLERY_METAOBJECT_TYPE}`);
   });
 
   test('falla si falta la galería de un color', () => {
@@ -424,7 +454,7 @@ describe('catálogo Shopify', () => {
 
   test('acepta el identificador real del tipo de metaobject configurado en Shopify', () => {
     const payload = validPayload();
-    galleriesOf(payload).references.nodes[0].type = 'kingbelt_color_gallery';
+    galleriesOf(payload).references.nodes[0].type = SHOPIFY_COLOR_GALLERY_METAOBJECT_TYPE;
     expect(mapShopifyCatalog(payload, HOSTS).products[0].mediaGroups).toHaveLength(3);
   });
 
@@ -642,7 +672,7 @@ describe('catálogo Shopify', () => {
     const adapter = createShopifyCatalogAdapter({
       async getProductHandles() {
         loads += 1;
-        if (loads > 1) throw new Error('storefront_down');
+        if (loads > 1) throw new ShopifyStorefrontRequestError('network', 'storefront_down');
         return catalog.products.map((product) => product.handle);
       },
       async getProductByHandle() { return catalog.products[0]; },
@@ -748,6 +778,29 @@ describe('catálogo Shopify', () => {
     expect(calls[0].query).toContain('... on Collection { id handle title }');
     expect(calls[0].query).toContain(SHOPIFY_IN_CONTEXT_DIRECTIVE);
     expect(calls[1].query).toContain(SHOPIFY_IN_CONTEXT_DIRECTIVE);
+  });
+
+  test('el catálogo completo falla cerrado al superar el máximo explícito de páginas', async () => {
+    let calls = 0;
+    const gateway = {
+      async graphql() {
+        calls += 1;
+        return {
+          products: {
+            nodes: [],
+            pageInfo: { hasNextPage: true, endCursor: `product-${calls}` },
+          },
+          collections: {
+            nodes: [],
+            pageInfo: { hasNextPage: true, endCursor: `collection-${calls}` },
+          },
+        };
+      },
+    };
+    await expect(fetchShopifyCatalog(gateway)).rejects.toThrow(
+      'límite de páginas del catálogo completo'
+    );
+    expect(calls).toBe(SHOPIFY_MAX_CONNECTION_PAGES);
   });
 
   test('completa variantes, imágenes y colecciones de un producto en paralelo', async () => {
@@ -983,8 +1036,6 @@ describe('colección principal Shopify', () => {
     expect(() => mapShopifyCatalog(payload, HOSTS)).toThrow(missingPrimaryCollection);
     expect(() => mapShopifyProduct(payload.products[0], HOSTS))
       .toThrow(missingPrimaryCollection);
-    expect(() => mapShopifyProduct(payload.products[0], HOSTS, { requireStructuredMetafields: false }))
-      .toThrow(missingPrimaryCollection);
     expect(() => mapShopifyProductSummary(productSummaryNode(payload.products[0]), HOSTS))
       .toThrow(missingPrimaryCollection);
   });
@@ -995,12 +1046,11 @@ describe('colección principal Shopify', () => {
       [novedadesCollection, casualCollection],
       casualCollection
     ));
-    expect(() => mapShopifyProduct(payload.products[0], HOSTS, { requireStructuredMetafields: false }))
+    expect(() => mapShopifyProduct(payload.products[0], HOSTS))
       .toThrow(missingPrimaryCollection);
     expect(() => mapShopifyProductSummary(
       productSummaryNode(payload.products[0]),
-      HOSTS,
-      { requireStructuredMetafields: false }
+      HOSTS
     )).toThrow(missingPrimaryCollection);
   });
 
@@ -1154,6 +1204,28 @@ describe('colección principal Shopify', () => {
     });
   });
 
+  test('getRelatedProducts solo busca en la colección principal, no en las secundarias', async () => {
+    const sport = demoCollections.find((collection) => collection.handle === 'sport');
+    const casual = demoCollections.find((collection) => collection.handle === 'casual');
+    const sportProducts = demoProducts.filter((product) => product.collectionIds.includes(sport.id));
+    const casualOnly = demoProducts.find(
+      (product) =>
+        product.primaryCollectionId === casual.id && !product.collectionIds.includes(sport.id)
+    );
+    const productA = {
+      ...sportProducts[0],
+      collectionIds: [...sportProducts[0].collectionIds, casual.id],
+    };
+    const queries = createShopifyCatalogSnapshotQueries({
+      products: [productA, casualOnly, sportProducts[1]],
+      collections: demoCollections,
+    });
+    const related = await queries.getRelatedProducts(productA, 8);
+    expect(related.map((item) => item.handle)).toContain(sportProducts[1].handle);
+    expect(related.map((item) => item.handle)).not.toContain(casualOnly.handle);
+    expect(related.every((item) => item.primaryCollection.handle === 'sport')).toBe(true);
+  });
+
   test('las queries snapshot no omiten un Product sin su colección principal', async () => {
     const catalog = mapShopifyCatalog(validPayload(), HOSTS);
     const orphan = {
@@ -1188,7 +1260,7 @@ describe('colección principal Shopify', () => {
     expect(PRODUCT_SUMMARY_FIELDS).toContain('namespace: "kingbelt", key: "model_reference"');
     expect(PRODUCT_SUMMARY_FIELDS).toContain('reference');
     expect(PRODUCT_SUMMARY_FIELDS).toContain('... on Collection { id handle title }');
-    expect(PRODUCT_SUMMARY_FIELDS).toMatch(/collections\s*\(/);
+    expect(PRODUCT_SUMMARY_FIELDS).not.toMatch(/collections\s*\(/);
   });
 });
 

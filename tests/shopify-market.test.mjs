@@ -18,7 +18,7 @@ import {
 } from './fixtures/shopify-catalog-payload.mjs';
 
 const root = resolve(import.meta.dir, '..');
-const checkoutHosts = ['kingbelt.myshopify.com', 'checkout.shopify.com'];
+const checkoutHosts = ['kingbelt.myshopify.com'];
 
 describe('contexto operativo de mercado Shopify', () => {
   test('fija España, español y EUR en una sola definición versionada', () => {

@@ -13,6 +13,7 @@ import {
   PRODUCT_HANDLE_FIELDS,
   PRODUCT_SUMMARY_FIELDS,
   SHOPIFY_PAGE_SIZE,
+  SHOPIFY_MAX_CONNECTION_PAGES,
   collectConnectionPages,
   collectLimitedConnectionPages,
   completeProductConnections,
@@ -30,8 +31,6 @@ import {
 import type { ShopifyStorefrontGateway } from './storefront-gateway';
 
 type GatewaySource = ShopifyStorefrontGateway | (() => ShopifyStorefrontGateway);
-
-const RUNTIME_PRODUCT_MAP = { requireStructuredMetafields: false } as const;
 
 interface HandleNode {
   handle: string;
@@ -153,7 +152,7 @@ export const createShopifyCatalogQueries = (
   const getGateway = createGatewayAccessor(gateway);
 
   const mapSummaries = (nodes: readonly ShopifyProductSummaryNode[]): ProductSummary[] =>
-    nodes.map((node) => mapShopifyProductSummary(node, allowedRemoteImageHosts, RUNTIME_PRODUCT_MAP));
+    nodes.map((node) => mapShopifyProductSummary(node, allowedRemoteImageHosts));
 
   const loadProductSummaries = async (limit?: number): Promise<ProductSummary[]> =>
     mapSummaries(
@@ -241,7 +240,7 @@ export const createShopifyCatalogQueries = (
       >(PRODUCT_BY_HANDLE_QUERY, withShopifyInContextVariables({ handle }));
       if (!data.product) return undefined;
       const complete = await completeProductConnections(gatewayImpl, data.product);
-      return mapShopifyProduct(complete, allowedRemoteImageHosts, RUNTIME_PRODUCT_MAP);
+      return mapShopifyProduct(complete, allowedRemoteImageHosts);
     },
 
     async getProductSummaries() {
@@ -253,15 +252,21 @@ export const createShopifyCatalogQueries = (
     },
 
     async getRelatedProducts(product, limit) {
-      const collectionIds = [...new Set(product.collectionIds)];
-      if (!collectionIds.length) return [];
+      const collectionId = product.primaryCollectionId;
+      if (!collectionId) return [];
+      const collectionIds = [collectionId];
 
       const gatewayImpl = getGateway();
       const pageSize = shopifyPageSize(Math.min(Math.max(limit + 1, 1), SHOPIFY_PAGE_SIZE));
       const collected = new Map<string, ProductSummary>();
       let pending = collectionIds.map((id) => ({ id, after: null as string | null }));
+      let pages = 0;
 
       while (collected.size < limit && pending.length) {
+        if (pages >= SHOPIFY_MAX_CONNECTION_PAGES) {
+          throw new Error('Shopify superó el límite de páginas de productos relacionados.');
+        }
+        pages += 1;
         const query = relatedCollectionsQuery(pending.length);
         const variables: Record<string, string | number | null> = { first: pageSize };
         pending.forEach((item, index) => {

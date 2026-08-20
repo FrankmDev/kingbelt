@@ -5,6 +5,7 @@ import { join, resolve } from 'node:path';
 import {
   handleShopifyCatalogRebuild,
   isVercelDeployHookUrl,
+  readLimitedWebhookBody,
   verifyShopifyWebhookHmac,
 } from '../src/pages/api/shopify-catalog-rebuild.ts';
 
@@ -101,6 +102,36 @@ describe('rebuild de catálogo por webhook', () => {
     expect(wrongMethod.status).toBe(405);
     expect(unavailable.status).toBe(503);
     expect(requests).toHaveLength(0);
+  });
+
+  test('limita el raw body mientras lee el stream, incluso sin Content-Length', async () => {
+    const oversized = new Request('https://kingbelt.test/api/shopify-catalog-rebuild', {
+      method: 'POST',
+      body: new ReadableStream({
+        start(controller) {
+          controller.enqueue(new Uint8Array(9).fill(97));
+          controller.close();
+        },
+      }),
+    });
+    expect(await readLimitedWebhookBody(oversized, 8)).toEqual({
+      ok: false,
+      status: 413,
+      error: 'payload_too_large',
+    });
+  });
+
+  test('rechaza Content-Length malformado antes de materializar el raw body', async () => {
+    const malformed = new Request('https://kingbelt.test/api/shopify-catalog-rebuild', {
+      method: 'POST',
+      headers: { 'Content-Length': '1x' },
+      body: '{}',
+    });
+    expect(await readLimitedWebhookBody(malformed)).toEqual({
+      ok: false,
+      status: 400,
+      error: 'invalid_body',
+    });
   });
 
   test('el example documenta el secreto y el hook como secretos de servidor', () => {

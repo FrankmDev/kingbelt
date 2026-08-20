@@ -30,6 +30,7 @@ import type {
 import {
   SHOPIFY_COLOR_GALLERIES_METAFIELD,
   SHOPIFY_COLOR_GALLERIES_METAFIELD_IDENTIFIER,
+  SHOPIFY_COLOR_GALLERY_METAOBJECT_TYPE,
   SHOPIFY_PRIMARY_COLLECTION_METAFIELD,
   SHOPIFY_PRIMARY_COLLECTION_METAFIELD_IDENTIFIER,
   SHOPIFY_SUPPORTED_CURRENCIES,
@@ -38,10 +39,6 @@ import {
 export interface ShopifyCatalog {
   products: Product[];
   collections: Collection[];
-}
-
-export interface ShopifyProductMapOptions {
-  requireStructuredMetafields?: boolean;
 }
 
 export class ShopifyCatalogMappingError extends Error {
@@ -69,12 +66,37 @@ const optionalText = (value: string | null | undefined): string | undefined => {
   return normalized || undefined;
 };
 
+const requiredShopifyGid = (value: string | null | undefined, resource: string, path: string): string => {
+  const id = requiredText(value, path);
+  if (!new RegExp(`^gid://shopify/${resource}/[^/?#\\s]+$`).test(id)) {
+    fail(path, `se esperaba un GID Shopify de ${resource}.`);
+  }
+  return id;
+};
+
+const requiredShopifyImageGid = (value: string | null | undefined, path: string): string => {
+  const id = requiredText(value, path);
+  if (!/^gid:\/\/shopify\/(?:ProductImage|MediaImage|ImageSource)\/[^/?#\s]+$/.test(id)) {
+    const resource = /^gid:\/\/shopify\/([^/?#\s]+)\//.exec(id)?.[1] ?? 'desconocido';
+    fail(path, `se esperaba un GID Shopify de imagen; se recibió el recurso ${resource}.`);
+  }
+  return id;
+};
+
+const requiredHandle = (value: string | null | undefined, path: string): string => {
+  const handle = requiredText(value, path);
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(handle)) {
+    fail(path, 'el handle no tiene un formato Shopify válido.');
+  }
+  return handle;
+};
+
 const mapImage = (
   image: ShopifyImageNode,
   path: string,
   fallbackAlt: string
 ): ProductImage => ({
-  id: requiredText(image.id, `${path}.id`),
+  id: requiredShopifyImageGid(image.id, `${path}.id`),
   url: requiredText(image.url, `${path}.url`),
   altText: optionalText(image.altText) ?? requiredText(fallbackAlt, `${path}.altText`),
   width: image.width ?? fail(`${path}.width`, 'falta la anchura.'),
@@ -195,8 +217,8 @@ const mapPrimaryCollectionReference = (
 
   const path = `${handle}.metafields.${SHOPIFY_PRIMARY_COLLECTION_METAFIELD.namespace}.${SHOPIFY_PRIMARY_COLLECTION_METAFIELD.key}`;
   const mapped = {
-    id: requiredText(reference.id, `${path}.id`),
-    handle: requiredText(reference.handle, `${path}.handle`),
+    id: requiredShopifyGid(reference.id, 'Collection', `${path}.id`),
+    handle: requiredHandle(reference.handle, `${path}.handle`),
     title: requiredText(reference.title, `${path}.title`),
   };
   const assigned = source.collections?.nodes ?? [];
@@ -221,7 +243,7 @@ const optionPurpose = (name: string): ProductOption['purpose'] => {
 
 const mapOptions = (product: ShopifyOptionSource): ProductOption[] =>
   product.options.map((option, optionIndex) => ({
-    id: requiredText(option.id, `${product.handle}.options[${optionIndex}].id`),
+    id: requiredShopifyGid(option.id, 'ProductOption', `${product.handle}.options[${optionIndex}].id`),
     name: requiredText(option.name, `${product.handle}.options[${optionIndex}].name`),
     purpose: optionPurpose(option.name),
     values: option.optionValues.map((value, valueIndex) => {
@@ -229,7 +251,11 @@ const mapOptions = (product: ShopifyOptionSource): ProductOption[] =>
       const shopifySwatch = optionalText(value.swatch?.color);
       const purpose = optionPurpose(option.name);
       return {
-        id: requiredText(value.id, `${product.handle}.options[${optionIndex}].values[${valueIndex}].id`),
+        id: requiredShopifyGid(
+          value.id,
+          'ProductOptionValue',
+          `${product.handle}.options[${optionIndex}].values[${valueIndex}].id`
+        ),
         label,
         ...(purpose === 'color' ? { swatch: resolveColorSwatch(label, shopifySwatch) } : {}),
       };
@@ -250,13 +276,14 @@ const mapVariants = (
   product: ShopifyProductNode,
   options: ProductOption[],
   mediaGroups: Product['mediaGroups'],
-  { requireCoverMatch = true }: { requireCoverMatch?: boolean } = {}
+  images: readonly ProductImage[]
 ): ProductVariant[] => {
   const optionsByName = new Map(options.map((option) => [normalizeOptionName(option.name), option]));
   const colorOption = options.find((option) => option.purpose === 'color');
   const colorImageByValue = new Map(
     mediaGroups.map((group) => [group.optionValueId, group.imageIds[0]])
   );
+  const imagesById = new Map(images.map((image) => [image.id, image]));
   return product.variants.nodes.map((variant, variantIndex) => {
     const path = `${product.handle}.variants[${variantIndex}]`;
     const optionHint = variant.selectedOptions
@@ -274,6 +301,14 @@ const mapVariants = (
     const compareAtPrice = variant.compareAtPrice
       ? moneyFromDecimal(variant.compareAtPrice.amount, variant.compareAtPrice.currencyCode)
       : undefined;
+    if (compareAtPrice) {
+      if (compareAtPrice.currency !== price.currency) {
+        fail(`${path}.compareAtPrice.currencyCode`, 'debe usar la misma moneda que price.');
+      }
+      if (compareAtPrice.amountMinor <= price.amountMinor) {
+        fail(`${path}.compareAtPrice.amount`, 'debe ser mayor que price.');
+      }
+    }
     const optionValues = variant.selectedOptions.map((selection, selectionIndex) => {
       const option = required(
         optionsByName.get(normalizeOptionName(selection.name)),
@@ -292,7 +327,9 @@ const mapVariants = (
       fail(`${path}.selectedOptions`, 'la variante no selecciona un color.');
     }
     const expectedColorImageId = colorValueId ? colorImageByValue.get(colorValueId) : undefined;
-    const actualImageId = optionalText(variant.image?.id);
+    const actualImageId = variant.image
+      ? requiredShopifyImageGid(variant.image.id, `${path}.image.id`)
+      : undefined;
     if (colorValueId && mediaGroups.length > 0) {
       if (!expectedColorImageId) {
         fail(`${path}.image`, 'la variante tiene un color sin galería.');
@@ -300,21 +337,40 @@ const mapVariants = (
       if (!actualImageId) {
         fail(`${path}.image`, 'la variante debe tener asignada la imagen principal de su color.');
       }
-      if (requireCoverMatch && actualImageId !== expectedColorImageId) {
-        fail(`${path}.image`, 'la imagen de la variante no coincide con la portada de su galería de color.');
+      const expectedImage = expectedColorImageId
+        ? imagesById.get(expectedColorImageId)
+        : undefined;
+      const matchesExactUrl = Boolean(
+        expectedImage
+        && variant.image
+        && requiredText(variant.image.url, `${path}.image.url`) === expectedImage.url
+      );
+      if (actualImageId !== expectedColorImageId && !matchesExactUrl) {
+        const sameUrlPath = (() => {
+          if (!expectedImage || !variant.image) return false;
+          try {
+            const actual = new URL(variant.image.url);
+            const expected = new URL(expectedImage.url);
+            return actual.origin === expected.origin && actual.pathname === expected.pathname;
+          } catch {
+            return false;
+          }
+        })();
+        fail(
+          `${path}.image`,
+          `la imagen de la variante no coincide con la portada de su galería de color (misma ruta CDN: ${sameUrlPath ? 'sí' : 'no'}).`
+        );
       }
     }
     const imageId = expectedColorImageId ?? actualImageId;
 
     return {
-      id: variantId(requiredText(variant.id, `${path}.id`)),
+      id: variantId(requiredShopifyGid(variant.id, 'ProductVariant', `${path}.id`)),
       sku: mappedSku,
       title: optionalText(variant.title),
       optionValues,
       price,
-      ...(compareAtPrice && compareAtPrice.amountMinor > price.amountMinor
-        ? { compareAtPrice }
-        : {}),
+      ...(compareAtPrice ? { compareAtPrice } : {}),
       salesStatus: variant.availableForSale ? 'active' : 'unavailable',
       inventory: { kind: 'unknown' },
       inventoryPolicy: variant.currentlyNotInStock ? 'continue' : 'deny',
@@ -345,51 +401,47 @@ const mergeImagesById = (
   return images;
 };
 
+const reconcileGalleryImageIds = (
+  productHandle: string,
+  productImages: readonly ProductImage[],
+  galleries: { mediaGroups: Product['mediaGroups']; images: ProductImage[] }
+): { mediaGroups: Product['mediaGroups']; images: ProductImage[] } => {
+  const productImagesByUrl = new Map<string, ProductImage>();
+  productImages.forEach((image) => {
+    if (productImagesByUrl.has(image.url)) {
+      fail(`${productHandle}.images`, 'dos imágenes de producto comparten la misma URL y no se pueden reconciliar.');
+    }
+    productImagesByUrl.set(image.url, image);
+  });
+
+  const canonicalIdByReferenceId = new Map<string, string>();
+  const images = galleries.images.map((image) => {
+    const canonical = productImagesByUrl.get(image.url) ?? image;
+    canonicalIdByReferenceId.set(image.id, canonical.id);
+    return canonical;
+  });
+  const mediaGroups = galleries.mediaGroups.map((group) => ({
+    ...group,
+    imageIds: group.imageIds.map((id) => canonicalIdByReferenceId.get(id) ?? id),
+  }));
+
+  return { mediaGroups, images };
+};
+
 const declaredMetafieldValue = (value: string | null | undefined): boolean => {
   const normalized = value?.trim() ?? '';
   return Boolean(normalized) && normalized !== '[]';
 };
 
-const IMAGE_FILE_STEM_PATTERN = /([^/?#]+)\.(?:jpe?g|png|webp|gif)(?:$|[?#])/i;
-const IMAGE_FILE_FAMILY_PATTERN =
-  /_(\d+)(?:_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})?$/i;
-
-const imageFileStem = (url: string): string | undefined =>
-  url.match(IMAGE_FILE_STEM_PATTERN)?.[1];
-
-const imageFileFamily = (url: string): string | undefined => {
-  const stem = imageFileStem(url);
-  if (!stem) return undefined;
-  const match = IMAGE_FILE_FAMILY_PATTERN.exec(stem);
-  if (!match || match.index === undefined) return undefined;
-  return stem.slice(0, match.index) || undefined;
-};
-
-const imageFileSequence = (url: string): number => {
-  const match = imageFileStem(url)?.match(IMAGE_FILE_FAMILY_PATTERN);
-  return match ? Number(match[1]) : Number.MAX_SAFE_INTEGER;
-};
-
-const nativeProductImageIds = (product: ShopifyProductNode): Set<string> =>
-  new Set(
-    product.images.nodes.flatMap((image) => {
-      const id = optionalText(image.id);
-      return id ? [id] : [];
-    })
-  );
-
 const colorGalleriesPath = (handle: string) =>
   `${handle}.metafields.${SHOPIFY_COLOR_GALLERIES_METAFIELD_IDENTIFIER}`;
 
-const readColorGalleriesMetafield = (
-  product: ShopifyProductNode,
-  requiredField: boolean
-) =>
+const readColorGalleriesMetafield = (product: ShopifyProductNode) =>
   metafieldByKey(
     product,
     SHOPIFY_COLOR_GALLERIES_METAFIELD.key,
     SHOPIFY_COLOR_GALLERIES_METAFIELD.type,
-    requiredField,
+    true,
     SHOPIFY_COLOR_GALLERIES_METAFIELD.namespace
   );
 
@@ -398,99 +450,77 @@ const mapCompleteColorGalleryGroup = (
   colorOption: ProductOption,
   productTitle: string,
   reference: ShopifyMetafieldReferenceNode,
-  referenceIndex: number,
-  strict: boolean,
-  nativeImageIds: ReadonlySet<string>
-): { group: Product['mediaGroups'][number]; images: ProductImage[] } | undefined => {
+  referenceIndex: number
+): { group: Product['mediaGroups'][number]; images: ProductImage[] } => {
   const path = `${colorGalleriesPath(product.handle)}[${referenceIndex}]`;
   if (reference.__typename !== 'Metaobject' || !reference.fields) {
-    if (strict) fail(path, 'la referencia no es un metaobject de galería publicado.');
-    return undefined;
+    return fail(path, 'la referencia no es un metaobject de galería publicado.');
+  }
+  if (reference.type !== SHOPIFY_COLOR_GALLERY_METAOBJECT_TYPE) {
+    return fail(
+      `${path}.type`,
+      `tipo ${reference.type ?? 'ausente'}; se esperaba ${SHOPIFY_COLOR_GALLERY_METAOBJECT_TYPE}.`
+    );
   }
   const fields = reference.fields;
   const colorField = fields.find((field) => field.key === 'color_value');
   if (!colorField) {
-    if (strict) fail(`${path}.color_value`, 'falta el campo single_line_text_field.');
-    return undefined;
+    return fail(`${path}.color_value`, 'falta el campo single_line_text_field.');
   }
   if (colorField.type !== 'single_line_text_field') {
-    if (strict) fail(`${path}.color_value`, `tipo ${colorField.type}; se esperaba single_line_text_field.`);
-    return undefined;
+    return fail(`${path}.color_value`, `tipo ${colorField.type}; se esperaba single_line_text_field.`);
   }
   const colorLabel = colorField.value?.trim();
   if (!colorLabel) {
-    if (strict) fail(`${path}.color_value.value`, 'el valor está vacío.');
-    return undefined;
+    return fail(`${path}.color_value.value`, 'el valor está vacío.');
   }
   const colorValue = colorOption.values.find((value) =>
     normalizeOptionName(value.label) === normalizeOptionName(colorLabel)
   );
   if (!colorValue) {
-    if (strict) fail(`${path}.color_value`, `el color ${colorLabel} no existe en la opción Color.`);
-    return undefined;
+    return fail(`${path}.color_value`, `el color ${colorLabel} no existe en la opción Color.`);
   }
 
   const imagesField = fields.find((field) => field.key === 'images');
   if (!imagesField || imagesField.type !== 'list.file_reference' || !imagesField.references) {
-    if (strict) {
-      fail(
-        `${path}.images`,
-        !imagesField
-          ? 'falta el campo list.file_reference.'
-          : imagesField.type !== 'list.file_reference'
-            ? `tipo ${imagesField.type}; se esperaba list.file_reference.`
-            : 'falta el campo list.file_reference.'
-      );
-    }
-    return undefined;
+    return fail(
+      `${path}.images`,
+      !imagesField
+        ? 'falta el campo list.file_reference.'
+        : imagesField.type !== 'list.file_reference'
+          ? `tipo ${imagesField.type}; se esperaba list.file_reference.`
+          : 'falta el campo list.file_reference.'
+    );
   }
   const imageReferences = imagesField.references;
   if (imageReferences.pageInfo.hasNextPage) {
-    if (strict) fail(`${path}.images`, 'supera el límite de 250 referencias.');
-    return undefined;
+    return fail(`${path}.images`, 'supera el límite de 250 referencias.');
   }
   if (imageReferences.nodes.length !== COLOR_GALLERY_IMAGE_COUNT) {
-    if (strict) {
-      fail(
-        `${path}.images`,
-        `debe contener exactamente ${COLOR_GALLERY_IMAGE_COUNT} imágenes.`
-      );
-    }
-    return undefined;
-  }
-  if (!strict) {
-    const referencedIds = imageReferences.nodes.map((imageReference) =>
-      imageReference.__typename === 'MediaImage'
-        ? optionalText(imageReference.image?.id)
-        : undefined
+    return fail(
+      `${path}.images`,
+      `debe contener exactamente ${COLOR_GALLERY_IMAGE_COUNT} imágenes.`
     );
-    if (referencedIds.some((id) => !id || !nativeImageIds.has(id))) {
-      return undefined;
-    }
   }
   const seenImageIds = new Set<string>();
   const images: ProductImage[] = [];
   const imageIds = imageReferences.nodes.map((imageReference, imageIndex) => {
     const imagePath = `${path}.images[${imageIndex}]`;
     if (imageReference.__typename !== 'MediaImage' || !imageReference.image) {
-      if (strict) fail(imagePath, 'la referencia no es una MediaImage publicada.');
-      return '';
+      return fail(imagePath, 'la referencia no es una MediaImage publicada.');
     }
+    requiredShopifyGid(imageReference.id, 'MediaImage', `${imagePath}.id`);
     const image = mapImage(imageReference.image, imagePath, productTitle);
     if (seenImageIds.has(image.id)) {
-      if (strict) fail(imagePath, `la imagen ${image.id} está repetida en la galería.`);
-      return '';
+      return fail(imagePath, `la imagen ${image.id} está repetida en la galería.`);
     }
     seenImageIds.add(image.id);
     images.push(image);
     return image.id;
   });
-  if (imageIds.some((id) => !id) || imageIds.length !== COLOR_GALLERY_IMAGE_COUNT) {
-    return undefined;
-  }
   return {
     group: {
-      id: requiredText(reference.id, `${path}.id`),
+      id: requiredShopifyGid(reference.id, 'Metaobject', `${path}.id`),
       optionValueId: colorValue.id,
       imageIds,
     },
@@ -498,20 +528,15 @@ const mapCompleteColorGalleryGroup = (
   };
 };
 
-const mapColorGalleryGroups = (
+const mapRequiredColorGalleries = (
   product: ShopifyProductNode,
   colorOption: ProductOption,
-  productTitle: string,
-  { strict }: { strict: boolean }
+  productTitle: string
 ): { mediaGroups: Product['mediaGroups']; images: ProductImage[] } => {
   const path = colorGalleriesPath(product.handle);
-  const metafield = readColorGalleriesMetafield(product, strict);
-  if (!metafield) {
-    return mapColorGroupsFromVariantImages(product, colorOption, productTitle);
-  }
+  const metafield = readColorGalleriesMetafield(product);
   const references = metafield.references;
   if (!references?.nodes.length) {
-    if (!strict) return mapColorGroupsFromVariantImages(product, colorOption, productTitle);
     fail(
       path,
       declaredMetafieldValue(metafield.value)
@@ -525,24 +550,19 @@ const mapColorGalleryGroups = (
     'debe contener exactamente una galería por cada valor de Color.'
   );
   if (galleryReferences.pageInfo.hasNextPage) {
-    if (strict) fail(`${path}.references`, 'supera el límite de 250 referencias.');
-    else return mapColorGroupsFromVariantImages(product, colorOption, productTitle);
+    fail(`${path}.references`, 'supera el límite de 250 referencias.');
   }
 
   const groupsByColorValueId = new Map<string, Product['mediaGroups'][number]>();
   const galleryImages: ProductImage[] = [];
-  const nativeImageIds = nativeProductImageIds(product);
   galleryReferences.nodes.forEach((reference, referenceIndex) => {
     const mapped = mapCompleteColorGalleryGroup(
       product,
       colorOption,
       productTitle,
       reference,
-      referenceIndex,
-      strict,
-      nativeImageIds
+      referenceIndex
     );
-    if (!mapped) return;
     if (groupsByColorValueId.has(mapped.group.optionValueId)) {
       const colorLabel = colorOption.values.find((value) => value.id === mapped.group.optionValueId)?.label
         ?? mapped.group.optionValueId;
@@ -555,116 +575,40 @@ const mapColorGalleryGroups = (
     galleryImages.push(...mapped.images);
   });
 
-  if (strict) {
-    return {
-      mediaGroups: colorOption.values.map((value) =>
-        required(
-          groupsByColorValueId.get(value.id),
-          path,
-          `el color ${value.label} no tiene una galería asociada.`
-        )
-      ),
-      images: galleryImages,
-    };
-  }
-
-  const fallback = mapColorGroupsFromVariantImages(product, colorOption, productTitle);
   return {
-    mediaGroups: fallback.mediaGroups.map((group) =>
-      groupsByColorValueId.get(group.optionValueId) ?? group
+    mediaGroups: colorOption.values.map((value) =>
+      required(
+        groupsByColorValueId.get(value.id),
+        path,
+        `el color ${value.label} no tiene una galería asociada.`
+      )
     ),
-    images: mergeImagesById(fallback.images, galleryImages),
+    images: galleryImages,
   };
-};
-
-const mapRequiredColorGalleries = (
-  product: ShopifyProductNode,
-  colorOption: ProductOption,
-  productTitle: string
-) => mapColorGalleryGroups(product, colorOption, productTitle, { strict: true });
-
-const mapColorGroupsFromVariantImages = (
-  product: ShopifyProductNode,
-  colorOption: ProductOption,
-  productTitle: string
-): { mediaGroups: Product['mediaGroups']; images: ProductImage[] } => {
-  const extraImages: ProductImage[] = [];
-  const mappedImageIds = new Set<string>();
-  const remember = (image: ProductImage) => {
-    if (mappedImageIds.has(image.id)) return;
-    mappedImageIds.add(image.id);
-    extraImages.push(image);
-  };
-  const nativeImages = product.images.nodes.map((image, index) => ({ image, index }));
-  const mediaGroups = colorOption.values.map((value) => {
-    const imageIds: string[] = [];
-    const seen = new Set<string>();
-    let coverFamily: string | undefined;
-    product.variants.nodes.forEach((variant, variantIndex) => {
-      const selectedColor = variant.selectedOptions.find((selection) =>
-        normalizeOptionName(selection.name) === 'color'
-      );
-      if (!selectedColor || normalizeOptionName(selectedColor.value) !== normalizeOptionName(value.label)) {
-        return;
-      }
-      if (!variant.image) return;
-      const image = mapImage(
-        variant.image,
-        `${product.handle}.variants[${variantIndex}].image`,
-        productTitle
-      );
-      if (seen.has(image.id)) return;
-      seen.add(image.id);
-      imageIds.push(image.id);
-      remember(image);
-      coverFamily ??= imageFileFamily(variant.image.url);
-    });
-    if (!imageIds.length) {
-      fail(`${product.handle}.variants`, `el color ${value.label} no tiene una imagen de variante.`);
-    }
-    if (coverFamily) {
-      nativeImages
-        .filter((candidate) => imageFileFamily(candidate.image.url) === coverFamily)
-        .sort((left, right) => imageFileSequence(left.image.url) - imageFileSequence(right.image.url))
-        .forEach((candidate) => {
-          if (imageIds.length >= COLOR_GALLERY_IMAGE_COUNT) return;
-          const image = mapImage(
-            candidate.image,
-            `${product.handle}.images[${candidate.index}]`,
-            productTitle
-          );
-          if (seen.has(image.id)) return;
-          seen.add(image.id);
-          imageIds.push(image.id);
-          remember(image);
-        });
-    }
-    return {
-      id: value.id,
-      optionValueId: value.id,
-      imageIds,
-    };
-  });
-  return { mediaGroups, images: extraImages };
 };
 
 const mapSpecifications = (source: ShopifyProductNode): Product['specifications'] => {
   const material = metafieldText(source, 'material', 'single_line_text_field', false);
   const width = metafieldText(source, 'width_mm', 'number_integer', false);
   const buckle = metafieldText(source, 'buckle_finish', 'single_line_text_field', false);
+  let normalizedWidth: string | undefined;
+  if (width !== undefined) {
+    const widthNumber = Number(width);
+    if (!/^\d+$/.test(width) || !Number.isSafeInteger(widthNumber) || widthNumber <= 0) {
+      fail(`${source.handle}.metafields.kingbelt.width_mm.value`, 'debe ser un entero positivo.');
+    }
+    normalizedWidth = `${widthNumber} mm`;
+  }
   const specifications = [
     ...(material ? [{ label: 'Material', value: material }] : []),
-    ...(width && Number.isSafeInteger(Number(width)) && Number(width) > 0
-      ? [{ label: 'Ancho', value: `${Number(width)} mm` }]
-      : []),
+    ...(normalizedWidth ? [{ label: 'Ancho', value: normalizedWidth }] : []),
     ...(buckle ? [{ label: 'Hebilla/acabado', value: buckle }] : []),
   ];
   return specifications;
 };
 
 const mapProduct = (
-  source: ShopifyProductNode,
-  { requireStructuredMetafields = true }: ShopifyProductMapOptions = {}
+  source: ShopifyProductNode
 ): Product => {
   const path = source.handle || source.id || 'product';
   const title = requiredText(source.title, `${path}.title`);
@@ -673,11 +617,10 @@ const mapProduct = (
     mapImage(image, `${path}.images[${index}]`, title)
   );
   const colorOption = options.find((option) => option.purpose === 'color');
-  const galleries = !colorOption
+  const rawGalleries = !colorOption
     ? { mediaGroups: [], images: [] }
-    : mapColorGalleryGroups(source, colorOption, title, {
-      strict: requireStructuredMetafields,
-    });
+    : mapRequiredColorGalleries(source, colorOption, title);
+  const galleries = reconcileGalleryImageIds(path, productImages, rawGalleries);
   const mediaGroups = galleries.mediaGroups;
   const images = mergeImagesById(productImages, galleries.images);
   const primaryCollection = mapPrimaryCollectionReference(source);
@@ -688,27 +631,27 @@ const mapProduct = (
   const firstColorImageId = mediaGroups[0]?.imageIds[0];
 
   return {
-    id: productId(requiredText(source.id, `${path}.id`)),
+    id: productId(requiredShopifyGid(source.id, 'Product', `${path}.id`)),
     reference: metafieldText(source, 'model_reference', 'single_line_text_field', false)
-      ?? requiredText(source.handle, `${path}.handle`),
-    handle: requiredText(source.handle, `${path}.handle`),
+      ?? requiredHandle(source.handle, `${path}.handle`),
+    handle: requiredHandle(source.handle, `${path}.handle`),
     title,
     description,
     summary: metafieldText(source, 'summary', 'multi_line_text_field', false) ?? description,
     vendor: requiredText(source.vendor, `${path}.vendor`),
     productType: requiredText(source.productType, `${path}.productType`),
     category: {
-      id: requiredText(source.category?.id, `${path}.category.id`),
+      id: requiredShopifyGid(source.category?.id, 'TaxonomyCategory', `${path}.category.id`),
       name: requiredText(source.category?.name, `${path}.category.name`),
     },
     publicationStatus: source.publishedAt ? 'published' : 'unpublished',
     primaryCollectionId: primaryCollection.id,
-    collectionIds: source.collections.nodes.map((collection) => collection.id),
+    collectionIds: source.collections.nodes.map((collection, index) =>
+      requiredShopifyGid(collection.id, 'Collection', `${path}.collections[${index}].id`)
+    ),
     ...(badge ? { badge } : {}),
     options,
-    variants: mapVariants(source, options, mediaGroups, {
-      requireCoverMatch: requireStructuredMetafields,
-    }),
+    variants: mapVariants(source, options, mediaGroups, images),
     images,
     primaryImageId: firstColorImageId
       ?? requiredText(source.featuredImage?.id, `${path}.featuredImage.id`),
@@ -727,8 +670,8 @@ export const mapShopifyCollection = (
 ): Collection => {
   const title = requiredText(collection.title, `collections[${index}].title`);
   return {
-    id: requiredText(collection.id, `collections[${index}].id`),
-    handle: requiredText(collection.handle, `collections[${index}].handle`),
+    id: requiredShopifyGid(collection.id, 'Collection', `collections[${index}].id`),
+    handle: requiredHandle(collection.handle, `collections[${index}].handle`),
     title,
     description: optionalText(collection.description) ?? title,
     ...(collection.image
@@ -741,8 +684,8 @@ const collectionStubsFromProduct = (source: ShopifyProductNode): Collection[] =>
   source.collections.nodes.map((collection, index) => {
     const title = requiredText(collection.title, `${source.handle}.collections[${index}].title`);
     return {
-      id: requiredText(collection.id, `${source.handle}.collections[${index}].id`),
-      handle: requiredText(collection.handle, `${source.handle}.collections[${index}].handle`),
+      id: requiredShopifyGid(collection.id, 'Collection', `${source.handle}.collections[${index}].id`),
+      handle: requiredHandle(collection.handle, `${source.handle}.collections[${index}].handle`),
       title,
       description: title,
     };
@@ -751,17 +694,14 @@ const collectionStubsFromProduct = (source: ShopifyProductNode): Collection[] =>
 /** Normaliza un producto completo y valida sus invariantes de PDP. */
 export const mapShopifyProduct = (
   source: ShopifyProductNode,
-  allowedRemoteImageHosts: readonly string[],
-  options: ShopifyProductMapOptions = {}
+  allowedRemoteImageHosts: readonly string[]
 ): Product => {
-  const requireStructuredMetafields = options.requireStructuredMetafields !== false;
-  const product = mapProduct(source, { requireStructuredMetafields });
+  const product = mapProduct(source);
   assertValidCatalog(
     [product],
     collectionStubsFromProduct(source),
     SHOPIFY_SUPPORTED_CURRENCIES,
-    allowedRemoteImageHosts,
-    { requireColorGalleries: requireStructuredMetafields }
+    allowedRemoteImageHosts
   );
   return product;
 };
@@ -769,8 +709,7 @@ export const mapShopifyProduct = (
 /** Normaliza la proyección de tarjeta sin exigir variantes ni galerías. */
 export const mapShopifyProductSummary = (
   source: ShopifyProductSummaryNode,
-  allowedRemoteImageHosts: readonly string[],
-  _mapOptionsConfig: ShopifyProductMapOptions = {}
+  allowedRemoteImageHosts: readonly string[]
 ): ProductSummary => {
   const path = source.handle || source.id || 'product';
   const title = requiredText(source.title, `${path}.title`);
@@ -793,11 +732,11 @@ export const mapShopifyProductSummary = (
   );
   const badge = metafieldText(source, 'badge', 'single_line_text_field', false);
   const summary: ProductSummary = {
-    id: productId(requiredText(source.id, `${path}.id`)),
-    handle: requiredText(source.handle, `${path}.handle`),
+    id: productId(requiredShopifyGid(source.id, 'Product', `${path}.id`)),
+    handle: requiredHandle(source.handle, `${path}.handle`),
     title,
     reference: metafieldText(source, 'model_reference', 'single_line_text_field', false)
-      ?? requiredText(source.handle, `${path}.handle`),
+      ?? requiredHandle(source.handle, `${path}.handle`),
     primaryCollection,
     productType: requiredText(source.productType, `${path}.productType`),
     ...(source.featuredImage

@@ -54,6 +54,51 @@ export interface RebuildHandlerResult {
   body: Record<string, unknown>;
 }
 
+type LimitedRawBody =
+  | { ok: true; body: Buffer }
+  | { ok: false; status: 400 | 413; error: 'invalid_body' | 'payload_too_large' };
+
+export const readLimitedWebhookBody = async (
+  request: Request,
+  maxBytes = MAX_WEBHOOK_BODY_BYTES
+): Promise<LimitedRawBody> => {
+  const rawLength = request.headers.get('content-length');
+  if (rawLength !== null) {
+    if (!/^[0-9]+$/.test(rawLength)) {
+      return { ok: false, status: 400, error: 'invalid_body' };
+    }
+    const length = Number(rawLength);
+    if (!Number.isSafeInteger(length)) {
+      return { ok: false, status: 400, error: 'invalid_body' };
+    }
+    if (length > maxBytes) {
+      return { ok: false, status: 413, error: 'payload_too_large' };
+    }
+  }
+  if (!request.body) return { ok: true, body: Buffer.alloc(0) };
+
+  const reader = request.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      if (!value?.byteLength) continue;
+      if (total + value.byteLength > maxBytes) {
+        await reader.cancel().catch(() => undefined);
+        return { ok: false, status: 413, error: 'payload_too_large' };
+      }
+      chunks.push(value);
+      total += value.byteLength;
+    }
+  } catch {
+    await reader.cancel().catch(() => undefined);
+    return { ok: false, status: 400, error: 'invalid_body' };
+  }
+  return { ok: true, body: Buffer.concat(chunks.map((chunk) => Buffer.from(chunk)), total) };
+};
+
 export const handleShopifyCatalogRebuild = async ({
   method,
   headers,
@@ -115,13 +160,16 @@ const toResponse = (result: RebuildHandlerResult): Response =>
     },
   });
 
-const handleRequest: APIRoute = async ({ request }) =>
-  toResponse(await handleShopifyCatalogRebuild({
+const handleRequest: APIRoute = async ({ request }) => {
+  const raw = await readLimitedWebhookBody(request);
+  if (!raw.ok) return toResponse({ status: raw.status, body: { error: raw.error } });
+  return toResponse(await handleShopifyCatalogRebuild({
     method: request.method,
     headers: Object.fromEntries(request.headers),
-    rawBody: Buffer.from(await request.arrayBuffer()),
+    rawBody: raw.body,
     env: process.env,
   }));
+};
 
 export const POST: APIRoute = handleRequest;
 // Cualquier otro método recibe el 405 cerrado del manejador.

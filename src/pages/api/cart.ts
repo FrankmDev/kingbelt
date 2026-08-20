@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { CHECKOUT_EXPIRED_MESSAGE } from '@commerce/application/checkout';
+import { CHECKOUT_EXPIRED_MESSAGE, type CheckoutStatus } from '@commerce/application/checkout';
 import { emptyCart } from '@commerce/application/cart-service';
 import { isDemoCommerce } from '@commerce/commerce-source';
 import type { CartOperationResult } from '@commerce/domain/cart';
@@ -29,7 +29,8 @@ const json = (body: unknown, status = 200): Response =>
   });
 
 const isJsonContentType = (value: string | null): boolean =>
-  value?.split(';', 1)[0]?.trim().toLowerCase() === 'application/json';
+  typeof value === 'string'
+  && /^application\/json(?:\s*;\s*charset\s*=\s*(?:utf-8|"utf-8"))?\s*$/i.test(value);
 
 const readLimitedRequestBody = async (
   request: Request,
@@ -65,7 +66,14 @@ const readLimitedRequestBody = async (
   }
 
   if (offset === 0) return { ok: false, error: 'invalid_json' };
-  return { ok: true, text: new TextDecoder('utf-8').decode(buffer.subarray(0, offset)) };
+  try {
+    return {
+      ok: true,
+      text: new TextDecoder('utf-8', { fatal: true }).decode(buffer.subarray(0, offset)),
+    };
+  } catch {
+    return { ok: false, error: 'invalid_json' };
+  }
 };
 
 const hasExactKeys = (value: Record<string, unknown>, keys: readonly string[]): boolean => {
@@ -76,8 +84,7 @@ const hasExactKeys = (value: Record<string, unknown>, keys: readonly string[]): 
 const isShopifyResourceId = (value: unknown, resource: 'ProductVariant' | 'CartLine'): value is string => {
   if (typeof value !== 'string' || value.length > SHOPIFY_RESOURCE_ID_MAX_LENGTH) return false;
   if (/[\u0000-\u0020\u007f]/.test(value) || /\s/.test(value)) return false;
-  const prefix = `gid://shopify/${resource}/`;
-  return value.startsWith(prefix) && value.length > prefix.length;
+  return new RegExp(`^gid://shopify/${resource}/[^/?#\\s]+$`).test(value);
 };
 
 const isCommandQuantity = (value: unknown): value is number =>
@@ -134,8 +141,40 @@ const expiredCheckout = () =>
     410
   );
 
-const mutationJson = (result: CartOperationResult & { cartId?: string }) =>
+type CartMutationResult = CartOperationResult & { cartId?: string };
+
+const mutationJson = (result: CartMutationResult) =>
   json(withoutRemoteCartId(result), result.success ? 200 : 422);
+
+const asIdempotentRemove = (result: CartMutationResult, lineId: string): CartMutationResult => {
+  if (
+    result.success
+    || result.error?.code !== 'not_found'
+    || result.cart.lines.some((line) => line.id === lineId)
+  ) {
+    return result;
+  }
+  return {
+    success: true,
+    cart: result.cart,
+    cartId: result.cartId,
+    notice: { code: 'product_removed', message: 'Producto eliminado del carrito.' },
+  };
+};
+
+const checkoutHttpStatus = (status: CheckoutStatus): number => {
+  switch (status) {
+    case 'ready':
+      return 200;
+    case 'blocked':
+    case 'unavailable':
+      return 422;
+    case 'expired':
+      return 410;
+    case 'error':
+      return 502;
+  }
+};
 
 export const POST: APIRoute = async ({ request, session, clientAddress }) => {
   if (isDemoCommerce()) return json({ error: 'not_found' }, 404);
@@ -157,9 +196,15 @@ export const POST: APIRoute = async ({ request, session, clientAddress }) => {
   }
 
   const rawContentLength = request.headers.get('content-length');
-  if (rawContentLength !== null && /^[0-9]+$/.test(rawContentLength)) {
+  if (rawContentLength !== null) {
+    if (!/^[0-9]+$/.test(rawContentLength)) {
+      return json({ error: 'invalid_content_length' }, 400);
+    }
     const contentLength = Number(rawContentLength);
-    if (Number.isSafeInteger(contentLength) && contentLength > CART_REQUEST_MAX_BYTES) {
+    if (!Number.isSafeInteger(contentLength)) {
+      return json({ error: 'invalid_content_length' }, 400);
+    }
+    if (contentLength > CART_REQUEST_MAX_BYTES) {
       return json({ error: 'payload_too_large' }, 413);
     }
   }
@@ -219,7 +264,7 @@ export const POST: APIRoute = async ({ request, session, clientAddress }) => {
     }
     const remoteCartId = shopifyCartId;
 
-    const reconcileNotFound = async (result: CartOperationResult & { cartId?: string }) => {
+    const reconcileNotFound = async (result: CartMutationResult) => {
       if (result.success || result.error?.code !== 'not_found') return result;
       const current = await service.get(remoteCartId);
       if (!current.cartId) {
@@ -240,15 +285,9 @@ export const POST: APIRoute = async ({ request, session, clientAddress }) => {
       const result = await reconcileNotFound(
         await service.remove(remoteCartId, body.lineId)
       );
-      if (!result) return expiredCart();
-      if (!result.success && result.error?.code === 'not_found') {
-        return json({
-          success: true,
-          cart: result.cart,
-          notice: { code: 'product_removed', message: 'Producto eliminado del carrito.' },
-        });
-      }
-      return mutationJson(result);
+      return result
+        ? mutationJson(asIdempotentRemove(result, body.lineId))
+        : expiredCart();
     }
 
     const result = await service.checkout(remoteCartId);
@@ -258,7 +297,7 @@ export const POST: APIRoute = async ({ request, session, clientAddress }) => {
     }
     return json(
       { success: result.status === 'ready', ...withoutRemoteCartId(result) },
-      result.status === 'ready' ? 200 : 422
+      checkoutHttpStatus(result.status)
     );
   } catch {
     return json({ error: 'provider_error' }, 502);

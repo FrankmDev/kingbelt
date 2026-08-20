@@ -18,7 +18,7 @@ No guardar en Git: capturas de Payments, IBAN, VAT ID, KYC, direcciones personal
 | Este documento | Admin: checkout → pedido | Un pedido de prueba |
 | Pedido de prueba *(después)* | Tarifa, tax, pago, pedido, email, inventario | — |
 
-`shopify:release-gate` ya engloba A/B/C/E + comprobaciones HTTP. Los comandos individuales siguen documentados para diagnosticar un fallo. No promociona, no hace rollback y no crea pedidos.
+`shopify:release-gate` ya engloba A/B/C/E + comprobaciones HTTP. Los comandos individuales siguen documentados para diagnosticar un fallo. No promociona, no hace rollback y no crea pedidos. Si los gates automáticos pasan, imprime `AUTOMATED PRE-PAYMENT GATE: PASSED` y `PAYMENT QA READINESS: BLOCKED`. No declara READY FOR PAYMENT QA: Shipping, Taxes, Payment provider, Notifications, Fulfillment y Thank You / Order Status se confirman a mano en este runbook.
 
 ## Código (ya garantizado)
 
@@ -73,7 +73,7 @@ G. MANUAL CHECKOUT SMOKE — hasta métodos de pago, **sin pagar**
 H. PAYMENT TEST ORDERS — siguiente fase
 I. ACTIVATE LIVE PAYMENTS — solo después
 
-F ya ejecuta A/B/C/E y las comprobaciones HTTP del deployment (`SHOPIFY_SMOKE_BASE_URL`). A–E siguen siendo útiles para aislar un fallo. No intercambiar el testing de pagos antes de F.
+F ya ejecuta A/B/C/E y las comprobaciones HTTP del deployment (`SHOPIFY_SMOKE_BASE_URL`). A–E siguen siendo útiles para aislar un fallo. F PASSED no desbloquea H: primero G y los checks 1–12 de este runbook. No intercambiar el testing de pagos antes de F.
 
 Preview puede certificar código y configuración Preview. No demuestra que Production tenga las mismas env vars. Antes de pedidos reales hay que comprobar Production.
 

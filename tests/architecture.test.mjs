@@ -606,8 +606,11 @@ describe('límites de arquitectura', () => {
     expect(mapper).toContain('COLOR_GALLERY_IMAGE_COUNT');
     expect(mapper).not.toMatch(/::native-color::/);
     expect(mapper).not.toMatch(
-      /FILENAME_COLOR_TOKEN_MIN|foldFilenameKey|filenameToken|tokensFromImageUrl|nativeDetailImageIdsByColor|mapNativeColorMediaGroups/
+      /FILENAME_COLOR_TOKEN_MIN|foldFilenameKey|filenameToken|tokensFromImageUrl|nativeDetailImageIdsByColor|mapNativeColorMediaGroups|imageFileFamily|imageFileSequence|mapColorGroupsFromVariantImages|IMAGE_FILE_FAMILY_PATTERN|IMAGE_FILE_STEM_PATTERN/
     );
+    expect(mapper).not.toContain('requireStructuredMetafields');
+    expect(runtimeQuery).not.toContain('requireStructuredMetafields');
+    expect(mapper).toMatch(/mapRequiredColorGalleries\(/);
     expect(mapper).not.toMatch(/new URL\([^)]*\)\.pathname/);
     expect(mapper).not.toMatch(/decodeURIComponent\(/);
     expect(readiness).toContain('custom.kingbelt_color_galleries');
@@ -657,7 +660,7 @@ describe('límites de arquitectura', () => {
     expect(summaryFields).toContain('SHOPIFY_PRIMARY_COLLECTION_METAFIELD.key');
     expect(summaryFields).not.toContain('key: "primary_collection"');
     expect(summaryFields).toContain('COLLECTION_REFERENCE_SELECTION');
-    expect(summaryFields).toMatch(/collections\s*\(/);
+    expect(summaryFields).not.toMatch(/collections\s*\(/);
     expect(query).toMatch(/\.\.\.\s*on Collection\s*\{\s*id handle title\s*\}/);
     expect(runtimeQuery).toContain('PRODUCT_SUMMARY_FIELDS');
     expect(runtimeQuery).toContain('FULL_PRODUCT_FIELDS');

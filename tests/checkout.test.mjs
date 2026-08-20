@@ -118,8 +118,7 @@ describe('hosts y URLs de checkout seguras', () => {
 
   test('el adaptador Shopify declara hosts explícitos sin sufijos ambiguos', () => {
     const hosts = buildShopifyCheckoutHosts('kingbelt.myshopify.com');
-    expect(hosts).toContain('kingbelt.myshopify.com');
-    expect(hosts).toContain('checkout.shopify.com');
+    expect(hosts).toEqual(['kingbelt.myshopify.com']);
     expect(hosts.some((host) => host.includes('*'))).toBe(false);
     expect(
       getSafeCheckoutUrl({
@@ -132,6 +131,13 @@ describe('hosts y URLs de checkout seguras', () => {
       getSafeCheckoutUrl({
         status: 'ready',
         url: 'https://kingbelt.myshopify.com.evil.test/checkouts/cn/test',
+        allowedHosts: hosts,
+      })
+    ).toBeNull();
+    expect(
+      getSafeCheckoutUrl({
+        status: 'ready',
+        url: 'https://checkout.shopify.com/checkouts/legacy',
         allowedHosts: hosts,
       })
     ).toBeNull();

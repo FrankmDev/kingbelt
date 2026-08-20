@@ -11,6 +11,7 @@ import { createCartService, emptyCart } from '../src/commerce/application/cart-s
 import { demoCartCatalog } from '../src/commerce/infrastructure/demo/demo-catalog-adapter.ts';
 import { isAllowedImageUrl } from '../src/commerce/domain/url-policy.ts';
 import { serializeJsonForHtml } from '../src/shared/security/serialize-json-for-html.ts';
+import { findCredentialAssignment } from '../scripts/security-patterns.mjs';
 
 const root = resolve(import.meta.dir, '..');
 const walk = (directory) => readdirSync(directory)
@@ -25,6 +26,20 @@ const collectStrings = (value) => {
   if (value && typeof value === 'object') return Object.values(value).flatMap(collectStrings);
   return [];
 };
+
+describe('escaneo de credenciales', () => {
+  test('una asignación vacía no consume el nombre de la variable de la línea siguiente', () => {
+    expect(findCredentialAssignment(
+      'SHOPIFY_STOREFRONT_PRIVATE_TOKEN=\nSHOPIFY_CUSTOMER_ACCOUNT_URL='
+    )).toBeNull();
+  });
+
+  test('una credencial no placeholder en la misma línea sí se detecta', () => {
+    const credential = ['actual', 'looking', 'credential', '123'].join('-');
+    expect(findCredentialAssignment(`private_token=${credential}`)).not.toBeNull();
+    expect(findCredentialAssignment('private_token=test-placeholder-value')).toBeNull();
+  });
+});
 
 describe('serialización y contenido externo', () => {
   test('el JSON embebido no puede cerrar el script ni crear HTML ejecutable', () => {
@@ -139,7 +154,7 @@ describe('checkout y carrito como entradas no confiables', () => {
 
   test('el redirect de checkout solo confía en hosts explícitos del dominio de la tienda', () => {
     const allowedHosts = buildShopifyCheckoutHosts('kingbelt.myshopify.com');
-    expect(allowedHosts).toEqual(['kingbelt.myshopify.com', 'checkout.shopify.com']);
+    expect(allowedHosts).toEqual(['kingbelt.myshopify.com']);
 
     const adversarial = {
       status: 'ready',

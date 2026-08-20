@@ -8,6 +8,7 @@ export interface CatalogProvider {
   getCollectionHandles(): Promise<string[]>;
   getProductByHandle(handle: string): Promise<Product | undefined>;
   getFeaturedProducts(limit: number): Promise<ProductSummary[]>;
+  /** Otros productos de `product.primaryCollectionId`; la PDP los titula «También en {primaria}». */
   getRelatedProducts(product: Product, limit: number): Promise<ProductSummary[]>;
   getProductSummaries(): Promise<ProductSummary[]>;
 }

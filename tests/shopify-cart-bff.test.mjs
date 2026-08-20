@@ -156,6 +156,20 @@ describe('frontera HTTP de /api/cart', () => {
     expect(result.response.status).toBe(200);
   });
 
+  test('rechaza parámetros distintos de charset UTF-8', async () => {
+    for (const contentType of [
+      'application/json; charset=iso-8859-1',
+      'application/json; boundary=x',
+      'application/json; charset=utf-8; profile=x',
+    ]) {
+      assertRejectedBeforeShopify(
+        await postCart({ json: { command: 'refresh' }, contentType }),
+        415,
+        'unsupported_media_type'
+      );
+    }
+  });
+
   test('rechaza Content-Type ausente', async () => {
     assertRejectedBeforeShopify(
       await postCart({ json: { command: 'refresh' }, contentType: null }),
@@ -267,6 +281,14 @@ describe('frontera HTTP de /api/cart', () => {
     assertRejectedBeforeShopify(result, 413, 'payload_too_large');
   });
 
+  test('rechaza Content-Length malformado antes de leer el body', async () => {
+    assertRejectedBeforeShopify(
+      await postCart({ body: '{"command":"refresh"}', contentLength: '12x' }),
+      400,
+      'invalid_content_length'
+    );
+  });
+
   test('rechaza un stream mayor de 2048 bytes sin Content-Length', async () => {
     const result = await postCart({
       body: new ReadableStream({
@@ -288,6 +310,11 @@ describe('frontera HTTP de /api/cart', () => {
 
   test('rechaza JSON inválido', async () => {
     assertRejectedBeforeShopify(await postCart({ body: '{not json' }), 400, 'invalid_json');
+  });
+
+  test('rechaza bytes que no son UTF-8 válido', async () => {
+    const bytes = new Uint8Array([0x7b, 0x22, 0x78, 0x22, 0x3a, 0x22, 0xc3, 0x28, 0x22, 0x7d]);
+    assertRejectedBeforeShopify(await postCart({ body: bytes }), 400, 'invalid_json');
   });
 
   test('rechaza body vacío', async () => {
@@ -470,6 +497,22 @@ describe('schema exacto de comandos /api/cart', () => {
       'invalid_command'
     );
   });
+
+  test('los GID públicos no aceptan path, query ni fragment adicionales', async () => {
+    for (const variantId of [
+      `${VARIANT_ID}/extra`,
+      `${VARIANT_ID}?key=secret`,
+      `${VARIANT_ID}#fragment`,
+    ]) {
+      serviceCreated = 0;
+      serviceCalls = [];
+      assertRejectedBeforeShopify(
+        await postCart({ json: { command: 'add', variantId, quantity: 1 } }),
+        400,
+        'invalid_command'
+      );
+    }
+  });
 });
 
 describe('flujo BFF de /api/cart', () => {
@@ -578,7 +621,16 @@ describe('flujo BFF de /api/cart', () => {
 
 describe('recuperación de sesión en /api/cart', () => {
   const existingCartId = 'gid://shopify/Cart/existing';
-  const remainingCart = { ...emptyCart(), globalNotice: 'authoritative-remaining' };
+  const remainingCart = {
+    ...emptyCart(),
+    lines: [{ id: 'gid://shopify/CartLine/line-b' }],
+    globalNotice: 'authoritative-remaining',
+  };
+  const cartWithRequestedLine = {
+    ...remainingCart,
+    lines: [{ id: LINE_ID }, ...remainingCart.lines],
+    globalNotice: 'authoritative-line-still-present',
+  };
   const notFoundResult = {
     success: false,
     cart: emptyCart(),
@@ -640,6 +692,51 @@ describe('recuperación de sesión en /api/cart', () => {
     expect(result.body.status).toBe('expired');
     expect(result.body.cart).toEqual(emptyCart());
     expect(session.store.shopifyCartId).toBeUndefined();
+    expect(Object.hasOwn(result.body, 'cartId')).toBe(false);
+  });
+
+  test('checkout blocked responde 422 y conserva la sesión', async () => {
+    serviceHandlers.checkout = () => ({
+      status: 'blocked',
+      cart: remainingCart,
+      message: 'El carrito está vacío.',
+    });
+    const session = createSession({ shopifyCartId: existingCartId });
+    const result = await postCart({ session, json: { command: 'checkout' } });
+    expect(result.response.status).toBe(422);
+    expect(result.body.success).toBe(false);
+    expect(result.body.status).toBe('blocked');
+    expect(session.store.shopifyCartId).toBe(existingCartId);
+    expect(Object.hasOwn(result.body, 'cartId')).toBe(false);
+  });
+
+  test('checkout unavailable responde 422 y conserva la sesión', async () => {
+    serviceHandlers.checkout = () => ({
+      status: 'unavailable',
+      message: 'El checkout de demostración todavía no está conectado.',
+    });
+    const session = createSession({ shopifyCartId: existingCartId });
+    const result = await postCart({ session, json: { command: 'checkout' } });
+    expect(result.response.status).toBe(422);
+    expect(result.body.success).toBe(false);
+    expect(result.body.status).toBe('unavailable');
+    expect(session.store.shopifyCartId).toBe(existingCartId);
+  });
+
+  test('checkout error de preparación responde 502 y conserva la sesión', async () => {
+    serviceHandlers.checkout = () => ({
+      status: 'error',
+      cart: remainingCart,
+      message: 'No se pudo preparar el checkout. Inténtalo de nuevo.',
+    });
+    const session = createSession({ shopifyCartId: existingCartId });
+    const result = await postCart({ session, json: { command: 'checkout' } });
+    expect(result.response.status).toBe(502);
+    expect(result.body.success).toBe(false);
+    expect(result.body.status).toBe('error');
+    expect(result.body.error).toBeUndefined();
+    expect(result.body.cart).toEqual(remainingCart);
+    expect(session.store.shopifyCartId).toBe(existingCartId);
     expect(Object.hasOwn(result.body, 'cartId')).toBe(false);
   });
 
@@ -708,6 +805,28 @@ describe('recuperación de sesión en /api/cart', () => {
     expect(result.body.error).toBeUndefined();
     expect(session.store.shopifyCartId).toBe(existingCartId);
     expect(Object.hasOwn(result.body, 'cartId')).toBe(false);
+    expect(serviceCalls).toEqual([
+      { method: 'remove', cartId: existingCartId, lineId: LINE_ID },
+      { method: 'get', cartId: existingCartId },
+    ]);
+  });
+
+  test('remove not_found no afirma product_removed si la línea sigue en el Cart', async () => {
+    serviceHandlers.remove = () => ({ ...notFoundResult, cartId: existingCartId });
+    serviceHandlers.get = () => ({ cart: cartWithRequestedLine, cartId: existingCartId });
+    const session = createSession({ shopifyCartId: existingCartId });
+    const result = await postCart({ session, json: { command: 'remove', lineId: LINE_ID } });
+    expect(result.response.status).toBe(422);
+    expect(result.body.success).toBe(false);
+    expect(result.body.error.code).toBe('not_found');
+    expect(result.body.notice).toBeUndefined();
+    expect(result.body.cart).toEqual(cartWithRequestedLine);
+    expect(session.store.shopifyCartId).toBe(existingCartId);
+    expect(Object.hasOwn(result.body, 'cartId')).toBe(false);
+    expect(serviceCalls).toEqual([
+      { method: 'remove', cartId: existingCartId, lineId: LINE_ID },
+      { method: 'get', cartId: existingCartId },
+    ]);
   });
 
   test('remove con validation no reconcilia not_found', async () => {

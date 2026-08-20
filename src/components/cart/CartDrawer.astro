@@ -3,6 +3,9 @@ import '../../styles/cart.css';
 import Button from '../ui/Button.astro';
 import Icon from '../ui/Icon.astro';
 import CartEmpty from './CartEmpty.astro';
+import { formatMoney, zeroMoney } from '../../commerce/domain/money';
+
+const emptySubtotal = formatMoney(zeroMoney());
 ---
 
 <div
@@ -66,7 +69,7 @@ import CartEmpty from './CartEmpty.astro';
     <footer class="cart-drawer__footer" data-cart-drawer-footer hidden>
       <div class="cart-drawer__subtotal-row">
         <span class="kb-meta-label text-king-muted">Subtotal</span>
-        <span class="cart-drawer__subtotal font-display" data-cart-drawer-subtotal>0 €</span>
+        <span class="cart-drawer__subtotal font-display" data-cart-drawer-subtotal>{emptySubtotal}</span>
       </div>
 
       <p class="cart-drawer__note kb-meta-label text-king-muted">

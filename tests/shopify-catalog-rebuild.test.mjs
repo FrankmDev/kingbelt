@@ -114,6 +114,6 @@ describe('rebuild de catálogo por webhook', () => {
     expect(astroConfig).toContain('SHOPIFY_WEBHOOK_SECRET:');
     expect(astroConfig).toContain('VERCEL_DEPLOY_HOOK_URL:');
     expect(astroConfig).toContain("access: 'secret'");
-    expect(catalogRoot).toContain('cacheTtlMs: import.meta.env.DEV ? 0');
+    expect(catalogRoot).toContain('import.meta.env.DEV ? 0 : 30_000');
   });
 });

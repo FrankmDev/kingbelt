@@ -22,11 +22,11 @@ Frontend de KingBelt construido con Astro 7.2, TypeScript estricto, Tailwind CSS
 | Staging | `shopify` | Solo las de la tienda de staging |
 | Production | `shopify` | Solo las de la tienda de producción |
 
-En Vercel, el carrito Shopify persiste el Cart ID en el store de sesiones de Astro (`UPSTASH_REDIS_REST_URL` y `UPSTASH_REDIS_REST_TOKEN`). El navegador solo recibe una cookie de sesión opaca.
+En Vercel, el carrito Shopify persiste el Cart ID en el store de sesiones de Astro. Configura **ambas** variables `UPSTASH_REDIS_REST_URL` y `UPSTASH_REDIS_REST_TOKEN` en Production y Preview. El session driver las lee en runtime desde `process.env`; no las copies en `astro.config` ni las marques `PUBLIC_*`. El navegador solo recibe la cookie opaca `__Host-kingbelt-session` (`HttpOnly`, `Secure`, `SameSite=Lax`, `Path=/`, sin `Domain`). Una variable sola, con espacios o HTTP, hace fallar el arranque. Tras crear o rotar una variable, redespliega: un deployment anterior no relee el runtime. Preferible una base Upstash distinta para Preview y Production. En local, sin esas variables, Astro usa disco (`.astro/session`).
 
 ## Despliegue en Vercel
 
-Crea las variables en el proyecto de Vercel (Settings → Environment Variables). `COMMERCE_SOURCE` es `astro:env` de cliente y se incrusta en el build: un cambio exige redesplegar. No las pongas en `vercel.json`.
+Crea las variables en el proyecto de Vercel (Settings → Environment Variables). `COMMERCE_SOURCE` es `astro:env` de cliente y se incrusta en el build: un cambio exige redesplegar. `UPSTASH_REDIS_REST_URL` y `UPSTASH_REDIS_REST_TOKEN` se leen en runtime por el session driver; también exigen un nuevo deployment tras crearlas o rotarlas. No las pongas en `vercel.json`.
 
 | Variable | Lectura | Build / runtime | Formato | Entornos |
 | --- | --- | --- | --- | --- |
@@ -35,21 +35,24 @@ Crea las variables en el proyecto de Vercel (Settings → Environment Variables)
 | `SHOPIFY_CUSTOMER_ACCOUNT_URL` | `astro:env/server` | Build y runtime (pública de servidor) | URL HTTPS alojada de Customer Accounts | Los mismos que Shopify |
 | `SHOPIFY_API_VERSION` | `astro:env/server` | Build y runtime | `2026-07` (valor por defecto) | Los mismos que Shopify |
 | `SHOPIFY_STOREFRONT_PRIVATE_TOKEN` | `astro:env/server` | Runtime (secreto) | token privado Headless, sin espacios ni comillas | Los mismos que Shopify |
-| `UPSTASH_REDIS_REST_URL` | `process.env` en el session driver | Runtime | URL REST de Upstash | Production y Preview en Vercel |
-| `UPSTASH_REDIS_REST_TOKEN` | `process.env` en el session driver | Runtime | token REST de Upstash | Production y Preview en Vercel |
+| `UPSTASH_REDIS_REST_URL` | `process.env` en el session driver | Runtime (no `astro:env`) | URL REST HTTPS de Upstash, sin credenciales, query ni fragment | Production y Preview. Las dos variables juntas |
+| `UPSTASH_REDIS_REST_TOKEN` | `process.env` en el session driver | Runtime (secreto, no `astro:env`) | token REST de Upstash, sin espacios ni saltos de línea | Production y Preview. Las dos variables juntas |
 | `SHOPIFY_WEBHOOK_SECRET` | `astro:env/server` | Runtime (secreto, opcional) | secreto HMAC del webhook | Solo si activas el rebuild |
 | `VERCEL_DEPLOY_HOOK_URL` | `astro:env/server` | Runtime (secreto, opcional) | URL del Deploy Hook | Solo si activas el rebuild |
-| `SHOPIFY_PREFLIGHT_REQUIRED_PRODUCT_HANDLES` | `process.env` en `shopify:preflight` | Preflight (no secreto, opcional) | `handle-1,handle-2` | Staging/Production si hay productos piloto |
+| `SHOPIFY_PREFLIGHT_EXPECTED_PRODUCT_HANDLES` | `process.env` en `shopify:preflight` | Preflight (no secreto, obligatorio al lanzar) | CSV de handles, conjunto exacto | Staging/Production al ejecutar `shopify:preflight` |
+| `SHOPIFY_PREFLIGHT_EXPECTED_COLLECTION_HANDLES` | `process.env` en `shopify:preflight` | Preflight (no secreto, obligatorio al lanzar) | CSV de handles, conjunto exacto | Staging/Production al ejecutar `shopify:preflight` |
+| `SHOPIFY_SMOKE_BASE_URL` | `process.env` en `shopify:cart-smoke` | CLI (no secreto, no runtime) | Origin HTTPS del deployment | Staging/preview autorizado/production candidate |
+| `SHOPIFY_SMOKE_PRODUCT_HANDLE` | `process.env` en `shopify:cart-smoke` | CLI (no secreto, no runtime) | Handle de catálogo del producto piloto | Los mismos que el cart smoke |
 
-`SHOPIFY_STORE_DOMAIN` es el hostname de la tienda en Shopify, no el dominio público del sitio:
+`SHOPIFY_STORE_DOMAIN` es el hostname `*.myshopify.com` de la tienda, no el dominio público del sitio ni `*.shopify.com`:
 
 ```text
-SHOPIFY_STORE_DOMAIN=tu-tienda-real.myshopify.com
+SHOPIFY_STORE_DOMAIN=kingbelt-store.myshopify.com
 SHOPIFY_STOREFRONT_PRIVATE_TOKEN=...
 COMMERCE_SOURCE=shopify
 ```
 
-No uses `https://`, barra final, `admin.shopify.com`, `kingbelt.es` ni comillas. El Storefront GraphQL no acepta el dominio público. El nombre `SHOPIFY_STOREFRONT_ACCESS_TOKEN` no existe en este proyecto.
+Confirmar en Shopify Admin → Settings → Domains el hostname que termina en `.myshopify.com`. No uses `https://`, barra final, `kingbelt-store.shopify.com`, `admin.shopify.com`, `kingbelt.es` ni comillas. El Storefront GraphQL no acepta el dominio público. El nombre `SHOPIFY_STOREFRONT_ACCESS_TOKEN` no existe en este proyecto.
 
 Tras crear o corregir variables: Redeploy del deployment en el dashboard de Vercel, o un push a la rama conectada. Un deployment Ready previo no relee variables de cliente hasta reconstruirse.
 
@@ -62,6 +65,10 @@ bun run check
 bun run test
 bun run build
 bun run shopify:preflight
+bun run session:preflight
+bun run launch:preflight
+bun run shopify:cart-smoke
+bun run shopify:release-gate
 bun run check:links
 bun run check:perf
 bun run validate
@@ -76,12 +83,13 @@ bun run validate
 
 `bun run validate` es la suite autoritativa de calidad: auditoría de dependencias, escaneo de secretos en fuentes e historial, check de Astro/TypeScript, build, tests, escaneo del build, enlaces internos, presupuestos de rendimiento y la ficha renderizada de 76 variantes. El job `quality` de GitHub Actions ejecuta la misma suite en cada Pull Request y en `push` a `main`, con `COMMERCE_SOURCE=demo` y sin credenciales Shopify. Instala dependencias una sola vez con `bun install --frozen-lockfile` y después corre `bun run validate`.
 
-`bun run build` valida la compilación. No llama a Shopify. Un despliegue staging/Production con `COMMERCE_SOURCE=shopify` debe ejecutar antes `COMMERCE_SOURCE=shopify bun run shopify:preflight` para validar configuración, Storefront API, catálogo, mapping e invariantes. `bun run shopify:smoke` solo comprueba conectividad mínima. El preflight no forma parte de `validate` ni del job `quality`.
+`bun run build` valida la compilación. No llama a Shopify ni a Upstash. Un despliegue staging/Production debe ejecutar antes `bun run launch:preflight` (o, por separado, `bun run session:preflight` y `COMMERCE_SOURCE=shopify bun run shopify:preflight`) en un entorno confiable. Tras desplegar el candidato, `bun run shopify:release-gate` orquesta código, sesión, Shopify, cart smoke y HTTP del deployment. `bun run shopify:cart-smoke` por separado sigue sirviendo para diagnosticar el BFF hasta `checkoutUrl`. Ninguno paga ni crea un pedido. Esos comandos no forman parte de `validate` ni del job `quality`.
 
 ## Estructura
 
 ```text
 src/
+├── session-storage-config.ts Credenciales Upstash y política del store
 ├── session-driver.ts        Store de sesiones Astro (Upstash en Vercel, disco en local)
 ├── commerce/
 │   ├── domain/              Modelos y reglas comerciales puras
@@ -130,6 +138,7 @@ src/
 Lee `AGENTS.md` antes de modificar el proyecto y carga `docs/DESIGN.md`, `docs/ARCHITECTURE.md` o `docs/PROJECT.md` según el alcance.
 
 Preparación y activación Shopify: `docs/SHOPIFY_READINESS.md`.  
+Checklist Admin de lanzamiento (checkout, envío, impuestos, pagos, emails): `docs/SHOPIFY_LAUNCH_OPERATIONS.md`.  
 Política de secretos, checkout, CSP, cabeceras, formularios y CI: `docs/SECURITY.md`. No conectes credenciales reales sin completar su checklist de activación.
 
 ## Rutas de ayuda y legal

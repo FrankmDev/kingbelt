@@ -32,9 +32,12 @@ import { createShopifyCatalogAdapter, createShopifyCatalogSnapshotQueries } from
 import {
   getShopifyStorefrontConfig,
   ShopifyConfigurationError,
+  SHOPIFY_IN_CONTEXT_DIRECTIVE,
+  SHOPIFY_IN_CONTEXT_VARIABLE_DEFINITIONS,
   SHOPIFY_MARKET_CONTEXT,
   SHOPIFY_STOREFRONT_API_VERSION,
   SHOPIFY_SUPPORTED_CURRENCIES,
+  shopifyInContextVariables,
   type ShopifyMarketContext,
 } from '../src/commerce/infrastructure/shopify/config.ts';
 import {
@@ -49,10 +52,24 @@ import {
   type ShopifyStorefrontGateway,
 } from '../src/commerce/infrastructure/shopify/storefront-gateway.ts';
 
-export const PREFLIGHT_SHOP_QUERY = `
-  query PreflightShop {
+export const PREFLIGHT_STOREFRONT_QUERY = `
+  query PreflightStorefront(${SHOPIFY_IN_CONTEXT_VARIABLE_DEFINITIONS}) ${SHOPIFY_IN_CONTEXT_DIRECTIVE} {
     shop {
       name
+    }
+    localization {
+      country {
+        isoCode
+        currency {
+          isoCode
+        }
+        availableLanguages {
+          isoCode
+        }
+      }
+      language {
+        isoCode
+      }
     }
   }
 `;
@@ -87,8 +104,13 @@ export interface ShopifyPreflightSummary {
   variants: number;
   collections: number;
   images: number;
-  requiredProducts: 'OK' | 'skipped';
+  manifest: 'OK';
   market: ShopifyMarketContext;
+}
+
+export interface HandleDiff {
+  missing: string[];
+  unexpected: string[];
 }
 
 export interface ShopifyPreflightIO {
@@ -99,12 +121,82 @@ export interface ShopifyPreflightIO {
   allowedRemoteImageHosts?: readonly string[];
 }
 
-interface ShopQueryData {
-  shop?: { name?: unknown };
+interface PreflightStorefrontData {
+  shop?: {
+    name?: unknown;
+  };
+  localization?: {
+    country?: {
+      isoCode?: unknown;
+      currency?: {
+        isoCode?: unknown;
+      };
+      availableLanguages?: Array<{
+        isoCode?: unknown;
+      }>;
+    };
+    language?: {
+      isoCode?: unknown;
+    };
+  };
 }
 
 const fail = (kind: ShopifyPreflightErrorKind, message: string): never => {
   throw new ShopifyPreflightError(kind, message);
+};
+
+export const assertShopifyMarketLocalization = (data: PreflightStorefrontData): void => {
+  const localization = data.localization;
+  const country = localization?.country;
+  const language = localization?.language;
+  const countryCode = country?.isoCode;
+  const languageCode = language?.isoCode;
+  const currencyCode = country?.currency?.isoCode;
+  const availableLanguages = country?.availableLanguages;
+  const malformedLocalization =
+    'Storefront localization payload does not match the expected '
+    + `${SHOPIFY_MARKET_CONTEXT.country} / ${SHOPIFY_MARKET_CONTEXT.language} / ${SHOPIFY_MARKET_CONTEXT.currency} context.`;
+  const languages = Array.isArray(availableLanguages)
+    ? availableLanguages
+    : fail('configuration', malformedLocalization);
+  if (
+    localization == null
+    || country == null
+    || language == null
+    || typeof countryCode !== 'string'
+    || typeof languageCode !== 'string'
+    || typeof currencyCode !== 'string'
+  ) {
+    fail('configuration', malformedLocalization);
+  }
+
+  if (countryCode !== SHOPIFY_MARKET_CONTEXT.country) {
+    fail(
+      'configuration',
+      `Storefront localization country is not ${SHOPIFY_MARKET_CONTEXT.country} (received ${countryCode}). Check Shopify Markets and Headless storefront availability for Spain.`
+    );
+  }
+
+  if (languageCode !== SHOPIFY_MARKET_CONTEXT.language) {
+    fail(
+      'configuration',
+      `Storefront localization language is not ${SHOPIFY_MARKET_CONTEXT.language} (received ${languageCode}). Publish/enable Spanish for Spain in Shopify Languages / Markets.`
+    );
+  }
+
+  if (!languages.some((item) => item?.isoCode === SHOPIFY_MARKET_CONTEXT.language)) {
+    fail(
+      'configuration',
+      `Storefront available languages for ${SHOPIFY_MARKET_CONTEXT.country} do not include ${SHOPIFY_MARKET_CONTEXT.language}. Publish/enable Spanish for Spain in Shopify Languages / Markets.`
+    );
+  }
+
+  if (currencyCode !== SHOPIFY_MARKET_CONTEXT.currency) {
+    fail(
+      'configuration',
+      `Storefront localization currency is not ${SHOPIFY_MARKET_CONTEXT.currency} (received ${currencyCode}). Check Shopify Markets so Spain uses EUR.`
+    );
+  }
 };
 
 const secretValues = (env: ShopifyPreflightEnv): string[] =>
@@ -132,24 +224,74 @@ export const sanitizePreflightText = (value: string, env: ShopifyPreflightEnv): 
 const errorMessage = (error: unknown): string =>
   error instanceof Error ? error.message : 'Unknown Shopify preflight error.';
 
-export const parseRequiredProductHandles = (raw: string | undefined): string[] => {
-  if (raw === undefined) return [];
-  const handles = raw.split(',').map((handle) => handle.trim()).filter(Boolean);
-  if (handles.some((handle) => !HANDLE_PATTERN.test(handle))) {
+const MAX_MANIFEST_HANDLES = 20;
+
+export const parseExpectedHandles = (raw: string | undefined, variableName: string): string[] => {
+  if (typeof raw !== 'string') {
     throw new ShopifyConfigurationError(
-      'SHOPIFY_PREFLIGHT_REQUIRED_PRODUCT_HANDLES must be a comma-separated list of product handles.'
+      `${variableName} must be a comma-separated list of handles.`
+    );
+  }
+  const handles = raw.split(',').map((handle) => handle.trim()).filter((handle) => handle.length > 0);
+  if (handles.length === 0) {
+    throw new ShopifyConfigurationError(
+      `${variableName} must be a comma-separated list of handles.`
     );
   }
   const seen = new Set<string>();
   handles.forEach((handle) => {
+    if (!HANDLE_PATTERN.test(handle)) {
+      throw new ShopifyConfigurationError(
+        `${variableName} contains an invalid handle: ${handle}.`
+      );
+    }
     if (seen.has(handle)) {
       throw new ShopifyConfigurationError(
-        'SHOPIFY_PREFLIGHT_REQUIRED_PRODUCT_HANDLES contains a duplicate handle.'
+        `${variableName} contains duplicate handle: ${handle}.`
       );
     }
     seen.add(handle);
   });
   return handles;
+};
+
+export const diffHandles = (
+  expected: readonly string[],
+  actual: readonly string[]
+): HandleDiff => {
+  const expectedSet = new Set(expected);
+  const actualSet = new Set(actual);
+  return {
+    missing: expected.filter((handle) => !actualSet.has(handle)).sort(),
+    unexpected: actual.filter((handle) => !expectedSet.has(handle)).sort(),
+  };
+};
+
+const formatHandleList = (handles: readonly string[]): string => {
+  const shown = handles.slice(0, MAX_MANIFEST_HANDLES);
+  const omitted = handles.length - shown.length;
+  return omitted > 0 ? `${shown.join(', ')} (+${omitted} more)` : shown.join(', ');
+};
+
+const assertExactHandleSet = (
+  kind: 'product' | 'collection',
+  expected: readonly string[],
+  actual: readonly string[]
+): void => {
+  const { missing, unexpected } = diffHandles(expected, actual);
+  if (!missing.length && !unexpected.length) return;
+
+  const parts = [`Storefront ${kind} manifest mismatch.`];
+  if (missing.length) parts.push(`Missing: ${formatHandleList(missing)}.`);
+  if (unexpected.length) parts.push(`Unexpected: ${formatHandleList(unexpected)}.`);
+  if (missing.length) {
+    parts.push(
+      kind === 'product'
+        ? 'Check Shopify Admin → Products → Publishing / Sales channels → Headless, and Markets → España.'
+        : 'Check Shopify Admin → Collections → Publishing / Sales channels → Headless.'
+    );
+  }
+  fail('catalog', parts.join(' '));
 };
 
 const createReadOnlyGateway = (
@@ -204,7 +346,8 @@ const assertProductPageSurface = (
 
 const assertAstroCatalogSurface = async (
   catalog: ShopifyCatalog,
-  requiredHandles: readonly string[]
+  expectedProductHandles: readonly string[],
+  expectedCollectionHandles: readonly string[]
 ): Promise<void> => {
   const provider = createShopifyCatalogAdapter(createShopifyCatalogSnapshotQueries(catalog));
   const [
@@ -250,6 +393,9 @@ const assertAstroCatalogSurface = async (
     }
   });
 
+  assertExactHandleSet('product', expectedProductHandles, productHandles);
+  assertExactHandleSet('collection', expectedCollectionHandles, collectionHandles);
+
   getCollectionFacets(summaries);
   const indexHead = resolveCatalogIndexHead(
     {
@@ -279,16 +425,6 @@ const assertAstroCatalogSurface = async (
     }
     await provider.getRelatedProducts(product, 4);
     assertProductPageSurface(product, collections);
-  }
-
-  for (const handle of requiredHandles) {
-    const product = await provider.getProductByHandle(handle);
-    if (!product) {
-      return fail('catalog', `Required product handle was not found: ${handle}.`);
-    }
-    if (!product.variants.length) {
-      return fail('catalog', `Required product ${handle} has no variants.`);
-    }
   }
 };
 
@@ -345,6 +481,8 @@ export const formatPreflightSuccess = (summary: ShopifyPreflightSummary): string
     'Shopify preflight passed',
     '',
     'Storefront API: OK',
+    'Localization context: OK',
+    'Catalog manifest: OK',
     'Catalog mapping: OK',
     'Catalog validation: OK',
     `Market: ${summary.market.country}`,
@@ -354,7 +492,6 @@ export const formatPreflightSuccess = (summary: ShopifyPreflightSummary): string
     `Variants: ${summary.variants}`,
     `Collections: ${summary.collections}`,
     `Images: ${summary.images}`,
-    `Required products: ${summary.requiredProducts}`,
   ].join('\n');
 
 const PREFLIGHT_ERROR_LABEL: Record<ShopifyPreflightErrorKind, string> = {
@@ -387,15 +524,22 @@ const assertPreflightConfiguration = (env: ShopifyPreflightEnv) => {
     storefrontToken: env.SHOPIFY_STOREFRONT_PRIVATE_TOKEN,
   });
   parseShopifyHostedUrl(env.SHOPIFY_CUSTOMER_ACCOUNT_URL);
-  const requiredHandles = parseRequiredProductHandles(env.SHOPIFY_PREFLIGHT_REQUIRED_PRODUCT_HANDLES);
-  return { config, requiredHandles };
+  const expectedProductHandles = parseExpectedHandles(
+    env.SHOPIFY_PREFLIGHT_EXPECTED_PRODUCT_HANDLES,
+    'SHOPIFY_PREFLIGHT_EXPECTED_PRODUCT_HANDLES'
+  );
+  const expectedCollectionHandles = parseExpectedHandles(
+    env.SHOPIFY_PREFLIGHT_EXPECTED_COLLECTION_HANDLES,
+    'SHOPIFY_PREFLIGHT_EXPECTED_COLLECTION_HANDLES'
+  );
+  return { config, expectedProductHandles, expectedCollectionHandles };
 };
 
 export const runShopifyPreflight = async (
   env: ShopifyPreflightEnv,
   io: ShopifyPreflightIO = {}
 ): Promise<ShopifyPreflightSummary> => {
-  const { config, requiredHandles } = assertPreflightConfiguration(env);
+  const { config, expectedProductHandles, expectedCollectionHandles } = assertPreflightConfiguration(env);
   const gateway = createReadOnlyGateway(
     createShopifyStorefrontGateway(config, {
       fetch: io.fetch,
@@ -403,10 +547,20 @@ export const runShopifyPreflight = async (
     })
   );
 
-  const shop = await gateway.graphql<ShopQueryData>(PREFLIGHT_SHOP_QUERY);
-  if (!shop || typeof shop !== 'object' || typeof shop.shop?.name !== 'string' || !shop.shop.name) {
+  const inContext = shopifyInContextVariables();
+  const storefront = await gateway.graphql<PreflightStorefrontData, typeof inContext>(
+    PREFLIGHT_STOREFRONT_QUERY,
+    inContext
+  );
+  if (
+    !storefront
+    || typeof storefront !== 'object'
+    || typeof storefront.shop?.name !== 'string'
+    || !storefront.shop.name
+  ) {
     fail('catalog', 'Shopify Storefront connection succeeded but returned an unexpected shop payload.');
   }
+  assertShopifyMarketLocalization(storefront);
 
   const payload = await fetchShopifyCatalog(gateway);
 
@@ -418,11 +572,11 @@ export const runShopifyPreflight = async (
     SHOPIFY_SUPPORTED_CURRENCIES,
     allowedHosts
   );
-  await assertAstroCatalogSurface(catalog, requiredHandles);
+  await assertAstroCatalogSurface(catalog, expectedProductHandles, expectedCollectionHandles);
 
   return {
     ...catalogCounts(catalog.products, catalog.collections),
-    requiredProducts: requiredHandles.length ? 'OK' : 'skipped',
+    manifest: 'OK',
     market: SHOPIFY_MARKET_CONTEXT,
   };
 };

@@ -1,12 +1,10 @@
 import { publicSecurityConfig } from '@config/security';
-import { CatalogValidationError } from '../../application/catalog-validation';
 import type { ProductSummary } from '../../domain/catalog';
 import type { ShopifyCatalogQueries } from './catalog-adapter';
 import {
   mapShopifyCollections,
   mapShopifyProduct,
   mapShopifyProductSummary,
-  ShopifyCatalogMappingError,
 } from './catalog-mappers';
 import {
   COLLECTION_FIELDS,
@@ -18,7 +16,6 @@ import {
   collectConnectionPages,
   collectLimitedConnectionPages,
   completeProductConnections,
-  requireNextCursor,
   shopifyPageSize,
   type ShopifyCollectionNode,
   type ShopifyConnection,
@@ -33,6 +30,8 @@ import {
 import type { ShopifyStorefrontGateway } from './storefront-gateway';
 
 type GatewaySource = ShopifyStorefrontGateway | (() => ShopifyStorefrontGateway);
+
+const RUNTIME_PRODUCT_MAP = { requireStructuredMetafields: false } as const;
 
 interface HandleNode {
   handle: string;
@@ -110,40 +109,21 @@ const paginateRootConnection = async <T>(
   extract: (payload: unknown) => ShopifyConnection<T>,
   limit?: number
 ): Promise<T[]> => {
-  const first = shopifyPageSize(limit ?? SHOPIFY_PAGE_SIZE);
-  const initialPayload = await gateway.graphql<unknown, { first: number; after: string | null }>(
-    query,
-    withShopifyInContextVariables({ first, after: null })
-  );
-  const initial = extract(initialPayload);
-  if (limit !== undefined) {
-    return collectLimitedConnectionPages(
-      initial,
-      label,
-      async (after, pageFirst) => extract(
-        await gateway.graphql<unknown, { first: number; after: string }>(query, withShopifyInContextVariables({
-          first: pageFirst,
-          after,
-        }))
-      ),
-      limit
-    );
-  }
-  return collectConnectionPages(
-    initial,
-    label,
-    async (after) => extract(
-      await gateway.graphql<unknown, { first: number; after: string }>(query, withShopifyInContextVariables({
-        first: SHOPIFY_PAGE_SIZE,
-        after,
-      }))
-    )
-  );
-};
+  if (limit === 0) return [];
 
-const readProductsConnection = (
-  payload: { products: ShopifyConnection<ShopifyProductSummaryNode> }
-): ShopifyConnection<ShopifyProductSummaryNode> => payload.products;
+  const loadPage = async (after: string | null, pageFirst: number) =>
+    extract(
+      await gateway.graphql<unknown, { first: number; after: string | null }>(
+        query,
+        withShopifyInContextVariables({ first: pageFirst, after })
+      )
+    );
+
+  const initial = await loadPage(null, shopifyPageSize(limit ?? SHOPIFY_PAGE_SIZE));
+  return limit === undefined
+    ? collectConnectionPages(initial, label, (after) => loadPage(after, SHOPIFY_PAGE_SIZE))
+    : collectLimitedConnectionPages(initial, label, loadPage, limit);
+};
 
 const relatedCollectionsQuery = (count: number): string => {
   const idVariables = Array.from({ length: count }, (_, index) => `$id${index}: ID!`).join(', ');
@@ -172,75 +152,19 @@ export const createShopifyCatalogQueries = (
 ): ShopifyCatalogQueries => {
   const getGateway = createGatewayAccessor(gateway);
 
-  const tryMapSummary = (node: ShopifyProductSummaryNode): ProductSummary | undefined => {
-    try {
-      return mapShopifyProductSummary(node, allowedRemoteImageHosts);
-    } catch (error) {
-      if (error instanceof ShopifyCatalogMappingError || error instanceof CatalogValidationError) {
-        return undefined;
-      }
-      throw error;
-    }
-  };
-
   const mapSummaries = (nodes: readonly ShopifyProductSummaryNode[]): ProductSummary[] =>
-    nodes.flatMap((node) => {
-      const summary = tryMapSummary(node);
-      return summary ? [summary] : [];
-    });
+    nodes.map((node) => mapShopifyProductSummary(node, allowedRemoteImageHosts, RUNTIME_PRODUCT_MAP));
 
-  const loadProductSummaries = async (limit?: number): Promise<ProductSummary[]> => {
-    if (limit === 0) return [];
-    if (limit === undefined) {
-      const nodes = await paginateRootConnection(
+  const loadProductSummaries = async (limit?: number): Promise<ProductSummary[]> =>
+    mapSummaries(
+      await paginateRootConnection(
         getGateway(),
         PRODUCT_SUMMARIES_PAGE_QUERY,
         'resúmenes de producto',
-        (payload) => readProductsConnection(payload as { products: ShopifyConnection<ShopifyProductSummaryNode> })
-      );
-      return mapSummaries(nodes);
-    }
-
-    const gatewayImpl = getGateway();
-    const summaries: ProductSummary[] = [];
-    let after: string | null = null;
-    let hasNextPage = true;
-    let pages = 0;
-    const seenCursors = new Set<string>();
-
-    while (summaries.length < limit && hasNextPage) {
-      if (pages >= 40) {
-        throw new Error('Shopify superó el límite de páginas de resúmenes de producto.');
-      }
-      const payload = await gatewayImpl.graphql<
-        { products: ShopifyConnection<ShopifyProductSummaryNode> },
-        { first: number; after: string | null }
-      >(
-        PRODUCT_SUMMARIES_PAGE_QUERY,
-        withShopifyInContextVariables({
-          first: shopifyPageSize(limit - summaries.length),
-          after,
-        })
-      );
-      const connection = readProductsConnection(payload);
-      summaries.push(...mapSummaries(connection.nodes));
-      hasNextPage = connection.pageInfo.hasNextPage;
-      pages += 1;
-      if (summaries.length >= limit || !hasNextPage) break;
-      const cursor = requireNextCursor(connection.pageInfo, 'resúmenes de producto');
-      if (seenCursors.has(cursor) || cursor === after) {
-        throw new Error(
-          after === cursor
-            ? 'Shopify devolvió un cursor que no avanza de resúmenes de producto.'
-            : 'Shopify devolvió un cursor repetido de resúmenes de producto: la paginación no avanza.'
-        );
-      }
-      seenCursors.add(cursor);
-      after = cursor;
-    }
-
-    return summaries.slice(0, limit);
-  };
+        (payload) => (payload as { products: ShopifyConnection<ShopifyProductSummaryNode> }).products,
+        limit
+      )
+    );
 
   return {
     async getCollections() {
@@ -317,7 +241,7 @@ export const createShopifyCatalogQueries = (
       >(PRODUCT_BY_HANDLE_QUERY, withShopifyInContextVariables({ handle }));
       if (!data.product) return undefined;
       const complete = await completeProductConnections(gatewayImpl, data.product);
-      return mapShopifyProduct(complete, allowedRemoteImageHosts);
+      return mapShopifyProduct(complete, allowedRemoteImageHosts, RUNTIME_PRODUCT_MAP);
     },
 
     async getProductSummaries() {

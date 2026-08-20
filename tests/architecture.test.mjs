@@ -249,14 +249,26 @@ describe('límites de arquitectura', () => {
 
   test('documenta el canal Headless y los scopes Storefront mínimos', () => {
     const readiness = readFileSync(join(root, 'docs/SHOPIFY_READINESS.md'), 'utf8');
+    const security = readFileSync(join(root, 'docs/SECURITY.md'), 'utf8');
     expect(readiness).toContain('canal Headless');
+    expect(readiness).toContain('Sales channels → Headless');
     [
       'unauthenticated_read_product_listings',
-      'unauthenticated_read_product_inventory',
       'unauthenticated_read_metaobjects',
       'unauthenticated_read_checkouts',
       'unauthenticated_write_checkouts',
-    ].forEach((scope) => expect(readiness).toContain(scope));
+    ].forEach((scope) => {
+      expect(readiness).toContain(scope);
+      expect(security).toContain(scope);
+    });
+    expect(readiness).toContain('unauthenticated_read_product_inventory');
+    expect(security).toContain('unauthenticated_read_product_inventory');
+    expect(readiness).toContain('solo es necesario si se activa inventario exacto');
+    expect(security).toContain('solo es necesario si se activa inventario exacto');
+    expect(readiness).toContain('SHOPIFY_PREFLIGHT_EXPECTED_PRODUCT_HANDLES');
+    expect(readiness).toContain('SHOPIFY_PREFLIGHT_EXPECTED_COLLECTION_HANDLES');
+    expect(readiness).not.toContain('SHOPIFY_PREFLIGHT_REQUIRED_PRODUCT_HANDLES');
+    expect(security).not.toContain('SHOPIFY_PREFLIGHT_REQUIRED_PRODUCT_HANDLES');
   });
 
   test('documenta el contrato obligatorio de metafields e imágenes antes de importar', () => {
@@ -267,15 +279,21 @@ describe('límites de arquitectura', () => {
       'kingbelt.material',
       'kingbelt.width_mm',
       'kingbelt.buckle_finish',
-      'kingbelt.primary_collection',
-      'kingbelt.color_galleries',
+      'custom.kingbelt_primary_collection',
+      'custom.kingbelt_color_galleries',
     ];
     requiredProductMetafields.forEach((key) => {
       expect(readiness).toContain(`\`${key}\``);
     });
+    expect(readiness).not.toContain('kingbelt.primary_collection');
     expect(readiness).toContain('list.metaobject_reference');
     expect(readiness).toContain('collection_reference');
-    expect(readiness).toContain('Type: Collection reference');
+    expect(readiness).toContain('Read / PUBLIC_READ');
+    expect(readiness).toContain('Type: collection_reference');
+    expect(readiness).toContain('Required: yes for every published KingBelt product');
+    expect(readiness).toContain('Fallback: none');
+    expect(readiness).not.toMatch(/si el producto está en más de una colección/);
+    expect(readiness).not.toMatch(/la única colección publicada/);
     expect(readiness).toContain('exactamente 3, ordenadas');
     expect(readiness).toContain('products with Color option');
     expect(readiness).toContain('variant.image');
@@ -357,8 +375,14 @@ describe('límites de arquitectura', () => {
     const apiCart = readFileSync(join(sourceRoot, 'pages/api/cart.ts'), 'utf8');
     expect(apiCart).toContain("session.get(SHOPIFY_CART_SESSION_KEY)");
     expect(apiCart).toContain("session.set(SHOPIFY_CART_SESSION_KEY, cartId)");
+    expect(apiCart).toContain('SHOPIFY_CART_SESSION_KEY = \'shopifyCartId\'');
     expect(apiCart).not.toContain('cookies.set');
     expect(apiCart).not.toContain('cookies.get');
+    expect(apiCart).not.toContain('unstorage');
+    expect(apiCart).not.toContain('@upstash/redis');
+    expect(apiCart).not.toContain('session-driver');
+    expect(apiCart).not.toContain('session-storage-config');
+    expect(apiCart).not.toContain('Redis.fromEnv');
 
     const cartServer = readFileSync(join(sourceRoot, 'commerce/cart-server.ts'), 'utf8');
     expect(cartServer).not.toContain('session');
@@ -371,6 +395,15 @@ describe('límites de arquitectura', () => {
     expect(architecture).toContain('browser → opaque session cookie → Astro session store → Shopify cartId');
     expect(readiness).toContain('browser → opaque session cookie → Astro session store → Shopify cartId');
     expect(security).toContain('browser → opaque session cookie → Astro session store → Shopify cartId');
+
+    const sessionData = readFileSync(join(sourceRoot, 'env.d.ts'), 'utf8');
+    expect(sessionData).toContain('shopifyCartId: string');
+    expect(sessionData).not.toContain('checkoutUrl');
+    expect(sessionData).not.toContain('buyerIp');
+    expect(sessionData).not.toContain('customer');
+    expect(existsSync(join(sourceRoot, 'pages/api/session-health.ts'))).toBe(false);
+    expect(existsSync(join(sourceRoot, 'pages/api/redis-health.ts'))).toBe(false);
+    expect(existsSync(join(sourceRoot, 'pages/api/upstash.ts'))).toBe(false);
   });
 
   test('el navegador y el dominio Shopify no importan sesión, Redis ni persistencia', () => {
@@ -384,6 +417,7 @@ describe('límites de arquitectura', () => {
     ];
     const forbiddenDependencies = [
       'src/session-driver',
+      'src/session-storage-config',
       'unstorage',
       '@upstash/redis',
     ];
@@ -405,6 +439,7 @@ describe('límites de arquitectura', () => {
     const sessionCoupling = shopifySources.filter((path) => {
       const source = readFileSync(path, 'utf8');
       return source.includes('session-driver')
+        || source.includes('session-storage-config')
         || source.includes('AstroSession')
         || source.includes('unstorage')
         || source.includes('@upstash/redis')
@@ -456,6 +491,16 @@ describe('límites de arquitectura', () => {
     expect(runtimeQuery).toContain('SHOPIFY_IN_CONTEXT_DIRECTIVE');
     expect(cartService).toContain('shopifyCartBuyerIdentity');
     expect(cartService).toContain('SHOPIFY_MARKET_CONTEXT');
+    expect(cartService).toContain('withShopifyCartInContextVariables');
+    expect(cartService).toContain('SHOPIFY_CART_IN_CONTEXT_DIRECTIVE');
+    expect(cartService).not.toContain('withShopifyInContextVariables');
+    expect(cartService).not.toContain('SHOPIFY_IN_CONTEXT_VARIABLE_DEFINITIONS');
+    const cartMapper = readFileSync(
+      join(sourceRoot, 'commerce/infrastructure/shopify/shopify-cart-mappers.ts'),
+      'utf8'
+    );
+    expect(cartMapper).toContain('SHOPIFY_MARKET_CONTEXT');
+    expect(cartMapper).toContain('assertShopifyCartMarket');
     expect(mapper).toContain('SHOPIFY_SUPPORTED_CURRENCIES');
   });
 
@@ -532,7 +577,7 @@ describe('límites de arquitectura', () => {
     expect(apiCart).not.toMatch(/body\.sku/);
   });
 
-  test('Shopify deriva Product.mediaGroups solo desde kingbelt.color_galleries', () => {
+  test('Shopify deriva Product.mediaGroups solo desde custom.kingbelt_color_galleries', () => {
     const mapper = readFileSync(
       join(sourceRoot, 'commerce/infrastructure/shopify/catalog-mappers.ts'),
       'utf8'
@@ -551,13 +596,13 @@ describe('límites de arquitectura', () => {
       .map((path) => readFileSync(path, 'utf8'))
       .join('\n');
 
-    expect(query).toContain('key: "color_galleries"');
+    expect(query).toContain('SHOPIFY_COLOR_GALLERIES_METAFIELD.key');
     expect(runtimeQuery).toContain('FULL_PRODUCT_FIELDS');
     expect(runtimeQuery).toContain('PRODUCT_SUMMARY_FIELDS');
     const summaryFields = query.match(/export const PRODUCT_SUMMARY_FIELDS = `([\s\S]*?)`;/)?.[1] ?? '';
     expect(summaryFields).not.toContain('color_galleries');
     expect(mapper).toContain('mapRequiredColorGalleries');
-    expect(mapper).toContain('list.metaobject_reference');
+    expect(mapper).toContain('SHOPIFY_COLOR_GALLERIES_METAFIELD');
     expect(mapper).toContain('COLOR_GALLERY_IMAGE_COUNT');
     expect(mapper).not.toMatch(/::native-color::/);
     expect(mapper).not.toMatch(
@@ -565,7 +610,7 @@ describe('límites de arquitectura', () => {
     );
     expect(mapper).not.toMatch(/new URL\([^)]*\)\.pathname/);
     expect(mapper).not.toMatch(/decodeURIComponent\(/);
-    expect(readiness).toContain('kingbelt.color_galleries');
+    expect(readiness).toContain('custom.kingbelt_color_galleries');
     expect(readiness).toContain('color_value');
     expect(planDocs).not.toMatch(/si el archivo nombra ese color|token de color|fallback nativo de galería/);
   });
@@ -586,20 +631,46 @@ describe('límites de arquitectura', () => {
     );
     const summaryFields = query.match(/export const PRODUCT_SUMMARY_FIELDS = `([\s\S]*?)`;/)?.[1] ?? '';
     const fullMetafields = query.match(/const FULL_PRODUCT_METAFIELDS = `([\s\S]*?)`;/)?.[1] ?? '';
+    const config = readFileSync(
+      join(sourceRoot, 'commerce/infrastructure/shopify/config.ts'),
+      'utf8'
+    );
 
-    expect(mapper).toContain('PRIMARY_COLLECTION_KEY');
-    expect(mapper).toContain("'primary_collection'");
-    expect(mapper).toContain('collection_reference');
+    expect(mapper).toContain('SHOPIFY_PRIMARY_COLLECTION_METAFIELD');
+    expect(mapper).toContain('SHOPIFY_PRIMARY_COLLECTION_METAFIELD_IDENTIFIER');
+    expect(mapper).not.toContain('PRIMARY_COLLECTION_KEY');
+    expect(mapper).not.toMatch(/namespace === 'kingbelt'[\s\S]{0,80}primary_collection/);
+    expect(config).toContain("namespace: 'custom'");
+    expect(config).toContain("key: 'kingbelt_primary_collection'");
+    expect(config).toContain("type: 'collection_reference'");
     expect(mapper).not.toMatch(/collections\.nodes\[0\]/);
     expect(mapper).not.toMatch(/primaryCollectionId\s*=\s*[\s\S]{0,120}\?\?/);
-    expect(fullMetafields).toContain('key: "primary_collection"');
+    expect(fullMetafields).toContain('SHOPIFY_PRIMARY_COLLECTION_METAFIELD.namespace');
+    expect(fullMetafields).toContain('SHOPIFY_PRIMARY_COLLECTION_METAFIELD.key');
+    expect(fullMetafields).not.toContain('key: "primary_collection"');
+    expect(fullMetafields).toContain('namespace: "kingbelt", key: "model_reference"');
+    expect(fullMetafields).toContain('SHOPIFY_COLOR_GALLERIES_METAFIELD.namespace');
+    expect(fullMetafields).toContain('SHOPIFY_COLOR_GALLERIES_METAFIELD.key');
+    expect(fullMetafields).not.toContain('namespace: "kingbelt", key: "color_galleries"');
     expect(fullMetafields).toContain('COLLECTION_REFERENCE_SELECTION');
-    expect(summaryFields).toContain('key: "primary_collection"');
+    expect(summaryFields).toContain('SHOPIFY_PRIMARY_COLLECTION_METAFIELD.namespace');
+    expect(summaryFields).toContain('SHOPIFY_PRIMARY_COLLECTION_METAFIELD.key');
+    expect(summaryFields).not.toContain('key: "primary_collection"');
     expect(summaryFields).toContain('COLLECTION_REFERENCE_SELECTION');
-    expect(summaryFields).not.toMatch(/collections\(first:\s*1\)/);
+    expect(summaryFields).toMatch(/collections\s*\(/);
     expect(query).toMatch(/\.\.\.\s*on Collection\s*\{\s*id handle title\s*\}/);
     expect(runtimeQuery).toContain('PRODUCT_SUMMARY_FIELDS');
     expect(runtimeQuery).toContain('FULL_PRODUCT_FIELDS');
+
+    const cartFields = readFileSync(
+      join(sourceRoot, 'commerce/infrastructure/shopify/shopify-cart.ts'),
+      'utf8'
+    ).match(/const CART_FIELDS = `([\s\S]*?)`;/)?.[1] ?? '';
+    expect(cartFields).toContain('SHOPIFY_PRIMARY_COLLECTION_METAFIELD.namespace');
+    expect(cartFields).toContain('SHOPIFY_PRIMARY_COLLECTION_METAFIELD.key');
+    expect(cartFields).not.toContain('key: "primary_collection"');
+    expect(cartFields).toContain('namespace: "kingbelt", key: "model_reference"');
+    expect(cartFields).not.toMatch(/collections\s*\(/);
   });
 
   test('el runtime de catálogo no descarga el catálogo Shopify completo', () => {
@@ -623,6 +694,7 @@ describe('límites de arquitectura', () => {
     expect(adapter).not.toContain('KingBeltCatalogPage');
     expect(runtime).not.toContain('fetchShopifyCatalog');
     expect(runtime).not.toContain('KingBeltCatalogPage');
+    expect(runtime).not.toContain('tryMapSummary');
     expect(runtime).toContain('product(handle:');
     expect(runtime).toContain('collection(handle:');
     expect(composition).not.toContain('fetchShopifyCatalog');
@@ -633,5 +705,96 @@ describe('límites de arquitectura', () => {
     expect(preflight).toContain('fetchShopifyCatalog');
     expect(preflight).toContain('mapShopifyCatalog');
     expect(preflight).toContain('assertValidCatalog');
+  });
+
+  test('el catálogo SSR Shopify viaja con Buyer IP del request y sin cabeceras de proxy', () => {
+    const composition = readFileSync(join(sourceRoot, 'commerce/catalog.ts'), 'utf8');
+    const adapter = readFileSync(
+      join(sourceRoot, 'commerce/infrastructure/shopify/catalog-adapter.ts'),
+      'utf8'
+    );
+    const cache = readFileSync(
+      join(sourceRoot, 'commerce/infrastructure/shopify/catalog-resource-cache.ts'),
+      'utf8'
+    );
+    const cartServer = readFileSync(join(sourceRoot, 'commerce/cart-server.ts'), 'utf8');
+    const apiCart = readFileSync(join(sourceRoot, 'pages/api/cart.ts'), 'utf8');
+    const cartCatalog = readFileSync(join(sourceRoot, 'pages/cart-catalog.json.ts'), 'utf8');
+
+    expect(composition).toContain('export const getCatalogProvider');
+    expect(composition).not.toContain('export const catalogProvider');
+    expect(composition).toContain('createConfiguredShopifyBuyerStorefrontGateway');
+    expect(composition).toContain('shopifyCatalogCache ??=');
+    expect(adapter).toContain('options.cache ??');
+    expect(adapter).not.toContain('buyerIp');
+    expect(cache).not.toContain('buyerIp');
+    expect(cartServer).toMatch(/createConfiguredShopifyCartService = \(buyerIp: string\)/);
+    expect(cartServer).toContain('createConfiguredShopifyBuyerStorefrontGateway(buyerIp)');
+    expect(apiCart).toContain('createConfiguredShopifyCartService(clientAddress)');
+    expect(cartCatalog).toContain('getCatalogProvider()');
+    expect(cartCatalog).not.toContain('clientAddress');
+
+    const ssrRoutes = {
+      'src/pages/index.astro': 'getCatalogProvider(Astro.clientAddress)',
+      'src/pages/productos/index.astro': 'getCatalogProvider(Astro.clientAddress)',
+      'src/pages/productos/[slug].astro': 'getCatalogProvider(Astro.clientAddress)',
+      'src/pages/categorias/[slug].astro': 'getCatalogProvider(Astro.clientAddress)',
+      'src/pages/sitemap-commerce.xml.ts': 'getCatalogProvider(clientAddress)',
+    };
+    for (const [path, call] of Object.entries(ssrRoutes)) {
+      const source = readFileSync(join(root, path), 'utf8');
+      expect(source).toContain(call);
+      expect(source).not.toMatch(/import\s*\{\s*catalogProvider\s*\}/);
+    }
+
+    const forbiddenProxyHeaders = ['x-forwarded-for', 'x-real-ip', 'cf-connecting-ip', 'true-client-ip'];
+    const scoped = sourceFiles.filter((path) => {
+      const relative = sourcePath(path);
+      return relative.startsWith('src/pages/') || relative.startsWith('src/commerce/');
+    });
+    const violations = scoped.flatMap((path) => {
+      const source = readFileSync(path, 'utf8').toLowerCase();
+      return forbiddenProxyHeaders
+        .filter((header) => source.includes(header))
+        .map((header) => `${sourcePath(path)}: ${header}`);
+    });
+    expect(violations).toEqual([]);
+  });
+
+  test('el gate operativo de Shopify Admin está documentado y no se finge con flags', () => {
+    expect(existsSync(join(root, 'docs/SHOPIFY_LAUNCH_OPERATIONS.md'))).toBe(true);
+    const readiness = readFileSync(join(root, 'docs/SHOPIFY_READINESS.md'), 'utf8');
+    expect(readiness).toContain('Operational launch gate');
+    expect(readiness).toContain('SHOPIFY_LAUNCH_OPERATIONS.md');
+    expect(readiness).not.toContain('SHOPIFY_SHIPPING_READY');
+
+    const forbiddenFlags = [
+      'SHOPIFY_ADMIN_ACCESS_TOKEN',
+      'SHOPIFY_SHIPPING_READY',
+      'SHOPIFY_TAX_READY',
+      'SHOPIFY_PAYMENT_READY',
+      'SHOPIFY_EMAIL_READY',
+      'SHIPPING_RATE',
+      'FREE_SHIPPING_THRESHOLD',
+      'VAT_RATE',
+      'TAX_RATE',
+      'TAX_INCLUDED',
+      'PAYMENT_PROVIDER',
+      'SHOPIFY_PAYMENTS_ENABLED',
+      'BOGUS_GATEWAY',
+    ];
+    const runtimeSurfaces = [
+      join(root, '.env.example'),
+      join(root, 'astro.config.mjs'),
+      ...sourceFiles,
+      ...walk(join(root, 'scripts')).filter((path) => /\.(?:mjs|ts)$/.test(path)),
+    ];
+    const leaks = runtimeSurfaces.flatMap((path) => {
+      const source = readFileSync(path, 'utf8');
+      return forbiddenFlags
+        .filter((name) => source.includes(name))
+        .map((name) => `${sourcePath(path)}: ${name}`);
+    });
+    expect(leaks).toEqual([]);
   });
 });

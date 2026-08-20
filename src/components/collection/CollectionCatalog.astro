@@ -231,6 +231,7 @@ const scopeCopy = scope
   /* ---------- Grupos por categoría ---------- */
 
   .collection-catalog__group {
+    isolation: isolate;
     min-width: 0;
     padding-top: var(--kb-space-8);
   }
@@ -288,6 +289,8 @@ const scopeCopy = scope
 
   .collection-catalog__group-link {
     position: relative;
+    z-index: 0;
+    align-self: start;
     width: fit-content;
     padding: var(--kb-space-2) 0;
     color: var(--color-king-muted);
@@ -306,6 +309,7 @@ const scopeCopy = scope
     background: var(--color-king-accent);
     transform: scaleX(0.28);
     transform-origin: left center;
+    pointer-events: none;
     transition: transform var(--kb-dur-med) var(--kb-ease-out);
   }
 
@@ -327,6 +331,8 @@ const scopeCopy = scope
   /* ---------- Grid de productos ---------- */
 
   .collection-catalog__grid {
+    position: relative;
+    z-index: 1;
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--kb-space-8) var(--kb-space-4);
@@ -336,9 +342,9 @@ const scopeCopy = scope
   }
 
   .collection-catalog__item {
+    position: relative;
+    z-index: 1;
     min-width: 0;
-    content-visibility: auto;
-    contain-intrinsic-block-size: auto 32rem;
   }
 
   .collection-catalog__item[hidden] {

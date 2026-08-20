@@ -13,6 +13,8 @@ const FORBIDDEN_QUALITY_ENV = [
   'SHOPIFY_WEBHOOK_SECRET',
   'SHOPIFY_CART_COOKIE_SECRET',
   'VERCEL_DEPLOY_HOOK_URL',
+  'UPSTASH_REDIS_REST_URL',
+  'UPSTASH_REDIS_REST_TOKEN',
 ];
 const VALIDATE_STEPS = [
   'bun run audit:dependencies',
@@ -68,7 +70,11 @@ describe('contrato de CI quality', () => {
     expect(source).not.toContain('continue-on-error');
     expect(source).not.toContain('|| true');
     expect(source).not.toContain('shopify:smoke');
+    expect(source).not.toContain('shopify:cart-smoke');
+    expect(source).not.toContain('shopify:release-gate');
     expect(source).not.toContain('shopify:preflight');
+    expect(source).not.toContain('session:preflight');
+    expect(source).not.toContain('launch:preflight');
     expect(source).not.toMatch(/\$\{\{\s*secrets\./);
     expect(source).not.toMatch(/\b(?:shpat|shpca|shpss)_[A-Za-z0-9]{20,}\b/);
   });
@@ -80,8 +86,16 @@ describe('contrato de CI quality', () => {
     expect(scripts.validate.split(/\s*&&\s*/)).toEqual(VALIDATE_STEPS);
     expect(scripts.validate).not.toContain('bun install');
     expect(scripts.validate).not.toContain('shopify:smoke');
+    expect(scripts.validate).not.toContain('shopify:cart-smoke');
+    expect(scripts.validate).not.toContain('shopify:release-gate');
     expect(scripts.validate).not.toContain('shopify:preflight');
+    expect(scripts.validate).not.toContain('session:preflight');
+    expect(scripts.validate).not.toContain('launch:preflight');
     expect(scripts['shopify:preflight']).toBe('bun scripts/shopify-preflight.mjs');
+    expect(scripts['shopify:cart-smoke']).toBe('bun scripts/shopify-cart-smoke.mjs');
+    expect(scripts['shopify:release-gate']).toBe('bun scripts/shopify-release-gate.mjs');
+    expect(scripts['session:preflight']).toBe('bun scripts/session-preflight.mjs');
+    expect(scripts['launch:preflight']).toBe('bun run session:preflight && bun run shopify:preflight');
     expect(scripts.validate).not.toContain('|| true');
     expect(scripts['audit:dependencies']).toBe('bun audit');
     expect(scripts['security:scan:history']).toContain('--history');
@@ -96,8 +110,12 @@ describe('contrato de CI quality', () => {
     expect(scale).not.toMatch(/\/Users\/|\/home\/[^/]+/);
     expect(historyScan).toContain('--is-shallow-repository');
     expect(historyScan).toContain('fetch-depth: 0');
+    expect(historyScan).not.toContain('session:preflight');
     expect(validate).not.toMatch(/\/Users\/|\/home\/[^/]+/);
     expect(validate).not.toContain('shopify:smoke');
+    expect(validate).not.toContain('shopify:cart-smoke');
+    expect(validate).not.toContain('shopify:release-gate');
     expect(validate).not.toContain('shopify:preflight');
+    expect(validate).not.toContain('session:preflight');
   });
 });

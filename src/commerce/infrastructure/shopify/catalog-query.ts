@@ -1,7 +1,9 @@
 import type { ShopifyStorefrontGateway } from './storefront-gateway';
 import {
+  SHOPIFY_COLOR_GALLERIES_METAFIELD,
   SHOPIFY_IN_CONTEXT_DIRECTIVE,
   SHOPIFY_IN_CONTEXT_VARIABLE_DEFINITIONS,
+  SHOPIFY_PRIMARY_COLLECTION_METAFIELD,
   withShopifyInContextVariables,
 } from './config';
 import {
@@ -135,7 +137,7 @@ export interface ShopifyProductSummaryNode {
   productType: string;
   availableForSale: boolean;
   featuredImage: ShopifyImageNode | null;
-  collections: Connection<Pick<ShopifyCollectionNode, 'id' | 'handle' | 'title'>>;
+  collections?: Connection<Pick<ShopifyCollectionNode, 'id' | 'handle' | 'title'>>;
   options: ShopifyOptionNode[];
   priceRange: {
     minVariantPrice: ShopifyMoneyV2;
@@ -197,8 +199,8 @@ const FULL_PRODUCT_METAFIELDS = `
     { namespace: "kingbelt", key: "width_mm" }
     { namespace: "kingbelt", key: "buckle_finish" }
     { namespace: "kingbelt", key: "badge" }
-    { namespace: "kingbelt", key: "primary_collection" }
-    { namespace: "kingbelt", key: "color_galleries" }
+    { namespace: "${SHOPIFY_PRIMARY_COLLECTION_METAFIELD.namespace}", key: "${SHOPIFY_PRIMARY_COLLECTION_METAFIELD.key}" }
+    { namespace: "${SHOPIFY_COLOR_GALLERIES_METAFIELD.namespace}", key: "${SHOPIFY_COLOR_GALLERIES_METAFIELD.key}" }
   ]) {
     namespace key type value
     ${COLLECTION_REFERENCE_SELECTION}
@@ -252,7 +254,7 @@ export const PRODUCT_SUMMARY_FIELDS = `
     { namespace: "kingbelt", key: "model_reference" }
     { namespace: "kingbelt", key: "summary" }
     { namespace: "kingbelt", key: "badge" }
-    { namespace: "kingbelt", key: "primary_collection" }
+    { namespace: "${SHOPIFY_PRIMARY_COLLECTION_METAFIELD.namespace}", key: "${SHOPIFY_PRIMARY_COLLECTION_METAFIELD.key}" }
   ]) {
     namespace key type value
     ${COLLECTION_REFERENCE_SELECTION}

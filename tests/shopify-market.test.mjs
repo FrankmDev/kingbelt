@@ -4,6 +4,7 @@ import { join, resolve } from 'node:path';
 import { createShopifyCatalogQueries } from '../src/commerce/infrastructure/shopify/catalog-runtime-query.ts';
 import { createShopifyCartService } from '../src/commerce/infrastructure/shopify/shopify-cart.ts';
 import {
+  SHOPIFY_CART_IN_CONTEXT_DIRECTIVE,
   SHOPIFY_IN_CONTEXT_DIRECTIVE,
   SHOPIFY_MARKET_CONTEXT,
   SHOPIFY_SUPPORTED_CURRENCIES,
@@ -85,9 +86,12 @@ describe('contexto operativo de mercado Shopify', () => {
       expect(variables.country).toBe(SHOPIFY_MARKET_CONTEXT.country);
       expect(variables.language).toBe(SHOPIFY_MARKET_CONTEXT.language);
     });
-    expect(create.variables.country).toBe(SHOPIFY_MARKET_CONTEXT.country);
+    expect(create.query).toContain(SHOPIFY_CART_IN_CONTEXT_DIRECTIVE);
+    expect(create.query).not.toContain(SHOPIFY_IN_CONTEXT_DIRECTIVE);
+    expect(create.variables).not.toHaveProperty('country');
     expect(create.variables.language).toBe(SHOPIFY_MARKET_CONTEXT.language);
     expect(create.variables.input.buyerIdentity).toEqual(shopifyCartBuyerIdentity());
+    expect(create.variables.input.buyerIdentity.countryCode).toBe('ES');
     expect(product.variants[0].price.currency).toBe(SHOPIFY_MARKET_CONTEXT.currency);
   });
 

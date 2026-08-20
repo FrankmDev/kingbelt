@@ -65,6 +65,8 @@ describe('configuración Shopify Storefront', () => {
       'https://kingbelt.es',
       'admin.shopify.com/store/tienda',
       'https://admin.shopify.com/store/tienda',
+      'kingbelt-store.shopify.com',
+      'https://kingbelt-store.shopify.com',
       'kingbelt.myshopify.com/products',
       'kingbelt.myshopify.com?preview=1',
       'kingbelt.myshopify.com#catalog',
@@ -86,7 +88,10 @@ describe('configuración Shopify Storefront', () => {
     expect(normalizeShopifyStoreDomain('tienda.myshopify.com')).toBe('tienda.myshopify.com');
     expect(normalizeShopifyStoreDomain('https://tienda.myshopify.com')).toBe('tienda.myshopify.com');
     expect(normalizeShopifyStoreDomain('tienda.myshopify.com/')).toBe('tienda.myshopify.com');
+    expect(normalizeShopifyStoreDomain('kingbelt-store.myshopify.com')).toBe('kingbelt-store.myshopify.com');
     expect(() => normalizeShopifyStoreDomain('admin.shopify.com/store/tienda'))
+      .toThrow(ShopifyConfigurationError);
+    expect(() => normalizeShopifyStoreDomain('kingbelt-store.shopify.com'))
       .toThrow(ShopifyConfigurationError);
     expect(() => normalizeShopifyStoreDomain('kingbelt.es'))
       .toThrow(ShopifyConfigurationError);
@@ -207,11 +212,21 @@ describe('configuración Shopify Storefront', () => {
     });
     expect(astroConfiguration.env.schema.SHOPIFY_CART_COOKIE_SECRET).toBeUndefined();
     expect(astroConfiguration.session.cookie.name).toBe('__Host-kingbelt-session');
+    expect(astroConfiguration.session.cookie.httpOnly).toBe(true);
     expect(astroConfiguration.session.cookie.secure).toBe(true);
     expect(astroConfiguration.session.cookie.sameSite).toBe('lax');
     expect(astroConfiguration.session.cookie.path).toBe('/');
     expect(astroConfiguration.session.cookie.domain).toBeUndefined();
+    expect(astroConfiguration.session.cookie.maxAge).toBe(60 * 60 * 24 * 30);
     expect(astroConfiguration.session.ttl).toBe(60 * 60 * 24 * 30);
+    expect(astroConfiguration.session.cookie.maxAge).toBe(astroConfiguration.session.ttl);
+    expect(astroConfig).toContain('httpOnly: true');
+    expect(astroConfig).toContain('sessionDriverConfig');
+    expect(astroConfig).not.toContain('process.env.UPSTASH_REDIS_REST_URL');
+    expect(astroConfig).not.toContain('process.env.UPSTASH_REDIS_REST_TOKEN');
+    expect(astroConfig).not.toContain('sessionDrivers.redis');
+    expect(astroConfiguration.env.schema.UPSTASH_REDIS_REST_URL).toBeUndefined();
+    expect(astroConfiguration.env.schema.UPSTASH_REDIS_REST_TOKEN).toBeUndefined();
   });
 
   test('el catálogo y el carrito comparten una selección explícita', () => {
@@ -226,6 +241,10 @@ describe('configuración Shopify Storefront', () => {
     expect(sourceRoot).toContain('isShopifyCommerce');
     expect(sourceRoot).not.toContain('VERCEL_ENV');
     expect(catalogRoot).toContain('selectCommerceProvider');
+    expect(catalogRoot).toContain('getCatalogProvider');
+    expect(catalogRoot).toContain('createConfiguredShopifyBuyerStorefrontGateway');
+    expect(catalogRoot).toContain('createResourceCache');
+    expect(catalogRoot).not.toContain('export const catalogProvider');
     expect(catalogRoot).toContain('demoCatalogAdapter');
     expect(catalogRoot).toContain("import('./infrastructure/demo/demo-catalog-adapter')");
     expect(catalogRoot).toContain('createShopifyCatalogAdapter');
@@ -241,6 +260,9 @@ describe('configuración Shopify Storefront', () => {
     expect(cartRoot).not.toContain('Boolean(');
     expect(cartRoot).not.toContain('astro:env');
     expect(smoke).toContain('PUBLIC_SHOPIFY_STOREFRONT_TOKEN');
+    expect(smoke).not.toContain('buyerIp');
+    expect(smoke).not.toContain('Shopify-Storefront-Buyer-IP');
+    expect(smoke).toContain('createShopifyStorefrontGateway({');
     expect(() => createShopifyStorefrontGateway({})).toThrow(ShopifyConfigurationError);
   });
 });
@@ -266,6 +288,7 @@ describe('gateway Shopify Storefront', () => {
       'Content-Type': 'application/json',
       'Shopify-Storefront-Private-Token': testToken,
     });
+    expect(requests[0].init.headers).not.toHaveProperty('Shopify-Storefront-Buyer-IP');
     expect(JSON.parse(requests[0].init.body)).toEqual({
       query: 'query Test($handle: String!) { shop { name } }',
       variables,
@@ -275,20 +298,31 @@ describe('gateway Shopify Storefront', () => {
   });
 
   test('envía Buyer-IP solo cuando es una dirección válida', async () => {
-    const { requests, fetch } = captureRequest();
-    const storefront = createShopifyStorefrontGateway(validConfig, {
-      fetch,
-      buyerIp: '203.0.113.10',
-    });
+    const accepted = ['203.0.113.10', '2001:db8::1', '::1', '::ffff:192.0.2.128'];
+    for (const buyerIp of accepted) {
+      const { requests, fetch } = captureRequest();
+      await createShopifyStorefrontGateway(validConfig, { fetch, buyerIp })
+        .graphql('query { shop { name } }');
+      expect(requests[0].init.headers['Shopify-Storefront-Buyer-IP']).toBe(buyerIp);
+      expect(requests[0].init.headers['Shopify-Storefront-Private-Token']).toBe(testToken);
+      expect(requests[0].init.headers).not.toHaveProperty('X-Shopify-Storefront-Buyer-IP');
+    }
 
-    await storefront.graphql('query { shop { name } }');
-    expect(requests[0].init.headers['Shopify-Storefront-Buyer-IP']).toBe('203.0.113.10');
-    expect(requests[0].init.headers['Shopify-Storefront-Private-Token']).toBe(testToken);
-
-    expect(() => createShopifyStorefrontGateway(validConfig, { buyerIp: 'not-an-ip' }))
-      .toThrow(ShopifyConfigurationError);
-    expect(() => createShopifyStorefrontGateway(validConfig, { buyerIp: '203.0.113.10\r\nX-Injected: 1' }))
-      .toThrow(ShopifyConfigurationError);
+    const rejected = [
+      'not-an-ip',
+      'foo',
+      'localhost',
+      '203.0.113.10:443',
+      '1.2.3',
+      '999.1.1.1',
+      ' 203.0.113.10',
+      '203.0.113.10 ',
+      '203.0.113.10\r\nX-Test: injected',
+    ];
+    for (const buyerIp of rejected) {
+      expect(() => createShopifyStorefrontGateway(validConfig, { buyerIp }))
+        .toThrow('Shopify-Storefront-Buyer-IP must be an IPv4 or IPv6 address.');
+    }
   });
 
   test('distingue fallo HTTP sin incorporar body ni token al error', async () => {

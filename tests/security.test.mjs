@@ -237,7 +237,9 @@ describe('superficie del navegador y cabeceras', () => {
     expect(csp).toContain("object-src 'none'");
     expect(csp).toContain("frame-ancestors 'none'");
     expect(csp).toContain("form-action 'self'");
+    expect(csp).toContain("frame-src 'none'");
     expect(csp).not.toContain("script-src 'self' 'unsafe-inline'");
+    expect(csp).not.toMatch(/js\.stripe\.com|paypal\.com|pay\.shopify\.com/);
     expect(headers.get('X-Content-Type-Options')).toBe('nosniff');
     expect(headers.get('X-Frame-Options')).toBe('DENY');
     expect(headers.has('Strict-Transport-Security')).toBe(true);
@@ -259,19 +261,24 @@ describe('superficie del navegador y cabeceras', () => {
       join(root, 'src/scripts'),
       join(root, 'src/shared/browser'),
     ].flatMap(walk).filter((path) => /\.(?:astro|m?[jt]s)$/.test(path));
+    const publicFiles = walk(join(root, 'public'));
 
     expect(example).toContain('COMMERCE_SOURCE=demo');
     expect(example).toMatch(/^SHOPIFY_STORE_DOMAIN=\s*$/m);
     expect(example).toMatch(/^SHOPIFY_STOREFRONT_PRIVATE_TOKEN=\s*$/m);
     expect(example).toMatch(/^SHOPIFY_CUSTOMER_ACCOUNT_URL=\s*$/m);
     expect(example).not.toContain('SHOPIFY_CHECKOUT_URL');
+    expect(example).not.toContain('SHOPIFY_ADMIN_ACCESS_TOKEN');
     expect(example).not.toMatch(/^SHOPIFY_STORE_DOMAIN=.+\S/m);
     expect(example).not.toMatch(/shpat_|shpca_|shpss_/);
     expect(example).not.toContain('PUBLIC_SHOPIFY');
     expect(example).not.toContain('SHOPIFY_CART_COOKIE_SECRET');
     expect(example).toContain('UPSTASH_REDIS_REST_URL=');
+    expect(example).toContain('UPSTASH_REDIS_REST_TOKEN=');
+    expect(example).not.toContain('PUBLIC_UPSTASH');
     expect(vercelText).not.toContain('COMMERCE_SOURCE');
     expect(vercelText).not.toMatch(/shpat_|SHOPIFY_STOREFRONT_PRIVATE_TOKEN|VERCEL_DEPLOY_HOOK_URL/);
+    expect(vercelText).not.toContain('UPSTASH_REDIS_REST_TOKEN');
 
     const secretImports = clientSurfaces.filter((path) => {
       const source = readFileSync(path, 'utf8');
@@ -280,8 +287,15 @@ describe('superficie del navegador y cabeceras', () => {
         || source.includes('SHOPIFY_CART_COOKIE_SECRET')
         || source.includes('SHOPIFY_WEBHOOK_SECRET')
         || source.includes('VERCEL_DEPLOY_HOOK_URL')
+        || source.includes('UPSTASH_REDIS_REST_URL')
         || source.includes('UPSTASH_REDIS_REST_TOKEN');
     });
     expect(secretImports).toEqual([]);
+    expect(publicFiles.some((path) => {
+      const source = readFileSync(path, 'utf8');
+      return source.includes('UPSTASH_REDIS_REST_URL')
+        || source.includes('UPSTASH_REDIS_REST_TOKEN')
+        || source.includes('PUBLIC_UPSTASH');
+    })).toBe(false);
   });
 });

@@ -1,13 +1,24 @@
 import { describe, expect, test } from 'bun:test';
+import { CatalogValidationError } from '../src/commerce/application/catalog-validation.ts';
 import { createShopifyCatalogAdapter } from '../src/commerce/infrastructure/shopify/catalog-adapter.ts';
-import { mapShopifyCatalog } from '../src/commerce/infrastructure/shopify/catalog-mappers.ts';
+import {
+  mapShopifyCatalog,
+  ShopifyCatalogMappingError,
+} from '../src/commerce/infrastructure/shopify/catalog-mappers.ts';
+import { createResourceCache } from '../src/commerce/infrastructure/shopify/catalog-resource-cache.ts';
 import { createShopifyCatalogQueries } from '../src/commerce/infrastructure/shopify/catalog-runtime-query.ts';
 import {
+  SHOPIFY_COLOR_GALLERIES_METAFIELD,
   SHOPIFY_IN_CONTEXT_DIRECTIVE,
   SHOPIFY_MARKET_CONTEXT,
+  SHOPIFY_PRIMARY_COLLECTION_METAFIELD,
+  SHOPIFY_STOREFRONT_API_VERSION,
   ShopifyConfigurationError,
 } from '../src/commerce/infrastructure/shopify/config.ts';
-import { ShopifyStorefrontRequestError } from '../src/commerce/infrastructure/shopify/storefront-gateway.ts';
+import {
+  createShopifyStorefrontGateway,
+  ShopifyStorefrontRequestError,
+} from '../src/commerce/infrastructure/shopify/storefront-gateway.ts';
 import {
   pageInfo,
   productSummaryNode,
@@ -41,6 +52,23 @@ const extraSummary = (payload, { id, handle, title }) => {
   };
 };
 
+const brokenSummary = (payload, id = 'gid://shopify/Product/2') => extraSummary(payload, {
+  id,
+  handle: 'cinturon-roto',
+  title: '',
+});
+
+const unusedQueries = () => ({
+  async getCollections() { return []; },
+  async getCollectionHandles() { return []; },
+  async getCollectionByHandle() { return undefined; },
+  async getProductHandles() { return []; },
+  async getProductByHandle() { return undefined; },
+  async getProductSummaries() { return []; },
+  async getFeaturedProducts() { return []; },
+  async getRelatedProducts() { return []; },
+});
+
 describe('consultas runtime Shopify por recurso', () => {
   test('getProductByHandle consulta un solo producto y no el catálogo completo', async () => {
     const payload = validPayload();
@@ -60,6 +88,25 @@ describe('consultas runtime Shopify por recurso', () => {
     expect(gateway.calls[0].variables.handle).toBe('cinturon-atlas');
     expect(gateway.calls[0].variables.country).toBe(SHOPIFY_MARKET_CONTEXT.country);
     expect(gateway.calls[0].variables.language).toBe(SHOPIFY_MARKET_CONTEXT.language);
+  });
+
+  test('getProductByHandle sirve un producto con Color si color_galleries no llega por Storefront', async () => {
+    const payload = validPayload();
+    payload.products[0].metafields = payload.products[0].metafields.filter((item) =>
+      item?.key !== SHOPIFY_COLOR_GALLERIES_METAFIELD.key
+    );
+    const gateway = createRecordingGateway((query) => {
+      if (query.includes('KingBeltProductByHandle')) return { product: payload.products[0] };
+      throw new Error(`consulta inesperada: ${query.slice(0, 80)}`);
+    });
+    const product = await createShopifyCatalogQueries(gateway, HOSTS)
+      .getProductByHandle('cinturon-atlas');
+    expect(product?.handle).toBe('cinturon-atlas');
+    expect(product?.mediaGroups.map((group) => group.optionValueId)).toEqual(
+      product?.options.find((option) => option.purpose === 'color')?.values.map((value) => value.id)
+    );
+    expect(product?.mediaGroups.every((group) => group.imageIds.length === 1)).toBe(true);
+    expect(product?.primaryImageId).toBe(payload.products[0].featuredImage.id);
   });
 
   test('getProductByHandle pagina variantes e imágenes del producto solicitado', async () => {
@@ -177,39 +224,141 @@ describe('consultas runtime Shopify por recurso', () => {
       .resolves.toBeUndefined();
   });
 
-  test('los resúmenes omiten un producto sin primaria inequívoca y no tumban el listado', async () => {
+  test('getProductSummaries rechaza un resumen inválido y no devuelve un listado parcial', async () => {
     const payload = validPayload();
-    const valid = productSummaryNode(payload.products[0]);
-    const ambiguous = extraSummary(payload, {
-      id: 'gid://shopify/Product/2',
-      handle: 'cinturon-beta',
-      title: 'Beta',
-    });
-    ambiguous.metafields = ambiguous.metafields.filter((item) => item?.key !== 'primary_collection');
-    ambiguous.collections = {
-      nodes: [
-        { id: 'gid://shopify/Collection/1', handle: 'sport', title: 'Sport' },
-        { id: 'gid://shopify/Collection/2', handle: 'casual', title: 'Casual' },
-      ],
-      pageInfo,
-    };
-    const uniqueWithoutMetafield = extraSummary(payload, {
-      id: 'gid://shopify/Product/3',
-      handle: 'cinturon-gamma',
-      title: 'Gamma',
-    });
-    uniqueWithoutMetafield.metafields = uniqueWithoutMetafield.metafields.filter(
-      (item) => item?.key !== 'primary_collection'
-    );
-
     const gateway = createRecordingGateway((query) => {
       if (query.includes('KingBeltProductSummariesPage')) {
-        return { products: { nodes: [valid, ambiguous, uniqueWithoutMetafield], pageInfo } };
+        return {
+          products: {
+            nodes: [
+              productSummaryNode(payload.products[0]),
+              brokenSummary(payload),
+              extraSummary(payload, {
+                id: 'gid://shopify/Product/3',
+                handle: 'cinturon-gamma',
+                title: 'Gamma',
+              }),
+            ],
+            pageInfo,
+          },
+        };
       }
       throw new Error(`consulta inesperada: ${query.slice(0, 80)}`);
     });
-    const featured = await createShopifyCatalogQueries(gateway, HOSTS).getFeaturedProducts(4);
-    expect(featured.map((item) => item.handle)).toEqual(['cinturon-atlas', 'cinturon-gamma']);
+    await expect(createShopifyCatalogQueries(gateway, HOSTS).getProductSummaries())
+      .rejects.toMatchObject({
+        name: 'ShopifyCatalogMappingError',
+        message: expect.stringContaining('cinturon-roto.title'),
+      });
+  });
+
+  test('getFeaturedProducts rechaza un resumen inválido y no pagina para rellenar el hueco', async () => {
+    const payload = validPayload();
+    const gateway = createRecordingGateway((query) => {
+      if (query.includes('KingBeltProductSummariesPage')) {
+        return {
+          products: {
+            nodes: [
+              productSummaryNode(payload.products[0]),
+              brokenSummary(payload),
+              extraSummary(payload, {
+                id: 'gid://shopify/Product/3',
+                handle: 'cinturon-gamma',
+                title: 'Gamma',
+              }),
+              extraSummary(payload, {
+                id: 'gid://shopify/Product/4',
+                handle: 'cinturon-delta',
+                title: 'Delta',
+              }),
+            ],
+            pageInfo: { hasNextPage: true, endCursor: 'next-page' },
+          },
+        };
+      }
+      throw new Error(`consulta inesperada: ${query.slice(0, 80)}`);
+    });
+    await expect(createShopifyCatalogQueries(gateway, HOSTS).getFeaturedProducts(4))
+      .rejects.toBeInstanceOf(ShopifyCatalogMappingError);
+    expect(gateway.calls).toHaveLength(1);
+  });
+
+  test('getCollectionByHandle rechaza un producto inválido de la colección', async () => {
+    const payload = validPayload();
+    const gateway = createRecordingGateway((query) => {
+      if (query.includes('KingBeltCollectionByHandle')) {
+        return {
+          collection: {
+            ...payload.collections[0],
+            products: {
+              nodes: [productSummaryNode(payload.products[0]), brokenSummary(payload)],
+              pageInfo,
+            },
+          },
+        };
+      }
+      throw new Error(`consulta inesperada: ${query.slice(0, 80)}`);
+    });
+    await expect(createShopifyCatalogQueries(gateway, HOSTS).getCollectionByHandle('sport'))
+      .rejects.toBeInstanceOf(ShopifyCatalogMappingError);
+  });
+
+  test('getRelatedProducts rechaza un resumen inválido y no lo sustituye por otro', async () => {
+    const catalog = mapShopifyCatalog(validPayload(), HOSTS);
+    const payload = validPayload();
+    const gateway = createRecordingGateway((query) => {
+      if (!query.includes('KingBeltRelatedProducts')) {
+        throw new Error(`consulta inesperada: ${query.slice(0, 80)}`);
+      }
+      return {
+        c0: {
+          products: {
+            nodes: [
+              brokenSummary(payload),
+              extraSummary(payload, {
+                id: 'gid://shopify/Product/3',
+                handle: 'cinturon-gamma',
+                title: 'Gamma',
+              }),
+            ],
+            pageInfo: { hasNextPage: true, endCursor: 'related-cursor' },
+          },
+        },
+      };
+    });
+    await expect(
+      createShopifyCatalogQueries(gateway, HOSTS).getRelatedProducts(catalog.products[0], 2)
+    ).rejects.toBeInstanceOf(ShopifyCatalogMappingError);
+    expect(gateway.calls).toHaveLength(1);
+  });
+
+  test('un listado vacío de productos sigue siendo un array vacío', async () => {
+    const gateway = createRecordingGateway((query) => {
+      if (query.includes('KingBeltProductSummariesPage')) {
+        return { products: { nodes: [], pageInfo } };
+      }
+      throw new Error(`consulta inesperada: ${query.slice(0, 80)}`);
+    });
+    await expect(createShopifyCatalogQueries(gateway, HOSTS).getProductSummaries())
+      .resolves.toEqual([]);
+  });
+
+  test('varios resúmenes válidos se devuelven todos', async () => {
+    const payload = validPayload();
+    const first = productSummaryNode(payload.products[0]);
+    const second = extraSummary(payload, {
+      id: 'gid://shopify/Product/2',
+      handle: 'cinturon-beta',
+      title: 'Cinturón Beta',
+    });
+    const gateway = createRecordingGateway((query) => {
+      if (query.includes('KingBeltProductSummariesPage')) {
+        return { products: { nodes: [first, second], pageInfo } };
+      }
+      throw new Error(`consulta inesperada: ${query.slice(0, 80)}`);
+    });
+    const summaries = await createShopifyCatalogQueries(gateway, HOSTS).getProductSummaries();
+    expect(summaries.map((item) => item.handle)).toEqual(['cinturon-atlas', 'cinturon-beta']);
   });
 
   test('getProductSummaries no incluye la proyección de variantes completas', async () => {
@@ -219,6 +368,10 @@ describe('consultas runtime Shopify por recurso', () => {
       expect(query).not.toContain('weight weightUnit');
       expect(query).not.toContain('quantityRule');
       expect(query).not.toContain('color_galleries');
+      expect(query).toMatch(/collections\s*\(/);
+      expect(query).toContain(`namespace: "${SHOPIFY_PRIMARY_COLLECTION_METAFIELD.namespace}"`);
+      expect(query).toContain(`key: "${SHOPIFY_PRIMARY_COLLECTION_METAFIELD.key}"`);
+      expect(query).not.toMatch(/namespace:\s*"kingbelt",\s*key:\s*"primary_collection"/);
       expect(query).toContain('priceRange');
       if (query.includes('KingBeltProductSummariesPage')) {
         return { products: { nodes: [productSummaryNode(payload.products[0])], pageInfo } };
@@ -243,6 +396,28 @@ describe('consultas runtime Shopify por recurso', () => {
     const collections = await createShopifyCatalogQueries(gateway, HOSTS).getCollections();
     expect(collections).toHaveLength(1);
     expect(collections[0].handle).toBe('sport');
+  });
+
+  test('el catálogo runtime reenvía Shopify-Storefront-Buyer-IP del gateway', async () => {
+    const payload = validPayload();
+    const requests = [];
+    const fetch = async (_input, init) => {
+      requests.push(init);
+      return new Response(JSON.stringify({
+        data: { collections: { nodes: payload.collections, pageInfo } },
+      }));
+    };
+    const gateway = createShopifyStorefrontGateway({
+      storeDomain: 'kingbelt-test.myshopify.com',
+      apiVersion: SHOPIFY_STOREFRONT_API_VERSION,
+      storefrontToken: 'test-private-storefront-token',
+    }, { fetch, buyerIp: '203.0.113.25' });
+    const collections = await createShopifyCatalogQueries(gateway, HOSTS).getCollections();
+    expect(collections).toHaveLength(1);
+    expect(requests).toHaveLength(1);
+    expect(requests[0].headers['Shopify-Storefront-Buyer-IP']).toBe('203.0.113.25');
+    expect(requests[0].headers['Shopify-Storefront-Private-Token']).toBe('test-private-storefront-token');
+    expect(JSON.stringify(collections)).not.toContain('203.0.113.25');
   });
 
   test('getProductHandles y getCollectionHandles usan proyecciones ligeras', async () => {
@@ -459,6 +634,43 @@ describe('caché granular del catálogo Shopify', () => {
       .rejects.toBeInstanceOf(ShopifyConfigurationError);
   });
 
+  test.each([
+    [
+      'mapping',
+      new ShopifyCatalogMappingError(
+        'Catálogo Shopify inválido en cinturon-atlas.title: falta un texto obligatorio.'
+      ),
+    ],
+    [
+      'validación',
+      new CatalogValidationError([{
+        code: 'unsupported_currency',
+        path: 'cinturon-atlas.priceRange.min.currency',
+        message: 'La moneda USD no está soportada.',
+      }]),
+    ],
+  ])('un error de %s no reutiliza stale cache', async (_label, error) => {
+    const catalog = mapShopifyCatalog(validPayload(), HOSTS);
+    let loads = 0;
+    const adapter = createShopifyCatalogAdapter({
+      async getProductByHandle() {
+        loads += 1;
+        if (loads > 1) throw error;
+        return catalog.products[0];
+      },
+      async getCollections() { return []; },
+      async getCollectionHandles() { return []; },
+      async getCollectionByHandle() { return undefined; },
+      async getProductHandles() { return []; },
+      async getProductSummaries() { return []; },
+      async getFeaturedProducts() { return []; },
+      async getRelatedProducts() { return []; },
+    }, { cacheTtlMs: 0 });
+    await adapter.getProductByHandle('cinturon-atlas');
+    await expect(adapter.getProductByHandle('cinturon-atlas'))
+      .rejects.toBeInstanceOf(error.constructor);
+  });
+
   test('errores de configuración no se ocultan mediante stale cache', async () => {
     const catalog = mapShopifyCatalog(validPayload(), HOSTS);
     let loads = 0;
@@ -481,5 +693,57 @@ describe('caché granular del catálogo Shopify', () => {
     await adapter.getProductByHandle('cinturon-atlas');
     await expect(adapter.getProductByHandle('cinturon-atlas'))
       .rejects.toBeInstanceOf(ShopifyConfigurationError);
+  });
+
+  test('una ResourceCache inyectada se comparte entre providers request-scoped', async () => {
+    const catalog = mapShopifyCatalog(validPayload(), HOSTS);
+    let queriesA = 0;
+    let queriesB = 0;
+    const sharedCache = createResourceCache(30_000);
+    const providerA = createShopifyCatalogAdapter({
+      ...unusedQueries(),
+      async getCollections() {
+        queriesA += 1;
+        return catalog.collections;
+      },
+    }, { cache: sharedCache });
+    const providerB = createShopifyCatalogAdapter({
+      ...unusedQueries(),
+      async getCollections() {
+        queriesB += 1;
+        return catalog.collections;
+      },
+    }, { cache: sharedCache });
+
+    expect(await providerA.getCollections()).toEqual(catalog.collections);
+    expect(queriesA).toBe(1);
+    expect(await providerB.getCollections()).toEqual(catalog.collections);
+    expect(queriesB).toBe(0);
+  });
+
+  test('tras expirar el TTL la recarga usa las queries del provider actual', async () => {
+    const catalog = mapShopifyCatalog(validPayload(), HOSTS);
+    let queriesA = 0;
+    let queriesB = 0;
+    const sharedCache = createResourceCache(0);
+    const providerA = createShopifyCatalogAdapter({
+      ...unusedQueries(),
+      async getCollections() {
+        queriesA += 1;
+        return catalog.collections;
+      },
+    }, { cache: sharedCache });
+    const providerB = createShopifyCatalogAdapter({
+      ...unusedQueries(),
+      async getCollections() {
+        queriesB += 1;
+        return catalog.collections;
+      },
+    }, { cache: sharedCache });
+
+    await providerA.getCollections();
+    expect(queriesA).toBe(1);
+    await providerB.getCollections();
+    expect(queriesB).toBe(1);
   });
 });

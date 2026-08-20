@@ -34,9 +34,16 @@ const merchandise = (id) => ({
     id: 'gid://shopify/Product/1',
     handle: 'cinturon-test',
     title: 'Cinturón de prueba',
-    productType: 'Piel lisa',
-    metafield: null,
-    collections: { nodes: [{ title: 'Sport' }] },
+    modelReference: null,
+    primaryCollection: {
+      type: 'collection_reference',
+      reference: {
+        __typename: 'Collection',
+        id: 'gid://shopify/Collection/1',
+        handle: 'sport',
+        title: 'Sport',
+      },
+    },
     featuredImage: null,
   },
 });
@@ -99,7 +106,11 @@ const installStorefront = () => {
     }
     const { query, variables } = JSON.parse(init.body);
     const name = operationName(query);
-    graphqlCalls.push({ name, variables });
+    graphqlCalls.push({
+      name,
+      variables,
+      buyerIp: init?.headers?.['Shopify-Storefront-Buyer-IP'],
+    });
     if (name === 'create') {
       const cart = remoteCart();
       carts.set(cart.id, cart);
@@ -213,6 +224,10 @@ installStorefront();
   assert.equal(body.success, true);
   assert.equal(body.cart.lines.length, 1);
   assert.equal(session.store.shopifyCartId, CART_ID);
+  assert.equal(graphqlCalls[0].name, 'create');
+  assert.equal(graphqlCalls[0].buyerIp, '203.0.113.10');
+  assert.equal(graphqlCalls[0].variables.input.buyerIdentity.countryCode, 'ES');
+  assert.equal(response.headers.get('Access-Control-Allow-Origin'), null);
   assertNoCartIdLeak(text, body);
 
   graphqlCalls.length = 0;
@@ -239,7 +254,7 @@ installStorefront();
 installStorefront();
 {
   const session = createMemorySession();
-  const { response, text, body } = await postCart(session, {
+  const { response, body } = await postCart(session, {
     command: 'add',
     variantId: VARIANT_A,
     quantity: 1,
@@ -248,15 +263,10 @@ installStorefront();
     language: 'EN',
     currency: 'USD',
   });
-  assert.equal(response.status, 200);
-  assert.equal(body.success, true);
-  assert.equal(graphqlCalls[0].name, 'create');
-  assert.equal(graphqlCalls[0].variables.input.buyerIdentity.countryCode, 'ES');
-  assert.equal(graphqlCalls[0].variables.country, 'ES');
-  assert.equal(graphqlCalls[0].variables.language, 'ES');
-  assert.equal(JSON.stringify(graphqlCalls[0].variables).includes('US'), false);
-  assert.equal(JSON.stringify(graphqlCalls[0].variables).includes('USD'), false);
-  assertNoCartIdLeak(text, body);
+  assert.equal(response.status, 400);
+  assert.deepEqual(body, { error: 'invalid_command' });
+  assert.deepEqual(graphqlCalls, []);
+  assert.equal(session.store.shopifyCartId, undefined);
 }
 
 installStorefront();
@@ -294,18 +304,36 @@ installStorefront();
 {
   const session = createMemorySession({ shopifyCartId: CART_ID });
   carts.set(CART_ID, remoteCart());
-  const { body, text } = await postCart(session, {
+  const { response, body, text } = await postCart(session, {
     command: 'update',
     lineId: LINE_A,
     quantity: 3,
     cartId: FOREIGN_CART_ID,
   });
-  assert.equal(body.success, true);
-  assert.equal(graphqlCalls.at(-1).variables.cartId, CART_ID);
-  assert.equal(graphqlCalls.some((item) => JSON.stringify(item.variables).includes(FOREIGN_CART_ID)), false);
+  assert.equal(response.status, 400);
+  assert.deepEqual(body, { error: 'invalid_command' });
+  assert.deepEqual(graphqlCalls, []);
   assert.equal(session.store.shopifyCartId, CART_ID);
-  assertNoCartIdLeak(text, body);
   assert.equal(text.includes(FOREIGN_CART_ID), false);
+}
+
+installStorefront();
+{
+  const session = createMemorySession();
+  for (const command of [
+    { command: 'update', lineId: LINE_A, quantity: 2 },
+    { command: 'remove', lineId: LINE_A },
+  ]) {
+    const { response, body } = await postCart(session, command);
+    assert.equal(response.status, 410);
+    assert.equal(body.success, false);
+    assert.equal(body.error.code, 'not_found');
+  }
+  const checkout = await postCart(session, { command: 'checkout' });
+  assert.equal(checkout.response.status, 410);
+  assert.equal(checkout.body.success, false);
+  assert.equal(checkout.body.status, 'expired');
+  assert.deepEqual(graphqlCalls, []);
 }
 
 installStorefront();
@@ -342,5 +370,14 @@ installStorefront();
   assert.equal(response.status, 403);
   assert.deepEqual(body, { error: 'origin_not_allowed' });
   assert.equal(response.headers.get('Cache-Control'), 'no-store');
+  assert.deepEqual(graphqlCalls, []);
+}
+
+installStorefront();
+{
+  const session = createMemorySession();
+  const missingOrigin = await postCart(session, { command: 'refresh' }, '');
+  assert.equal(missingOrigin.response.status, 403);
+  assert.deepEqual(missingOrigin.body, { error: 'origin_not_allowed' });
   assert.deepEqual(graphqlCalls, []);
 }

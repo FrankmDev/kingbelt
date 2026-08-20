@@ -11,7 +11,8 @@ mock.module('astro:env/server', () => ({
   VERCEL_DEPLOY_HOOK_URL: undefined,
 }));
 
-const { catalogProvider } = await import('../../src/commerce/catalog.ts');
+const { getCatalogProvider } = await import('../../src/commerce/catalog.ts');
+const catalogProvider = await getCatalogProvider();
 const { cartProvider } = await import('../../src/commerce/cart.ts');
 const { toCartCatalogSnapshot } = await import('../../src/commerce/application/cart-catalog.ts');
 const { demoCollections, demoProducts } = await import('../../src/demo-catalog.ts');

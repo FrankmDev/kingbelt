@@ -5,11 +5,12 @@ import Footer from '../../components/layout/Footer.astro';
 import Header from '../../components/layout/Header.astro';
 import { catalogPage } from '@content/catalog';
 import { site, siteUrl } from '@config/site';
-import { catalogProvider } from '@commerce/catalog';
+import { getCatalogProvider } from '@commerce/catalog';
 import { getCollectionFacets } from '@commerce/domain/catalog-filters';
 import { resolveCatalogIndexHead, type CommercePageHead } from '@commerce/application/seo';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 
+const catalogProvider = await getCatalogProvider(Astro.clientAddress);
 const [products, collections] = await Promise.all([
   catalogProvider.getProductSummaries(),
   catalogProvider.getCollections(),

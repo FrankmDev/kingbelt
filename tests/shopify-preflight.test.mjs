@@ -1,15 +1,20 @@
 import { describe, expect, test } from 'bun:test';
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import {
-  PREFLIGHT_SHOP_QUERY,
+  PREFLIGHT_STOREFRONT_QUERY,
+  diffHandles,
+  parseExpectedHandles,
   runShopifyPreflight,
   runShopifyPreflightCli,
   sanitizePreflightText,
 } from '../scripts/shopify-preflight.ts';
 import {
+  SHOPIFY_COLOR_GALLERIES_METAFIELD,
   SHOPIFY_IN_CONTEXT_DIRECTIVE,
   SHOPIFY_MARKET_CONTEXT,
+  SHOPIFY_PRIMARY_COLLECTION_METAFIELD,
+  SHOPIFY_PRIMARY_COLLECTION_METAFIELD_IDENTIFIER,
   SHOPIFY_STOREFRONT_API_VERSION,
 } from '../src/commerce/infrastructure/shopify/config.ts';
 import {
@@ -17,6 +22,8 @@ import {
   casualCollection,
   novedadesCollection,
   pageInfo,
+  productWithoutColorPayload,
+  sportCollection,
   validShopifyCatalogPayload,
 } from './fixtures/shopify-catalog-payload.mjs';
 
@@ -32,6 +39,8 @@ const validEnv = (overrides = {}) => ({
   SHOPIFY_API_VERSION: SHOPIFY_STOREFRONT_API_VERSION,
   SHOPIFY_STOREFRONT_PRIVATE_TOKEN: TOKEN,
   SHOPIFY_CUSTOMER_ACCOUNT_URL: CUSTOMER_ACCOUNT_URL,
+  SHOPIFY_PREFLIGHT_EXPECTED_PRODUCT_HANDLES: 'cinturon-atlas',
+  SHOPIFY_PREFLIGHT_EXPECTED_COLLECTION_HANDLES: 'sport',
   ...overrides,
 });
 
@@ -47,6 +56,38 @@ const captureIO = () => {
   };
 };
 
+const twoProductCatalog = () => {
+  const atlas = validShopifyCatalogPayload();
+  const unico = productWithoutColorPayload();
+  return {
+    collections: atlas.collections,
+    products: [...atlas.products, ...unico.products],
+  };
+};
+
+const runConfigCli = async (overrides) => {
+  const fetch = async () => {
+    throw new Error('no request expected');
+  };
+  const io = captureIO();
+  const code = await runShopifyPreflightCli(validEnv(overrides), { ...io, fetch });
+  return { code, io };
+};
+
+const storefrontLocalization = ({
+  country = SHOPIFY_MARKET_CONTEXT.country,
+  language = SHOPIFY_MARKET_CONTEXT.language,
+  currency = SHOPIFY_MARKET_CONTEXT.currency,
+  availableLanguages = [{ isoCode: language }],
+} = {}) => ({
+  country: {
+    isoCode: country,
+    currency: { isoCode: currency },
+    availableLanguages,
+  },
+  language: { isoCode: language },
+});
+
 const json = (payload, status = 200) =>
   new Response(JSON.stringify(payload), {
     status,
@@ -56,6 +97,7 @@ const json = (payload, status = 200) =>
 const createStorefrontFetch = ({
   catalog = validShopifyCatalogPayload(),
   shopName = 'KingBelt Test',
+  localization = storefrontLocalization(),
   status,
   graphqlErrors,
   hang = false,
@@ -81,14 +123,14 @@ const createStorefrontFetch = ({
     const body = JSON.parse(init.body);
     if (graphqlErrors) {
       return json({
-        data: { shop: { name: shopName } },
+        data: { shop: { name: shopName }, localization },
         errors: graphqlErrors,
       });
     }
 
     const query = body.query;
-    if (query.includes('PreflightShop')) {
-      return json({ data: { shop: { name: shopName } } });
+    if (query.includes('PreflightStorefront')) {
+      return json({ data: { shop: { name: shopName }, localization } });
     }
     if (query.includes('KingBeltCatalogPage')) {
       if (catalogPages) {
@@ -180,6 +222,7 @@ describe('preflight Shopify', () => {
       { ...io, fetch }
     );
     expect(code).toBe(1);
+    expect(io.failure()).toContain('configuration error');
     expect(io.failure()).toContain(
       'Missing required Shopify configuration: SHOPIFY_CUSTOMER_ACCOUNT_URL'
     );
@@ -212,17 +255,24 @@ describe('preflight Shopify', () => {
     expect(code).toBe(0);
     expect(io.success()).toContain('Shopify preflight passed');
     expect(io.success()).toContain('Storefront API: OK');
+    expect(io.success()).toContain('Catalog manifest: OK');
     expect(io.success()).toContain('Catalog mapping: OK');
     expect(io.success()).toContain('Catalog validation: OK');
+    expect(io.success()).toContain('Localization context: OK');
     expect(io.success()).toContain(`Market: ${SHOPIFY_MARKET_CONTEXT.country}`);
     expect(io.success()).toContain(`Language: ${SHOPIFY_MARKET_CONTEXT.language}`);
     expect(io.success()).toContain(`Currency: ${SHOPIFY_MARKET_CONTEXT.currency}`);
     expect(io.success()).toMatch(/Products: 1/);
     expect(io.success()).toMatch(/Variants: 6/);
     expect(io.success()).toMatch(/Collections: 1/);
-    expect(io.success()).toContain('Required products: skipped');
-    expect(queriesOf(requests).some((query) => query.includes('PreflightShop'))).toBe(true);
+    expect(io.success()).not.toContain('skipped');
+    expect(io.success()).not.toContain('Required products');
+    expect(queriesOf(requests).filter((query) => query.includes('PreflightStorefront'))).toHaveLength(1);
     expect(queriesOf(requests).some((query) => query.includes('KingBeltCatalogPage'))).toBe(true);
+    expect(requests.length).toBeGreaterThan(0);
+    for (const request of requests) {
+      expect(request.headers).not.toHaveProperty('Shopify-Storefront-Buyer-IP');
+    }
   });
 
   test('un fallo de autenticación devuelve código de error', async () => {
@@ -269,6 +319,8 @@ describe('preflight Shopify', () => {
     expect(code).toBe(1);
     expect(io.failure()).toContain('catalog error');
     expect(io.failure()).toContain('title');
+    expect(io.failure()).not.toContain('manifest mismatch');
+    expect(io.failure()).not.toContain('Missing:');
   });
 
   test('una variante inválida falla', async () => {
@@ -307,26 +359,41 @@ describe('preflight Shopify', () => {
     expect(io.failure()).toContain('unpublished_product');
   });
 
-  test('un handle requerido ausente falla si se configuró', async () => {
+  test('un handle esperado ausente del Storefront falla como manifiesto', async () => {
     const { code, io } = await runCli(validEnv({
-      SHOPIFY_PREFLIGHT_REQUIRED_PRODUCT_HANDLES: 'piloto-ausente',
+      SHOPIFY_PREFLIGHT_EXPECTED_PRODUCT_HANDLES: 'cinturon-atlas,cinturon-dakar,cinturon-monza',
     }));
     expect(code).toBe(1);
-    expect(io.failure()).toContain('Required product handle was not found: piloto-ausente');
+    expect(io.failure()).toContain('catalog error');
+    expect(io.failure()).toContain('Storefront product manifest mismatch');
+    expect(io.failure()).toContain('Missing: cinturon-dakar, cinturon-monza');
+    expect(io.failure()).not.toContain('Required product handle');
   });
 
-  test('un handle requerido válido pasa', async () => {
+  test('un producto inesperado publicado en Storefront falla como manifiesto', async () => {
+    const { code, io } = await runCli(validEnv(), { catalog: twoProductCatalog() });
+    expect(code).toBe(1);
+    expect(io.failure()).toContain('catalog error');
+    expect(io.failure()).toContain('Storefront product manifest mismatch');
+    expect(io.failure()).toContain('Unexpected: cinturon-unico');
+  });
+
+  test('el conjunto exacto de productos es independiente del orden', async () => {
     const { code, io } = await runCli(validEnv({
-      SHOPIFY_PREFLIGHT_REQUIRED_PRODUCT_HANDLES: 'cinturon-atlas',
-    }));
+      SHOPIFY_PREFLIGHT_EXPECTED_PRODUCT_HANDLES: 'cinturon-unico,cinturon-atlas',
+    }), { catalog: twoProductCatalog() });
     expect(code).toBe(0);
-    expect(io.success()).toContain('Required products: OK');
+    expect(io.success()).toContain('Catalog manifest: OK');
+    expect(io.success()).toMatch(/Products: 2/);
   });
 
-  test('la configuración sin handles requeridos funciona', async () => {
-    const { code, io } = await runCli(validEnv());
-    expect(code).toBe(0);
-    expect(io.success()).toContain('Required products: skipped');
+  test('faltantes e inesperados se reportan juntos en el manifiesto de productos', async () => {
+    const { code, io } = await runCli(validEnv({
+      SHOPIFY_PREFLIGHT_EXPECTED_PRODUCT_HANDLES: 'cinturon-atlas,cinturon-dakar',
+    }), { catalog: twoProductCatalog() });
+    expect(code).toBe(1);
+    expect(io.failure()).toContain('Missing: cinturon-dakar');
+    expect(io.failure()).toContain('Unexpected: cinturon-unico');
   });
 
   test('no se ejecutan mutations ni se llama Admin API ni deploy hook', async () => {
@@ -353,23 +420,30 @@ describe('preflight Shopify', () => {
     expect(summary.variants).toBe(6);
     expect(summary.collections).toBe(1);
     expect(summary.images).toBe(9);
-    expect(summary.requiredProducts).toBe('skipped');
+    expect(summary.manifest).toBe('OK');
     expect(summary.market).toEqual(SHOPIFY_MARKET_CONTEXT);
   });
 
   test('no se degrada a una query shop { name } y carga el catálogo autoritativo', async () => {
-    expect(PREFLIGHT_SHOP_QUERY).toContain('shop');
+    expect(PREFLIGHT_STOREFRONT_QUERY).toContain('shop');
+    expect(PREFLIGHT_STOREFRONT_QUERY).toContain('localization');
+    expect(PREFLIGHT_STOREFRONT_QUERY).toContain(SHOPIFY_IN_CONTEXT_DIRECTIVE);
+    expect(PREFLIGHT_STOREFRONT_QUERY).not.toContain('availableCountries');
+    expect(PREFLIGHT_STOREFRONT_QUERY).not.toMatch(/\bmarket\b/);
     const { requests } = await runCli(validEnv());
     const queries = queriesOf(requests);
     const catalogQuery = queries.find((query) => query.includes('KingBeltCatalogPage'));
     expect(catalogQuery).toBeDefined();
     expect(catalogQuery).toContain('metafields(identifiers:');
-    expect(catalogQuery).toContain('key: "primary_collection"');
+    expect(catalogQuery).toContain(`namespace: "${SHOPIFY_PRIMARY_COLLECTION_METAFIELD.namespace}"`);
+    expect(catalogQuery).toContain(`key: "${SHOPIFY_PRIMARY_COLLECTION_METAFIELD.key}"`);
+    expect(catalogQuery).not.toMatch(/namespace:\s*"kingbelt",\s*key:\s*"primary_collection"/);
+    expect(catalogQuery).toContain('namespace: "kingbelt", key: "model_reference"');
     expect(catalogQuery).toContain('... on Collection { id handle title }');
     expect(catalogQuery).toContain('variants(first:');
     expect(catalogQuery).toContain('images(first:');
     expect(catalogQuery).toContain('collections(first:');
-    expect(queries.filter((query) => query.includes('PreflightShop'))).toHaveLength(1);
+    expect(queries.filter((query) => query.includes('PreflightStorefront'))).toHaveLength(1);
   });
 
   test('un metafield opcional ausente no convierte el preflight en fallo', async () => {
@@ -382,6 +456,17 @@ describe('preflight Shopify', () => {
     expect(io.success()).toContain('Shopify preflight passed');
   });
 
+  test('un producto con una sola colección sin metafield hace fallar el preflight', async () => {
+    const catalog = validShopifyCatalogPayload();
+    catalog.products[0].metafields = catalog.products[0].metafields.filter((item) =>
+      item?.key !== SHOPIFY_PRIMARY_COLLECTION_METAFIELD.key
+    );
+    const { code, io } = await runCli(validEnv(), { catalog });
+    expect(code).toBe(1);
+    expect(io.failure()).toContain('Product "cinturon-atlas":');
+    expect(io.failure()).toContain(`${SHOPIFY_PRIMARY_COLLECTION_METAFIELD_IDENTIFIER} is missing`);
+  });
+
   test('un producto en varias colecciones sin metafield hace fallar el preflight con su handle', async () => {
     const catalog = assignProductCollections(
       validShopifyCatalogPayload(),
@@ -389,12 +474,12 @@ describe('preflight Shopify', () => {
       casualCollection
     );
     catalog.products[0].metafields = catalog.products[0].metafields.filter((item) =>
-      item?.key !== 'primary_collection'
+      item?.key !== SHOPIFY_PRIMARY_COLLECTION_METAFIELD.key
     );
     const { code, io } = await runCli(validEnv(), { catalog });
     expect(code).toBe(1);
     expect(io.failure()).toContain('Product "cinturon-atlas":');
-    expect(io.failure()).toContain('kingbelt.primary_collection is missing');
+    expect(io.failure()).toContain(`${SHOPIFY_PRIMARY_COLLECTION_METAFIELD_IDENTIFIER} is missing`);
     expect(io.failure()).not.toContain('"products"');
   });
 
@@ -407,7 +492,9 @@ describe('preflight Shopify', () => {
     const { code, io } = await runCli(validEnv(), { catalog });
     expect(code).toBe(1);
     expect(io.failure()).toContain('Product "cinturon-atlas":');
-    expect(io.failure()).toContain('primary collection "casual" is not assigned to this product');
+    expect(io.failure()).toContain(
+      `${SHOPIFY_PRIMARY_COLLECTION_METAFIELD_IDENTIFIER} references collection "casual" but that collection is not assigned to this product`
+    );
   });
 
   test('una variante sin SKU falla el preflight y no se fabrica un código', async () => {
@@ -448,7 +535,7 @@ describe('preflight Shopify', () => {
 
     const missingColorGallery = validShopifyCatalogPayload();
     missingColorGallery.products[0].metafields =
-      missingColorGallery.products[0].metafields.filter((item) => item?.key !== 'color_galleries');
+      missingColorGallery.products[0].metafields.filter((item) => item?.key !== SHOPIFY_COLOR_GALLERIES_METAFIELD.key);
     const galleryResult = await runCli(validEnv(), { catalog: missingColorGallery });
     expect(galleryResult.code).toBe(1);
     expect(galleryResult.io.failure()).toContain('color_galleries');
@@ -457,7 +544,7 @@ describe('preflight Shopify', () => {
   test('preflight falla ante una galería con cardinalidad inválida', async () => {
     const catalog = validShopifyCatalogPayload();
     const imagesField = catalog.products[0].metafields
-      .find((item) => item?.key === 'color_galleries')
+      .find((item) => item?.key === SHOPIFY_COLOR_GALLERIES_METAFIELD.key)
       .references.nodes[0].fields.find((field) => field.key === 'images');
     imagesField.references.nodes = imagesField.references.nodes.slice(0, 2);
     const { code, io } = await runCli(validEnv(), { catalog });
@@ -499,19 +586,38 @@ describe('preflight Shopify', () => {
     const workflow = readFileSync(join(root, '.github/workflows/quality.yml'), 'utf8');
     expect(pkg.scripts['shopify:preflight']).toBe('bun scripts/shopify-preflight.mjs');
     expect(pkg.scripts['shopify:smoke']).toBe('bun scripts/shopify-storefront-smoke.mjs');
+    expect(pkg.scripts['shopify:cart-smoke']).toBe('bun scripts/shopify-cart-smoke.mjs');
+    expect(pkg.scripts['shopify:release-gate']).toBe('bun scripts/shopify-release-gate.mjs');
     expect(pkg.scripts.validate).not.toContain('shopify:preflight');
+    expect(pkg.scripts.validate).not.toContain('shopify:cart-smoke');
+    expect(pkg.scripts.validate).not.toContain('shopify:release-gate');
+    expect(pkg.scripts.validate).not.toContain('session:preflight');
     expect(pkg.scripts.build).not.toContain('shopify:preflight');
+    expect(pkg.scripts.build).not.toContain('shopify:cart-smoke');
     expect(pkg.scripts.build).not.toContain('shopify');
     expect(workflow).not.toContain('shopify:preflight');
+    expect(workflow).not.toContain('shopify:cart-smoke');
+    expect(workflow).not.toContain('shopify:release-gate');
+    expect(workflow).not.toContain('session:preflight');
     expect(workflow).not.toContain('SHOPIFY_STOREFRONT_PRIVATE_TOKEN');
     const preflight = readFileSync(join(root, 'scripts/shopify-preflight.ts'), 'utf8');
     expect(preflight).toContain('fetchShopifyCatalog');
     expect(preflight).toContain('mapShopifyCatalog');
     expect(preflight).toContain('createShopifyCatalogAdapter');
+    expect(preflight).toContain('SHOPIFY_PREFLIGHT_EXPECTED_PRODUCT_HANDLES');
+    expect(preflight).toContain('SHOPIFY_PREFLIGHT_EXPECTED_COLLECTION_HANDLES');
+    expect(preflight).toContain('PREFLIGHT_STOREFRONT_QUERY');
+    expect(preflight).toContain('assertShopifyMarketLocalization');
+    expect(preflight).not.toContain('PREFLIGHT_SHOP_QUERY');
+    expect(preflight).not.toContain('PreflightShop');
+    expect(preflight).not.toContain('SHOPIFY_PREFLIGHT_REQUIRED_PRODUCT_HANDLES');
+    expect(preflight).not.toContain('Required products');
     expect(preflight).not.toContain("from 'astro:env");
     expect(preflight).not.toContain('@commerce/catalog');
     expect(preflight).not.toContain('cartCreate');
     expect(preflight).not.toContain('demo-catalog');
+    expect(preflight).not.toContain('buyerIp');
+    expect(preflight).not.toContain('Shopify-Storefront-Buyer-IP');
   });
 
   test('el preflight consulta el catálogo con el mismo contexto de mercado que producción', async () => {
@@ -527,9 +633,87 @@ describe('preflight Shopify', () => {
       expect(body.variables.country).toBe(SHOPIFY_MARKET_CONTEXT.country);
       expect(body.variables.language).toBe(SHOPIFY_MARKET_CONTEXT.language);
     });
-    const shopQuery = queriesOf(requests).find((query) => query.includes('PreflightShop'));
-    expect(shopQuery).toBeDefined();
-    expect(shopQuery).not.toContain('@inContext');
+    const storefrontRequest = requests.find((request) =>
+      JSON.parse(request.body).query.includes('PreflightStorefront')
+    );
+    expect(storefrontRequest).toBeDefined();
+    const storefrontBody = JSON.parse(storefrontRequest.body);
+    expect(storefrontBody.query).toContain(SHOPIFY_IN_CONTEXT_DIRECTIVE);
+    expect(storefrontBody.query).toContain('$country: CountryCode!');
+    expect(storefrontBody.query).toContain('$language: LanguageCode!');
+    expect(storefrontBody.variables).toEqual({
+      country: SHOPIFY_MARKET_CONTEXT.country,
+      language: SHOPIFY_MARKET_CONTEXT.language,
+    });
+  });
+
+  test('un país Storefront distinto de ES falla y no descarga el catálogo', async () => {
+    const { code, io, requests } = await runCli(validEnv(), {
+      localization: storefrontLocalization({ country: 'FR' }),
+    });
+    expect(code).toBe(1);
+    expect(io.failure()).toContain('configuration error');
+    expect(io.failure()).toContain('Storefront localization country is not ES');
+    expect(io.failure()).toContain('received FR');
+    expect(io.success()).not.toContain('Localization context: OK');
+    expect(queriesOf(requests).some((query) => query.includes('KingBeltCatalogPage'))).toBe(false);
+  });
+
+  test('un idioma Storefront distinto de ES falla sin fallback', async () => {
+    const { code, io, requests } = await runCli(validEnv(), {
+      localization: storefrontLocalization({ language: 'EN' }),
+    });
+    expect(code).toBe(1);
+    expect(io.failure()).toContain('configuration error');
+    expect(io.failure()).toContain('Storefront localization language is not ES');
+    expect(io.failure()).toContain('received EN');
+    expect(queriesOf(requests).some((query) => query.includes('KingBeltCatalogPage'))).toBe(false);
+  });
+
+  test('ES ausente de availableLanguages falla el preflight', async () => {
+    const { code, io, requests } = await runCli(validEnv(), {
+      localization: storefrontLocalization({ availableLanguages: [{ isoCode: 'EN' }] }),
+    });
+    expect(code).toBe(1);
+    expect(io.failure()).toContain('configuration error');
+    expect(io.failure()).toContain('available languages');
+    expect(queriesOf(requests).some((query) => query.includes('KingBeltCatalogPage'))).toBe(false);
+  });
+
+  test('una moneda Storefront distinta de EUR falla y no descarga el catálogo', async () => {
+    const { code, io, requests } = await runCli(validEnv(), {
+      localization: storefrontLocalization({ currency: 'USD' }),
+    });
+    expect(code).toBe(1);
+    expect(io.failure()).toContain('configuration error');
+    expect(io.failure()).toContain('Storefront localization currency is not EUR');
+    expect(io.failure()).toContain('received USD');
+    expect(queriesOf(requests).some((query) => query.includes('KingBeltCatalogPage'))).toBe(false);
+  });
+
+  [
+    ['localization ausente', null],
+    ['country ausente', { language: { isoCode: 'ES' } }],
+    ['currency ausente', {
+      country: { isoCode: 'ES', availableLanguages: [{ isoCode: 'ES' }] },
+      language: { isoCode: 'ES' },
+    }],
+    ['language ausente', {
+      country: {
+        isoCode: 'ES',
+        currency: { isoCode: 'EUR' },
+        availableLanguages: [{ isoCode: 'ES' }],
+      },
+    }],
+  ].forEach(([label, localization]) => {
+    test(`un payload de ${label} falla el preflight`, async () => {
+      const { code, io, requests } = await runCli(validEnv(), { localization });
+      expect(code).toBe(1);
+      expect(io.failure()).toContain('configuration error');
+      expect(io.failure()).toContain('Storefront localization payload does not match');
+      expect(io.failure()).not.toContain('TypeError');
+      expect(queriesOf(requests).some((query) => query.includes('KingBeltCatalogPage'))).toBe(false);
+    });
   });
 
   test('un precio en moneda distinta de EUR falla el preflight', async () => {
@@ -540,5 +724,256 @@ describe('preflight Shopify', () => {
     const { code, io } = await runCli(validEnv(), { catalog });
     expect(code).toBe(1);
     expect(io.failure()).toContain('unsupported_currency');
+  });
+
+  test('una imagen de variante incorrecta para Color falla el preflight', async () => {
+    const catalog = validShopifyCatalogPayload();
+    catalog.products[0].variants.nodes[0].image = catalog.products[0].images.nodes[1];
+    const { code, io } = await runCli(validEnv(), { catalog });
+    expect(code).toBe(1);
+    expect(io.failure()).toContain('catalog error');
+    expect(io.failure()).toContain('image');
+    expect(io.failure()).not.toContain('manifest mismatch');
+  });
+
+  test('una categoría oficial ausente falla el preflight', async () => {
+    const catalog = validShopifyCatalogPayload();
+    catalog.products[0].category = null;
+    const { code, io } = await runCli(validEnv(), { catalog });
+    expect(code).toBe(1);
+    expect(io.failure()).toContain('catalog error');
+    expect(io.failure()).toContain('category');
+    expect(io.failure()).not.toContain('manifest mismatch');
+  });
+
+  test('el manifiesto de colecciones exacto es independiente del orden', async () => {
+    const catalog = assignProductCollections(
+      validShopifyCatalogPayload(),
+      [sportCollection, casualCollection],
+      sportCollection
+    );
+    const { code, io } = await runCli(validEnv({
+      SHOPIFY_PREFLIGHT_EXPECTED_COLLECTION_HANDLES: 'casual,sport',
+    }), { catalog });
+    expect(code).toBe(0);
+    expect(io.success()).toContain('Catalog manifest: OK');
+    expect(io.success()).toMatch(/Collections: 2/);
+  });
+
+  test('una colección esperada ausente falla el preflight', async () => {
+    const { code, io } = await runCli(validEnv({
+      SHOPIFY_PREFLIGHT_EXPECTED_COLLECTION_HANDLES: 'sport,casual',
+    }));
+    expect(code).toBe(1);
+    expect(io.failure()).toContain('catalog error');
+    expect(io.failure()).toContain('Storefront collection manifest mismatch');
+    expect(io.failure()).toContain('Missing: casual');
+  });
+
+  test('una colección inesperada falla el preflight', async () => {
+    const catalog = assignProductCollections(
+      validShopifyCatalogPayload(),
+      [sportCollection, casualCollection],
+      sportCollection
+    );
+    const { code, io } = await runCli(validEnv(), { catalog });
+    expect(code).toBe(1);
+    expect(io.failure()).toContain('catalog error');
+    expect(io.failure()).toContain('Storefront collection manifest mismatch');
+    expect(io.failure()).toContain('Unexpected: casual');
+  });
+
+  test('faltantes e inesperadas se reportan juntos en el manifiesto de colecciones', async () => {
+    const catalog = assignProductCollections(
+      validShopifyCatalogPayload(),
+      [sportCollection, casualCollection],
+      sportCollection
+    );
+    const { code, io } = await runCli(validEnv({
+      SHOPIFY_PREFLIGHT_EXPECTED_COLLECTION_HANDLES: 'sport,novedades',
+    }), { catalog });
+    expect(code).toBe(1);
+    expect(io.failure()).toContain('Missing: novedades');
+    expect(io.failure()).toContain('Unexpected: casual');
+  });
+
+  test('falta el manifiesto de productos y no consulta Storefront', async () => {
+    const { code, io } = await runConfigCli({
+      SHOPIFY_PREFLIGHT_EXPECTED_PRODUCT_HANDLES: undefined,
+    });
+    expect(code).toBe(1);
+    expect(io.failure()).toContain('configuration error');
+    expect(io.failure()).toContain('SHOPIFY_PREFLIGHT_EXPECTED_PRODUCT_HANDLES');
+    expect(io.failure()).not.toContain('skipped');
+  });
+
+  test('falta el manifiesto de colecciones y no consulta Storefront', async () => {
+    const { code, io } = await runConfigCli({
+      SHOPIFY_PREFLIGHT_EXPECTED_COLLECTION_HANDLES: undefined,
+    });
+    expect(code).toBe(1);
+    expect(io.failure()).toContain('configuration error');
+    expect(io.failure()).toContain('SHOPIFY_PREFLIGHT_EXPECTED_COLLECTION_HANDLES');
+  });
+
+  [
+    ['', 'vacío'],
+    [' , ', 'solo separadores'],
+  ].forEach(([value, label]) => {
+    test(`un manifiesto de productos ${label} es error de configuración`, async () => {
+      const { code, io } = await runConfigCli({
+        SHOPIFY_PREFLIGHT_EXPECTED_PRODUCT_HANDLES: value,
+      });
+      expect(code).toBe(1);
+      expect(io.failure()).toContain('configuration error');
+      expect(io.failure()).toContain('SHOPIFY_PREFLIGHT_EXPECTED_PRODUCT_HANDLES');
+    });
+
+    test(`un manifiesto de colecciones ${label} es error de configuración`, async () => {
+      const { code, io } = await runConfigCli({
+        SHOPIFY_PREFLIGHT_EXPECTED_COLLECTION_HANDLES: value,
+      });
+      expect(code).toBe(1);
+      expect(io.failure()).toContain('configuration error');
+      expect(io.failure()).toContain('SHOPIFY_PREFLIGHT_EXPECTED_COLLECTION_HANDLES');
+    });
+  });
+
+  [
+    'Cinturon Atlas',
+    'Cinturon-Atlas',
+    '/productos/foo',
+    'https://kingbelt.test/foo',
+    'Foo',
+    'foo/bar',
+  ].forEach((handle) => {
+    test(`un handle de producto inválido (${handle}) es error de configuración`, async () => {
+      const { code, io } = await runConfigCli({
+        SHOPIFY_PREFLIGHT_EXPECTED_PRODUCT_HANDLES: handle,
+      });
+      expect(code).toBe(1);
+      expect(io.failure()).toContain('configuration error');
+      expect(io.failure()).toContain('invalid handle');
+      expect(io.failure()).toContain(handle);
+    });
+
+    test(`un handle de colección inválido (${handle}) es error de configuración`, async () => {
+      const { code, io } = await runConfigCli({
+        SHOPIFY_PREFLIGHT_EXPECTED_COLLECTION_HANDLES: handle,
+      });
+      expect(code).toBe(1);
+      expect(io.failure()).toContain('configuration error');
+      expect(io.failure()).toContain('invalid handle');
+      expect(io.failure()).toContain(handle);
+    });
+  });
+
+  test('un handle de producto duplicado en el manifiesto falla', async () => {
+    const { code, io } = await runConfigCli({
+      SHOPIFY_PREFLIGHT_EXPECTED_PRODUCT_HANDLES: 'cinturon-atlas,cinturon-dakar,cinturon-atlas',
+    });
+    expect(code).toBe(1);
+    expect(io.failure()).toContain('configuration error');
+    expect(io.failure()).toContain(
+      'SHOPIFY_PREFLIGHT_EXPECTED_PRODUCT_HANDLES contains duplicate handle: cinturon-atlas.'
+    );
+  });
+
+  test('un handle de colección duplicado en el manifiesto falla', async () => {
+    const { code, io } = await runConfigCli({
+      SHOPIFY_PREFLIGHT_EXPECTED_COLLECTION_HANDLES: 'sport,casual,sport',
+    });
+    expect(code).toBe(1);
+    expect(io.failure()).toContain('configuration error');
+    expect(io.failure()).toContain(
+      'SHOPIFY_PREFLIGHT_EXPECTED_COLLECTION_HANDLES contains duplicate handle: sport.'
+    );
+  });
+
+  test('parseExpectedHandles recorta espacios CSV y no normaliza handles inválidos', () => {
+    expect(parseExpectedHandles('a, b', 'X')).toEqual(['a', 'b']);
+    expect(() => parseExpectedHandles(undefined, 'SHOPIFY_PREFLIGHT_EXPECTED_PRODUCT_HANDLES')).toThrow(
+      'SHOPIFY_PREFLIGHT_EXPECTED_PRODUCT_HANDLES must be a comma-separated list of handles.'
+    );
+    expect(() => parseExpectedHandles('Cinturon-Atlas', 'X')).toThrow('invalid handle: Cinturon-Atlas');
+  });
+
+  test('el manifiesto de lanzamiento usa los handles exactos de Storefront, con ó transliterada a o', () => {
+    const launchProductHandles = [
+      'cinturon-caballero-al-corte-tintado-40-mm-5003-40',
+      'cinturon-caballero-al-corte-volanato-5026-40',
+      'cinturon-caballero-altamarea-hebilla-doble-pua-5880-40',
+      'cinturon-caballero-piel-al-corte-montana-5029-40',
+      'cinturon-caballero-al-corte-doble-pespunte-bicolor-5508-35',
+      'cinturon-caballero-al-corte-tintado-seta-5009-35',
+      'cinturon-caballero-al-corte-lujado-con-costura-5025-35',
+      'cinturon-caballero-altamarea-5568-35',
+      'cinturon-caballero-al-corte-grabado-puntos-5776-40',
+      'cinturon-ensamblado-serraje-pintado-contorno-5365-35',
+    ];
+    expect(parseExpectedHandles(
+      launchProductHandles.join(','),
+      'SHOPIFY_PREFLIGHT_EXPECTED_PRODUCT_HANDLES'
+    )).toEqual(launchProductHandles);
+    expect(parseExpectedHandles(
+      'sport,casual,vestir',
+      'SHOPIFY_PREFLIGHT_EXPECTED_COLLECTION_HANDLES'
+    )).toEqual(['sport', 'casual', 'vestir']);
+    expect(launchProductHandles.every((handle) => handle.startsWith('cinturon-'))).toBe(true);
+    expect(launchProductHandles.some((handle) => handle.startsWith('cintur-on-'))).toBe(false);
+    expect(() => parseExpectedHandles(
+      'cinturón-caballero-al-corte-tintado-seta-5009-35',
+      'SHOPIFY_PREFLIGHT_EXPECTED_PRODUCT_HANDLES'
+    )).toThrow('invalid handle');
+    expect(diffHandles(launchProductHandles, ['cintur-on-caballero-al-corte-tintado-seta-5009-35'])).toEqual({
+      missing: [...launchProductHandles].sort(),
+      unexpected: ['cintur-on-caballero-al-corte-tintado-seta-5009-35'],
+    });
+  });
+
+  test('diffHandles compara conjuntos y ordena de forma determinista', () => {
+    expect(diffHandles(['a', 'b', 'c'], ['c', 'a', 'b'])).toEqual({ missing: [], unexpected: [] });
+    expect(diffHandles(['a', 'b', 'c'], ['a', 'c'])).toEqual({ missing: ['b'], unexpected: [] });
+    expect(diffHandles(['a', 'b'], ['a', 'b', 'test'])).toEqual({ missing: [], unexpected: ['test'] });
+    expect(diffHandles(['atlas', 'dakar'], ['atlas', 'test'])).toEqual({
+      missing: ['dakar'],
+      unexpected: ['test'],
+    });
+  });
+
+  test('nunca imprime un Cart ID en errores de preflight', () => {
+    const cartId = 'gid://shopify/Cart/secret-cart-key-never-print';
+    const sanitized = sanitizePreflightText(`cart ${cartId} Authorization: ${TOKEN}`, validEnv());
+    expect(sanitized).toContain('[redacted-cart-id]');
+    expect(sanitized).toContain('[redacted-header]');
+    expect(sanitized).not.toContain('secret-cart-key-never-print');
+    expect(sanitized).not.toContain(TOKEN);
+  });
+
+  test('los manifiestos de preflight no entran en runtime ni en astro:env', () => {
+    const names = [
+      'SHOPIFY_PREFLIGHT_EXPECTED_PRODUCT_HANDLES',
+      'SHOPIFY_PREFLIGHT_EXPECTED_COLLECTION_HANDLES',
+      'SHOPIFY_PREFLIGHT_REQUIRED_PRODUCT_HANDLES',
+    ];
+    const walk = (directory) => readdirSync(directory).flatMap((name) => {
+      const path = join(directory, name);
+      return statSync(path).isDirectory() ? walk(path) : [path];
+    });
+    const runtimeHits = [
+      join(root, 'astro.config.mjs'),
+      ...walk(join(root, 'src')),
+    ].filter((path) => {
+      const text = readFileSync(path, 'utf8');
+      return names.some((name) => text.includes(name));
+    }).map((path) => path.slice(root.length + 1));
+    expect(runtimeHits).toEqual([]);
+
+    const example = readFileSync(join(root, '.env.example'), 'utf8');
+    expect(example).toContain('SHOPIFY_PREFLIGHT_EXPECTED_PRODUCT_HANDLES=');
+    expect(example).toContain('SHOPIFY_PREFLIGHT_EXPECTED_COLLECTION_HANDLES=');
+    expect(example).toContain('Solo se usan durante shopify:preflight');
+    expect(example).not.toContain('SHOPIFY_PREFLIGHT_REQUIRED_PRODUCT_HANDLES');
+    expect(example).not.toContain('required handles optional');
   });
 });

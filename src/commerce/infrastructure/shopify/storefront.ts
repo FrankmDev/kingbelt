@@ -15,7 +15,8 @@ import {
 
 /**
  * Frontera Astro de Storefront. Solo se alcanza cuando COMMERCE_SOURCE elige
- * Shopify. El BFF puede pasar `buyerIp`; catálogo y smoke no deben inventarla.
+ * Shopify. El tráfico runtime de comprador debe pasar `buyerIp`; preflight,
+ * smoke y build lo omiten.
  */
 export const getConfiguredShopifyStorefrontConfig = () => {
   try {
@@ -39,3 +40,6 @@ export const createConfiguredShopifyStorefrontGateway = (
   options: ShopifyStorefrontGatewayOptions = {}
 ) =>
   createShopifyStorefrontGateway(getConfiguredShopifyStorefrontConfig(), options);
+
+export const createConfiguredShopifyBuyerStorefrontGateway = (buyerIp: string) =>
+  createConfiguredShopifyStorefrontGateway({ buyerIp });

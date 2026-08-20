@@ -18,8 +18,12 @@ import {
 } from '../src/commerce/infrastructure/shopify/catalog-query.ts';
 import { createShopifyCatalogQueries } from '../src/commerce/infrastructure/shopify/catalog-runtime-query.ts';
 import {
+  SHOPIFY_COLOR_GALLERIES_METAFIELD,
+  SHOPIFY_COLOR_GALLERIES_METAFIELD_IDENTIFIER,
   SHOPIFY_IN_CONTEXT_DIRECTIVE,
   SHOPIFY_MARKET_CONTEXT,
+  SHOPIFY_PRIMARY_COLLECTION_METAFIELD,
+  SHOPIFY_PRIMARY_COLLECTION_METAFIELD_IDENTIFIER,
   ShopifyConfigurationError,
 } from '../src/commerce/infrastructure/shopify/config.ts';
 import {
@@ -34,9 +38,11 @@ import {
   galleryImagesOf,
   image,
   mediaImage,
+  legacyPrimaryCollectionMetafield,
   novedadesCollection,
   pageInfo,
   primaryCollectionMetafield,
+  primaryCollectionOf,
   productWithoutColorPayload,
   productSummaryNode,
   SHOPIFY_CATALOG_TEST_HOSTS as HOSTS,
@@ -48,6 +54,19 @@ const expectMappingError = (payload, fragment) => {
   expect(() => mapShopifyCatalog(payload, HOSTS)).toThrow(ShopifyCatalogMappingError);
   expect(() => mapShopifyCatalog(payload, HOSTS)).toThrow(fragment);
 };
+
+const withoutPrimaryCollection = (payload) => {
+  payload.products[0].metafields = payload.products[0].metafields.filter((item) =>
+    item?.key !== SHOPIFY_PRIMARY_COLLECTION_METAFIELD.key
+  );
+  return payload;
+};
+
+const missingPrimaryCollection = `${SHOPIFY_PRIMARY_COLLECTION_METAFIELD_IDENTIFIER} is missing`;
+const primaryCollectionQueryKey = `key: "${SHOPIFY_PRIMARY_COLLECTION_METAFIELD.key}"`;
+const primaryCollectionQueryNamespace = `namespace: "${SHOPIFY_PRIMARY_COLLECTION_METAFIELD.namespace}"`;
+const colorGalleriesQueryKey = `key: "${SHOPIFY_COLOR_GALLERIES_METAFIELD.key}"`;
+const colorGalleriesQueryNamespace = `namespace: "${SHOPIFY_COLOR_GALLERIES_METAFIELD.namespace}"`;
 
 describe('catálogo Shopify', () => {
   test('normaliza un catálogo completo al dominio neutral', () => {
@@ -121,10 +140,89 @@ describe('catálogo Shopify', () => {
   test('un producto con Color exige color_galleries y falla si el metafield está ausente', () => {
     const payload = validPayload();
     payload.products[0].metafields = payload.products[0].metafields.filter((item) =>
-      item?.key !== 'color_galleries'
+      item?.key !== SHOPIFY_COLOR_GALLERIES_METAFIELD.key
     );
-    expectMappingError(payload, 'metafields.kingbelt.color_galleries');
+    expectMappingError(payload, `metafields.${SHOPIFY_COLOR_GALLERIES_METAFIELD_IDENTIFIER}`);
     expectMappingError(payload, 'Storefront access = Read');
+  });
+
+  test('el runtime usa las tres imágenes de custom.kingbelt_color_galleries cuando llegan', () => {
+    const product = mapShopifyProduct(validPayload().products[0], HOSTS, { requireStructuredMetafields: false });
+    expect(product.mediaGroups.every((group) => group.imageIds.length === COLOR_GALLERY_IMAGE_COUNT)).toBe(true);
+    expect(product.mediaGroups[0].imageIds).toEqual(colorImages('Cuero').map((image) => image.id));
+  });
+
+  test('el runtime usa las tres imágenes de la galería aunque la variante no use la portada', () => {
+    const payload = validPayload();
+    payload.products[0].variants.nodes[0].image = colorImages('Cuero')[1];
+    const product = mapShopifyProduct(payload.products[0], HOSTS, { requireStructuredMetafields: false });
+    expect(product.mediaGroups[0].imageIds).toEqual(colorImages('Cuero').map((image) => image.id));
+    expect(product.variants[0].imageId).toBe(colorImages('Cuero')[0].id);
+  });
+
+  test('el runtime aplica galerías completas y cae a la imagen de variante si un color no tiene images', () => {
+    const payload = validPayload();
+    const negroGallery = galleriesOf(payload).references.nodes.find((item) =>
+      galleryField(item, 'color_value').value === 'Negro'
+    );
+    negroGallery.fields = negroGallery.fields.filter((field) => field.key !== 'images');
+    const product = mapShopifyProduct(payload.products[0], HOSTS, { requireStructuredMetafields: false });
+    expect(product.mediaGroups.map((group) => group.imageIds)).toEqual([
+      colorImages('Cuero').map((item) => item.id),
+      colorImages('Marrón').map((item) => item.id),
+      [colorImages('Negro')[0].id],
+    ]);
+  });
+
+  test('el runtime no importa galerías de otro producto y usa la familia de la portada de variante', () => {
+    const payload = validPayload();
+    payload.products[0].images.nodes.forEach((item) => {
+      const stem = item.id.replace('gid://shopify/ProductImage/', '');
+      const [slug, sequence] = stem.split('-');
+      item.url = `https://cdn.shopify.com/s/files/${slug}_${String(sequence).padStart(2, '0')}.jpg`;
+    });
+    galleriesOf(payload).references.nodes.forEach((gallery, galleryIndex) => {
+      galleryField(gallery, 'images').references.nodes = [1, 2, 3].map((sequence) =>
+        mediaImage(image(`ajena-${galleryIndex}-${sequence}`, `ajeno-${galleryIndex}-${sequence}.jpg`))
+      );
+    });
+    const product = mapShopifyProduct(payload.products[0], HOSTS, { requireStructuredMetafields: false });
+    expect(product.images.some((item) => item.id.includes('ajena'))).toBe(false);
+    expect(product.mediaGroups.map((group) => group.imageIds)).toEqual([
+      colorImages('Cuero').map((item) => item.id),
+      colorImages('Marrón').map((item) => item.id),
+      colorImages('Negro').map((item) => item.id),
+    ]);
+    expect(product.primaryImageId).toBe(colorImages('Cuero')[0].id);
+  });
+
+  test('el runtime sirve un producto con Color sin color_galleries usando media nativa', () => {
+    const payload = validPayload();
+    payload.products[0].metafields = payload.products[0].metafields.filter((item) =>
+      item?.key !== SHOPIFY_COLOR_GALLERIES_METAFIELD.key
+    );
+    expectMappingError(payload, `metafields.${SHOPIFY_COLOR_GALLERIES_METAFIELD_IDENTIFIER}`);
+    const product = mapShopifyProduct(payload.products[0], HOSTS, { requireStructuredMetafields: false });
+    expect(product.mediaGroups.map((group) => group.optionValueId)).toEqual(
+      product.options[0].values.map((value) => value.id)
+    );
+    expect(product.mediaGroups.map((group) => group.imageIds)).toEqual([
+      [colorImages('Cuero')[0].id],
+      [colorImages('Marrón')[0].id],
+      [colorImages('Negro')[0].id],
+    ]);
+    expect(product.primaryImageId).toBe(colorImages('Cuero')[0].id);
+    expect(product.variants[0].imageId).toBe(colorImages('Cuero')[0].id);
+    expect(product.variants.every((variant) => Boolean(variant.imageId))).toBe(true);
+  });
+
+  test('el runtime sigue fallando si color_galleries llega con tipo incorrecto', () => {
+    const payload = validPayload();
+    payload.products[0].metafields = payload.products[0].metafields.map((item) =>
+      item?.key === SHOPIFY_COLOR_GALLERIES_METAFIELD.key ? { ...item, type: 'single_line_text_field' } : item
+    );
+    expect(() => mapShopifyProduct(payload.products[0], HOSTS, { requireStructuredMetafields: false }))
+      .toThrow('se esperaba list.metaobject_reference');
   });
 
   test('un precio en moneda distinta de EUR falla la validación del catálogo', () => {
@@ -450,7 +548,7 @@ describe('catálogo Shopify', () => {
   });
 
   test('getProductByHandle carga color_galleries y los summaries no descargan las galerías', () => {
-    expect(FULL_PRODUCT_FIELDS).toContain('key: "color_galleries"');
+    expect(FULL_PRODUCT_FIELDS).toContain(colorGalleriesQueryKey);
     expect(FULL_PRODUCT_FIELDS).toContain('... on MediaImage');
     expect(PRODUCT_SUMMARY_FIELDS).not.toContain('color_galleries');
     expect(PRODUCT_SUMMARY_FIELDS).not.toContain('... on MediaImage');
@@ -640,7 +738,13 @@ describe('catálogo Shopify', () => {
       language: SHOPIFY_MARKET_CONTEXT.language,
     });
     expect(calls[0].query).toContain('metafields(identifiers:');
-    expect(calls[0].query).toContain('key: "primary_collection"');
+    expect(calls[0].query).toContain(primaryCollectionQueryNamespace);
+    expect(calls[0].query).toContain(primaryCollectionQueryKey);
+    expect(calls[0].query).not.toMatch(/namespace:\s*"kingbelt",\s*key:\s*"primary_collection"/);
+    expect(calls[0].query).toContain('namespace: "kingbelt", key: "model_reference"');
+    expect(calls[0].query).toContain(colorGalleriesQueryNamespace);
+    expect(calls[0].query).toContain(colorGalleriesQueryKey);
+    expect(calls[0].query).not.toMatch(/namespace:\s*"kingbelt",\s*key:\s*"color_galleries"/);
     expect(calls[0].query).toContain('... on Collection { id handle title }');
     expect(calls[0].query).toContain(SHOPIFY_IN_CONTEXT_DIRECTIVE);
     expect(calls[1].query).toContain(SHOPIFY_IN_CONTEXT_DIRECTIVE);
@@ -802,6 +906,12 @@ describe('colección principal Shopify', () => {
     expect(product.primaryCollectionId).toBe(casualCollection.id);
     expect(product.collectionIds).toEqual([novedadesCollection.id, casualCollection.id]);
     expect(product.collectionIds[0]).not.toBe(product.primaryCollectionId);
+    expect(mapShopifyProductSummary(productSummaryNode(payload.products[0]), HOSTS).primaryCollection)
+      .toEqual({
+        id: casualCollection.id,
+        handle: casualCollection.handle,
+        title: casualCollection.title,
+      });
   });
 
   test('cambiar el orden de product.collections no cambia primaryCollectionId', () => {
@@ -820,6 +930,10 @@ describe('colección principal Shopify', () => {
     expect(productA.primaryCollectionId).toBe(casualCollection.id);
     expect(productB.primaryCollectionId).toBe(casualCollection.id);
     expect(productA.primaryCollectionId).toBe(productB.primaryCollectionId);
+    expect(mapShopifyProductSummary(productSummaryNode(payloadA.products[0]), HOSTS).primaryCollection.id)
+      .toBe(casualCollection.id);
+    expect(mapShopifyProductSummary(productSummaryNode(payloadB.products[0]), HOSTS).primaryCollection.id)
+      .toBe(casualCollection.id);
   });
 
   test('un producto con varias colecciones conserva todas las pertenencias', () => {
@@ -837,66 +951,144 @@ describe('colección principal Shopify', () => {
     expect(product.primaryCollectionId).toBe(casualCollection.id);
   });
 
-  test('un producto con una sola colección usa esa colección si falta el metafield', () => {
-    const payload = validPayload();
-    payload.products[0].metafields = payload.products[0].metafields.filter((item) =>
-      item?.key !== 'primary_collection'
+  test('un producto con una sola colección también exige custom.kingbelt_primary_collection', () => {
+    const payload = assignProductCollections(
+      validPayload(),
+      [casualCollection],
+      casualCollection
     );
     const product = mapShopifyCatalog(payload, HOSTS).products[0];
-    expect(product.primaryCollectionId).toBe(payload.products[0].collections.nodes[0].id);
+    expect(product.primaryCollectionId).toBe(casualCollection.id);
+    expect(product.collectionIds).toEqual([casualCollection.id]);
     expect(mapShopifyProductSummary(productSummaryNode(payload.products[0]), HOSTS).primaryCollection)
       .toEqual({
-        id: payload.products[0].collections.nodes[0].id,
-        handle: payload.products[0].collections.nodes[0].handle,
-        title: payload.products[0].collections.nodes[0].title,
+        id: casualCollection.id,
+        handle: casualCollection.handle,
+        title: casualCollection.title,
       });
+
+    withoutPrimaryCollection(payload);
+    expect(() => mapShopifyCatalog(payload, HOSTS)).toThrow(ShopifyCatalogMappingError);
+    expect(() => mapShopifyCatalog(payload, HOSTS)).toThrow(missingPrimaryCollection);
+    expect(() => mapShopifyProductSummary(productSummaryNode(payload.products[0]), HOSTS))
+      .toThrow(missingPrimaryCollection);
   });
 
-  test('el metafield ausente falla sin caer a collections[0]', () => {
-    const payload = assignProductCollections(
+  test('el runtime también exige custom.kingbelt_primary_collection con una sola colección asignada', () => {
+    const payload = withoutPrimaryCollection(assignProductCollections(
+      validPayload(),
+      [casualCollection],
+      casualCollection
+    ));
+    expect(() => mapShopifyCatalog(payload, HOSTS)).toThrow(missingPrimaryCollection);
+    expect(() => mapShopifyProduct(payload.products[0], HOSTS))
+      .toThrow(missingPrimaryCollection);
+    expect(() => mapShopifyProduct(payload.products[0], HOSTS, { requireStructuredMetafields: false }))
+      .toThrow(missingPrimaryCollection);
+    expect(() => mapShopifyProductSummary(productSummaryNode(payload.products[0]), HOSTS))
+      .toThrow(missingPrimaryCollection);
+  });
+
+  test('el runtime no elige una colección si faltan el metafield y hay varias asignadas', () => {
+    const payload = withoutPrimaryCollection(assignProductCollections(
       validPayload(),
       [novedadesCollection, casualCollection],
       casualCollection
-    );
-    payload.products[0].metafields = payload.products[0].metafields.filter((item) =>
-      item?.key !== 'primary_collection'
-    );
-    expect(() => mapShopifyCatalog(payload, HOSTS)).toThrow('kingbelt.primary_collection is missing');
+    ));
+    expect(() => mapShopifyProduct(payload.products[0], HOSTS, { requireStructuredMetafields: false }))
+      .toThrow(missingPrimaryCollection);
+    expect(() => mapShopifyProductSummary(
+      productSummaryNode(payload.products[0]),
+      HOSTS,
+      { requireStructuredMetafields: false }
+    )).toThrow(missingPrimaryCollection);
+  });
+
+  test('el metafield ausente falla sin caer a collections[0]', () => {
+    const payload = withoutPrimaryCollection(assignProductCollections(
+      validPayload(),
+      [novedadesCollection, casualCollection],
+      casualCollection
+    ));
+    expect(() => mapShopifyCatalog(payload, HOSTS)).toThrow(missingPrimaryCollection);
     expect(() => mapShopifyCatalog(payload, HOSTS)).not.toThrow(novedadesCollection.id);
+    expect(() => mapShopifyProductSummary(productSummaryNode(payload.products[0]), HOSTS))
+      .toThrow(missingPrimaryCollection);
+  });
+
+  test('el campo legado kingbelt.primary_collection no actúa como fallback', () => {
+    const payload = assignProductCollections(
+      validPayload(),
+      [casualCollection],
+      casualCollection
+    );
+    withoutPrimaryCollection(payload);
+    payload.products[0].metafields = [
+      ...payload.products[0].metafields,
+      legacyPrimaryCollectionMetafield(casualCollection),
+    ];
+    expect(() => mapShopifyCatalog(payload, HOSTS)).toThrow(missingPrimaryCollection);
+    expect(() => mapShopifyProductSummary(productSummaryNode(payload.products[0]), HOSTS))
+      .toThrow(missingPrimaryCollection);
   });
 
   test('el metafield vacío falla', () => {
     const payload = validPayload();
-    const metafieldNode = payload.products[0].metafields.find((item) => item?.key === 'primary_collection');
+    const metafieldNode = primaryCollectionOf(payload);
     metafieldNode.value = '';
     metafieldNode.reference = null;
-    expectMappingError(payload, 'kingbelt.primary_collection is empty');
+    expectMappingError(payload, `${SHOPIFY_PRIMARY_COLLECTION_METAFIELD_IDENTIFIER} is empty`);
+    expect(() => mapShopifyProductSummary(productSummaryNode(payload.products[0]), HOSTS))
+      .toThrow(`${SHOPIFY_PRIMARY_COLLECTION_METAFIELD_IDENTIFIER} is empty`);
   });
 
   test('un tipo incorrecto falla', () => {
     const payload = validPayload();
     payload.products[0].metafields = payload.products[0].metafields.map((item) =>
-      item?.key === 'primary_collection' ? { ...item, type: 'single_line_text_field' } : item
+      item?.key === SHOPIFY_PRIMARY_COLLECTION_METAFIELD.key
+        ? { ...item, type: 'single_line_text_field' }
+        : item
     );
-    expectMappingError(payload, 'has type single_line_text_field; expected collection_reference');
+    expectMappingError(
+      payload,
+      `${SHOPIFY_PRIMARY_COLLECTION_METAFIELD_IDENTIFIER} has type single_line_text_field; expected collection_reference`
+    );
   });
 
   test('una referencia que no es Collection falla', () => {
     const payload = validPayload();
-    const metafieldNode = payload.products[0].metafields.find((item) => item?.key === 'primary_collection');
+    const metafieldNode = primaryCollectionOf(payload);
     metafieldNode.reference = {
       __typename: 'Product',
       id: 'gid://shopify/Product/99',
     };
-    expectMappingError(payload, 'does not reference a Collection');
+    expectMappingError(
+      payload,
+      `${SHOPIFY_PRIMARY_COLLECTION_METAFIELD_IDENTIFIER} does not reference a Collection`
+    );
   });
 
-  test('una colección referenciada inexistente falla', () => {
+  test('una referencia rota con valor falla de forma accionable', () => {
     const payload = validPayload();
-    const metafieldNode = payload.products[0].metafields.find((item) => item?.key === 'primary_collection');
+    const metafieldNode = primaryCollectionOf(payload);
     metafieldNode.value = 'gid://shopify/Collection/999';
     metafieldNode.reference = null;
-    expectMappingError(payload, 'primary collection "gid://shopify/Collection/999" does not exist');
+    expectMappingError(
+      payload,
+      `${SHOPIFY_PRIMARY_COLLECTION_METAFIELD_IDENTIFIER} has a value but the Collection reference is not available in Storefront`
+    );
+    expectMappingError(payload, 'Storefront access');
+  });
+
+  test('id, handle y title de la Collection referenciada son obligatorios', () => {
+    for (const field of ['id', 'handle', 'title']) {
+      const payload = validPayload();
+      const metafieldNode = primaryCollectionOf(payload);
+      metafieldNode.reference[field] = '';
+      expect(() => mapShopifyCatalog(payload, HOSTS)).toThrow(ShopifyCatalogMappingError);
+      expect(() => mapShopifyProductSummary(productSummaryNode(payload.products[0]), HOSTS))
+        .toThrow(ShopifyCatalogMappingError);
+    }
   });
 
   test('una colección principal no asignada al producto falla', () => {
@@ -905,7 +1097,10 @@ describe('colección principal Shopify', () => {
       [novedadesCollection, cueroCollection],
       casualCollection
     );
-    expectMappingError(payload, 'primary collection "casual" is not assigned to this product');
+    expectMappingError(
+      payload,
+      `${SHOPIFY_PRIMARY_COLLECTION_METAFIELD_IDENTIFIER} references collection "casual" but that collection is not assigned to this product`
+    );
   });
 
   test('summaries conservan la colección principal explícita, no la colección visitada', async () => {
@@ -959,11 +1154,41 @@ describe('colección principal Shopify', () => {
     });
   });
 
-  test('getProductByHandle y getProductSummaries piden primary_collection', () => {
-    expect(FULL_PRODUCT_FIELDS).toContain('key: "primary_collection"');
-    expect(PRODUCT_SUMMARY_FIELDS).toContain('key: "primary_collection"');
+  test('las queries snapshot no omiten un Product sin su colección principal', async () => {
+    const catalog = mapShopifyCatalog(validPayload(), HOSTS);
+    const orphan = {
+      ...catalog.products[0],
+      id: 'gid://shopify/Product/orphan',
+      handle: 'cinturon-huerfano',
+      primaryCollectionId: 'gid://shopify/Collection/missing',
+    };
+    const broken = {
+      products: [catalog.products[0], orphan],
+      collections: catalog.collections,
+    };
+    const queries = createShopifyCatalogSnapshotQueries(broken);
+    const expected = 'Primary collection gid://shopify/Collection/missing not found for product cinturon-huerfano.';
+    await expect(queries.getProductSummaries()).rejects.toThrow(expected);
+    await expect(queries.getFeaturedProducts(4)).rejects.toThrow(expected);
+    await expect(queries.getCollectionByHandle('sport')).rejects.toThrow(expected);
+    await expect(queries.getRelatedProducts(catalog.products[0], 1)).rejects.toThrow(expected);
+  });
+
+  test('getProductByHandle y getProductSummaries piden custom.kingbelt_primary_collection', () => {
+    expect(FULL_PRODUCT_FIELDS).toContain(primaryCollectionQueryNamespace);
+    expect(FULL_PRODUCT_FIELDS).toContain(primaryCollectionQueryKey);
+    expect(FULL_PRODUCT_FIELDS).not.toMatch(/namespace:\s*"kingbelt",\s*key:\s*"primary_collection"/);
+    expect(FULL_PRODUCT_FIELDS).toContain('namespace: "kingbelt", key: "model_reference"');
+    expect(FULL_PRODUCT_FIELDS).toContain(colorGalleriesQueryNamespace);
+    expect(FULL_PRODUCT_FIELDS).toContain(colorGalleriesQueryKey);
+    expect(FULL_PRODUCT_FIELDS).not.toMatch(/namespace:\s*"kingbelt",\s*key:\s*"color_galleries"/);
+    expect(PRODUCT_SUMMARY_FIELDS).toContain(primaryCollectionQueryNamespace);
+    expect(PRODUCT_SUMMARY_FIELDS).toContain(primaryCollectionQueryKey);
+    expect(PRODUCT_SUMMARY_FIELDS).not.toMatch(/namespace:\s*"kingbelt",\s*key:\s*"primary_collection"/);
+    expect(PRODUCT_SUMMARY_FIELDS).toContain('namespace: "kingbelt", key: "model_reference"');
+    expect(PRODUCT_SUMMARY_FIELDS).toContain('reference');
     expect(PRODUCT_SUMMARY_FIELDS).toContain('... on Collection { id handle title }');
-    expect(PRODUCT_SUMMARY_FIELDS).not.toMatch(/collections\(first:\s*1\)/);
+    expect(PRODUCT_SUMMARY_FIELDS).toMatch(/collections\s*\(/);
   });
 });
 

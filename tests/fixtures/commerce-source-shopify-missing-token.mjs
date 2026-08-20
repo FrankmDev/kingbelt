@@ -11,7 +11,8 @@ mock.module('astro:env/server', () => ({
 }));
 
 globalThis.fetch = async () => { throw new Error('Storefront must not be called with invalid configuration'); };
-const { catalogProvider } = await import('../../src/commerce/catalog.ts');
+const { getCatalogProvider } = await import('../../src/commerce/catalog.ts');
+const catalogProvider = await getCatalogProvider('203.0.113.10');
 await assert.rejects(() => catalogProvider.getProductHandles());
 await assert.rejects(() => catalogProvider.getFeaturedProducts(4));
 
@@ -19,9 +20,17 @@ const { POST } = await import('../../src/pages/api/cart.ts');
 const response = await POST({
   request: new Request('https://kingbelt.test/api/cart', {
     method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Origin: 'https://kingbelt.test',
+    },
     body: JSON.stringify({ command: 'refresh' }),
   }),
-  cookies: { get: () => undefined, set: () => undefined, delete: () => undefined },
+  session: {
+    get: async () => undefined,
+    set() {},
+    delete() {},
+  },
   clientAddress: '203.0.113.10',
 });
 assert.equal(response.status, 503);

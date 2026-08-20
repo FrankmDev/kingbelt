@@ -1,9 +1,26 @@
-import { afterEach, describe, expect, test } from 'bun:test';
-import createSessionDriver, {
+import { afterEach, describe, expect, mock, test } from 'bun:test';
+
+let lastUpstashOptions;
+
+mock.module('unstorage/drivers/upstash', () => ({
+  default(options) {
+    lastUpstashOptions = options;
+    return {
+      name: 'upstash',
+      getItem() {},
+      setItem() {},
+      removeItem() {},
+    };
+  },
+}));
+
+const {
+  default: createSessionDriver,
   SESSION_COOKIE_NAME,
   SESSION_TTL_SECONDS,
   sessionDriverConfig,
-} from '../src/session-driver.ts';
+} = await import('../src/session-driver.ts');
+const { SESSION_STORE_PREFIX } = await import('../src/session-storage-config.ts');
 
 const originalEnv = {
   VERCEL: process.env.VERCEL,
@@ -11,13 +28,16 @@ const originalEnv = {
   UPSTASH_REDIS_REST_TOKEN: process.env.UPSTASH_REDIS_REST_TOKEN,
 };
 
+const restoreEnv = (name, previous) => {
+  if (previous === undefined) delete process.env[name];
+  else process.env[name] = previous;
+};
+
 afterEach(() => {
-  if (originalEnv.VERCEL === undefined) delete process.env.VERCEL;
-  else process.env.VERCEL = originalEnv.VERCEL;
-  if (originalEnv.UPSTASH_REDIS_REST_URL === undefined) delete process.env.UPSTASH_REDIS_REST_URL;
-  else process.env.UPSTASH_REDIS_REST_URL = originalEnv.UPSTASH_REDIS_REST_URL;
-  if (originalEnv.UPSTASH_REDIS_REST_TOKEN === undefined) delete process.env.UPSTASH_REDIS_REST_TOKEN;
-  else process.env.UPSTASH_REDIS_REST_TOKEN = originalEnv.UPSTASH_REDIS_REST_TOKEN;
+  lastUpstashOptions = undefined;
+  restoreEnv('VERCEL', originalEnv.VERCEL);
+  restoreEnv('UPSTASH_REDIS_REST_URL', originalEnv.UPSTASH_REDIS_REST_URL);
+  restoreEnv('UPSTASH_REDIS_REST_TOKEN', originalEnv.UPSTASH_REDIS_REST_TOKEN);
 });
 
 describe('driver de sesión Astro', () => {
@@ -36,23 +56,47 @@ describe('driver de sesión Astro', () => {
     expect(typeof driver.getItem).toBe('function');
     expect(typeof driver.setItem).toBe('function');
     expect(typeof driver.removeItem).toBe('function');
+    expect(lastUpstashOptions).toBeUndefined();
   });
 
   test('en Vercel exige Redis/KV persistente', () => {
     process.env.VERCEL = '1';
     delete process.env.UPSTASH_REDIS_REST_URL;
     delete process.env.UPSTASH_REDIS_REST_TOKEN;
-    expect(() => createSessionDriver()).toThrow(/UPSTASH_REDIS_REST_URL/);
+    expect(() => createSessionDriver()).toThrow(/required for session storage on Vercel/);
+  });
+
+  test('credenciales parciales no caen a disco', () => {
+    delete process.env.VERCEL;
+    process.env.UPSTASH_REDIS_REST_URL = 'https://example.upstash.io';
+    delete process.env.UPSTASH_REDIS_REST_TOKEN;
+    expect(() => createSessionDriver()).toThrow(/must be configured together/);
   });
 
   test('con credenciales Upstash usa el driver Redis REST', () => {
     process.env.VERCEL = '1';
-    process.env.UPSTASH_REDIS_REST_URL = 'https://example-upstash.upstash.io';
+    process.env.UPSTASH_REDIS_REST_URL = 'https://example.upstash.io';
     process.env.UPSTASH_REDIS_REST_TOKEN = 'example-upstash-token';
     const driver = createSessionDriver();
     expect(driver.name).toBe('upstash');
     expect(typeof driver.getItem).toBe('function');
     expect(typeof driver.setItem).toBe('function');
     expect(typeof driver.removeItem).toBe('function');
+    expect(lastUpstashOptions).toEqual({
+      url: 'https://example.upstash.io',
+      token: 'example-upstash-token',
+      base: SESSION_STORE_PREFIX,
+      ttl: SESSION_TTL_SECONDS,
+    });
+  });
+
+  test('local con credenciales válidas también usa Upstash', () => {
+    delete process.env.VERCEL;
+    process.env.UPSTASH_REDIS_REST_URL = 'https://example.upstash.io/';
+    process.env.UPSTASH_REDIS_REST_TOKEN = 'example-upstash-token';
+    const driver = createSessionDriver();
+    expect(driver.name).toBe('upstash');
+    expect(lastUpstashOptions?.base).toBe('kingbelt-session');
+    expect(lastUpstashOptions?.ttl).toBe(SESSION_TTL_SECONDS);
   });
 });

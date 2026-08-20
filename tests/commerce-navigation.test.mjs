@@ -34,6 +34,20 @@ describe('URLs alojadas de Shopify', () => {
     expect(parseShopifyHostedUrl(`${ACCOUNT_URL}/account`).pathname).toBe('/account');
   });
 
+  test('acepta la URL de Customer Accounts de shopify.com con path de tienda', () => {
+    const hosted = parseShopifyHostedUrl('https://shopify.com/106425811284/account');
+    expect(hosted.protocol).toBe('https:');
+    expect(hosted.hostname).toBe('shopify.com');
+    expect(hosted.pathname).toBe('/106425811284/account');
+    expect(hosted.search).toBe('');
+    expect(hosted.hash).toBe('');
+    expect(hosted.href).toBe('https://shopify.com/106425811284/account');
+    expect(resolveCustomerAccountHref({
+      source: 'shopify',
+      customerAccountUrl: 'https://shopify.com/106425811284/account',
+    })).toBe('https://shopify.com/106425811284/account');
+  });
+
   test('exige HTTPS y rechaza javascript:, data: y URLs no absolutas', () => {
     [
       undefined,
@@ -136,6 +150,9 @@ describe('superficies alojadas en la interfaz', () => {
     expect(composition).toContain('Response.redirect');
     expect(composition).toContain('CUSTOMER_ACCOUNT_REDIRECT_STATUS');
     expect(composition).not.toContain('status: 301');
+    expect(composition).toContain('status: 503');
+    expect(composition).toContain('Shopify Customer Accounts are not configured.');
+    expect(composition).not.toContain('AccountAccessPanel');
     expect(iniciar.indexOf('getAccountAccessResponse')).toBeLessThan(iniciar.indexOf('AccountAccessPanel />'));
   });
 
@@ -160,6 +177,8 @@ describe('superficies alojadas en la interfaz', () => {
     expect(shopifyCart).toContain('checkoutUrl');
     expect(shopifyCart).toContain('getSafeCheckoutUrl');
     expect(cartController).toContain('getSafeCheckoutUrl');
+    expect(cartController).toContain('window.location.assign');
+    expect(cartController).not.toMatch(/iframe|window\.open/);
     expect(checkoutRedirect).toContain('result.url');
     expect(read('astro.config.mjs')).not.toContain('SHOPIFY_CHECKOUT_URL');
     expect(read('.env.example')).not.toContain('SHOPIFY_CHECKOUT_URL');
@@ -208,5 +227,40 @@ describe('superficies alojadas en la interfaz', () => {
     expect(mobile).not.toContain('window.location');
     expect(panel).not.toContain('localStorage');
     expect(panel).not.toMatch(/\btoken\b/i);
+  });
+});
+
+describe('navegación de tarjetas de producto', () => {
+  const card = read('src/components/collection/ProductCard.astro');
+  const catalog = read('src/components/collection/CollectionCatalog.astro');
+  const pdp = read('src/pages/productos/[slug].astro');
+
+  test('la tarjeta enlaza a la PDP y el enlace de categoría no envuelve el grid', () => {
+    expect(card).toContain('href={`/productos/${product.handle}`}');
+    expect(card).not.toContain('primaryCollection.handle');
+    expect(card).not.toContain('/categorias/');
+    expect(catalog).toContain('href={`/categorias/${group.collection.handle}`}');
+    expect(catalog.indexOf('collection-catalog__group-link'))
+      .toBeLessThan(catalog.indexOf('<ul class="collection-catalog__grid">'));
+    expect(catalog).toMatch(/collection-catalog__group-link::after[\s\S]*pointer-events:\s*none/);
+    expect(catalog).not.toMatch(/content-visibility:\s*auto/);
+  });
+
+  test('la ficha no tapa la compra con el bloque de categoría relacionada', () => {
+    expect(pdp).toContain('data-product-page');
+    expect(pdp).not.toMatch(/\.pdp__buy\s*\{[^}]*height:\s*0/);
+    expect(pdp).not.toMatch(/\.pdp__related\s*\{[^}]*z-index:\s*[1-9]/);
+  });
+
+  test('la galería de escritorio es miniatura a la izquierda y foto principal al lado', () => {
+    const gallery = read('src/components/product/ProductGallery.astro');
+    const desktop = gallery.split('@media (min-width: 48rem)')[1] ?? '';
+    expect(gallery).toContain('grid-template-columns: var(--gallery-thumb-width) auto');
+    expect(gallery).toContain('grid-row: 1 / -1');
+    expect(gallery).toContain('height: 100%');
+    expect(desktop).toContain('width: fit-content');
+    expect(desktop).toContain('grid-template-columns: var(--gallery-thumb-width) auto');
+    expect(desktop).not.toContain('minmax(0, 1fr)');
+    expect(gallery).not.toContain('padding-bottom: 125%');
   });
 });

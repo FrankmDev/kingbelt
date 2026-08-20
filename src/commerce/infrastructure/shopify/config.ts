@@ -22,6 +22,27 @@ export const SHOPIFY_SUPPORTED_CURRENCIES: readonly [typeof SHOPIFY_MARKET_CURRE
   SHOPIFY_MARKET_CURRENCY,
 ];
 
+/** Colección principal: contrato fijo de Storefront, no configurable por entorno. */
+export const SHOPIFY_PRIMARY_COLLECTION_METAFIELD = {
+  namespace: 'custom',
+  key: 'kingbelt_primary_collection',
+  type: 'collection_reference',
+} as const;
+
+export const SHOPIFY_PRIMARY_COLLECTION_METAFIELD_IDENTIFIER =
+  `${SHOPIFY_PRIMARY_COLLECTION_METAFIELD.namespace}.${SHOPIFY_PRIMARY_COLLECTION_METAFIELD.key}` as const;
+
+/** Galerías por color: contrato fijo de Storefront, no configurable por entorno. */
+export const SHOPIFY_COLOR_GALLERIES_METAFIELD = {
+  namespace: 'custom',
+  key: 'kingbelt_color_galleries',
+  type: 'list.metaobject_reference',
+} as const;
+
+export const SHOPIFY_COLOR_GALLERIES_METAFIELD_IDENTIFIER =
+  `${SHOPIFY_COLOR_GALLERIES_METAFIELD.namespace}.${SHOPIFY_COLOR_GALLERIES_METAFIELD.key}` as const;
+
+/** Catálogo: país e idioma del mercado. El país del Cart no usa este helper. */
 export const SHOPIFY_IN_CONTEXT_VARIABLE_DEFINITIONS =
   '$country: CountryCode!, $language: LanguageCode!' as const;
 export const SHOPIFY_IN_CONTEXT_DIRECTIVE =
@@ -38,6 +59,20 @@ export const shopifyInContextVariables = (): {
 export const withShopifyInContextVariables = <T extends object>(variables: T) => ({
   ...variables,
   ...shopifyInContextVariables(),
+});
+
+/**
+ * Cart: solo idioma para títulos y opciones traducibles.
+ * El país y el pricing internacional salen de `buyerIdentity.countryCode`.
+ */
+export const SHOPIFY_CART_IN_CONTEXT_VARIABLE_DEFINITIONS =
+  '$language: LanguageCode!' as const;
+export const SHOPIFY_CART_IN_CONTEXT_DIRECTIVE =
+  '@inContext(language: $language)' as const;
+
+export const withShopifyCartInContextVariables = <T extends object>(variables: T) => ({
+  ...variables,
+  language: SHOPIFY_MARKET_CONTEXT.language,
 });
 
 export const shopifyCartBuyerIdentity = (): {

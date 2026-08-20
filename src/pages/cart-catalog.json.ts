@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { catalogProvider } from '@commerce/catalog';
+import { getCatalogProvider } from '@commerce/catalog';
 import { toCartCatalogSnapshot } from '@commerce/application/cart-catalog';
 import type { Product } from '@commerce/domain/catalog';
 import { isShopifyCommerce } from '@commerce/commerce-source';
@@ -15,6 +15,7 @@ export const GET: APIRoute = async () => {
     });
   }
 
+  const catalogProvider = await getCatalogProvider();
   const [handles, collections] = await Promise.all([
     catalogProvider.getProductHandles(),
     catalogProvider.getCollections(),

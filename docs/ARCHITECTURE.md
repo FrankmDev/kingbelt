@@ -17,6 +17,7 @@ Usa Astro y HTML nativo para contenido y UI estática. Añade JavaScript cliente
 
 ```txt
 src/
+  session-storage-config.ts # credenciales Upstash y política del store de sesiones
   session-driver.ts         # store de sesiones Astro: Redis/KV en Vercel, disco en local
   commerce/                 # comercio neutral y sustituible
     domain/                 # entidades y reglas puras: catálogo, variantes, stock, dinero y carrito
@@ -110,11 +111,11 @@ Flujos actuales:
 
 ```txt
 COMMERCE_SOURCE=demo
-  pages   → commerce/catalog.ts → CatalogProvider demo
+  pages   → getCatalogProvider() → CatalogProvider demo
   scripts → commerce/cart.ts    → CartProvider demo → localStorage + `/cart-catalog.json`
 
 COMMERCE_SOURCE=shopify
-  pages   → commerce/catalog.ts → CatalogProvider Shopify
+  pages   → getCatalogProvider(Astro.clientAddress) → CatalogProvider Shopify
   scripts → commerce/cart.ts    → CartProvider Shopify → BFF `/api/cart` → Cart API
 
 components → commerce/domain/* (solo contratos y reglas neutrales)
@@ -126,17 +127,17 @@ Catálogo y carrito tienen puertos distintos: `CatalogProvider` para lectura en 
 
 El store cliente termina su inicialización antes de ejecutar comandos, serializa mutaciones distintas, deduplica envíos equivalentes y coalesce cambios de cantidad por línea. El adaptador demo carga el snapshot `/cart-catalog.json` —servido bajo demanda desde el catálogo vigente, sin dependencia de builds— antes de restaurar líneas, relee y reconcilia la persistencia dentro de un bloqueo compartido entre pestañas cuando el navegador ofrece Web Locks; los eventos de `storage` actualizan el mismo store consumido por drawer y página. Cada reconciliación reconstruye título, imagen, precio, disponibilidad y stock desde ese catálogo. Una excepción de almacenamiento degrada el carrito a memoria con aviso, sin reemplazar el último estado válido.
 
-Todo adaptador valida el catálogo normalizado antes de exponerlo. `assertValidCatalog()` falla con rutas y códigos concretos para identidades, relaciones, opciones, variantes, dinero, inventario, medios y colecciones; el adaptador demo y el preflight Shopify ejecutan esa frontera sobre el catálogo completo. El runtime Shopify consulta por recurso (producto, colección, resúmenes) y valida la proyección correspondiente. Cada instancia conserva esas respuestas en una caché breve (30 s en producción) y, si Shopify falla con una respuesta válida previa del mismo recurso, sirve esa versión (stale-if-error) en vez de convertir las páginas en errores. El mapper Shopify exige el SKU comercial de cada variante: no lo fabrica a partir de handle, GID, índice ni opciones.
+Todo adaptador valida el catálogo normalizado antes de exponerlo. `assertValidCatalog()` falla con rutas y códigos concretos para identidades, relaciones, opciones, variantes, dinero, inventario, medios y colecciones; el adaptador demo y el preflight Shopify ejecutan esa frontera sobre el catálogo completo. El runtime Shopify consulta por recurso (producto, colección, resúmenes) y valida cada `ProductSummary` antes de exponerlo: un producto que Shopify devuelve y no cumple el contrato hace fallar esa operación; nunca se omite del listado. Los providers request-scoped comparten una caché breve de datos anónimos (30 s en producción); la IP del comprador no forma parte de esa caché. Un fallo transitorio del proveedor (red, timeout, 5xx, 429) puede servir la última respuesta válida del mismo recurso (stale-if-error); un error de mapping, validación o configuración falla cerrado y no reutiliza stale. El mapper Shopify exige el SKU comercial de cada variante: no lo fabrica a partir de handle, GID, índice ni opciones.
 
 `Product`, `ProductVariant`, `ProductOption`, `ProductImage`, `Collection`, `Money`, `Cart` y `CartLine` son nombres de dominio. Interfaces y tipos usan `PascalCase`; funciones, valores y archivos usan `camelCase` y `kebab-case`; una implementación externa termina en `-adapter.ts`. No se usan barrels `index.ts`: cada import declara su dependencia concreta.
 
-`Product` es el agregado canónico y no almacena precio mínimo/máximo, disponibilidad global, colores para grid, referencias expandidas de colección ni objetos de imagen dentro de variantes. Esos datos se derivan en `ProductSummary`, carrito y ficha mediante funciones puras. La pertenencia a colecciones vive solo en `Product.collectionIds`; `Collection` no mantiene una lista inversa de productos. `Product.primaryCollectionId` es un atributo comercial explícito: en Shopify proviene de `kingbelt.primary_collection`. El orden de las colecciones del producto no es autoridad; si el metafield falta y el producto pertenece a exactamente una colección publicada, esa colección es la primaria.
+`Product` es el agregado canónico y no almacena precio mínimo/máximo, disponibilidad global, colores para grid, referencias expandidas de colección ni objetos de imagen dentro de variantes. Esos datos se derivan en `ProductSummary`, carrito y ficha mediante funciones puras. La pertenencia a colecciones vive solo en `Product.collectionIds`; `Collection` no mantiene una lista inversa de productos. `Product.primaryCollectionId` es un atributo comercial explícito: en Shopify proviene de `custom.kingbelt_primary_collection`. Preflight y runtime lo exigen siempre. No hay fallback a la única colección asignada ni a `collections[0]`. El orden de las colecciones del producto no es autoridad.
 
 Una variante selecciona IDs de valores de opción existentes. El inventario es una unión explícita `known` | `unknown`, separada de `inventoryPolicy` (`deny` | `continue`), `salesStatus` y la regla `quantityRule` (`minimum`, `increment`, `maximum?`) declarada por el origen. La disponibilidad se deriva exclusivamente con `getVariantAvailability()`: una variante agotada continúa existiendo, una combinación no declarada no produce variante, una variante eliminada deja de resolverse y la venta sin stock solo ocurre con política `continue`.
 
 El límite efectivo de una línea conserva su motivo: inventario, máximo comercial de variante o protección técnica del carrito. `src/commerce/domain/commerce-rules.ts` contiene el umbral y la política de exposición pendientes de confirmación, además de los límites técnicos que protegen inputs y persistencia. Ningún límite técnico se presenta como stock. Con la configuración conservadora actual se muestran estados —incluido «pocas unidades»—, pero no cifras exactas de inventario.
 
-La reconciliación vuelve a resolver cada línea desde el catálogo autoritativo. Si el stock conocido disminuye pero sigue siendo positivo, reduce la cantidad y deja un aviso no impeditivo; si llega a cero o la variante deja de estar disponible, conserva la línea con error para que la persona decida retirarla. Una variante que ya no existe se retira con aviso. Antes de checkout, el proveedor se refresca de nuevo: cualquier error de línea impide continuar, mientras que `inventoryPolicy: 'continue'` mantiene el checkout permitido.
+La reconciliación vuelve a resolver cada línea desde el catálogo autoritativo. Si el stock conocido disminuye pero sigue siendo positivo, reduce la cantidad y deja un aviso no impeditivo; si llega a cero o la variante deja de estar disponible, conserva la línea con error para que la persona decida retirarla. Una variante que ya no existe se retira con aviso. Al pulsar checkout, el proveedor remoto reconcilia el Cart autoritativo en esa misma operación: cualquier error de línea impide continuar, mientras que `inventoryPolicy: 'continue'` mantiene el checkout permitido.
 
 Las imágenes viven una sola vez en `Product.images`. `primaryImageId`, `ProductVariant.imageId` y los grupos por valor de opción solo contienen referencias; los resolutores aplican fallback seguro cuando una asociación opcional no está presente. Los grids reciben `ProductSummary` y nunca el array de variantes.
 
@@ -168,12 +169,13 @@ Al conectar Shopify:
 - con `COMMERCE_SOURCE=shopify`, toda operación de carrito pasa por la frontera servidor/BFF same-origin `src/pages/api/cart.ts`; una configuración incompleta devuelve un error cerrado y nunca activa demo;
 - el navegador envía únicamente identificadores públicos de variante, cantidades y comandos cerrados; nunca recibe la parte secreta del ID de carrito, tokens, credenciales, respuestas administrativas ni identidad sensible del comprador;
 - el BFF lee el Cart ID completo desde la sesión server-side de Astro (`session.get("shopifyCartId")`) y es autoridad para precios, cantidades aceptadas, stock, identidad del comprador, checkout, errores y avisos;
+- la persistencia de esa sesión es `browser → cookie opaca __Host-kingbelt-session → Astro Session → Unstorage Upstash → shopifyCartId`. Las credenciales `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` se resuelven en runtime desde el entrypoint `src/session-driver.ts`, no se serializan en `astro.config`. En Vercel no hay fallback a disco, memoria ni cookie; si Upstash falta o `session.get` falla, `/api/cart` responde 503. En local, sin ambas variables, el store es `.astro/session`. `bun run session:preflight` comprueba PING/SET/GET/TTL/DELETE contra una clave efímera. `bun run shopify:cart-smoke` observa la misma persistencia desde HTTP contra un deployment real y no lee Redis. Ninguno forma parte de `validate` ni del CI de PRs;
 - la identidad anónima del comprador Shopify es solo `buyerIdentity.countryCode` del contexto de mercado servidor (`ES`); el navegador no puede enviarla ni arbitrarla;
 - devuelve la URL de checkout junto con una lista exacta de hosts permitidos; la UI exige HTTPS, sin credenciales embebidas ni hosts por sufijo;
 - considera todo precio, stock y cantidad enviados por el navegador datos no confiables y vuelve a validarlos antes de crear o actualizar el carrito remoto.
   - trata como autoridad final la respuesta actual del carrito remoto —líneas, cantidades aceptadas, errores, avisos y URL de checkout—, no el snapshot de ficha, el estado cliente ni `localStorage`.
 
-Las fronteras por capacidad quedan así; el detalle operativo vive en `docs/SHOPIFY_READINESS.md` §17:
+Las fronteras por capacidad quedan así; el detalle de integración vive en `docs/SHOPIFY_READINESS.md` §17 y el checklist Admin de lanzamiento en `docs/SHOPIFY_LAUNCH_OPERATIONS.md`:
 
 | Capacidad | Puerta |
 | --- | --- |
@@ -183,7 +185,7 @@ Las fronteras por capacidad quedan así; el detalle operativo vive en `docs/SHOP
 | Acceso a cuenta (alojado) | `commerce-navigation` + `SHOPIFY_CUSTOMER_ACCOUNT_URL` |
 | Cuenta de cliente (API, perfil, pedidos) | puerto futuro; no implementado |
 
-El runtime consulta Storefront por recurso —producto, colección o resúmenes— con paginación interna por cursor. La descarga completa del catálogo queda reservada a `shopify:preflight`. En tiempo real, el navegador opera el cliente neutral de carrito, que llama a endpoints same-origin; esos endpoints delegan en un servicio servidor que consulta y muta Shopify. El adaptador remoto normaliza dentro de `infrastructure/`, valida la proyección de dominio antes de exponer y nunca deja que una respuesta parcial o una caída del catálogo genere páginas corruptas: un error de configuración Shopify (`SHOPIFY_STORE_DOMAIN` ausente o inválido, token ausente) falla cerrado, registra un diagnóstico sin secretos y no sirve un catálogo vacío; cualquier otro fallo sin una respuesta válida previa del mismo recurso sigue fallando cerrado, y con una válida sirve la última conocida (stale-if-error).
+El runtime consulta Storefront por recurso —producto, colección o resúmenes— con paginación interna por cursor. La descarga completa del catálogo queda reservada a `shopify:preflight`. En tiempo real, el navegador opera el cliente neutral de carrito, que llama a endpoints same-origin; esos endpoints delegan en un servicio servidor que consulta y muta Shopify. El adaptador remoto normaliza dentro de `infrastructure/`, valida la proyección de dominio antes de exponer y nunca deja que una respuesta parcial o una caída del catálogo genere páginas corruptas: un producto inválido no desaparece del listado, un error de configuración Shopify (`SHOPIFY_STORE_DOMAIN` ausente o inválido, token ausente) falla cerrado, registra un diagnóstico sin secretos y no sirve un catálogo vacío. Mapping, validación y configuración no usan stale; un fallo transitorio del proveedor sin respuesta válida previa del mismo recurso sigue fallando cerrado, y con una válida sirve la última conocida (stale-if-error).
 
 La política de referrer se define en `BaseLayout.astro`; las cabeceras HTTP de Vercel viven en `vercel.json`: CSP, HSTS, `X-Content-Type-Options`, `Permissions-Policy` y política de framing. El build no incrusta módulos ejecutables para ser compatible con `script-src 'self'`. Cualquier servicio o CDN nuevo debe actualizar a la vez la allowlist pública, la directiva CSP mínima y las pruebas descritas en `docs/SECURITY.md`.
 
@@ -191,7 +193,7 @@ Los scripts interactivos dentro de `src/` deben mantenerse procesados por Astro 
 
 Mantén datos editoriales en `src/content/`, configuración en `src/config/` y datos ficticios en `src/demo-catalog.ts`. Ninguno sustituye contratos de producción ni debe contener transformación propia de un adaptador.
 
-No se crea una carpeta de autenticación hasta que exista un caso de uso real. Cuando se implemente, tendrá contratos propios en aplicación y adaptadores en infraestructura; los componentes consumirán un estado neutral, nunca SDKs del proveedor. El checkout ya tiene contrato y validación en `commerce/application/checkout.ts`, pero el adaptador demo continúa devolviendo `unavailable` y no simula pagos.
+No se crea una carpeta de autenticación hasta que exista un caso de uso real. Cuando se implemente, tendrá contratos propios en aplicación y adaptadores en infraestructura; los componentes consumirán un estado neutral, nunca SDKs del proveedor. El checkout ya tiene contrato y validación en `commerce/application/checkout.ts`, pero el adaptador demo continúa devolviendo `unavailable` y no simula pagos. Envío, impuestos, pagos, Thank You y Order Status los cubre Shopify; el gate Admin es `docs/SHOPIFY_LAUNCH_OPERATIONS.md`.
 
 ## CSS y sistema global
 
@@ -258,7 +260,7 @@ Según el cambio, `bun run validate` agrupa sin duplicar:
 5. Inspección visual de móvil y escritorio para UI.
 6. Comprobación de overflow, focus, reduced motion, estados hover/active/disabled y contenido largo cuando apliquen.
 
-Un catálogo Shopify inválido no hace fallar `bun run build`. La barrera autenticada contra Storefront es `bun run shopify:preflight`, exclusiva de entornos confiables con `COMMERCE_SOURCE=shopify`. No forma parte del job `quality` de Pull Requests.
+Un catálogo Shopify inválido no hace fallar `bun run build`. La barrera autenticada contra Storefront es `bun run shopify:preflight`, exclusiva de entornos confiables con `COMMERCE_SOURCE=shopify`. No forma parte del job `quality` de Pull Requests. El smoke autenticado de carrito es `bun run shopify:cart-smoke`: llama al BFF `/api/cart` de un deployment real hasta `checkoutUrl` y tampoco forma parte de `validate`. El orquestador pre-pagos es `bun run shopify:release-gate`: reutiliza `validate` (en demo), `session:preflight`, `shopify:preflight` y `shopify:cart-smoke`, y añade comprobaciones HTTP del deployment. No promueve, no paga y no crea un Order.
 
 No declares completada una tarea si el check relevante falla por tus cambios. Distingue claramente errores previos del proyecto.
 
@@ -267,4 +269,13 @@ Antes de integrar cambios, ejecuta `bun run validate` con `COMMERCE_SOURCE=demo`
 ```sh
 COMMERCE_SOURCE=shopify bun run shopify:preflight
 bun run build
+```
+
+Tras desplegar el candidato, el cart smoke usa una base URL HTTPS explícita. El gate pre-pagos reutiliza la misma URL:
+
+```sh
+COMMERCE_SOURCE=shopify \
+SHOPIFY_SMOKE_BASE_URL=https://your-deployment.example \
+SHOPIFY_SMOKE_PRODUCT_HANDLE=your-pilot-handle \
+bun run shopify:release-gate
 ```

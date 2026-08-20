@@ -3,6 +3,7 @@ import { createCartService, emptyCart } from '../src/commerce/application/cart-s
 import {
   getQuantityLimitMessage,
   getVariantAvailability,
+  isTechnicalLineQuantity,
   TECHNICAL_LINE_QUANTITY_LIMIT,
 } from '../src/commerce/domain/inventory.ts';
 import { commerceRules } from '../src/commerce/domain/commerce-rules.ts';
@@ -191,10 +192,14 @@ describe('reconciliación y checkout', () => {
       addItem: async (input) => service.addToCart(cart, input),
       updateItem: async (lineId, quantity) => service.updateLineQuantity(cart, lineId, quantity),
       removeItem: async (lineId) => service.removeLine(cart, lineId),
-      checkout: async (snapshot) => {
+      checkout: async () => {
         checkoutCalls += 1;
-        cart = snapshot;
-        return { status: 'ready', url: 'https://checkout.example.test/cart', allowedHosts: ['checkout.example.test'] };
+        return {
+          status: 'ready',
+          url: 'https://checkout.example.test/cart',
+          allowedHosts: ['checkout.example.test'],
+          cart,
+        };
       },
     };
     const store = createCartStore(provider);
@@ -208,25 +213,33 @@ describe('reconciliación y checkout', () => {
     const state = mutableCatalog(demoRecord());
     const service = createCartService(state.catalog);
     const initial = service.restoreCart([{ variantId: state.record.variant.id, quantity: 1 }]);
+    let refreshCalls = 0;
     let checkoutCalls = 0;
     const provider = {
       initialize: async () => initial,
       refresh: async () => {
-        state.record.variant.inventory = { kind: 'known', quantity: 0 };
-        return service.refreshCart(initial);
+        refreshCalls += 1;
+        return initial;
       },
       addItem: async () => { throw new Error('not used'); },
       updateItem: async () => { throw new Error('not used'); },
       removeItem: async () => { throw new Error('not used'); },
       checkout: async () => {
         checkoutCalls += 1;
-        return { status: 'ready' };
+        state.record.variant.inventory = { kind: 'known', quantity: 0 };
+        const soldOut = service.refreshCart(initial);
+        return {
+          status: 'blocked',
+          cart: soldOut,
+          message: 'Revisa los productos marcados antes de finalizar la compra.',
+        };
       },
     };
     const store = createCartStore(provider);
     const result = await store.checkout();
     expect(result.status).toBe('blocked');
-    expect(checkoutCalls).toBe(0);
+    expect(checkoutCalls).toBe(1);
+    expect(refreshCalls).toBe(0);
     expect(store.getCart().lineErrors[0].code).toBe('out_of_stock');
     expect(store.getCart().canCheckout).toBe(false);
   });
@@ -259,5 +272,22 @@ describe('proyección pública de la ficha', () => {
     expect(json).not.toMatch(/"inventory"\s*:/);
     expect(json).not.toMatch(/"quantity"\s*:/);
     expect(JSON.parse(json).variants[0].availability.status).toBeDefined();
+  });
+});
+
+describe('límite técnico de cantidad de línea', () => {
+  test('acepta enteros de 1 a 99', () => {
+    expect(isTechnicalLineQuantity(1)).toBe(true);
+    expect(isTechnicalLineQuantity(99)).toBe(true);
+  });
+
+  test('rechaza 0, 100 y valores no enteros', () => {
+    expect(isTechnicalLineQuantity(0)).toBe(false);
+    expect(isTechnicalLineQuantity(100)).toBe(false);
+    expect(isTechnicalLineQuantity(-1)).toBe(false);
+    expect(isTechnicalLineQuantity(1.5)).toBe(false);
+    expect(isTechnicalLineQuantity(Number.NaN)).toBe(false);
+    expect(isTechnicalLineQuantity(Number.POSITIVE_INFINITY)).toBe(false);
+    expect(isTechnicalLineQuantity(Number.MAX_SAFE_INTEGER)).toBe(false);
   });
 });

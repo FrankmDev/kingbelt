@@ -1,3 +1,4 @@
+import { isIP } from 'node:net';
 import {
   buildShopifyStorefrontEndpoint,
   getShopifyStorefrontConfig,
@@ -44,12 +45,6 @@ export interface ShopifyStorefrontGatewayOptions {
 
 type UnknownRecord = Record<string, unknown>;
 
-const IPV4_PATTERN =
-  /^(?:(?:25[0-5]|2[0-4]\d|[01]?\d{1,2})\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d{1,2})$/;
-const IPV6_PATTERN = /^[0-9a-fA-F:]+$/;
-const IPV4_MAPPED_IPV6_PATTERN =
-  /^[0-9a-fA-F:]+(?:\.(?:25[0-5]|2[0-4]\d|[01]?\d{1,2})){3}$/;
-
 const isRecord = (value: unknown): value is UnknownRecord =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 
@@ -80,26 +75,12 @@ const validateTimeout = (timeoutMs: number): number => {
 };
 
 const validateBuyerIp = (buyerIp: string): string => {
-  if (buyerIp.trim() !== buyerIp) {
-    throw new ShopifyConfigurationError(
-      'Shopify-Storefront-Buyer-IP must not contain surrounding whitespace.'
-    );
-  }
   if (
     !buyerIp ||
+    buyerIp.trim() !== buyerIp ||
     buyerIp.length > MAX_SHOPIFY_BUYER_IP_LENGTH ||
-    /[^0-9a-fA-F.:]/.test(buyerIp)
+    isIP(buyerIp) === 0
   ) {
-    throw new ShopifyConfigurationError(
-      'Shopify-Storefront-Buyer-IP must be an IPv4 or IPv6 address.'
-    );
-  }
-
-  const isIpv4 = IPV4_PATTERN.test(buyerIp);
-  const isIpv6 = buyerIp.includes(':')
-    && !buyerIp.includes(':::')
-    && (IPV6_PATTERN.test(buyerIp) || IPV4_MAPPED_IPV6_PATTERN.test(buyerIp));
-  if (!isIpv4 && !isIpv6) {
     throw new ShopifyConfigurationError(
       'Shopify-Storefront-Buyer-IP must be an IPv4 or IPv6 address.'
     );

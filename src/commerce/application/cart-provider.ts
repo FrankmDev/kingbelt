@@ -9,9 +9,9 @@ export interface CartProvider {
   updateItem(lineId: string, quantity: number): Promise<CartOperationResult>;
   removeItem(lineId: string): Promise<CartOperationResult>;
   /**
-   * Crea o regenera checkout delegado en el proveedor de pago externo (Shopify al conectar).
-   * Debe reconciliar `cart` contra la autoridad remota y devolver hosts permitidos explícitos.
+   * Prepara y reconcilia checkout en una sola operación.
+   * El provider remoto devuelve el Cart autoritativo y hosts permitidos explícitos.
    */
-  checkout(cart: Cart): Promise<CheckoutResult>;
+  checkout(): Promise<CheckoutResult>;
   subscribeToExternalChanges?(listener: () => void): () => void;
 }

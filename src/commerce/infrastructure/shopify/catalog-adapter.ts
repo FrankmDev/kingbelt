@@ -3,7 +3,7 @@ import { getCollectionFacets } from '../../domain/catalog-filters';
 import { toCollectionReference, toProductSummary } from '../../domain/product-mappers';
 import type { Collection, CollectionPage, Product, ProductSummary } from '../../domain/catalog';
 import type { ShopifyCatalog } from './catalog-mappers';
-import { createResourceCache } from './catalog-resource-cache';
+import { createResourceCache, type ResourceCache } from './catalog-resource-cache';
 
 export interface ShopifyCatalogQueries {
   getCollections(): Promise<Collection[]>;
@@ -26,6 +26,7 @@ export interface ShopifyCatalogAdapterOptions {
    * cuando no hay una carga en curso para esa misma clave.
    */
   cacheTtlMs?: number;
+  cache?: ResourceCache;
 }
 
 const isUsableLimit = (limit: number): boolean => Number.isInteger(limit) && limit >= 0;
@@ -34,9 +35,14 @@ const isUsableLimit = (limit: number): boolean => Number.isInteger(limit) && lim
 export const createShopifyCatalogSnapshotQueries = (
   catalog: ShopifyCatalog
 ): ShopifyCatalogQueries => {
-  const summaryFor = (product: Product): ProductSummary | undefined => {
+  const summaryFor = (product: Product): ProductSummary => {
     const collection = catalog.collections.find((item) => item.id === product.primaryCollectionId);
-    return collection ? toProductSummary(product, toCollectionReference(collection)) : undefined;
+    if (!collection) {
+      throw new Error(
+        `Primary collection ${product.primaryCollectionId} not found for product ${product.handle}.`
+      );
+    }
+    return toProductSummary(product, toCollectionReference(collection));
   };
 
   return {
@@ -53,7 +59,7 @@ export const createShopifyCatalogSnapshotQueries = (
         collection,
         products: catalog.products
           .filter((product) => product.collectionIds.includes(collection.id))
-          .flatMap((product) => summaryFor(product) ?? []),
+          .map(summaryFor),
       };
     },
     async getProductHandles() {
@@ -63,13 +69,11 @@ export const createShopifyCatalogSnapshotQueries = (
       return catalog.products.find((product) => product.handle === handle);
     },
     async getProductSummaries() {
-      return catalog.products.flatMap((product) => summaryFor(product) ?? []);
+      return catalog.products.map(summaryFor);
     },
     async getFeaturedProducts(limit) {
       if (!isUsableLimit(limit)) return [];
-      return catalog.products
-        .slice(0, limit)
-        .flatMap((product) => summaryFor(product) ?? []);
+      return catalog.products.slice(0, limit).map(summaryFor);
     },
     async getRelatedProducts(product, limit) {
       if (!isUsableLimit(limit)) return [];
@@ -80,7 +84,7 @@ export const createShopifyCatalogSnapshotQueries = (
             && candidate.collectionIds.some((collectionId) => product.collectionIds.includes(collectionId))
         )
         .slice(0, limit)
-        .flatMap((candidate) => summaryFor(candidate) ?? []);
+        .map(summaryFor);
     },
   };
 };
@@ -89,7 +93,7 @@ export const createShopifyCatalogAdapter = (
   queries: ShopifyCatalogQueries,
   options: ShopifyCatalogAdapterOptions = {}
 ): CatalogProvider => {
-  const cache = createResourceCache(options.cacheTtlMs);
+  const cache = options.cache ?? createResourceCache(options.cacheTtlMs);
 
   const loadCollectionPage = async (
     handle: string

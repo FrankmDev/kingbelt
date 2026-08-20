@@ -7,7 +7,7 @@ import ProductGallery from '../../components/product/ProductGallery.astro';
 import Badge from '../../components/ui/Badge.astro';
 import Breadcrumbs from '../../components/ui/Breadcrumbs.astro';
 import { site, siteUrl } from '@config/site';
-import { catalogProvider } from '@commerce/catalog';
+import { getCatalogProvider } from '@commerce/catalog';
 import { getRedirectedProductHandles } from '@commerce/application/product-redirects';
 import { CATALOG_INDEX_PATH } from '@commerce/application/paths';
 import { resolveProductPageHead, type CommercePageHead } from '@commerce/application/seo';
@@ -16,11 +16,12 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
 const handle = Astro.params.slug;
 const redirectedHandles = getRedirectedProductHandles();
-if (handle && redirectedHandles.has(handle)) {
+if (!handle || redirectedHandles.has(handle)) {
   Astro.response.status = 404;
   return Astro.rewrite('/404');
 }
-const product = handle ? await catalogProvider.getProductByHandle(handle) : undefined;
+const catalogProvider = await getCatalogProvider(Astro.clientAddress);
+const product = await catalogProvider.getProductByHandle(handle);
 if (!product) {
   Astro.response.status = 404;
   return Astro.rewrite('/404');
@@ -29,10 +30,12 @@ if (!product) {
 // alineada con la del catálogo; un redeploy purga la CDN de Vercel.
 Astro.response.headers.set('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=600');
 const pageHead: CommercePageHead = resolveProductPageHead(product, site, siteUrl);
-const category = (await catalogProvider.getCollections())
-  .find((collection) => collection.id === product.primaryCollectionId);
+const [collections, related] = await Promise.all([
+  catalogProvider.getCollections(),
+  catalogProvider.getRelatedProducts(product, 4),
+]);
+const category = collections.find((collection) => collection.id === product.primaryCollectionId);
 if (!category) throw new Error(`Colección principal no encontrada: ${product.primaryCollectionId}`);
-const related = await catalogProvider.getRelatedProducts(product, 4);
 const initialVariant = getFirstAvailableVariant(product) ?? product.variants[0];
 const specifications = product.specifications.filter((spec) => spec.label !== 'Referencia');
 
@@ -252,8 +255,6 @@ const breadcrumbs = [
   }
 
   .pdp__related {
-    position: relative;
-    z-index: 1;
     padding-top: var(--kb-space-7);
     padding-bottom: var(--kb-space-6);
     margin-top: var(--kb-space-1);
@@ -351,17 +352,7 @@ const breadcrumbs = [
     .pdp__main {
       grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
       gap: clamp(2rem, 3.25vw, 2.75rem);
-      align-items: stretch;
-    }
-
-    .pdp__buy {
-      height: 0;
-      min-height: 100%;
-    }
-
-    .pdp__buy :global(.product-buy) {
-      flex: 1 1 auto;
-      min-height: 0;
+      align-items: start;
     }
 
     .pdp__related-grid {

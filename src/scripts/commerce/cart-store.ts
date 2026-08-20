@@ -198,10 +198,7 @@ export const createCartStore = (
       const beforeSync = currentCart;
       publishCart({ ...beforeSync, status: 'checkout', globalError: undefined });
       const outcome = await runCheckoutOrchestration(
-        {
-          refresh: () => provider.refresh(),
-          checkout: (cart) => provider.checkout(cart),
-        },
+        { checkout: () => provider.checkout() },
         { beforeSync, timeoutMs: checkoutTimeoutMs }
       );
       publishCart(outcome.cart);

@@ -1,3 +1,5 @@
+import { SHOPIFY_COLOR_GALLERIES_METAFIELD, SHOPIFY_PRIMARY_COLLECTION_METAFIELD } from '../../src/commerce/infrastructure/shopify/config.ts';
+
 export const pageInfo = { hasNextPage: false, endCursor: null };
 export const SHOPIFY_CATALOG_TEST_HOSTS = ['cdn.shopify.com'];
 export const COLORS = [
@@ -62,9 +64,9 @@ export const colorGallery = (color, images, type = 'color_gallery') => ({
 });
 
 export const colorGalleriesMetafield = (references) => ({
-  namespace: 'kingbelt',
-  key: 'color_galleries',
-  type: 'list.metaobject_reference',
+  namespace: SHOPIFY_COLOR_GALLERIES_METAFIELD.namespace,
+  key: SHOPIFY_COLOR_GALLERIES_METAFIELD.key,
+  type: SHOPIFY_COLOR_GALLERIES_METAFIELD.type,
   value: JSON.stringify(references.map((item) => item.id)),
   reference: null,
   references: { nodes: references, pageInfo },
@@ -103,6 +105,20 @@ export const cueroCollection = {
 };
 
 export const primaryCollectionMetafield = (collection) => ({
+  namespace: SHOPIFY_PRIMARY_COLLECTION_METAFIELD.namespace,
+  key: SHOPIFY_PRIMARY_COLLECTION_METAFIELD.key,
+  type: SHOPIFY_PRIMARY_COLLECTION_METAFIELD.type,
+  value: collection.id,
+  reference: {
+    __typename: 'Collection',
+    id: collection.id,
+    handle: collection.handle,
+    title: collection.title,
+  },
+  references: null,
+});
+
+export const legacyPrimaryCollectionMetafield = (collection) => ({
   namespace: 'kingbelt',
   key: 'primary_collection',
   type: 'collection_reference',
@@ -259,7 +275,10 @@ export const productWithoutColorPayload = () => {
 };
 
 export const galleriesOf = (payload) =>
-  payload.products[0].metafields.find((item) => item?.key === 'color_galleries');
+  payload.products[0].metafields.find((item) =>
+    item?.namespace === SHOPIFY_COLOR_GALLERIES_METAFIELD.namespace
+    && item?.key === SHOPIFY_COLOR_GALLERIES_METAFIELD.key
+  );
 
 export const galleryField = (gallery, key) =>
   gallery.fields.find((field) => field.key === key);
@@ -268,7 +287,10 @@ export const galleryImagesOf = (payload, index = 0) =>
   galleryField(galleriesOf(payload).references.nodes[index], 'images');
 
 export const primaryCollectionOf = (payload) =>
-  payload.products[0].metafields.find((item) => item?.key === 'primary_collection');
+  payload.products[0].metafields.find((item) =>
+    item?.namespace === SHOPIFY_PRIMARY_COLLECTION_METAFIELD.namespace
+    && item.key === SHOPIFY_PRIMARY_COLLECTION_METAFIELD.key
+  );
 
 export const assignProductCollections = (payload, collections, primaryCollection) => {
   payload.collections = collections.map((collection) => ({
@@ -282,8 +304,12 @@ export const assignProductCollections = (payload, collections, primaryCollection
     nodes: collections.map(({ id, handle, title }) => ({ id, handle, title })),
     pageInfo,
   };
-  const metafields = payload.products[0].metafields.filter((item) => item?.key !== 'primary_collection');
-  const galleriesIndex = metafields.findIndex((item) => item?.key === 'color_galleries');
+  const metafields = payload.products[0].metafields.filter((item) =>
+    item?.key !== SHOPIFY_PRIMARY_COLLECTION_METAFIELD.key
+  );
+  const galleriesIndex = metafields.findIndex((item) =>
+    item?.key === SHOPIFY_COLOR_GALLERIES_METAFIELD.key
+  );
   metafields.splice(
     galleriesIndex >= 0 ? galleriesIndex : metafields.length,
     0,
@@ -301,16 +327,13 @@ export const productSummaryNode = (product, { availableForSale = true } = {}) =>
   productType: product.productType,
   availableForSale,
   featuredImage: product.featuredImage,
-  collections: {
-    nodes: product.collections.nodes.map(({ id, handle, title }) => ({ id, handle, title })),
-    pageInfo,
-  },
+  collections: product.collections,
   options: product.options,
   priceRange: {
     minVariantPrice: product.variants.nodes[0].price,
     maxVariantPrice: product.variants.nodes.at(-1).price,
   },
   metafields: (product.metafields ?? []).filter((item) =>
-    item && ['model_reference', 'summary', 'badge', 'primary_collection'].includes(item.key)
+    item && ['model_reference', 'summary', 'badge', SHOPIFY_PRIMARY_COLLECTION_METAFIELD.key].includes(item.key)
   ),
 });

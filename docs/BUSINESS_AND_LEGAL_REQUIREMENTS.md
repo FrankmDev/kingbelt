@@ -25,6 +25,8 @@ Los valores pendientes:
 
 ### Comercio y operación
 
+Los importes, plazos y métodos deben coincidir con Shopify Admin. No inventarlos aquí ni en copy público. El checklist operativo está en `docs/SHOPIFY_LAUNCH_OPERATIONS.md`. Una contradicción entre estas páginas y Checkout es MANUAL BLOCKER.
+
 - [ ] Territorios de venta
 - [ ] Política fiscal (IVA, impuestos)
 - [ ] Métodos de pago aceptados

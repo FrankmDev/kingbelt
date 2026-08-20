@@ -64,7 +64,7 @@ No introduzcas modelos como `Belt` cuando una entidad genérica de comercio resu
 1. **Base editorial/corporativa — consolidada:** páginas de marca, blog, contacto, navegación, SEO base y sistema de componentes.
 2. **Ecommerce local — presente y aislado:** colecciones, productos y carrito de demostración con datos locales tipados.
 3. **Shopify:** adaptación de la capa de comercio a Storefront API y checkout.
-4. **Operación real:** pagos, pedidos, emails, legal, analítica, SEO completo, QA y lanzamiento.
+4. **Operación real:** pagos, pedidos, emails, legal, analítica, SEO completo, QA y lanzamiento. El checklist Admin está en `docs/SHOPIFY_LAUNCH_OPERATIONS.md`; el código no simula esas superficies.
 
 No adelantes una fase salvo petición explícita. La implementación local existente no autoriza a ampliar por iniciativa propia grids o fichas de producto, filtros, carrito, login, checkout ni llamadas a Shopify.
 

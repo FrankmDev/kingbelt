@@ -14,7 +14,7 @@ export interface CheckoutResult {
   /** Hosts exactos autorizados por el adaptador; la UI no acepta sufijos ni comodines. */
   allowedHosts?: readonly string[];
   message?: string;
-  /** Carrito reconciliado por la fuente autoritativa tras la sincronización. */
+  /** Cart autoritativo devuelto por la misma operación que prepara el checkout. */
   cart?: Cart;
   /** Indica que el precio visible cambió respecto al snapshot previo al checkout. */
   priceChanged?: boolean;
@@ -28,6 +28,9 @@ export interface CheckoutSyncDelta {
 }
 
 export const DEFAULT_CHECKOUT_TIMEOUT_MS = commerceRules.checkout.timeoutMs;
+
+export const CHECKOUT_EXPIRED_MESSAGE =
+  'El carrito ha caducado; vuelve a añadir tus productos.';
 
 export class CheckoutTimeoutError extends Error {
   constructor(message = 'checkout_timeout') {
@@ -57,25 +60,27 @@ const mergeNotices = (existing: string | undefined, addition: string): string =>
   existing?.includes(addition) ? existing : existing ? `${existing} ${addition}` : addition;
 
 export const detectCheckoutSyncDelta = (before: Cart, after: Cart): CheckoutSyncDelta => {
-  const messages: string[] = [];
-  const beforeById = new Map(before.lines.map((line) => [line.id, line]));
+  const afterById = new Map(after.lines.map((line) => [line.id, line]));
   let priceChanged = false;
   let quantitiesAdjusted = false;
   let linesRemoved = false;
 
-  after.lines.forEach((line) => {
-    const previous = beforeById.get(line.id);
-    if (!previous) return;
-    if (previous.product.unitPrice.amountMinor !== line.product.unitPrice.amountMinor) {
+  for (const line of before.lines) {
+    const current = afterById.get(line.id);
+    if (!current) {
+      linesRemoved = true;
+      continue;
+    }
+    if (line.product.unitPrice.amountMinor !== current.product.unitPrice.amountMinor) {
       priceChanged = true;
     }
-    if (previous.quantity !== line.quantity) {
+    if (line.quantity !== current.quantity) {
       quantitiesAdjusted = true;
     }
-  });
+  }
 
-  if (after.lines.length < before.lines.length) {
-    linesRemoved = true;
+  const messages: string[] = [];
+  if (linesRemoved) {
     messages.push('Algunos productos ya no están disponibles y se han retirado del carrito.');
   }
 

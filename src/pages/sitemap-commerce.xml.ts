@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { catalogProvider } from '@commerce/catalog';
+import { getCatalogProvider } from '@commerce/catalog';
 import { siteUrl } from '@config/site';
 
 const escapeXml = (value: string): string => value.replace(/[<>&'\"]/g, (character) => ({
@@ -12,7 +12,8 @@ const escapeXml = (value: string): string => value.replace(/[<>&'\"]/g, (charact
 
 export const prerender = false;
 
-export const GET: APIRoute = async () => {
+export const GET: APIRoute = async ({ clientAddress }) => {
+  const catalogProvider = await getCatalogProvider(clientAddress);
   const [productHandles, collectionHandles] = await Promise.all([
     catalogProvider.getProductHandles(),
     catalogProvider.getCollectionHandles(),

@@ -16,6 +16,7 @@ import {
   type LineAvailability,
 } from '../../domain/inventory';
 import { moneyFromDecimal, sumMoney, zeroMoney } from '../../domain/money';
+import { SHOPIFY_MARKET_CONTEXT, SHOPIFY_PRIMARY_COLLECTION_METAFIELD } from './config';
 
 export interface ShopifyCartMoney {
   amount: string;
@@ -47,9 +48,17 @@ export interface ShopifyCartMerchandise {
     id: string;
     handle: string;
     title: string;
-    productType: string;
-    metafield?: { value?: string | null } | null;
-    collections?: { nodes: Array<{ title: string }> };
+    modelReference?: { value?: string | null } | null;
+    primaryCollection?: {
+      type?: string | null;
+      value?: string | null;
+      reference?: {
+        __typename?: string;
+        id?: string;
+        handle?: string;
+        title?: string;
+      } | null;
+    } | null;
     featuredImage?: ShopifyCartImage | null;
   };
 }
@@ -230,8 +239,9 @@ export const mapShopifyCartErrorCode = (
     case 'SERVICE_UNAVAILABLE':
       return 'provider_error';
     case 'CART_TOO_LARGE':
-    case 'INVALID':
       return 'validation';
+    case 'INVALID':
+      return fieldIncludes(field, 'cartId') ? 'not_found' : 'validation';
     default:
       return 'provider_error';
   }
@@ -312,42 +322,54 @@ const unavailableAvailability = (): LineAvailability => ({
   message: 'Esta variante no está disponible.',
 });
 
-const unavailableCartLine = (line: ShopifyCartLine): CartLine | undefined => {
-  if (!line.id) return undefined;
-  try {
-    return {
-      id: line.id,
-      variantId: variantId(line.id),
-      product: {
-        id: productId(line.id),
-        handle: 'no-disponible',
-        title: SHOPIFY_UNAVAILABLE_LINE_TITLE,
-        collection: 'KingBelt',
-        reference: 'no-disponible',
-        unitPrice: moneyOrZero(line.cost?.amountPerQuantity),
-        href: '/',
-      },
-      selectedOptions: [],
-      quantity: Number.isSafeInteger(line.quantity) && line.quantity >= 1 ? line.quantity : 1,
-      availability: unavailableAvailability(),
-      lineTotal: moneyOrZero(line.cost?.totalAmount),
-    };
-  } catch {
-    return undefined;
+const unavailableCartLine = (line: ShopifyCartLine): CartLine => {
+  if (!line.id) {
+    throw new Error('Shopify cart line is missing a usable id.');
   }
+  return {
+    id: line.id,
+    variantId: variantId(line.id),
+    product: {
+      id: productId(line.id),
+      handle: 'no-disponible',
+      title: SHOPIFY_UNAVAILABLE_LINE_TITLE,
+      collection: 'KingBelt',
+      reference: 'no-disponible',
+      unitPrice: moneyOrZero(line.cost?.amountPerQuantity),
+      href: '/',
+    },
+    selectedOptions: [],
+    quantity: Number.isSafeInteger(line.quantity) && line.quantity >= 1 ? line.quantity : 1,
+    availability: unavailableAvailability(),
+    lineTotal: moneyOrZero(line.cost?.totalAmount),
+  };
 };
 
-const mapShopifyCartLine = (line: ShopifyCartLine): CartLine | undefined => {
+const primaryCollectionTitle = (
+  metafield: ShopifyCartMerchandise['product']['primaryCollection']
+): string => {
+  const reference = metafield?.type === SHOPIFY_PRIMARY_COLLECTION_METAFIELD.type
+    ? metafield.reference
+    : undefined;
+  if (reference?.__typename !== 'Collection') {
+    throw new Error('invalid primary collection');
+  }
+  const id = reference.id?.trim() ?? '';
+  const handle = reference.handle?.trim() ?? '';
+  const title = reference.title?.trim() ?? '';
+  if (!id || !handle || !title) throw new Error('invalid primary collection');
+  return title;
+};
+
+const mapShopifyCartLine = (line: ShopifyCartLine): CartLine => {
   const merchandise = line.merchandise;
-  if (!merchandise?.id || !merchandise.product?.id || !merchandise.product.handle) {
+  if (!line.id || !merchandise?.id || !merchandise.product?.id || !merchandise.product.handle) {
     return unavailableCartLine(line);
   }
   try {
     const image = toCartImage(merchandise.image ?? merchandise.product.featuredImage);
-    const reference = merchandise.product.metafield?.value?.trim() || merchandise.product.handle;
-    const collection = merchandise.product.collections?.nodes[0]?.title?.trim()
-      || merchandise.product.productType
-      || 'KingBelt';
+    const reference = merchandise.product.modelReference?.value?.trim() || merchandise.product.handle;
+    const collection = primaryCollectionTitle(merchandise.product.primaryCollection);
     return {
       id: line.id,
       variantId: variantId(merchandise.id),
@@ -473,6 +495,23 @@ const applyWarnings = (
 const canCheckoutFrom = (lines: readonly CartLine[], lineErrors: readonly CartLineError[]): boolean =>
   lines.length > 0 && !lineErrors.some((error) => error.severity !== 'notice');
 
+const assertCartCurrencyCode = (currencyCode: string | undefined, path: string): void => {
+  if (currencyCode !== SHOPIFY_MARKET_CONTEXT.currency) {
+    throw new Error(`Shopify cart currency does not match ${SHOPIFY_MARKET_CONTEXT.currency} at ${path}.`);
+  }
+};
+
+const assertShopifyCartMarket = (remote: ShopifyCart): void => {
+  if (remote.buyerIdentity?.countryCode !== SHOPIFY_MARKET_CONTEXT.country) {
+    throw new Error(`Shopify cart country does not match ${SHOPIFY_MARKET_CONTEXT.country}.`);
+  }
+  assertCartCurrencyCode(remote.cost?.subtotalAmount?.currencyCode, 'cost.subtotalAmount');
+  for (const [index, line] of remote.lines.nodes.entries()) {
+    assertCartCurrencyCode(line.cost?.amountPerQuantity?.currencyCode, `lines[${index}].cost.amountPerQuantity`);
+    assertCartCurrencyCode(line.cost?.totalAmount?.currencyCode, `lines[${index}].cost.totalAmount`);
+  }
+};
+
 const subtotalFromRemote = (remote: ShopifyCart, lines: readonly CartLine[]) => {
   try {
     return moneyFromDecimal(remote.cost.subtotalAmount.amount, remote.cost.subtotalAmount.currencyCode);
@@ -487,10 +526,8 @@ export const mapShopifyCart = (
   remote: ShopifyCart,
   warnings: readonly ShopifyCartWarning[] = []
 ): Cart => {
-  const lines = remote.lines.nodes.flatMap((line) => {
-    const mapped = mapShopifyCartLine(line);
-    return mapped ? [mapped] : [];
-  });
+  assertShopifyCartMarket(remote);
+  const lines = remote.lines.nodes.map(mapShopifyCartLine);
   const warningResult = applyWarnings(lines, warnings);
   const lineErrors = [...availabilityLineErrors(lines), ...warningResult.lineErrors];
   const truncated = remote.lines.pageInfo?.hasNextPage === true;

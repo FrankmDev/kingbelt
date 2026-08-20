@@ -5,13 +5,18 @@ import CollectionPageHead from '../../components/collection/CollectionPageHead.a
 import Footer from '../../components/layout/Footer.astro';
 import Header from '../../components/layout/Header.astro';
 import { site, siteUrl } from '@config/site';
-import { catalogProvider } from '@commerce/catalog';
+import { getCatalogProvider } from '@commerce/catalog';
 import { CATALOG_INDEX_PATH } from '@commerce/application/paths';
 import { resolveCollectionPageHead, type CommercePageHead } from '@commerce/application/seo';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 
 const handle = Astro.params.slug;
-const collectionPage = handle ? await catalogProvider.getCollectionByHandle(handle) : undefined;
+if (!handle) {
+  Astro.response.status = 404;
+  return Astro.rewrite('/404');
+}
+const catalogProvider = await getCatalogProvider(Astro.clientAddress);
+const collectionPage = await catalogProvider.getCollectionByHandle(handle);
 if (!collectionPage) {
   Astro.response.status = 404;
   return Astro.rewrite('/404');

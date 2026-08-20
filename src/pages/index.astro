@@ -13,13 +13,16 @@ import HomeTrustSection from '../components/sections/home/HomeTrustSection.astro
 import HomeClosingCta from '../components/sections/home/HomeClosingCta.astro';
 import { blogPosts } from '@content/blog';
 import { site } from '@config/site';
-import { catalogProvider } from '@commerce/catalog';
+import { getCatalogProvider } from '@commerce/catalog';
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href;
 const featuredPost = blogPosts.find((post) => post.status === 'featured') ?? blogPosts[0];
 const journalPosts = [featuredPost, blogPosts[1], blogPosts[2]].filter(Boolean);
-const featuredProducts = await catalogProvider.getFeaturedProducts(4);
-const productCategories = await catalogProvider.getCollections();
+const catalogProvider = await getCatalogProvider(Astro.clientAddress);
+const [featuredProducts, productCategories] = await Promise.all([
+  catalogProvider.getFeaturedProducts(4),
+  catalogProvider.getCollections(),
+]);
 // HTML anónimo derivado del catálogo: caché CDN breve; un redeploy purga.
 Astro.response.headers.set('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=600');
 

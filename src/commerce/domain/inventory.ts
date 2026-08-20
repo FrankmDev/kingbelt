@@ -3,6 +3,9 @@ import { commerceRules } from './commerce-rules';
 
 export const TECHNICAL_LINE_QUANTITY_LIMIT = commerceRules.cart.technicalLineQuantityLimit;
 
+export const isTechnicalLineQuantity = (quantity: number): boolean =>
+  Number.isSafeInteger(quantity) && quantity >= 1 && quantity <= TECHNICAL_LINE_QUANTITY_LIMIT;
+
 export type AvailabilityStatus =
   | 'available'
   | 'limited'

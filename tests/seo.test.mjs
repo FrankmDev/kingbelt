@@ -191,6 +191,22 @@ describe('datos estructurados de producto', () => {
     });
   });
 
+  test('no publica como SKU comercial el identificador técnico del runtime', () => {
+    const schema = createProductStructuredData(
+      makeProduct({
+        variants: [makeVariant({
+          id: 'gid://shopify/ProductVariant/90',
+          sku: 'shopify-variant-90',
+          price: 8_900,
+        })],
+      }),
+      'https://kingbelt.com/productos/cinturon-test',
+      'KingBelt'
+    );
+    expect(schema.offers).toMatchObject({ '@type': 'Offer', price: '89.00' });
+    expect(schema.offers.sku).toBeUndefined();
+  });
+
   test('los productos agotados permanecen en schema como OutOfStock sin desindexarse', () => {
     const product = makeProduct({
       variants: [

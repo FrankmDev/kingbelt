@@ -10,6 +10,8 @@ export const prerender = false;
 const SHOPIFY_CART_SESSION_KEY = 'shopifyCartId' as const;
 const CART_REQUEST_MAX_BYTES = 2_048;
 const SHOPIFY_RESOURCE_ID_MAX_LENGTH = 256;
+const SHOPIFY_CART_LINE_ID_PATTERN =
+  /^gid:\/\/shopify\/CartLine\/[^/?#\s]+(?:\?cart=[A-Za-z0-9_-]{1,128})?$/;
 
 type Command =
   | { command: 'refresh' }
@@ -84,6 +86,7 @@ const hasExactKeys = (value: Record<string, unknown>, keys: readonly string[]): 
 const isShopifyResourceId = (value: unknown, resource: 'ProductVariant' | 'CartLine'): value is string => {
   if (typeof value !== 'string' || value.length > SHOPIFY_RESOURCE_ID_MAX_LENGTH) return false;
   if (/[\u0000-\u0020\u007f]/.test(value) || /\s/.test(value)) return false;
+  if (resource === 'CartLine') return SHOPIFY_CART_LINE_ID_PATTERN.test(value);
   return new RegExp(`^gid://shopify/${resource}/[^/?#\\s]+$`).test(value);
 };
 

@@ -12,7 +12,8 @@ mock.module('astro:env/server', () => ({
 const CART_ID = 'gid://shopify/Cart/z2NwLXVzLWVhc3QxOjAxSk1YV0hKRlA?key=super-secret-cart-key-never-leak';
 const FOREIGN_CART_ID = 'gid://shopify/Cart/foreign?key=other-session-secret';
 const VARIANT_A = 'gid://shopify/ProductVariant/111';
-const LINE_A = 'gid://shopify/CartLine/line-a';
+// Storefront 2026-07 contextualiza los CartLine IDs con `?cart=...`.
+const LINE_A = `gid://shopify/CartLine/line-a?cart=${'a'.repeat(32)}`;
 const CHECKOUT_URL = 'https://kingbelt.myshopify.com/checkouts/cn/test';
 
 const money = (amount = '89.00') => ({ amount, currencyCode: 'EUR' });

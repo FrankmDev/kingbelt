@@ -1,6 +1,7 @@
 import { calculatePriceRange } from '../domain/variants';
 import { isVariantPurchasable } from '../domain/inventory';
 import type { Collection, Product, ProductImage, ProductSummary, ProductVariant } from '../domain/catalog';
+import { isRuntimeTechnicalSku } from '../domain/identifiers';
 import { moneyToDecimal } from '../domain/money';
 import { productPath, resolveCanonicalUrl } from './paths';
 
@@ -95,7 +96,9 @@ export const createProductStructuredData = (
     '@type': 'Offer',
     price: moneyToDecimal(priceRange.min),
     priceCurrency: priceRange.min.currency,
-    ...(singleVariant ? { sku: singleVariant.sku } : {}),
+    ...(singleVariant && !isRuntimeTechnicalSku(singleVariant.sku)
+      ? { sku: singleVariant.sku }
+      : {}),
     ...sharedOffer,
   };
 

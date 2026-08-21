@@ -13,6 +13,18 @@ interface CacheEntry<T> {
   loadedAt: number;
 }
 
+export interface ResourceCacheOptions {
+  /** Límite defensivo para impedir crecimiento de memoria por claves dinámicas. */
+  maxEntries?: number;
+  /** Antigüedad máxima reutilizable tras un fallo transitorio. */
+  maxStaleMs?: number;
+  /** Reloj inyectable para tests deterministas. */
+  now?: () => number;
+}
+
+export const DEFAULT_RESOURCE_CACHE_MAX_ENTRIES = 512;
+export const DEFAULT_RESOURCE_CACHE_MAX_STALE_MS = 15 * 60_000;
+
 export const isNonTransientShopifyError = (error: unknown): boolean => {
   if (
     error instanceof ShopifyConfigurationError
@@ -31,13 +43,36 @@ export const isNonTransientShopifyError = (error: unknown): boolean => {
 
 export const createResourceCache = (
   cacheTtlMs?: number,
-  isNonTransientError: (error: unknown) => boolean = isNonTransientShopifyError
+  isNonTransientError: (error: unknown) => boolean = isNonTransientShopifyError,
+  options: ResourceCacheOptions = {}
 ): ResourceCache => {
+  if (cacheTtlMs !== undefined && (!Number.isFinite(cacheTtlMs) || cacheTtlMs < 0)) {
+    throw new TypeError('cacheTtlMs must be a finite non-negative number.');
+  }
+  const maxEntries = options.maxEntries ?? DEFAULT_RESOURCE_CACHE_MAX_ENTRIES;
+  const maxStaleMs = options.maxStaleMs ?? DEFAULT_RESOURCE_CACHE_MAX_STALE_MS;
+  if (!Number.isSafeInteger(maxEntries) || maxEntries <= 0) {
+    throw new TypeError('maxEntries must be a positive safe integer.');
+  }
+  if (!Number.isFinite(maxStaleMs) || maxStaleMs < 0) {
+    throw new TypeError('maxStaleMs must be a finite non-negative number.');
+  }
+  const now = options.now ?? Date.now;
   const values = new Map<string, CacheEntry<unknown>>();
   const inflight = new Map<string, Promise<unknown>>();
 
   const isFresh = (entry: CacheEntry<unknown>): boolean =>
-    cacheTtlMs === undefined || Date.now() - entry.loadedAt < cacheTtlMs;
+    cacheTtlMs === undefined || now() - entry.loadedAt < cacheTtlMs;
+
+  const remember = (key: string, value: unknown): void => {
+    values.delete(key);
+    values.set(key, { value, loadedAt: now() });
+    while (values.size > maxEntries) {
+      const oldestKey = values.keys().next().value;
+      if (oldestKey === undefined) break;
+      values.delete(oldestKey);
+    }
+  };
 
   const getFresh = <T>(key: string): { hit: true; value: T } | { hit: false } => {
     const entry = values.get(key) as CacheEntry<T> | undefined;
@@ -54,13 +89,14 @@ export const createResourceCache = (
 
     const request = loader()
       .then((value) => {
-        values.set(key, { value, loadedAt: Date.now() });
+        remember(key, value);
         return value;
       })
       .catch((error: unknown) => {
         if (isNonTransientError(error)) throw error;
         const previous = values.get(key) as CacheEntry<T> | undefined;
-        if (previous) return previous.value;
+        if (previous && now() - previous.loadedAt <= maxStaleMs) return previous.value;
+        if (previous) values.delete(key);
         throw error;
       })
       .finally(() => {

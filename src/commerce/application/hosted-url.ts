@@ -5,9 +5,12 @@ const ABSOLUTE_URL_PATTERN = /^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//;
 const IPV4_PATTERN = /^(?:\d{1,3}\.){3}\d{1,3}$/;
 
 export const MAX_HOSTED_URL_LENGTH = MAX_EXTERNAL_URL_LENGTH;
-export const DEMO_ACCOUNT_ACCESS_HREF = '/cuenta/iniciar';
+export const ACCOUNT_ACCESS_HREF = '/cuenta/iniciar';
 export const CUSTOMER_ACCOUNT_REDIRECT_STATUS = 307 as const;
+export const CUSTOMER_ACCOUNT_UNAVAILABLE_STATUS = 503 as const;
 export const SHOPIFY_CUSTOMER_ACCOUNT_URL_NAME = 'SHOPIFY_CUSTOMER_ACCOUNT_URL' as const;
+export const CUSTOMER_ACCOUNT_UNAVAILABLE_MESSAGE =
+  'Shopify Customer Accounts are not configured.' as const;
 
 const HOSTED_URL_MESSAGE =
   'must be an absolute HTTPS URL with an explicit hostname, without credentials, javascript:, data:, query, or unexpected fragments.';
@@ -88,15 +91,46 @@ export const parseShopifyHostedUrl = (
   return url;
 };
 
-/** Destino del CTA de cuenta. En Shopify no hay fallback silencioso a la ruta demo. */
+/**
+ * Destino del CTA de cuenta. Desktop y móvil usan siempre la ruta estable de KingBelt.
+ * En Shopify, `/cuenta/iniciar` redirige al portal alojado; si la URL falta o es inválida,
+ * el CTA se desactiva y la ruta responde 503. No hay fallback silencioso al panel demo.
+ */
 export const resolveCustomerAccountHref = (input: {
   source: 'demo' | 'shopify';
   customerAccountUrl?: string | null;
 }): string | null => {
-  if (input.source !== 'shopify') return DEMO_ACCOUNT_ACCESS_HREF;
+  if (input.source !== 'shopify') return ACCOUNT_ACCESS_HREF;
   try {
-    return parseShopifyHostedUrl(input.customerAccountUrl).href;
+    parseShopifyHostedUrl(input.customerAccountUrl);
+    return ACCOUNT_ACCESS_HREF;
   } catch {
     return null;
+  }
+};
+
+/**
+ * Respuesta de `/cuenta/iniciar`. Demo renderiza el panel visual (null).
+ * Shopify: 307 al portal alojado, o 503 fail-closed si la URL falta o es inválida.
+ */
+export const buildAccountAccessResponse = (
+  source: 'demo' | 'shopify',
+  customerAccountUrl?: string | null
+): Response | null => {
+  if (source !== 'shopify') return null;
+
+  try {
+    return Response.redirect(
+      parseShopifyHostedUrl(customerAccountUrl).href,
+      CUSTOMER_ACCOUNT_REDIRECT_STATUS
+    );
+  } catch (error) {
+    if (error instanceof ShopifyHostedUrlError) {
+      return new Response(CUSTOMER_ACCOUNT_UNAVAILABLE_MESSAGE, {
+        status: CUSTOMER_ACCOUNT_UNAVAILABLE_STATUS,
+        headers: { 'Cache-Control': 'no-store' },
+      });
+    }
+    throw error;
   }
 };

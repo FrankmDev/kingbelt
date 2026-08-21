@@ -32,7 +32,7 @@ Crea las variables en el proyecto de Vercel (Settings → Environment Variables)
 | --- | --- | --- | --- | --- |
 | `COMMERCE_SOURCE` | `import.meta.env` vía `astro:env/client` | Build (pública de cliente) | `demo` o `shopify` | Todos. Production y staging: `shopify`. Preview/local sin tienda: `demo` |
 | `SHOPIFY_STORE_DOMAIN` | `astro:env/server` | Build y runtime (pública de servidor) | hostname `tu-tienda.myshopify.com` | Production y Preview/staging con `COMMERCE_SOURCE=shopify` |
-| `SHOPIFY_CUSTOMER_ACCOUNT_URL` | `astro:env/server` | Build y runtime (pública de servidor) | URL HTTPS alojada de Customer Accounts | Los mismos que Shopify |
+| `SHOPIFY_CUSTOMER_ACCOUNT_URL` | `astro:env/server` | Build y runtime (pública de servidor; nunca `PUBLIC_*`) | URL HTTPS alojada de Customer Accounts | Production y Preview cuando `COMMERCE_SOURCE=shopify`. No va en `vercel.json`. Tras cambiarla: nuevo deployment |
 | `SHOPIFY_API_VERSION` | `astro:env/server` | Build y runtime | `2026-07` (valor por defecto) | Los mismos que Shopify |
 | `SHOPIFY_STOREFRONT_PRIVATE_TOKEN` | `astro:env/server` | Runtime (secreto) | token privado Headless, sin espacios ni comillas | Los mismos que Shopify |
 | `UPSTASH_REDIS_REST_URL` | `process.env` en el session driver | Runtime (no `astro:env`) | URL REST HTTPS de Upstash, sin credenciales, query ni fragment | Production y Preview. Las dos variables juntas |

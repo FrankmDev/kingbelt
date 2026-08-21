@@ -4,8 +4,7 @@ import FormField from '../ui/FormField.astro';
 import Icon from '../ui/Icon.astro';
 import { accountAccessPage } from '@content/account';
 
-const { intents, note, helpLabel, helpHref } = accountAccessPage;
-const initial = intents.login;
+const { heading, lede, submit, note, helpLabel, helpHref } = accountAccessPage;
 ---
 
 <section
@@ -13,51 +12,18 @@ const initial = intents.login;
   aria-labelledby="account-access-title"
   data-account-access
   data-demo-account-access
-  data-login-heading={intents.login.heading}
-  data-login-lede={intents.login.lede}
-  data-login-submit={intents.login.submit}
-  data-register-heading={intents.register.heading}
-  data-register-lede={intents.register.lede}
-  data-register-submit={intents.register.submit}
 >
   <header class="account-access__head">
     <p class="account-access__eyebrow kb-eyebrow text-king-accent">Cuenta KingBelt</p>
-    <h1 id="account-access-title" class="account-access__title font-display" data-account-heading>
-      {initial.heading}
+    <h1 id="account-access-title" class="account-access__title font-display">
+      {heading}
     </h1>
-    <p class="account-access__lede text-king-muted" data-account-lede>
-      {initial.lede}
+    <p class="account-access__lede text-king-muted">
+      {lede}
     </p>
   </header>
 
-  <div class="account-access__intents" role="tablist" aria-label="Tipo de acceso">
-    <button
-      type="button"
-      class="account-access__intent"
-      role="tab"
-      id="account-intent-login"
-      aria-selected="true"
-      aria-controls="account-access-form"
-      data-account-intent="login"
-    >
-      {intents.login.label}
-    </button>
-    <button
-      type="button"
-      class="account-access__intent"
-      role="tab"
-      id="account-intent-register"
-      aria-selected="false"
-      aria-controls="account-access-form"
-      data-account-intent="register"
-    >
-      {intents.register.label}
-    </button>
-  </div>
-
   <form id="account-access-form" class="account-access__form" data-account-form>
-    <input type="hidden" name="intent" value="login" data-account-intent-value />
-
     <FormField label="Email" for="account-email" required>
       <input
         id="account-email"
@@ -74,7 +40,7 @@ const initial = intents.login;
 
     <div class="account-access__actions">
       <Button type="submit" variant="primary" size="lg" data-account-start>
-        <span data-account-submit>{initial.submit}</span>
+        <span>{submit}</span>
         <Icon name="arrow-right" />
       </Button>
     </div>
@@ -86,50 +52,10 @@ const initial = intents.login;
 </section>
 
 <script>
-  const root = document.querySelector<HTMLElement>('[data-account-access]');
-  if (root) {
-    const heading = root.querySelector<HTMLElement>('[data-account-heading]');
-    const lede = root.querySelector<HTMLElement>('[data-account-lede]');
-    const submit = root.querySelector<HTMLElement>('[data-account-submit]');
-    const intentValue = root.querySelector<HTMLInputElement>('[data-account-intent-value]');
-    const tabs = [...root.querySelectorAll<HTMLButtonElement>('[data-account-intent]')];
-
-    const copy = {
-      login: {
-        heading: root.dataset.loginHeading ?? '',
-        lede: root.dataset.loginLede ?? '',
-        submit: root.dataset.loginSubmit ?? '',
-      },
-      register: {
-        heading: root.dataset.registerHeading ?? '',
-        lede: root.dataset.registerLede ?? '',
-        submit: root.dataset.registerSubmit ?? '',
-      },
-    } as const;
-
-    const setIntent = (intent: 'login' | 'register') => {
-      const next = copy[intent];
-      if (heading) heading.textContent = next.heading;
-      if (lede) lede.textContent = next.lede;
-      if (submit) submit.textContent = next.submit;
-      if (intentValue) intentValue.value = intent;
-
-      for (const tab of tabs) {
-        tab.setAttribute('aria-selected', String(tab.dataset.accountIntent === intent));
-      }
-    };
-
-    for (const tab of tabs) {
-      tab.addEventListener('click', () => {
-        const intent = tab.dataset.accountIntent;
-        if (intent === 'login' || intent === 'register') setIntent(intent);
-      });
-    }
-
-    root.querySelector<HTMLFormElement>('[data-account-form]')?.addEventListener('submit', (event) => {
+  document.querySelector<HTMLFormElement>('[data-demo-account-access] [data-account-form]')
+    ?.addEventListener('submit', (event) => {
       event.preventDefault();
     });
-  }
 </script>
 
 <style>
@@ -170,58 +96,6 @@ const initial = intents.login;
     font-size: var(--kb-text-sm);
     line-height: 1.6;
     text-wrap: pretty;
-  }
-
-  .account-access__intents {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    margin: 0;
-    padding: 0;
-    border-bottom: 1px solid var(--kb-stroke-dark);
-  }
-
-  @media (max-width: 29.99rem) {
-    .account-access__intents {
-      grid-template-columns: 1fr;
-    }
-
-    .account-access__intent {
-      padding-inline: 0.5rem;
-      letter-spacing: 0.1em;
-    }
-  }
-
-  .account-access__intent {
-    margin: 0 0 -1px;
-    padding: 0.85rem 0.25rem;
-    border: 0;
-    border-bottom: 2px solid transparent;
-    background: transparent;
-    color: var(--color-king-muted);
-    font-family: var(--font-sans);
-    font-size: var(--kb-text-meta);
-    font-weight: var(--kb-label-weight);
-    letter-spacing: 0.14em;
-    line-height: 1.2;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition:
-      color var(--kb-dur-fast) var(--kb-ease-out),
-      border-color var(--kb-dur-fast) var(--kb-ease-out);
-  }
-
-  .account-access__intent:hover {
-    color: var(--color-king-text);
-  }
-
-  .account-access__intent[aria-selected='true'] {
-    color: var(--color-king-text);
-    border-bottom-color: var(--color-king-accent);
-  }
-
-  .account-access__intent:focus-visible {
-    outline: 2px solid var(--color-king-accent);
-    outline-offset: 3px;
   }
 
   .account-access__form {

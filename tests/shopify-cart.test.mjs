@@ -33,6 +33,7 @@ const VARIANT_A = 'gid://shopify/ProductVariant/111';
 const VARIANT_B = 'gid://shopify/ProductVariant/222';
 const VARIANT_C = 'gid://shopify/ProductVariant/333';
 const LINE_A = 'gid://shopify/CartLine/line-a';
+const CONTEXTUAL_LINE_A = `${LINE_A}?cart=${'a'.repeat(32)}`;
 const LINE_B = 'gid://shopify/CartLine/line-b';
 const LINE_C = 'gid://shopify/CartLine/line-c';
 const LINE_MISSING = 'gid://shopify/CartLine/line-missing';
@@ -576,6 +577,21 @@ describe('disponibilidad real del ProductVariant en Cart', () => {
       .toBe(line.merchandise.image.id);
   });
 
+  test('acepta CollectionImage como GID de Image de variante', () => {
+    const line = remoteLine(LINE_A, VARIANT_A, 1);
+    line.merchandise.image.id = 'gid://shopify/CollectionImage/123456789';
+    expect(mapShopifyCart(remoteCart({ lines: [line] })).lines[0].product.image.id)
+      .toBe('gid://shopify/CollectionImage/123456789');
+  });
+
+  test('un Product.id CollectionImage no es un GID de Product en Cart', () => {
+    const line = remoteLine(LINE_A, VARIANT_A, 1);
+    line.merchandise.product.id = 'gid://shopify/CollectionImage/123456789';
+    expect(() => mapShopifyCart(remoteCart({ lines: [line] }))).toThrow(
+      'line.merchandise.product.id'
+    );
+  });
+
   test('un Image ID no Shopify hace fallar el Cart completo', () => {
     const line = remoteLine(LINE_A, VARIANT_A, 1);
     line.merchandise.image.id = 'image-local-1';
@@ -743,6 +759,25 @@ describe('disponibilidad real del ProductVariant en Cart', () => {
         },
       ],
     }))).toThrow('line.id');
+  });
+
+  test('conserva el CartLine ID contextual que devuelve Storefront', () => {
+    const cart = mapShopifyCart(remoteCart({
+      lines: [remoteLine(CONTEXTUAL_LINE_A, VARIANT_A, 1)],
+    }));
+    expect(cart.lines[0].id).toBe(CONTEXTUAL_LINE_A);
+  });
+
+  test('rechaza parámetros no contractuales en CartLine ID', () => {
+    for (const id of [
+      `${LINE_A}?key=secret`,
+      `${LINE_A}?cart=`,
+      `${LINE_A}?cart=${'a'.repeat(32)}&extra=1`,
+      `${LINE_A}#fragment`,
+    ]) {
+      expect(() => mapShopifyCart(remoteCart({ lines: [remoteLine(id, VARIANT_A, 1)] })))
+        .toThrow('line.id');
+    }
   });
 
   test('un carrito truncado por paginación bloquea checkout', () => {

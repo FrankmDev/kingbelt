@@ -8,6 +8,12 @@ export type ProductId = Identifier<'ProductId'>;
 export type VariantId = Identifier<'VariantId'>;
 export type Sku = Identifier<'Sku'>;
 
+/**
+ * Namespace reservado para mantener operativo el runtime cuando Shopify aún no
+ * tiene un SKU comercial. Nunca debe publicarse como SKU de producto.
+ */
+export const RUNTIME_TECHNICAL_SKU_PREFIX = 'shopify-variant-';
+
 const toIdentifier = <TKind extends string>(
   value: string,
   label: string
@@ -32,3 +38,11 @@ export const variantId = (value: string): VariantId =>
 
 export const sku = (value: string): Sku =>
   toIdentifier<'Sku'>(value, 'El SKU');
+
+export const runtimeTechnicalSku = (shopifyVariantGid: string): Sku => {
+  const remoteId = shopifyVariantGid.split('/').at(-1) ?? '';
+  return sku(`${RUNTIME_TECHNICAL_SKU_PREFIX}${remoteId}`);
+};
+
+export const isRuntimeTechnicalSku = (value: string): boolean =>
+  value.startsWith(RUNTIME_TECHNICAL_SKU_PREFIX);

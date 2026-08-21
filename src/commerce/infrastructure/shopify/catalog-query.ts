@@ -1,6 +1,5 @@
 import type { ShopifyStorefrontGateway } from './storefront-gateway';
 import {
-  SHOPIFY_COLOR_GALLERIES_METAFIELD,
   SHOPIFY_IN_CONTEXT_DIRECTIVE,
   SHOPIFY_IN_CONTEXT_VARIABLE_DEFINITIONS,
   SHOPIFY_PRIMARY_COLLECTION_METAFIELD,
@@ -79,13 +78,6 @@ export interface ShopifyMoneyV2 {
   currencyCode: string;
 }
 
-export interface ShopifyMetaobjectFieldNode {
-  key: string;
-  type: string;
-  value: string | null;
-  references: Connection<ShopifyMetafieldReferenceNode> | null;
-}
-
 export interface ShopifyCollectionReferenceNode {
   __typename: 'Collection';
   id: string;
@@ -98,10 +90,6 @@ export interface ShopifyMetafieldReferenceNode {
   id?: string;
   handle?: string;
   title?: string;
-  type?: string;
-  fields?: ShopifyMetaobjectFieldNode[];
-  image?: ShopifyImageNode | null;
-  url?: string;
 }
 
 export interface ShopifyMetafieldNode {
@@ -110,7 +98,6 @@ export interface ShopifyMetafieldNode {
   type: string;
   value: string | null;
   reference: ShopifyMetafieldReferenceNode | null;
-  references: Connection<ShopifyMetafieldReferenceNode> | null;
 }
 
 export interface ShopifyProductNode {
@@ -139,7 +126,7 @@ export interface ShopifyProductSummaryNode {
   productType: string;
   availableForSale: boolean;
   featuredImage: ShopifyImageNode | null;
-  collections?: Connection<Pick<ShopifyCollectionNode, 'id' | 'handle' | 'title'>>;
+  collections: Connection<Pick<ShopifyCollectionNode, 'id' | 'handle' | 'title'>>;
   options: ShopifyOptionNode[];
   priceRange: {
     minVariantPrice: ShopifyMoneyV2;
@@ -165,27 +152,6 @@ export const VARIANT_FIELDS = `
   weight weightUnit
 `;
 
-const MEDIA_REFERENCE_FIELDS = `
-  __typename
-  ... on MediaImage { id image { ${IMAGE_FIELDS} } }
-  ... on GenericFile { id url }
-`;
-
-const METAFIELD_REFERENCE_FIELDS = `
-  __typename
-  ... on Collection { id handle title }
-  ... on Metaobject {
-    id type
-    fields {
-      key type value
-      references(first: ${SHOPIFY_PAGE_SIZE}) {
-        nodes { ${MEDIA_REFERENCE_FIELDS} }
-        pageInfo { hasNextPage endCursor }
-      }
-    }
-  }
-`;
-
 const COLLECTION_REFERENCE_SELECTION = `
   reference {
     __typename
@@ -202,14 +168,9 @@ const FULL_PRODUCT_METAFIELDS = `
     { namespace: "kingbelt", key: "buckle_finish" }
     { namespace: "kingbelt", key: "badge" }
     { namespace: "${SHOPIFY_PRIMARY_COLLECTION_METAFIELD.namespace}", key: "${SHOPIFY_PRIMARY_COLLECTION_METAFIELD.key}" }
-    { namespace: "${SHOPIFY_COLOR_GALLERIES_METAFIELD.namespace}", key: "${SHOPIFY_COLOR_GALLERIES_METAFIELD.key}" }
   ]) {
     namespace key type value
     ${COLLECTION_REFERENCE_SELECTION}
-    references(first: ${SHOPIFY_PAGE_SIZE}) {
-      nodes { ${METAFIELD_REFERENCE_FIELDS} }
-      pageInfo { hasNextPage endCursor }
-    }
   }
 `;
 
@@ -240,6 +201,10 @@ export const FULL_PRODUCT_FIELDS = `
 export const PRODUCT_SUMMARY_FIELDS = `
   id handle title description productType availableForSale
   featuredImage { ${IMAGE_FIELDS} }
+  collections(first: ${SHOPIFY_PAGE_SIZE}) {
+    nodes { id handle title }
+    pageInfo { hasNextPage endCursor }
+  }
   options(first: 3) {
     id name
     optionValues { id name swatch { color } }
@@ -313,45 +278,6 @@ const PRODUCT_COLLECTIONS_PAGE_QUERY = `
   }
 `;
 
-const PRODUCT_METAFIELD_REFERENCES_PAGE_QUERY = `
-  query KingBeltProductMetafieldReferencesPage(
-    $id: ID!,
-    $namespace: String!,
-    $key: String!,
-    $first: Int!,
-    $after: String!,
-    ${SHOPIFY_IN_CONTEXT_VARIABLE_DEFINITIONS}
-  ) ${SHOPIFY_IN_CONTEXT_DIRECTIVE} {
-    node(id: $id) { ... on Product {
-      metafield(namespace: $namespace, key: $key) {
-        references(first: $first, after: $after) {
-          nodes { ${METAFIELD_REFERENCE_FIELDS} }
-          pageInfo { hasNextPage endCursor }
-        }
-      }
-    } }
-  }
-`;
-
-const METAOBJECT_FIELD_REFERENCES_PAGE_QUERY = `
-  query KingBeltMetaobjectFieldReferencesPage(
-    $id: ID!,
-    $key: String!,
-    $first: Int!,
-    $after: String!,
-    ${SHOPIFY_IN_CONTEXT_VARIABLE_DEFINITIONS}
-  ) ${SHOPIFY_IN_CONTEXT_DIRECTIVE} {
-    node(id: $id) { ... on Metaobject {
-      field(key: $key) {
-        references(first: $first, after: $after) {
-          nodes { ${MEDIA_REFERENCE_FIELDS} }
-          pageInfo { hasNextPage endCursor }
-        }
-      }
-    } }
-  }
-`;
-
 const variablesForProductPage = (id: string, after: string) => ({
   id,
   first: SHOPIFY_PAGE_SIZE,
@@ -375,86 +301,6 @@ const loadProductConnectionPage = async <T>(
   return read(data.node);
 };
 
-const completeNestedFieldReferences = async (
-  gateway: ShopifyStorefrontGateway,
-  reference: ShopifyMetafieldReferenceNode,
-  label: string
-): Promise<ShopifyMetafieldReferenceNode> => {
-  if (reference.__typename !== 'Metaobject' || !reference.fields || !reference.id) {
-    return reference;
-  }
-
-  const fields = await Promise.all(reference.fields.map(async (field) => {
-    if (!field.references?.pageInfo.hasNextPage) return field;
-    const nodes = await collectConnectionPages(
-      field.references,
-      `${label}.${field.key}`,
-      async (after) => {
-        const data = await gateway.graphql<{
-          node: { field: { references: Connection<ShopifyMetafieldReferenceNode> } | null } | null;
-        }, { id: string; key: string; first: number; after: string }>(
-          METAOBJECT_FIELD_REFERENCES_PAGE_QUERY,
-          withShopifyInContextVariables({
-            id: reference.id as string,
-            key: field.key,
-            first: SHOPIFY_PAGE_SIZE,
-            after,
-          })
-        );
-        if (!data.node?.field?.references) {
-          throw new Error(`Shopify dejó de devolver las referencias de ${label}.${field.key}.`);
-        }
-        return data.node.field.references;
-      }
-    );
-    return { ...field, references: completedConnection(nodes) };
-  }));
-
-  return { ...reference, fields };
-};
-
-const completeProductMetafields = async (
-  gateway: ShopifyStorefrontGateway,
-  product: ShopifyProductNode
-): Promise<Array<ShopifyMetafieldNode | null>> =>
-  Promise.all(product.metafields.map(async (metafield) => {
-    if (!metafield?.references) return metafield;
-    const nodes = metafield.references.pageInfo.hasNextPage
-      ? await collectConnectionPages(
-          metafield.references,
-          `referencias de ${product.handle}.metafields.${metafield.namespace}.${metafield.key}`,
-          async (after) => {
-            const data = await gateway.graphql<{
-              node: { metafield: { references: Connection<ShopifyMetafieldReferenceNode> } | null } | null;
-            }, { id: string; namespace: string; key: string; first: number; after: string }>(
-              PRODUCT_METAFIELD_REFERENCES_PAGE_QUERY,
-              withShopifyInContextVariables({
-                id: product.id,
-                namespace: metafield.namespace,
-                key: metafield.key,
-                first: SHOPIFY_PAGE_SIZE,
-                after,
-              })
-            );
-            if (!data.node?.metafield?.references) {
-              throw new Error(
-                `Shopify dejó de devolver las referencias de ${product.handle}.metafields.${metafield.key}.`
-              );
-            }
-            return data.node.metafield.references;
-          }
-        )
-      : metafield.references.nodes;
-    const completed = await Promise.all(nodes.map((reference, index) =>
-      completeNestedFieldReferences(
-        gateway,
-        reference,
-        `${product.handle}.metafields.${metafield.key}[${index}]`
-      )
-    ));
-    return { ...metafield, references: completedConnection(completed) };
-  }));
-
 export const completeProductConnections = async (
   gateway: ShopifyStorefrontGateway,
   product: ShopifyProductNode
@@ -462,15 +308,9 @@ export const completeProductConnections = async (
   const needsVariants = product.variants.pageInfo.hasNextPage;
   const needsImages = product.images.pageInfo.hasNextPage;
   const needsCollections = product.collections.pageInfo.hasNextPage;
-  const needsMetafields = product.metafields.some((metafield) =>
-    Boolean(metafield?.references?.pageInfo.hasNextPage)
-    || metafield?.references?.nodes.some((reference) =>
-      reference.fields?.some((field) => field.references?.pageInfo.hasNextPage)
-    )
-  );
-  if (!needsVariants && !needsImages && !needsCollections && !needsMetafields) return product;
+  if (!needsVariants && !needsImages && !needsCollections) return product;
 
-  const [variants, images, collections, metafields] = await Promise.all([
+  const [variants, images, collections] = await Promise.all([
     needsVariants
       ? collectConnectionPages(
           product.variants,
@@ -510,7 +350,6 @@ export const completeProductConnections = async (
           )
         )
       : Promise.resolve(product.collections.nodes),
-    completeProductMetafields(gateway, product),
   ]);
 
   return {
@@ -518,7 +357,6 @@ export const completeProductConnections = async (
     variants: completedConnection(variants),
     images: completedConnection(images),
     collections: completedConnection(collections),
-    metafields,
   };
 };
 

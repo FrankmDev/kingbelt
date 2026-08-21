@@ -2,7 +2,7 @@
 
 ## 1. Estado actual
 
-La web usa SSR en Vercel. `COMMERCE_SOURCE` es obligatoria y selecciona de forma determinista `demo` o `shopify` para catálogo y carrito a la vez. Con `demo`, solo se usan los adapters demo, `localStorage` y `/cart-catalog.json`; las credenciales Shopify presentes se ignoran. Con `shopify`, el catálogo consulta Storefront por recurso con una caché breve por instancia y el carrito usa el BFF same-origin `/api/cart` y la Cart API. Una configuración Shopify incompleta no activa demo: las páginas de catálogo fallan cerrado y el BFF responde `503`. El webhook de catálogo puede reconstruir Vercel como respaldo.
+La web usa SSR en Vercel. `COMMERCE_SOURCE` es obligatoria y selecciona de forma determinista `demo` o `shopify` para catálogo y carrito a la vez. Con `demo`, solo se usan los adapters demo, `localStorage` y `/cart-catalog.json`; las credenciales Shopify presentes se ignoran. Con `shopify`, el catálogo consulta Storefront por recurso con una caché breve por instancia, acotada a 512 recursos y 15 minutos máximos de stale-if-error, y el carrito usa el BFF same-origin `/api/cart` y la Cart API. Una configuración Shopify incompleta no activa demo: las páginas de catálogo fallan cerrado y el BFF responde `503`. El webhook de catálogo puede reconstruir Vercel como respaldo.
 
 La Storefront API está fijada en `2026-07` y usa exclusivamente el token privado. El runtime consulta y pagina el recurso solicitado —producto, colección o resúmenes—; el preflight descarga el catálogo completo, normaliza la respuesta al dominio neutral y falla cerrado si el catálogo es parcial. `bun run shopify:smoke` comprueba únicamente la conectividad mínima `shop { name }`. La barrera autoritativa antes de un despliegue Shopify es `bun run shopify:preflight`: valida configuración, autenticación, la localización Storefront activa (ES / ES / EUR), que el conjunto exacto de productos y colecciones visibles en Storefront para España coincida con el manifiesto de lanzamiento, mapping, `assertValidCatalog()` y las superficies Astro. `bun run build` solo valida la compilación: no llama a Shopify ni certifica el catálogo real.
 
@@ -10,7 +10,7 @@ La Storefront API está fijada en `2026-07` y usa exclusivamente el token privad
 
 Los adaptadores demo y Shopify pasan por `assertValidCatalog()` antes de exponer datos. Las respuestas externas quedan confinadas a `infrastructure/shopify/`; páginas y componentes no conocen tipos de Shopify.
 
-La consulta real del 18 de agosto de 2026 confirma `cdn.shopify.com` como host exacto de imágenes, ya autorizado en la política de imagen y la CSP. Los metafields `kingbelt.*` de copy y especificaciones pueden caer a campos nativos si aún no están visibles en Storefront. `custom.kingbelt_color_galleries` es la fuente estructurada de galerías por color. Preflight y runtime de ficha exigen el mismo contrato en productos con opción Color: no se reparte por posición, filename, URL ni por huecos entre portadas. Si el metafield no llega, llega incompleto, tiene tipo incorrecto o las referencias no se resuelven, ambos fallan cerrado. No se inventa material, ancho ni copy comercial. Un fallo transitorio de obtención sin catálogo previo no se renderiza; con uno válido, se sirve el último conocido (stale-if-error). Un error de mapping o validación falla cerrado, no usa stale y no omite el producto del listado.
+La auditoría real del 21 de agosto de 2026 confirma `cdn.shopify.com` como host exacto de imágenes y que `Product.images` ya contiene una familia propia por color con la convención `MODELO_COLOR_01/02/03`. Esa media nativa es la única autoridad de galerías. El preflight exige una sola familia y exactamente tres imágenes únicas numeradas por cada valor de Color. El runtime puede servir temporalmente una familia incompleta o, si el nombre no es resoluble, una imagen de variante que pertenezca exactamente a `Product.images`; nunca incorpora archivos externos ni reparte imágenes por posición. `ProductVariant.image` es opcional para construir la galería y no necesita coincidir con su portada. Los metafields `kingbelt.*` de copy y especificaciones pueden caer a campos nativos si aún no están visibles en Storefront. No se inventa material, ancho ni copy comercial. Un fallo transitorio de obtención sin catálogo previo no se renderiza; con uno válido, se sirve el último conocido (stale-if-error). Un error de mapping o validación falla cerrado, no usa stale y no omite el producto del listado.
 
 ## 2. Arquitectura objetivo
 
@@ -77,7 +77,7 @@ Para activarlo:
 | opción `Talla` | 1 cuando el producto varía por talla; valores únicos | `ProductOption` con `purpose: size` |
 | opciones restantes | hasta completar tres en total | `ProductOption`; más de tres falla |
 | `ProductVariant.id` | 1 por variante, único | `ProductVariant.id` |
-| `ProductVariant.sku` | 1, obligatorio y único en todo el catálogo | `ProductVariant.sku` recibido de Storefront; nunca se fabrica ni se serializa al navegador |
+| `ProductVariant.sku` | preflight: 1 comercial, obligatorio y único; runtime: opcional | SKU de Storefront o identificador técnico estable `shopify-variant-<id>` solo para mantener operativa la ficha |
 | opciones seleccionadas | exactamente una por opción y con valor existente | `optionValues`; no se generan combinaciones ausentes |
 | `price` / `compareAtPrice` | precio obligatorio y comparado opcional, misma moneda | `price` / `compareAtPrice` en unidades mínimas |
 | `quantityAvailable` | 0..1 según permisos; `null` significa desconocido | `inventory: known | unknown`; nunca público como cifra |
@@ -85,11 +85,11 @@ Para activarlo:
 | `quantityRule` | mínimo e incremento obligatorios; máximo opcional | `quantityRule`; inicialmente solo 1/1 es compatible |
 | título y cuerpo | título y descripción obligatorios, texto saneado | `title` y `description` |
 | SEO nativo | título/description opcionales | `seo`; fallback determinista a título y resumen, sin inventar copy |
-| media de producto | con opción Color: exactamente tres `MediaImage` por color desde `custom.kingbelt_color_galleries` (preflight y runtime); sin opción Color: `mediaGroups = []` y portada de `featuredImage` | `images`, `primaryImageId`, `mediaGroups` e `imageId` de variante |
+| `Product.images` | con Color: una familia nativa `MODELO_COLOR_01/02/03` por valor; preflight exige exactamente tres imágenes únicas; sin Color: `mediaGroups = []` y portada de `featuredImage` | `images`, `primaryImageId`, `mediaGroups` e `imageId` de variante |
 
-`reference`, `summary`, `badge`, material, ancho y hebilla/acabado se resuelven con los metafields `kingbelt.*` cuando están publicados para Storefront. Si aún no lo están, el importador usa campos nativos: `handle` como referencia, `description` como resumen, título de colección si falta descripción y título de producto como `alt`. `ProductVariant.sku` no tiene fallback: Storefront debe devolver el SKU comercial no vacío; si falta, el mapping y `shopify:preflight` fallan. Para Color, preflight y runtime toman `custom.kingbelt_color_galleries` como única fuente de grupos de tres imágenes: no infieren por filename, URL, alt ni posición. Si el metafield no llega, llega incompleto o tiene tipo incorrecto, ambos fallan. No se inventa copy comercial, material, medidas ni códigos de variante. No se importa coste, margen, tags administrativos ni HTML sin sanear.
+`reference`, `summary`, `badge`, material, ancho y hebilla/acabado se resuelven con los metafields `kingbelt.*` cuando están publicados para Storefront. Si aún no lo están, el importador usa campos nativos: `handle` como referencia, `description` nativa, título de colección si falta descripción y título de producto como `alt`. El catálogo completo y `shopify:preflight` exigen `ProductVariant.sku` comercial no vacío. La ficha runtime usa un identificador técnico estable derivado del GID de variante cuando falta; no se presenta como SKU comercial, se omite de JSON-LD y no hace pasar el preflight. El prefijo `shopify-variant-` está reservado para evitar colisiones con SKU comerciales. Para Color, el preflight valida las familias de filename de `Product.images`; el runtime usa exclusivamente media del mismo producto. No se inventa copy comercial, material ni medidas. No se importa coste, margen, tags administrativos ni HTML sin sanear.
 
-### 8.1 Metafields y metaobject de galería
+### 8.1 Metafields y galerías nativas
 
 | Propietario | Namespace / key | Tipo Shopify | Cardinalidad | Obligatorio | Fallback | Destino interno |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -100,38 +100,18 @@ Para activarlo:
 | Product | `kingbelt.buckle_finish` | `single_line_text_field` | exactamente 1 | si está publicado | se omite la especificación | `specifications[Hebilla/acabado]` |
 | Product | `kingbelt.badge` | `single_line_text_field` | 0..1 | no | se omite | `Product.badge` |
 | Product | `custom.kingbelt_primary_collection` | `collection_reference` | exactamente 1 | sí | ninguno | `Product.primaryCollectionId` |
-| Product | `custom.kingbelt_color_galleries` | `list.metaobject_reference` | exactamente una referencia por valor de Color | products with Color option | ninguno | `Product.mediaGroups` |
-| Metaobject referenciado | `color_value` | `single_line_text_field` | exactamente 1 | con galería estructurada | no aplica | relación con `optionValueId` de Color |
-| Metaobject referenciado | `images` | `list.file_reference` | exactamente 3, ordenadas | con galería estructurada | no aplica | IDs de `Product.images` del grupo |
 
-Los metafields de producto se consultan juntos en la ficha completa: `kingbelt.*` más `custom.kingbelt_primary_collection`. Copy, especificaciones y distintivo pueden caer a campos nativos de §8 si aún no están visibles en Storefront. `custom.kingbelt_primary_collection` es la autoridad de colección principal: debe ser una referencia Storefront a Collection, pertenecer a `product.collections` y no depende del orden en que Shopify las devuelva. Preflight y runtime fallan si no llega; no hay fallback a una colección asignada. `custom.kingbelt_color_galleries` tiene Storefront access = Read y el scope `unauthenticated_read_metaobjects`. Preflight y runtime fallan si no llega, llega vacío, tiene tipo incorrecto o las referencias no se resuelven. Un producto sin opción Color conserva `mediaGroups = []` y no exige este metafield. Las queries de `ProductSummary` no descargan las tres imágenes de cada color.
+Los metafields de producto se consultan juntos en la ficha completa: `kingbelt.*` más `custom.kingbelt_primary_collection`. Copy, especificaciones y distintivo pueden caer a campos nativos de §8 si aún no están visibles en Storefront. `custom.kingbelt_primary_collection` es la autoridad de colección principal: debe ser una referencia Storefront a Collection, pertenecer a `product.collections` y no depende del orden en que Shopify las devuelva. Preflight y runtime fallan si no llega; no hay fallback a una colección asignada. Las galerías no consultan metafields ni metaobjects y, por tanto, no necesitan el scope `unauthenticated_read_metaobjects`. Un producto sin opción Color conserva `mediaGroups = []`. Las queries de `ProductSummary` no descargan las tres imágenes de cada color.
 
-Definición esperada de la galería por color (no se crea ni se rellena desde el frontend ni con Admin API): namespace `custom`, key `kingbelt_color_galleries`, type `list.metaobject_reference`, referencias resueltas mediante acceso Storefront Read y metaobject type `galerias_por_color`. La configuración real se certifica al ejecutar `shopify:preflight` con el entorno autorizado.
+Convención de archivos para un producto con Color:
 
 ```txt
-Product metafield
-namespace: custom
-key: kingbelt_color_galleries
-type: list.metaobject_reference
-required: products with Color option
-Storefront access: Read / PUBLIC_READ
-
-Metaobject definition
-Storefront access: Read / PUBLIC_READ
-
-Metaobject fields
-color_value
-→ single_line_text_field
-→ debe coincidir con un valor de la opción Color
-
-images
-→ list.file_reference
-→ exactamente 3 MediaImage
-→ orden: portada, detalle, contexto
-
-variant.image
-→ debe ser images[0] de su color
+MODELO_COLOR_01.jpg  → portada
+MODELO_COLOR_02.jpg  → detalle
+MODELO_COLOR_03.jpg  → contexto
 ```
+
+La extensión puede ser JPG, PNG, WebP, AVIF o GIF y Shopify puede añadir un UUID después del número. El nombre se normaliza sin tildes, mayúsculas ni separadores; el color debe ocupar el sufijo completo de la familia para que `Cuero` no coincida con `Cuero oscuro`. El preflight rechaza familias ausentes, duplicadas, ambiguas, incompletas o con una secuencia distinta de `01/02/03`.
 
 Definición esperada de la colección principal (no se crea desde el frontend ni con Admin API):
 
@@ -178,9 +158,9 @@ Las categorías públicas se modelan como colecciones. Una colección destacada 
 
 ## 11. Estrategia inequívoca de imágenes
 
-`custom.kingbelt_color_galleries` es la fuente autoritativa de preflight y runtime para relacionar colores con imágenes. Cada valor de `Color` tiene exactamente un metaobject y tres `MediaImage` ordenadas: posición 1, portada; posición 2, detalle; posición 3, contexto. El orden de `images` en el metaobject es el que configura la persona en Shopify Admin; no se reordena por filename, ID, URL, alt ni posición global en `product.images`. La imagen principal del producto es la posición 1 del primer color según el orden de la opción Color, no el orden accidental del metafield. Storefront puede identificar el `Image` anidado de una `MediaImage` como `ImageSource` y la misma imagen dentro de `Product.images` como `ProductImage`; únicamente una URL absoluta completa idéntica permite reconciliar ambos IDs y conservar el ID canónico de producto. No se comparan filenames, stems ni URLs parciales. `variant.image` debe ser esa misma portada por ID o URL absoluta completa; si falta o apunta a otra imagen, el mapping falla. `Product.mediaGroups` conserva las tres referencias sin copiar objetos. Las imágenes referenciadas que no vengan en `product.images` se incorporan al producto y se deduplican por `image.id`.
+`Product.images` es la única fuente autoritativa. Para cada valor de `Color`, el mapper busca exactamente una familia cuyo nombre termine en el color normalizado y la ordena por sufijo numérico. El preflight exige exactamente tres imágenes únicas `01`, `02` y `03`; `01` se convierte en la portada interna del color. `ProductVariant.image` no necesita coincidir con esa portada y puede estar ausente: Shopify la define como una asociación de variante, no como autoridad de nuestra galería personalizada. El mapper conserva el ID de imagen legítimo si llega, pero proyecta `ProductVariant.imageId` a la portada resuelta de su color para mantener un dominio interno coherente.
 
-Si el metafield llega vacío, tiene un color de más o de menos, no es `MediaImage`, no tiene dimensiones o repite una imagen, el mapping falla. Preflight y runtime no infieren por filename, URL, alt text, posición ni orden de variantes. Nunca se deben repartir imágenes por posición, orden de `Product.images` ni por huecos entre portadas. Ambos fallan si el metafield no llega por Storefront. Un producto sin opción Color no exige el metafield y conserva `mediaGroups = []`; su imagen principal sale de `featuredImage`. Cada archivo debe tener ID y URL únicos, `alt` no vacío y contextual, y dimensiones positivas conocidas.
+La ficha no reparte `Product.images` por posición, orden global ni huecos entre portadas y nunca copia media de otro producto. En runtime, una familia inequívoca puede mostrarse aunque esté temporalmente incompleta; si no existe una familia nombrada, solo puede usarse la imagen de variante cuando coincide por ID o URL absoluta con una imagen del mismo producto. Si no hay relación segura, falla cerrado. Un producto sin opción Color conserva `mediaGroups = []` y su imagen principal sale de `featuredImage`. Cada archivo debe tener un GID Shopify de imagen estructuralmente válido, URL permitida, `alt` no vacío y dimensiones positivas conocidas. Los metaobjects heredados de galería no se consultan y nunca pueden incorporar media de otro producto.
 
 ## 12. Filtros
 
@@ -196,9 +176,9 @@ El SEO consume el dominio neutral. La ficha genera `Product`, marca, imágenes, 
 
 1. Declarar `COMMERCE_SOURCE=shopify` explícitamente en el entorno correspondiente.
 2. Completar las descripciones de `casual`, `sport` y `vestir`.
-3. Crear, rellenar y habilitar visibilidad Storefront de los metafields/metaobjects de §8.1 para cada producto publicado en Headless.
-4. Añadir alt contextual a todas las imágenes, completar imágenes/SKU pendientes y corregir cualquier relación variante-color. Mientras un producto no esté listo, retirarlo del canal Headless en vez de depender de un filtro local.
-5. En Shopify Admin → Sales channels → Headless, abrir el storefront usado por producción. Ese canal debe tener como mínimo `unauthenticated_read_product_listings`, `unauthenticated_read_metaobjects`, `unauthenticated_read_checkouts` y `unauthenticated_write_checkouts`. `unauthenticated_read_product_inventory` solo es necesario si se activa inventario exacto en Storefront (`quantityAvailable`); el código actual no lo consulta y conserva inventario `unknown`. Los productos y colecciones del manifiesto de preflight deben estar publicados en ese Headless storefront y disponibles en el mercado España.
+3. Configurar `custom.kingbelt_primary_collection` en cada producto publicado y habilitar su lectura Storefront.
+4. Añadir alt contextual y mantener en `Product.images` una familia `MODELO_COLOR_01/02/03` por cada valor de Color; completar también los SKU comerciales pendientes. Mientras un producto no esté listo, retirarlo del canal Headless en vez de depender de un filtro local.
+5. En Shopify Admin → Sales channels → Headless, abrir el storefront usado por producción. Ese canal debe tener como mínimo `unauthenticated_read_product_listings`, `unauthenticated_read_checkouts` y `unauthenticated_write_checkouts`. `unauthenticated_read_product_inventory` solo es necesario si se activa inventario exacto en Storefront (`quantityAvailable`); el código actual no lo consulta y conserva inventario `unknown`. Los productos y colecciones del manifiesto de preflight deben estar publicados en ese Headless storefront y disponibles en el mercado España.
 6. En entornos confiables con `COMMERCE_SOURCE=shopify`, definir el conjunto exacto esperado (`SHOPIFY_PREFLIGHT_EXPECTED_PRODUCT_HANDLES` y `SHOPIFY_PREFLIGHT_EXPECTED_COLLECTION_HANDLES`, CSV de handles, ambas obligatorias) y ejecutar `bun run launch:preflight` (o `bun run session:preflight` y después `COMMERCE_SOURCE=shopify bun run shopify:preflight`) y luego `bun run build`. El preflight de sesión valida PING/SET/GET/TTL/DELETE contra una clave efímera propia. El preflight Shopify valida configuración, el manifiesto exacto contra Storefront ES y el contrato de dominio. El build solo compila. No usar el job `quality` de Pull Requests ni `COMMERCE_SOURCE=demo` como demostración de que Shopify o Upstash están listos. Storefront no informa de productos invisibles para ese canal o mercado: el manifiesto es el contrato externo del preflight y no hace falta Admin API. Si falta un handle esperado, comprobar Shopify Admin → Products → Publishing / Sales channels → Headless, y Markets → España. Estas variables no se leen en runtime, no filtran el catálogo y no entran en `astro:env`.
 
 Secuencia operativa de un deployment Shopify:
@@ -209,7 +189,7 @@ COMMERCE_SOURCE=shopify bun run launch:preflight
 bun run build
 ```
 
-`shopify:preflight` es read-only: no crea carritos, no llama Admin API y no dispara deploy hooks. Exige el conjunto exacto de `SHOPIFY_PREFLIGHT_EXPECTED_PRODUCT_HANDLES` y `SHOPIFY_PREFLIGHT_EXPECTED_COLLECTION_HANDLES` frente a lo que Storefront devuelve para España; un producto o colección de más o de menos hace fallar el comando. `shopify:smoke` sigue siendo solo conectividad `shop { name }`. `shopify:cart-smoke` es un segundo comando explícito contra un deployment real y sí muta un Cart piloto hasta `checkoutUrl`, sin pagar ni crear un Order. `session:preflight` no inspecciona sesiones de clientes ni usa `SCAN`/`KEYS`/`FLUSHDB`.
+`shopify:preflight` es read-only: no crea carritos, no llama Admin API y no dispara deploy hooks. Exige el conjunto exacto de `SHOPIFY_PREFLIGHT_EXPECTED_PRODUCT_HANDLES` y `SHOPIFY_PREFLIGHT_EXPECTED_COLLECTION_HANDLES` frente a lo que Storefront devuelve para España; un producto o colección de más o de menos hace fallar el comando. Mapea todos los productos antes de detenerse y reporta hasta diez fallos por ejecución; si el mapping individual pasa, conserva la validación global de relaciones y unicidad. `shopify:smoke` sigue siendo solo conectividad `shop { name }`. `shopify:cart-smoke` es un segundo comando explícito contra un deployment real y sí muta un Cart piloto hasta `checkoutUrl`, sin pagar ni crear un Order. `session:preflight` no inspecciona sesiones de clientes ni usa `SCAN`/`KEYS`/`FLUSHDB`.
 
 Checklist operativo por cada producto del manifiesto:
 
@@ -226,8 +206,8 @@ Checklist operativo por cada producto del manifiesto:
 - [ ] Todas las variantes tienen SKU único.
 - [ ] Precio correcto.
 - [ ] Opciones Color/Talla correctas.
-- [ ] Variant image correcta.
-- [ ] Si tiene Color: `custom.kingbelt_color_galleries` completa.
+- [ ] Si tiene Color: una única familia nativa `MODELO_COLOR_01/02/03` por valor.
+- [ ] `Variant image` opcionalmente configurada para Shopify; no necesita coincidir con la portada interna.
 - [ ] Galerías contienen exactamente 3 MediaImage.
 - [ ] Producto puede resolverse mediante su handle.
 
@@ -254,19 +234,30 @@ Mantener `src/demo-catalog.ts` y `commerce/infrastructure/demo/` mientras dure l
 
 ## 16. Cuentas de cliente
 
-Login, registro y cuenta se delegan temporalmente a Shopify Customer Accounts. KingBelt no implementa autenticación propia, Customer Account API, OAuth, perfil, pedidos ni direcciones.
+La integración de lanzamiento es **Shopify-hosted Customer Accounts**. KingBelt no implementa autenticación propia, Customer Account API, OAuth, perfil, pedidos ni direcciones. No hay passwords propios, registro propio, tabla de usuarios, sesiones de usuario, JWT, ni Storefront `customerCreate` / `customerAccessToken*`.
 
-`SHOPIFY_CUSTOMER_ACCOUNT_URL` es la URL base alojada configurada en Shopify Customer Accounts. Es `astro:env` de servidor público (`context: server`, `access: public`). No se construye concatenando `SHOPIFY_STORE_DOMAIN` + `/account`. El preflight exige que esté presente y sea HTTPS válido; no hace peticiones autenticadas contra la cuenta.
+Con las Customer Accounts actuales no hay un paso separado obligatorio de «crear cuenta». El comprador introduce email, Shopify envía un código, y:
 
-El CTA «Iniciar sesión» del header y del menú móvil, y la ruta de compatibilidad `/cuenta/iniciar`, resuelven esa única URL. En modo Shopify, `/cuenta/iniciar` redirige 307 al portal alojado y no renderiza el panel visual. Si la URL falta o es inválida, responde 503. El panel de `/cuenta/iniciar` solo existe en `COMMERCE_SOURCE=demo` y no autentica. Customer Account es opcional: el frontend no exige login para añadir al carrito, ver el carrito ni ir a checkout.
+- si el Customer existe, entra en esa cuenta;
+- si no existe, Shopify crea el perfil automáticamente.
+
+El CTA público es **Mi cuenta**. Desktop y móvil apuntan a la ruta estable `/cuenta/iniciar`. En Shopify esa ruta hace redirect server-side **307** a `SHOPIFY_CUSTOMER_ACCOUNT_URL`; en demo renderiza un panel visual que no autentica. Si la URL falta o es inválida: el CTA se desactiva y `/cuenta/iniciar` responde 503 `no-store`. No hay fallback silencioso al panel demo.
+
+`SHOPIFY_CUSTOMER_ACCOUNT_URL` es `astro:env` de servidor público (`context: server`, `access: public`). No es un secreto y no se marca `PUBLIC_*`. No se construye concatenando `SHOPIFY_STORE_DOMAIN` + `/account`. El valor identificado de esta tienda (`https://shopify.com/106425811284/account`) se verifica a mano; la autoridad en runtime es la env. El preflight exige que esté presente y sea HTTPS válido; no hace login, OTP ni Admin API. Obligatoria en Production y en Preview cuando `COMMERCE_SOURCE=shopify`. No va en `vercel.json`. Tras cambiarla: nuevo deployment.
+
+KingBelt no inspecciona si el usuario está autenticado en Customer Accounts (`isLoggedIn`, cookies cruzadas, `localStorage`). El CTA sigue siendo «Mi cuenta» conectado o no. Logout, pedidos, perfil, direcciones y métodos guardados los sirve el portal alojado. No hay `/cuenta/perfil`, `/addresses` ni `/orders` en Astro.
+
+`locale` / `region_country` de la documentación headless aplican al authorization endpoint de Customer Account API. El enfoque hosted no los añade; España/Español se configuran en Admin. Autofill de checkout para un comprador ya autenticado no está cableado: el Cart no lleva `customerAccessToken`. Se verifica en el bloque de checkout.
+
+Customer Account es opcional: el frontend no exige login para añadir al carrito, ver el carrito ni ir a checkout.
 
 Checkout, Thank You y Order Status los sirve Shopify desde `checkoutUrl`. No hay `SHOPIFY_CHECKOUT_URL` ni páginas Astro equivalentes. El gate Admin —incluidas Thank You / Order Status no-legacy— está en [`SHOPIFY_LAUNCH_OPERATIONS.md`](SHOPIFY_LAUNCH_OPERATIONS.md).
 
-La arquitectura de Customer Account API con BFF y sesión propia sigue documentada en [`plans/2026-08-06-shopify-customer-accounts-design.md`](plans/2026-08-06-shopify-customer-accounts-design.md) y no forma parte de este enlace a superficies alojadas.
+La arquitectura de Customer Account API con BFF y sesión propia sigue documentada en [`plans/2026-08-06-shopify-customer-accounts-design.md`](plans/2026-08-06-shopify-customer-accounts-design.md) como opción **post-lanzamiento**, no como requisito de esta integración hosted.
 
 ## 17. Decisiones de arquitectura de la integración
 
-Este apartado fija las decisiones de la integración. La lectura de catálogo, el carrito BFF, el runtime SSR y el enlace a Customer Accounts alojadas están implementados; Customer Account API, perfil y pedidos propios siguen pendientes (§16).
+Este apartado fija las decisiones de la integración. La lectura de catálogo, el carrito BFF, el runtime SSR y el enlace a Customer Accounts alojadas están implementados; Customer Account API, perfil y pedidos propios quedan post-lanzamiento (§16).
 
 ### 17.1 Fronteras por capacidad
 
@@ -281,7 +272,7 @@ Este apartado fija las decisiones de la integración. La lectura de catálogo, e
 | Crear/recuperar carrito | `CartProvider.initialize` / `refresh` | cliente neutral → `src/pages/api/cart.ts` → `shopify-cart.ts` (BFF same-origin implementado) |
 | Modificar líneas | `CartProvider.addItem` / `updateItem` / `removeItem` | comandos cerrados al mismo BFF |
 | Checkout | `CartProvider.checkout` + `CheckoutResult` / `getSafeCheckoutUrl` | BFF autoritativo + `checkout-redirect` |
-| Acceso a cuenta (alojado) | `commerce-navigation` + `SHOPIFY_CUSTOMER_ACCOUNT_URL` | Header, menú móvil y `/cuenta/iniciar` → Customer Accounts |
+| Acceso a cuenta (alojado) | `commerce-navigation` + `SHOPIFY_CUSTOMER_ACCOUNT_URL` | Header y menú móvil → `/cuenta/iniciar` → Customer Accounts |
 | Cuenta de cliente (API) | puerto `CustomerAccountProvider` futuro en `application/` | §16 y plan en `plans/`; no implementado |
 
 Regla general: las respuestas GraphQL y los tipos de Shopify viven exclusivamente en `infrastructure/shopify/`. La carpeta contiene configuración, gateway genérico, frontera `astro:env`, query paginada, mapper y adapter de catálogo. Páginas, componentes y scripts consumen solo los composition roots `@commerce/catalog`, `@commerce/cart` y `@commerce/commerce-navigation` o contratos de `application`/`domain`. Todo el árbol Shopify es ahora alcanzable desde el composition root real, por lo que `tests/architecture.test.mjs` ya no necesita una excepción temporal de reachability.
@@ -315,7 +306,7 @@ La normalización vive en `catalog-mappers.ts` y no conoce página ni componente
 - `options` → `ProductOption`; `purpose` solo cuando el nombre coincide con los conocidos (Color→color, Talla/Tamaño→size). `swatch` solo si el origen lo expone.
 - `selectedOptions` de variante → `OptionSelection[]` contra valores existentes; las combinaciones no declaradas no producen variante (§5).
 - Inventario y política según §9.1: `availableForSale`, `currentlyNotInStock`, `quantityAvailable` (cuando esté autorizado) y `quantityRule { minimum, increment, maximum }` → `inventory`, `inventoryPolicy`, `salesStatus` y `quantityRule`. Un mínimo/incremento distinto de 1/1 falla explícitamente hasta que todas las capas amplíen su política.
-- Imágenes: una sola vez en `Product.images`. Con opción Color, preflight y runtime toman `custom.kingbelt_color_galleries`: cada color exige un metaobject y tres `MediaImage` ordenadas. El `id` del grupo es el del metaobject. `primaryImageId` es la portada del primer color y `variant.imageId` coincide con la portada de su color (§11). Si el metafield falta o es inválido, ambos fallan. Sin opción Color, `mediaGroups = []` y la imagen principal sale de `featuredImage`. El host real `cdn.shopify.com` está autorizado de forma exacta en `imagePolicy.transformableHosts`, `publicSecurityConfig.remoteImageHosts` y CSP; no se usan comodines. El render aplica `width`/`height`, `srcset`, `sizes` y `loading`/`fetchpriority` sin JavaScript de cliente.
+- Imágenes: una sola vez en `Product.images`. Con opción Color, el catálogo completo y preflight exigen una familia nativa `MODELO_COLOR_01/02/03` por valor; la ficha runtime solo utiliza media propia segura (§11). `primaryImageId` y `variant.imageId` apuntan a la portada resuelta de su color. Sin opción Color, `mediaGroups = []` y la imagen principal sale de `featuredImage`. El host real `cdn.shopify.com` está autorizado de forma exacta en `imagePolicy.transformableHosts`, `publicSecurityConfig.remoteImageHosts` y CSP; no se usan comodines. El render aplica `width`/`height`, `srcset`, `sizes` y `loading`/`fetchpriority` sin JavaScript de cliente.
 - `descriptionHtml` se sanea a texto plano antes de usarse en ficha y meta.
 
 ### 17.5 Validación antes del uso

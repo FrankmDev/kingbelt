@@ -20,6 +20,7 @@ import { moneyFromDecimal } from '../../domain/money';
 import { isAllowedImageUrl } from '../../domain/url-policy';
 import { publicSecurityConfig } from '../../../config/security';
 import { SHOPIFY_MARKET_CONTEXT, SHOPIFY_PRIMARY_COLLECTION_METAFIELD } from './config';
+import { isShopifyImageIdentifier } from './shopify-image-identifier';
 
 export interface ShopifyCartMoney {
   amount: string;
@@ -133,6 +134,9 @@ export const SHOPIFY_UNAVAILABLE_IN_LOCATION_NOTICE =
 export const SHOPIFY_CART_OVERFLOW_MESSAGE =
   'El carrito tiene más productos de los que podemos mostrar. Elimina algún artículo para continuar.';
 
+const SHOPIFY_CART_LINE_ID_PATTERN =
+  /^gid:\/\/shopify\/CartLine\/[^/?#\s]+(?:\?cart=[A-Za-z0-9_-]{1,128})?$/;
+
 const OPERATION_ERROR_MESSAGES: Record<CartOperationErrorCode, string> = {
   validation: 'Los datos enviados no son válidos.',
   out_of_stock: 'El producto está agotado.',
@@ -159,18 +163,20 @@ const requiredShopifyGid = (
   path: string
 ): string => {
   const id = requiredText(value, path);
-  if (!new RegExp(`^gid://shopify/${resource}/[^/?#\\s]+$`).test(id)) {
+  const valid = resource === 'CartLine'
+    ? SHOPIFY_CART_LINE_ID_PATTERN.test(id)
+    : new RegExp(`^gid://shopify/${resource}/[^/?#\\s]+$`).test(id);
+  if (!valid) {
     throw new Error(`Shopify cart field is invalid at ${path}.`);
   }
   return id;
 };
 
 const requiredShopifyImageGid = (value: unknown, path: string): string => {
-  const id = requiredText(value, path);
-  if (!/^gid:\/\/shopify\/(?:ProductImage|MediaImage|ImageSource)\/[^/?#\s]+$/.test(id)) {
+  if (!isShopifyImageIdentifier(value)) {
     throw new Error(`Shopify cart field is invalid at ${path}.`);
   }
-  return id;
+  return value;
 };
 
 const requiredHandle = (value: unknown, path: string): string => {

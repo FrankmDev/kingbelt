@@ -17,9 +17,9 @@ export interface HeaderAccountCta {
 
 /** Copy del CTA de cuenta. El href lo resuelve `commerce-navigation` según el origen. */
 export const headerAccountCta: HeaderAccountCta = {
-  label: 'Iniciar sesión',
-  ariaLabel: 'Iniciar sesión o crear cuenta',
-  unavailableAriaLabel: 'Iniciar sesión no disponible',
+  label: 'Mi cuenta',
+  ariaLabel: 'Mi cuenta',
+  unavailableAriaLabel: 'Mi cuenta no disponible',
 };
 
 export const mainNav: NavItem[] = [

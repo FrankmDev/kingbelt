@@ -4,13 +4,14 @@ import { join, resolve } from 'node:path';
 import {
   PREFLIGHT_STOREFRONT_QUERY,
   diffHandles,
+  formatPreflightFailure,
+  mapShopifyCatalogForPreflight,
   parseExpectedHandles,
   runShopifyPreflight,
   runShopifyPreflightCli,
   sanitizePreflightText,
 } from '../scripts/shopify-preflight.ts';
 import {
-  SHOPIFY_COLOR_GALLERIES_METAFIELD,
   SHOPIFY_IN_CONTEXT_DIRECTIVE,
   SHOPIFY_MARKET_CONTEXT,
   SHOPIFY_PRIMARY_COLLECTION_METAFIELD,
@@ -18,6 +19,7 @@ import {
   SHOPIFY_STOREFRONT_API_VERSION,
 } from '../src/commerce/infrastructure/shopify/config.ts';
 import {
+  SHOPIFY_COLOR_GALLERIES_METAFIELD,
   assignProductCollections,
   casualCollection,
   novedadesCollection,
@@ -275,6 +277,49 @@ describe('preflight Shopify', () => {
     }
   });
 
+  test('el diagnóstico de mapping informa varios productos defectuosos de una vez', () => {
+    const payload = validShopifyCatalogPayload();
+    const second = structuredClone(payload.products[0]);
+    payload.products[0].title = '';
+    second.id = 'gid://shopify/Product/2';
+    second.handle = 'cinturon-segundo';
+    second.title = '';
+    payload.products.push(second);
+
+    expect(() => mapShopifyCatalogForPreflight(payload, ['cdn.shopify.com']))
+      .toThrow('2 producto(s) no superan el mapping');
+    try {
+      mapShopifyCatalogForPreflight(payload, ['cdn.shopify.com']);
+      throw new Error('se esperaba un preflight inválido');
+    } catch (error) {
+      expect(error.message).toContain('cinturon-atlas.title');
+      expect(error.message).toContain('cinturon-segundo.title');
+    }
+  });
+
+  test('el formato conserva hasta diez diagnósticos de producto y sigue redactando secretos', () => {
+    const payload = validShopifyCatalogPayload();
+    payload.products = Array.from({ length: 11 }, (_, index) => {
+      const product = structuredClone(payload.products[0]);
+      product.id = `gid://shopify/Product/${index + 1}`;
+      product.handle = `cinturon-roto-${index + 1}`;
+      product.title = '';
+      return product;
+    });
+
+    try {
+      mapShopifyCatalogForPreflight(payload, ['cdn.shopify.com']);
+      throw new Error('se esperaba un preflight inválido');
+    } catch (error) {
+      const formatted = formatPreflightFailure(error, validEnv());
+      expect(formatted).toContain('cinturon-roto-1.title');
+      expect(formatted).toContain('cinturon-roto-10.title');
+      expect(formatted).not.toContain('cinturon-roto-11.title');
+      expect(formatted).toContain('+1 producto(s) con errores adicionales');
+      expect(formatted).not.toContain(TOKEN);
+    }
+  });
+
   test('un fallo de autenticación devuelve código de error', async () => {
     const { code, io } = await runCli(validEnv(), { status: 401 });
     expect(code).toBe(1);
@@ -419,7 +464,7 @@ describe('preflight Shopify', () => {
     expect(summary.products).toBe(1);
     expect(summary.variants).toBe(6);
     expect(summary.collections).toBe(1);
-    expect(summary.images).toBe(9);
+    expect(summary.images).toBe(10);
     expect(summary.manifest).toBe('OK');
     expect(summary.market).toEqual(SHOPIFY_MARKET_CONTEXT);
   });
@@ -533,24 +578,23 @@ describe('preflight Shopify', () => {
     expect(titleResult.code).toBe(1);
     expect(titleResult.io.failure()).toContain('title');
 
-    const missingColorGallery = validShopifyCatalogPayload();
-    missingColorGallery.products[0].metafields =
-      missingColorGallery.products[0].metafields.filter((item) => item?.key !== SHOPIFY_COLOR_GALLERIES_METAFIELD.key);
-    const galleryResult = await runCli(validEnv(), { catalog: missingColorGallery });
-    expect(galleryResult.code).toBe(1);
-    expect(galleryResult.io.failure()).toContain('color_galleries');
+    const missingLegacyGallery = validShopifyCatalogPayload();
+    missingLegacyGallery.products[0].metafields =
+      missingLegacyGallery.products[0].metafields.filter((item) => item?.key !== SHOPIFY_COLOR_GALLERIES_METAFIELD.key);
+    const galleryResult = await runCli(validEnv(), { catalog: missingLegacyGallery });
+    expect(galleryResult.code).toBe(0);
+    expect(galleryResult.io.success()).toContain('preflight passed');
   });
 
-  test('preflight falla ante una galería con cardinalidad inválida', async () => {
+  test('preflight falla ante una familia nativa con cardinalidad inválida', async () => {
     const catalog = validShopifyCatalogPayload();
-    const imagesField = catalog.products[0].metafields
-      .find((item) => item?.key === SHOPIFY_COLOR_GALLERIES_METAFIELD.key)
-      .references.nodes[0].fields.find((field) => field.key === 'images');
-    imagesField.references.nodes = imagesField.references.nodes.slice(0, 2);
+    catalog.products[0].images.nodes = catalog.products[0].images.nodes.filter((item) =>
+      !item.id.endsWith('/cuero-3')
+    );
     const { code, io } = await runCli(validEnv(), { catalog });
     expect(code).toBe(1);
-    expect(io.failure()).toContain('color_galleries');
-    expect(io.failure()).toContain('imágenes');
+    expect(io.failure()).toContain('familia cuero');
+    expect(io.failure()).toContain('01, 02 y 03');
   });
 
   test('la paginación de catálogo se recorre con la query autoritativa', async () => {
@@ -726,14 +770,12 @@ describe('preflight Shopify', () => {
     expect(io.failure()).toContain('unsupported_currency');
   });
 
-  test('una imagen de variante incorrecta para Color falla el preflight', async () => {
+  test('una imagen de variante distinta de la portada no invalida la galería nativa', async () => {
     const catalog = validShopifyCatalogPayload();
     catalog.products[0].variants.nodes[0].image = catalog.products[0].images.nodes[1];
     const { code, io } = await runCli(validEnv(), { catalog });
-    expect(code).toBe(1);
-    expect(io.failure()).toContain('catalog error');
-    expect(io.failure()).toContain('image');
-    expect(io.failure()).not.toContain('manifest mismatch');
+    expect(code).toBe(0);
+    expect(io.success()).toContain('preflight passed');
   });
 
   test('una categoría oficial ausente falla el preflight', async () => {

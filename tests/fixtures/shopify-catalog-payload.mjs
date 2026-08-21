@@ -1,8 +1,16 @@
 import {
-  SHOPIFY_COLOR_GALLERIES_METAFIELD,
-  SHOPIFY_COLOR_GALLERY_METAOBJECT_TYPE,
   SHOPIFY_PRIMARY_COLLECTION_METAFIELD,
 } from '../../src/commerce/infrastructure/shopify/config.ts';
+
+// Datos legacy deliberadamente presentes para comprobar que el mapper los ignora.
+export const SHOPIFY_COLOR_GALLERIES_METAFIELD = {
+  namespace: 'custom',
+  key: 'kingbelt_color_galleries',
+  type: 'list.metaobject_reference',
+};
+export const SHOPIFY_COLOR_GALLERIES_METAFIELD_IDENTIFIER =
+  'custom.kingbelt_color_galleries';
+export const SHOPIFY_COLOR_GALLERY_METAOBJECT_TYPE = 'galerias_por_color';
 
 export const pageInfo = { hasNextPage: false, endCursor: null };
 export const SHOPIFY_CATALOG_TEST_HOSTS = ['cdn.shopify.com'];
@@ -76,12 +84,20 @@ export const colorGalleriesMetafield = (references) => ({
   references: { nodes: references, pageInfo },
 });
 
+export const sportCollectionImage = {
+  id: 'gid://shopify/CollectionImage/123456789',
+  url: 'https://cdn.shopify.com/s/files/sport-collection.jpg',
+  altText: 'Sport',
+  width: 1200,
+  height: 1500,
+};
+
 export const sportCollection = {
   id: 'gid://shopify/Collection/1',
   handle: 'sport',
   title: 'Sport',
   description: 'Cinturones de piel para uso diario.',
-  image: null,
+  image: sportCollectionImage,
 };
 
 export const casualCollection = {

@@ -41,11 +41,15 @@ import {
   type ShopifyMarketContext,
 } from '../src/commerce/infrastructure/shopify/config.ts';
 import {
-  mapShopifyCatalog,
+  mapShopifyCollections,
+  mapShopifyProduct,
   ShopifyCatalogMappingError,
   type ShopifyCatalog,
 } from '../src/commerce/infrastructure/shopify/catalog-mappers.ts';
-import { fetchShopifyCatalog } from '../src/commerce/infrastructure/shopify/catalog-query.ts';
+import {
+  fetchShopifyCatalog,
+  type ShopifyCatalogPayload,
+} from '../src/commerce/infrastructure/shopify/catalog-query.ts';
 import {
   createShopifyStorefrontGateway,
   ShopifyStorefrontRequestError,
@@ -208,7 +212,14 @@ const secretValues = (env: ShopifyPreflightEnv): string[] =>
     env.UPSTASH_REDIS_REST_TOKEN,
   ].flatMap((value) => (value && value.trim() ? [value] : []));
 
-export const sanitizePreflightText = (value: string, env: ShopifyPreflightEnv): string => {
+const MAX_PREFLIGHT_MESSAGE_LENGTH = 500;
+const MAX_CATALOG_DIAGNOSTIC_LENGTH = 4_000;
+
+export const sanitizePreflightText = (
+  value: string,
+  env: ShopifyPreflightEnv,
+  maxLength = MAX_PREFLIGHT_MESSAGE_LENGTH
+): string => {
   let sanitized = value;
   for (const secret of secretValues(env)) {
     sanitized = sanitized.split(secret).join('[redacted]');
@@ -218,7 +229,7 @@ export const sanitizePreflightText = (value: string, env: ShopifyPreflightEnv): 
     .replace(AUTH_HEADER_PATTERN, '[redacted-header]')
     .replace(/[\r\n\t]+/g, ' ')
     .trim()
-    .slice(0, 500);
+    .slice(0, maxLength);
 };
 
 const errorMessage = (error: unknown): string =>
@@ -436,13 +447,65 @@ const catalogCounts = (products: readonly Product[], collections: readonly Colle
     + collections.reduce((total, collection) => total + (collection.image ? 1 : 0), 0),
 });
 
+const MAX_REPORTED_PRODUCT_MAPPING_ERRORS = 10;
+
+/**
+ * Valida todos los productos antes de fallar para que una sola ejecución del
+ * preflight permita corregir varios registros sin perder el aislamiento por
+ * producto del mapper runtime.
+ */
+export const mapShopifyCatalogForPreflight = (
+  payload: ShopifyCatalogPayload,
+  allowedRemoteImageHosts: readonly string[]
+): ShopifyCatalog => {
+  const collections = mapShopifyCollections(payload.collections, allowedRemoteImageHosts);
+  const products: Product[] = [];
+  const mappingErrors: string[] = [];
+
+  payload.products.forEach((source) => {
+    try {
+      products.push(mapShopifyProduct(source, allowedRemoteImageHosts));
+    } catch (error) {
+      if (!(error instanceof ShopifyCatalogMappingError)) throw error;
+      mappingErrors.push(error.message);
+    }
+  });
+
+  if (mappingErrors.length > 0) {
+    const reported = mappingErrors.slice(0, MAX_REPORTED_PRODUCT_MAPPING_ERRORS);
+    const omitted = mappingErrors.length - reported.length;
+    const suffix = omitted > 0 ? ` | +${omitted} producto(s) con errores adicionales` : '';
+    fail(
+      'catalog',
+      `${mappingErrors.length} producto(s) no superan el mapping: ${reported.join(' | ')}${suffix}`
+    );
+  }
+
+  assertValidCatalog(
+    products,
+    collections,
+    SHOPIFY_SUPPORTED_CURRENCIES,
+    allowedRemoteImageHosts
+  );
+  return { products, collections };
+};
+
 const classifyPreflightError = (
   error: unknown,
   env: ShopifyPreflightEnv
 ): { kind: ShopifyPreflightErrorKind; message: string } => {
   const message = sanitizePreflightText(errorMessage(error), env);
   if (error instanceof ShopifyPreflightError) {
-    return { kind: error.kind, message: sanitizePreflightText(error.message, env) };
+    return {
+      kind: error.kind,
+      message: sanitizePreflightText(
+        error.message,
+        env,
+        error.kind === 'catalog'
+          ? MAX_CATALOG_DIAGNOSTIC_LENGTH
+          : MAX_PREFLIGHT_MESSAGE_LENGTH
+      ),
+    };
   }
   if (error instanceof ShopifyConfigurationError || error instanceof ShopifyHostedUrlError) {
     return { kind: 'configuration', message };
@@ -565,13 +628,7 @@ export const runShopifyPreflight = async (
   const payload = await fetchShopifyCatalog(gateway);
 
   const allowedHosts = io.allowedRemoteImageHosts ?? publicSecurityConfig.remoteImageHosts;
-  const catalog = mapShopifyCatalog(payload, allowedHosts);
-  assertValidCatalog(
-    catalog.products,
-    catalog.collections,
-    SHOPIFY_SUPPORTED_CURRENCIES,
-    allowedHosts
-  );
+  const catalog = mapShopifyCatalogForPreflight(payload, allowedHosts);
   await assertAstroCatalogSurface(catalog, expectedProductHandles, expectedCollectionHandles);
 
   return {

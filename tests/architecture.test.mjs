@@ -254,7 +254,6 @@ describe('límites de arquitectura', () => {
     expect(readiness).toContain('Sales channels → Headless');
     [
       'unauthenticated_read_product_listings',
-      'unauthenticated_read_metaobjects',
       'unauthenticated_read_checkouts',
       'unauthenticated_write_checkouts',
     ].forEach((scope) => {
@@ -271,7 +270,7 @@ describe('límites de arquitectura', () => {
     expect(security).not.toContain('SHOPIFY_PREFLIGHT_REQUIRED_PRODUCT_HANDLES');
   });
 
-  test('documenta el contrato obligatorio de metafields e imágenes antes de importar', () => {
+  test('documenta el contrato de metafields e imágenes nativas antes de importar', () => {
     const readiness = readFileSync(join(root, 'docs/SHOPIFY_READINESS.md'), 'utf8');
     const requiredProductMetafields = [
       'kingbelt.model_reference',
@@ -280,13 +279,11 @@ describe('límites de arquitectura', () => {
       'kingbelt.width_mm',
       'kingbelt.buckle_finish',
       'custom.kingbelt_primary_collection',
-      'custom.kingbelt_color_galleries',
     ];
     requiredProductMetafields.forEach((key) => {
       expect(readiness).toContain(`\`${key}\``);
     });
     expect(readiness).not.toContain('kingbelt.primary_collection');
-    expect(readiness).toContain('list.metaobject_reference');
     expect(readiness).toContain('collection_reference');
     expect(readiness).toContain('Read / PUBLIC_READ');
     expect(readiness).toContain('Type: collection_reference');
@@ -294,12 +291,13 @@ describe('límites de arquitectura', () => {
     expect(readiness).toContain('Fallback: none');
     expect(readiness).not.toMatch(/si el producto está en más de una colección/);
     expect(readiness).not.toMatch(/la única colección publicada/);
-    expect(readiness).toContain('exactamente 3, ordenadas');
-    expect(readiness).toContain('products with Color option');
-    expect(readiness).toContain('variant.image');
-    expect(readiness).not.toContain('imagen principal nativa compartida por las variantes');
-    expect(readiness).not.toMatch(/si el archivo nombra|nombre de archivo contiene|detalles nativos inequívocos/);
-    expect(readiness).toContain('Nunca se deben repartir imágenes por posición');
+    expect(readiness).toContain('exactamente tres imágenes únicas');
+    expect(readiness).toContain('MODELO_COLOR_01');
+    expect(readiness).toContain('ProductVariant.image');
+    expect(readiness).toContain('no necesita coincidir');
+    expect(readiness).toContain('familia nativa');
+    expect(readiness).toContain('no reparte `Product.images` por posición');
+    expect(readiness).toContain('nunca copia media de otro producto');
   });
 
   test('COMMERCE_SOURCE solo se interpreta en commerce-source.ts', () => {
@@ -543,7 +541,7 @@ describe('límites de arquitectura', () => {
     expect(apiCart).not.toMatch(/clientAddress.*country|country.*clientAddress/);
   });
 
-  test('el mapper Shopify exige el SKU comercial y no fabrica uno técnico', () => {
+  test('el preflight exige SKU comercial y el runtime usa un identificador técnico estable', () => {
     const mapper = readFileSync(
       join(sourceRoot, 'commerce/infrastructure/shopify/catalog-mappers.ts'),
       'utf8'
@@ -553,13 +551,16 @@ describe('límites de arquitectura', () => {
       'utf8'
     );
     const preflight = readFileSync(join(root, 'scripts/shopify-preflight.ts'), 'utf8');
+    const runtimeQuery = readFileSync(
+      join(sourceRoot, 'commerce/infrastructure/shopify/catalog-runtime-query.ts'),
+      'utf8'
+    );
     const catalogDomain = readFileSync(join(sourceRoot, 'commerce/domain/catalog.ts'), 'utf8');
     const apiCart = readFileSync(join(sourceRoot, 'pages/api/cart.ts'), 'utf8');
-    const syntheticSkuFn = /\b(?:generateSku|fallbackSku|syntheticSku|technicalSku)\b/;
-
-    expect(mapper).toMatch(/sku\(\s*requiredText\(\s*variant\.sku/);
-    expect(mapper).not.toMatch(/optionalText\(\s*variant\.sku\s*\)/);
-    expect(mapper).not.toMatch(syntheticSkuFn);
+    expect(mapper).toContain('requireCommercialSku');
+    expect(mapper).toMatch(/optionalText\(variant\.sku\)/);
+    expect(mapper).toContain('runtimeTechnicalSku(mappedVariantId)');
+    expect(runtimeQuery).toContain('requireCommercialSku: false');
     expect(query).toMatch(/\bsku\b/);
     expect(query).toContain('export const PRODUCT_SUMMARY_FIELDS');
     const summaryFields = query.match(/export const PRODUCT_SUMMARY_FIELDS = `([\s\S]*?)`;/)?.[1] ?? '';
@@ -567,7 +568,7 @@ describe('límites de arquitectura', () => {
     expect(summaryFields).not.toMatch(/\bsku\b/);
     expect(preflight).toContain('mapShopifyCatalog');
     expect(preflight).toContain('assertValidCatalog');
-    expect(preflight).not.toMatch(syntheticSkuFn);
+    expect(preflight).not.toContain('requireCommercialSku: false');
     expect(preflight).not.toMatch(/variant\.sku\s*\?\.trim/);
     expect(catalogDomain).toMatch(/export interface ProductVariant \{[\s\S]*?\bsku:\s*Sku;/);
     const summary = catalogDomain.match(/export interface ProductSummary \{[\s\S]*?\n\}/)?.[0] ?? '';
@@ -577,7 +578,7 @@ describe('límites de arquitectura', () => {
     expect(apiCart).not.toMatch(/body\.sku/);
   });
 
-  test('Shopify deriva Product.mediaGroups solo desde custom.kingbelt_color_galleries', () => {
+  test('Shopify usa Product.images como única autoridad de galerías', () => {
     const mapper = readFileSync(
       join(sourceRoot, 'commerce/infrastructure/shopify/catalog-mappers.ts'),
       'utf8'
@@ -596,26 +597,26 @@ describe('límites de arquitectura', () => {
       .map((path) => readFileSync(path, 'utf8'))
       .join('\n');
 
-    expect(query).toContain('SHOPIFY_COLOR_GALLERIES_METAFIELD.key');
+    expect(query).not.toContain('kingbelt_color_galleries');
+    expect(query).not.toContain('... on Metaobject');
     expect(runtimeQuery).toContain('FULL_PRODUCT_FIELDS');
     expect(runtimeQuery).toContain('PRODUCT_SUMMARY_FIELDS');
     const summaryFields = query.match(/export const PRODUCT_SUMMARY_FIELDS = `([\s\S]*?)`;/)?.[1] ?? '';
     expect(summaryFields).not.toContain('color_galleries');
-    expect(mapper).toContain('mapRequiredColorGalleries');
-    expect(mapper).toContain('SHOPIFY_COLOR_GALLERIES_METAFIELD');
+    expect(mapper).toContain('mapNativeColorGroups');
+    expect(mapper).not.toContain('SHOPIFY_COLOR_GALLERIES_METAFIELD');
     expect(mapper).toContain('COLOR_GALLERY_IMAGE_COUNT');
     expect(mapper).not.toMatch(/::native-color::/);
-    expect(mapper).not.toMatch(
-      /FILENAME_COLOR_TOKEN_MIN|foldFilenameKey|filenameToken|tokensFromImageUrl|nativeDetailImageIdsByColor|mapNativeColorMediaGroups|imageFileFamily|imageFileSequence|mapColorGroupsFromVariantImages|IMAGE_FILE_FAMILY_PATTERN|IMAGE_FILE_STEM_PATTERN/
-    );
-    expect(mapper).not.toContain('requireStructuredMetafields');
-    expect(runtimeQuery).not.toContain('requireStructuredMetafields');
-    expect(mapper).toMatch(/mapRequiredColorGalleries\(/);
+    expect(mapper).toContain('imageFamilyNamesColor');
+    expect(mapper).not.toContain('rebalanceColorGalleries');
+    expect(mapper).toContain('requireCompleteColorGalleries');
+    expect(runtimeQuery).toContain('requireCompleteColorGalleries: false');
     expect(mapper).not.toMatch(/new URL\([^)]*\)\.pathname/);
-    expect(mapper).not.toMatch(/decodeURIComponent\(/);
-    expect(readiness).toContain('custom.kingbelt_color_galleries');
-    expect(readiness).toContain('color_value');
-    expect(planDocs).not.toMatch(/si el archivo nombra ese color|token de color|fallback nativo de galería/);
+    expect(mapper).toMatch(/decodeURIComponent\(/);
+    expect(readiness).toContain('MODELO_COLOR_01');
+    expect(readiness).toContain('Product.images');
+    expect(planDocs).toContain('Product.images');
+    expect(planDocs).toContain('Nunca se distribuyen imágenes por posición global');
   });
 
   test('la colección principal Shopify no se deriva del orden de collections', () => {
@@ -652,15 +653,15 @@ describe('límites de arquitectura', () => {
     expect(fullMetafields).toContain('SHOPIFY_PRIMARY_COLLECTION_METAFIELD.key');
     expect(fullMetafields).not.toContain('key: "primary_collection"');
     expect(fullMetafields).toContain('namespace: "kingbelt", key: "model_reference"');
-    expect(fullMetafields).toContain('SHOPIFY_COLOR_GALLERIES_METAFIELD.namespace');
-    expect(fullMetafields).toContain('SHOPIFY_COLOR_GALLERIES_METAFIELD.key');
+    expect(fullMetafields).not.toContain('kingbelt_color_galleries');
     expect(fullMetafields).not.toContain('namespace: "kingbelt", key: "color_galleries"');
     expect(fullMetafields).toContain('COLLECTION_REFERENCE_SELECTION');
     expect(summaryFields).toContain('SHOPIFY_PRIMARY_COLLECTION_METAFIELD.namespace');
     expect(summaryFields).toContain('SHOPIFY_PRIMARY_COLLECTION_METAFIELD.key');
     expect(summaryFields).not.toContain('key: "primary_collection"');
     expect(summaryFields).toContain('COLLECTION_REFERENCE_SELECTION');
-    expect(summaryFields).not.toMatch(/collections\s*\(/);
+    expect(summaryFields).toMatch(/collections\s*\(first:\s*\$\{SHOPIFY_PAGE_SIZE\}\)/);
+    expect(summaryFields).toContain('nodes { id handle title }');
     expect(query).toMatch(/\.\.\.\s*on Collection\s*\{\s*id handle title\s*\}/);
     expect(runtimeQuery).toContain('PRODUCT_SUMMARY_FIELDS');
     expect(runtimeQuery).toContain('FULL_PRODUCT_FIELDS');

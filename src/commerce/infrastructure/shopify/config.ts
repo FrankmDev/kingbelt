@@ -32,19 +32,6 @@ export const SHOPIFY_PRIMARY_COLLECTION_METAFIELD = {
 export const SHOPIFY_PRIMARY_COLLECTION_METAFIELD_IDENTIFIER =
   `${SHOPIFY_PRIMARY_COLLECTION_METAFIELD.namespace}.${SHOPIFY_PRIMARY_COLLECTION_METAFIELD.key}` as const;
 
-/** Galerías por color: contrato fijo de Storefront, no configurable por entorno. */
-export const SHOPIFY_COLOR_GALLERIES_METAFIELD = {
-  namespace: 'custom',
-  key: 'kingbelt_color_galleries',
-  type: 'list.metaobject_reference',
-} as const;
-
-export const SHOPIFY_COLOR_GALLERIES_METAFIELD_IDENTIFIER =
-  `${SHOPIFY_COLOR_GALLERIES_METAFIELD.namespace}.${SHOPIFY_COLOR_GALLERIES_METAFIELD.key}` as const;
-
-/** Tipo real del metaobject referenciado por la definición publicada. */
-export const SHOPIFY_COLOR_GALLERY_METAOBJECT_TYPE = 'galerias_por_color' as const;
-
 /** Catálogo: país e idioma del mercado. El país del Cart no usa este helper. */
 export const SHOPIFY_IN_CONTEXT_VARIABLE_DEFINITIONS =
   '$country: CountryCode!, $language: LanguageCode!' as const;

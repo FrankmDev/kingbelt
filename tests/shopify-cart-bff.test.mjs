@@ -3,6 +3,7 @@ import { emptyCart } from '../src/commerce/application/cart-service.ts';
 
 const VARIANT_ID = 'gid://shopify/ProductVariant/111';
 const LINE_ID = 'gid://shopify/CartLine/line-a';
+const CONTEXTUAL_LINE_ID = `${LINE_ID}?cart=${'a'.repeat(32)}`;
 const API_URL = 'https://kingbelt.test/api/cart';
 const EXPECTED_ORIGIN = 'https://kingbelt.test';
 const CLIENT_ADDRESS = '203.0.113.10';
@@ -360,6 +361,34 @@ describe('schema exacto de comandos /api/cart', () => {
     expect(serviceCalls).toEqual([{ method: 'remove', cartId: 'gid://shopify/Cart/existing', lineId: LINE_ID }]);
   });
 
+  test('update y remove aceptan el CartLine ID contextual que devuelve Shopify', async () => {
+    const updateSession = createSession({ shopifyCartId: 'gid://shopify/Cart/existing' });
+    const updated = await postCart({
+      session: updateSession,
+      json: { command: 'update', lineId: CONTEXTUAL_LINE_ID, quantity: 2 },
+    });
+    expect(updated.response.status).toBe(200);
+    expect(serviceCalls).toEqual([
+      {
+        method: 'update',
+        cartId: 'gid://shopify/Cart/existing',
+        lineId: CONTEXTUAL_LINE_ID,
+        quantity: 2,
+      },
+    ]);
+
+    serviceCalls = [];
+    const removeSession = createSession({ shopifyCartId: 'gid://shopify/Cart/existing' });
+    const removed = await postCart({
+      session: removeSession,
+      json: { command: 'remove', lineId: CONTEXTUAL_LINE_ID },
+    });
+    expect(removed.response.status).toBe(200);
+    expect(serviceCalls).toEqual([
+      { method: 'remove', cartId: 'gid://shopify/Cart/existing', lineId: CONTEXTUAL_LINE_ID },
+    ]);
+  });
+
   test('command desconocido es inválido', async () => {
     assertRejectedBeforeShopify(
       await postCart({ json: { command: 'drop' } }),
@@ -508,6 +537,25 @@ describe('schema exacto de comandos /api/cart', () => {
       serviceCalls = [];
       assertRejectedBeforeShopify(
         await postCart({ json: { command: 'add', variantId, quantity: 1 } }),
+        400,
+        'invalid_command'
+      );
+    }
+  });
+
+  test('CartLine solo acepta el parámetro contextual cart de Shopify', async () => {
+    for (const lineId of [
+      `${LINE_ID}/extra`,
+      `${LINE_ID}?key=secret`,
+      `${LINE_ID}?cart=`,
+      `${LINE_ID}?cart=${'a'.repeat(32)}&extra=1`,
+      `${LINE_ID}?cart=%2Fencoded`,
+      `${LINE_ID}#fragment`,
+    ]) {
+      serviceCreated = 0;
+      serviceCalls = [];
+      assertRejectedBeforeShopify(
+        await postCart({ json: { command: 'remove', lineId } }),
         400,
         'invalid_command'
       );

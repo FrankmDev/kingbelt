@@ -32,6 +32,11 @@ import type { ShopifyStorefrontGateway } from './storefront-gateway';
 
 type GatewaySource = ShopifyStorefrontGateway | (() => ShopifyStorefrontGateway);
 
+const RUNTIME_PRODUCT_MAP = {
+  requireCommercialSku: false,
+  requireCompleteColorGalleries: false,
+} as const;
+
 interface HandleNode {
   handle: string;
 }
@@ -240,7 +245,7 @@ export const createShopifyCatalogQueries = (
       >(PRODUCT_BY_HANDLE_QUERY, withShopifyInContextVariables({ handle }));
       if (!data.product) return undefined;
       const complete = await completeProductConnections(gatewayImpl, data.product);
-      return mapShopifyProduct(complete, allowedRemoteImageHosts);
+      return mapShopifyProduct(complete, allowedRemoteImageHosts, RUNTIME_PRODUCT_MAP);
     },
 
     async getProductSummaries() {

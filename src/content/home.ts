@@ -25,25 +25,51 @@ export const brandStatement = {
   meta: 'Marca · Producto',
   title: 'Accesorios masculinos con criterio, <em>no con etiqueta.</em>',
   lede: 'Una marca que empieza por el producto y avanza con criterio, no con ruido de escaparate.',
+  panel: {
+    eyebrow: 'Posicionamiento',
+    statement: 'Lo que debe notarse en la pieza, no solo en el escaparate.',
+  },
   body: 'Piezas con carácter para el día a día: proporción contenida, materiales con presencia y un acabado que se nota al usarlas.',
   kicker: 'Criterio',
   quote: 'Criterio de producto antes que discurso de escaparate.',
+  highlights: [
+    {
+      label: 'Catálogo',
+      text: 'Selección reducida: cada referencia tiene que merecer su sitio.',
+    },
+    {
+      label: 'Taller',
+      text: 'Fabricación artesanal con control de proporción, cierre y acabado.',
+    },
+    {
+      label: 'Origen',
+      text: madeInSpain ? `Hecho en ${madeInSpain}.` : 'Hecho en España.',
+    },
+  ] as const,
   signals: [
     {
       number: '01',
       label: 'Curaduría',
+      meta: 'Selección',
       text: 'Catálogo reducido: cada referencia tiene que merecer su sitio.',
     },
     {
       number: '02',
       label: 'Proporción',
+      meta: 'Integración',
       text: 'Presencia contenida que completa el conjunto sin dominarlo.',
     },
     {
       number: '03',
       label: 'Criterio',
+      meta: 'Material / Uso',
       text: 'Piezas seleccionadas con atención al material, al ajuste y al uso real.',
     },
+  ] as const,
+  shortcuts: [
+    { label: 'Historia de la marca', href: '/sobre' },
+    { label: 'Ver colección', href: '/productos' },
+    { label: 'Cuidado del cuero', href: '/cuidados' },
   ] as const,
   image: '/images/imagen-cinturon-kingbelt-6.avif',
   imageAlt: 'Manos ensamblando un cinturón de cuero marrón KingBelt con hebilla y remaches',

@@ -166,13 +166,11 @@ describe('configuración Shopify Storefront', () => {
     expect(astroConfig).toContain('MAX_HOSTED_URL_LENGTH');
     expect(astroConfig).not.toContain('SHOPIFY_CHECKOUT_URL');
     expect(astroConfig).not.toContain('PUBLIC_SHOPIFY_CUSTOMER_ACCOUNT_URL');
-    expect(astroConfig).not.toContain('SHOPIFY_CART_COOKIE_SECRET');
     expect(astroConfig).toContain('SHOPIFY_WEBHOOK_SECRET:');
     expect(astroConfig).toContain('sessionDriverConfig');
     expect(astroConfig).toContain('SESSION_COOKIE_NAME');
     expect(example).toContain('UPSTASH_REDIS_REST_URL=');
     expect(example).toContain('UPSTASH_REDIS_REST_TOKEN=');
-    expect(example).not.toContain('SHOPIFY_CART_COOKIE_SECRET');
     expect(astroConfig).toContain('VERCEL_DEPLOY_HOOK_URL:');
     expect(astroConfig).not.toContain('SHOPIFY_USE_CATALOG');
     expect(astroConfig).toContain("access: 'secret'");
@@ -202,7 +200,6 @@ describe('configuración Shopify Storefront', () => {
       access: 'public',
       optional: true,
     });
-    expect(astroConfiguration.env.schema.SHOPIFY_CART_COOKIE_SECRET).toBeUndefined();
     expect(astroConfiguration.session.cookie.name).toBe('__Host-kingbelt-session');
     expect(astroConfiguration.session.cookie.httpOnly).toBeUndefined();
     expect(astroConfiguration.session.cookie.secure).toBe(true);

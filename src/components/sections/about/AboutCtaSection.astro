@@ -1,4 +1,5 @@
 ---
+import SectionHeaderHome from '../home/SectionHeaderHome.astro';
 import CTABox from '../../ui/CTABox.astro';
 
 interface CtaData {
@@ -20,9 +21,7 @@ const { cta, backgroundImage } = Astro.props;
 <section class="about-cta section-spacing section-spacing-close" aria-label={cta.eyebrow}>
   <div class="cta-section-inner kb-shell-wide">
     <CTABox
-      eyebrow={cta.eyebrow}
       title={cta.title}
-      description={cta.description}
       buttonLabel={cta.label}
       buttonHref={cta.href}
       buttonVariant="secondary"
@@ -32,7 +31,20 @@ const { cta, backgroundImage } = Astro.props;
       backgroundHeight={1080}
       backgroundPosition="center 58%"
       titleTag="h2"
-    />
+    >
+      <SectionHeaderHome
+        slot="header"
+        index="05"
+        eyebrow={cta.eyebrow}
+        body={cta.description}
+        tone="dark"
+        density="compact"
+      >
+        <Fragment slot="title">
+          <span set:html={cta.title} />
+        </Fragment>
+      </SectionHeaderHome>
+    </CTABox>
   </div>
 </section>
 
@@ -40,5 +52,10 @@ const { cta, backgroundImage } = Astro.props;
   .about-cta {
     padding-top: var(--kb-space-section);
     background: var(--color-king-bg);
+    border-top: 1px solid var(--kb-stroke-hairline);
+  }
+
+  .about-cta :global(.section-header-home) {
+    margin-bottom: 0;
   }
 </style>

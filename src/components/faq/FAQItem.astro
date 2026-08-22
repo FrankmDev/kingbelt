@@ -16,7 +16,6 @@ const { item, index, sectionId, groupName, tone, variant = 'default' } = Astro.p
 const number = String(index + 1).padStart(2, '0');
 const isSteel = variant === 'editorial' ? false : index % 3 === 2;
 const isEditorial = variant === 'editorial';
-const delayClass = `animate-delay-${(index % 5) + 1}`;
 ---
 
 <details
@@ -25,8 +24,6 @@ const delayClass = `animate-delay-${(index % 5) + 1}`;
     'faq-card group',
     `faq-card--${tone}`,
     isEditorial ? 'faq-card--editorial' : isSteel ? 'kb-card-steel' : 'kb-card',
-    'animate-on-scroll',
-    delayClass,
   ]}
   name={groupName}
   data-faq-item
@@ -128,7 +125,7 @@ const delayClass = `animate-delay-${(index % 5) + 1}`;
   .faq-card--editorial {
     border: 1px solid var(--kb-stroke-hairline);
     border-radius: var(--kb-card-radius);
-    background: var(--color-king-surface);
+    background: var(--color-king-bg);
   }
 
   .faq-card--editorial::before {
@@ -136,7 +133,7 @@ const delayClass = `animate-delay-${(index % 5) + 1}`;
   }
 
   .faq-card--editorial[open] {
-    background: color-mix(in srgb, var(--color-king-bone) 24%, var(--color-king-surface));
+    background: color-mix(in srgb, var(--color-king-bone) 18%, var(--color-king-bg));
     border-color: color-mix(in srgb, var(--color-king-accent) 22%, var(--kb-stroke-hairline));
   }
 

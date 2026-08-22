@@ -6,6 +6,8 @@ import Breadcrumbs from '../components/ui/Breadcrumbs.astro';
 import Button from '../components/ui/Button.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { formatMoney, zeroMoney } from '../commerce/domain/money';
+import { CART_UNRECOVERABLE_MESSAGE } from '../commerce/application/cart-provider';
+import { CART_CHECKOUT_NOTE } from '@config/business';
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href;
 const emptySubtotal = formatMoney(zeroMoney());
@@ -59,6 +61,13 @@ const cartSchema = {
         <div data-cart-page-empty>
           <CartEmpty />
         </div>
+
+        <div class="cart-recovery" data-cart-page-recovery hidden>
+          <p>{CART_UNRECOVERABLE_MESSAGE}</p>
+          <Button type="button" variant="primary" size="md" data-cart-reset>
+            Restablecer carrito
+          </Button>
+        </div>
       </section>
 
       <aside class="cart-page__summary" data-cart-page-summary hidden aria-labelledby="cart-summary-title">
@@ -77,7 +86,7 @@ const cartSchema = {
           </dl>
 
           <p class="cart-page__summary-note kb-meta-label text-king-muted">
-            Envío e impuestos se calcularán en el checkout.
+            {CART_CHECKOUT_NOTE}
           </p>
 
           <div class="cart-page__summary-actions">
@@ -104,7 +113,7 @@ const cartSchema = {
 
 <style>
   .cart-page {
-    padding-top: clamp(5.5rem, 14vw, 9.5rem);
+    padding-top: var(--kb-page-offset-top);
     padding-bottom: var(--kb-space-12);
   }
 

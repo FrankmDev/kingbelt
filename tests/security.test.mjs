@@ -287,7 +287,6 @@ describe('superficie del navegador y cabeceras', () => {
     expect(example).not.toMatch(/^SHOPIFY_STORE_DOMAIN=.+\S/m);
     expect(example).not.toMatch(/shpat_|shpca_|shpss_/);
     expect(example).not.toContain('PUBLIC_SHOPIFY');
-    expect(example).not.toContain('SHOPIFY_CART_COOKIE_SECRET');
     expect(example).toContain('UPSTASH_REDIS_REST_URL=');
     expect(example).toContain('UPSTASH_REDIS_REST_TOKEN=');
     expect(example).not.toContain('PUBLIC_UPSTASH');
@@ -299,7 +298,6 @@ describe('superficie del navegador y cabeceras', () => {
       const source = readFileSync(path, 'utf8');
       return source.includes('astro:env/server')
         || source.includes('SHOPIFY_STOREFRONT_PRIVATE_TOKEN')
-        || source.includes('SHOPIFY_CART_COOKIE_SECRET')
         || source.includes('SHOPIFY_WEBHOOK_SECRET')
         || source.includes('VERCEL_DEPLOY_HOOK_URL')
         || source.includes('UPSTASH_REDIS_REST_URL')

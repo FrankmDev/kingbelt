@@ -1,7 +1,6 @@
 ---
-import SectionHeader from '@components/ui/SectionHeader.astro';
+import SectionHeaderHome from '../home/SectionHeaderHome.astro';
 import MediaFrame from '../../ui/MediaFrame.astro';
-import Panel from '../../ui/Panel.astro';
 
 interface OriginData {
   eyebrow: string;
@@ -27,24 +26,29 @@ const { data, class: className = '' } = Astro.props;
   class:list={['about-origin section-spacing', className]}
   aria-labelledby="about-origin-title"
 >
-  <div class="kb-shell-wide section-stack-lg">
-    <SectionHeader eyebrow={data.eyebrow} meta="KingBelt / Marca">
+  <div class="kb-shell-wide about-origin__shell">
+    <SectionHeaderHome
+      index="01"
+      eyebrow={data.eyebrow}
+      meta="KingBelt / Marca"
+      class="about-origin__header"
+    >
       <Fragment slot="title">
         <span id="about-origin-title" set:html={data.title} />
       </Fragment>
-    </SectionHeader>
+    </SectionHeaderHome>
 
-    <div class="about-origin-layout">
-      <Panel padding="lg" class="about-origin-panel kb-origin-panel">
+    <div class="about-origin__layout">
+      <div class="about-origin__panel kb-origin-panel">
         <div class="kb-origin-panel__main">
-          <p class="kb-eyebrow text-king-accent kb-origin-panel__kicker">Posicionamiento</p>
-          <p class="body-copy-lg text-king-muted kb-origin-panel__body">{data.body}</p>
+          <p class="kb-meta-label text-king-muted kb-origin-panel__kicker">Posicionamiento</p>
+          <p class="body-copy-lg kb-origin-panel__body">{data.body}</p>
         </div>
 
         <blockquote class="kb-origin-panel__quote">
           <p>{data.statement}</p>
         </blockquote>
-      </Panel>
+      </div>
 
       <MediaFrame
         src={data.image}
@@ -56,33 +60,69 @@ const { data, class: className = '' } = Astro.props;
         width={1200}
         height={900}
         loading="lazy"
-        class="about-origin-media"
+        class="about-origin__media"
       />
     </div>
   </div>
 </section>
 
 <style>
-  .about-origin-layout {
+  .about-origin {
+    padding-top: clamp(2.5rem, 5vw, var(--kb-space-section));
+    background: var(--color-king-bg);
+  }
+
+  .about-origin__header:global(.section-header-home) {
+    margin-bottom: var(--kb-space-gap);
+  }
+
+  .about-origin__layout {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
     gap: var(--kb-space-gap-lg);
     align-items: start;
+    min-width: 0;
+  }
+
+  .about-origin__panel {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 0;
+    padding: var(--kb-space-5);
+    border: 1px solid var(--kb-stroke-hairline);
+    border-radius: var(--kb-card-radius);
+    background: color-mix(in srgb, var(--color-king-bone) 18%, var(--color-king-bg));
+  }
+
+  .about-origin__panel .kb-origin-panel__body {
+    color: color-mix(in srgb, var(--color-king-text) 68%, var(--color-king-muted));
+  }
+
+  .about-origin__panel .kb-origin-panel__quote {
+    border-top-color: var(--kb-stroke-hairline);
+  }
+
+  .about-origin__panel .kb-origin-panel__kicker {
+    margin: 0;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
   }
 
   @media (min-width: 64rem) {
-    .about-origin-layout {
+    .about-origin__layout {
       grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
       align-items: stretch;
     }
 
-    .about-origin-panel,
-    :global(.about-origin-media.media-frame) {
+    .about-origin__panel {
       height: 100%;
       min-height: 0;
     }
 
-    :global(.about-origin-media.media-frame) {
+    .about-origin__media:global(.media-frame.media-frame--ratio-4-3) {
+      height: 100%;
+      min-height: 0;
       aspect-ratio: auto;
     }
   }

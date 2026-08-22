@@ -334,8 +334,8 @@ const scopeCopy = scope
     position: relative;
     z-index: 1;
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--kb-space-8) var(--kb-space-4);
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--kb-space-6);
     margin: 0;
     padding: 0;
     list-style: none;
@@ -399,7 +399,21 @@ const scopeCopy = scope
     }
 
     .collection-catalog__grid {
-      gap: var(--kb-space-6) var(--kb-space-3);
+      gap: 0;
+    }
+
+    .collection-catalog__item {
+      padding-block: var(--kb-space-6);
+      border-bottom: 1px solid var(--kb-stroke-hairline);
+    }
+
+    .collection-catalog__item:first-child {
+      padding-top: 0;
+    }
+
+    .collection-catalog__item:last-child {
+      padding-bottom: 0;
+      border-bottom: 0;
     }
 
     .collection-catalog__group {

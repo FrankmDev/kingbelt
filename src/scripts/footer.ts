@@ -66,6 +66,7 @@ export function initFooter(root: HTMLElement): Cleanup {
   const controller = new AbortController();
   const { signal } = controller;
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const desktop = window.matchMedia('(min-width: 48rem)');
   const scrollToTopButton = root.querySelector<HTMLButtonElement>('[data-footer-scroll-top]');
   let visibilityFrame = 0;
   let disposed = false;
@@ -91,7 +92,7 @@ export function initFooter(root: HTMLElement): Cleanup {
   };
 
   const syncMotionPreference = () => {
-    if (reducedMotion.matches) stopMotion();
+    if (reducedMotion.matches || !desktop.matches) stopMotion();
     else startMotion();
   };
 
@@ -115,6 +116,7 @@ export function initFooter(root: HTMLElement): Cleanup {
     { signal }
   );
   reducedMotion.addEventListener('change', syncMotionPreference);
+  desktop.addEventListener('change', syncMotionPreference);
 
   updateButtonVisibility();
   syncMotionPreference();
@@ -123,6 +125,7 @@ export function initFooter(root: HTMLElement): Cleanup {
     disposed = true;
     controller.abort();
     reducedMotion.removeEventListener('change', syncMotionPreference);
+    desktop.removeEventListener('change', syncMotionPreference);
     if (visibilityFrame) cancelAnimationFrame(visibilityFrame);
     stopMotion();
     delete root.dataset.footerInitialized;

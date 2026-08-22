@@ -617,7 +617,7 @@ describe('preflight Shopify', () => {
     );
     const { code, io } = await runCli(validEnv(), { catalog });
     expect(code).toBe(1);
-    expect(io.failure()).toContain('familia cuero');
+    expect(io.failure()).toContain('familia 5365_35_cuero');
     expect(io.failure()).toContain('01, 02 y 03');
   });
 

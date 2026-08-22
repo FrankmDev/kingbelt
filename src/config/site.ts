@@ -3,8 +3,14 @@ export const site = {
   tagline: 'Accesorios de cuero para hombre',
   description:
     'Accesorios de cuero para hombre con carácter. Piezas pensadas para la ruta y el uso diario.',
+  logos: {
+    ink: '/images/brand/logo.avif',
+    white: '/images/brand/logo-white.avif',
+    width: 3969,
+    height: 2102,
+  },
   contact: {
-    email: 'hola@kingbelt.com',
+    email: 'contabilidad@cintuelx.com',
   },
   social: {
     instagram: {

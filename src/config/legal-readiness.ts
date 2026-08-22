@@ -46,6 +46,7 @@ export const legalReadinessRequirements = {
       'registeredAddress',
       'email',
       'phone',
+      'website',
       'registryData',
       'activity',
       'jurisdiction',
@@ -80,7 +81,6 @@ export const legalReadinessRequirements = {
       'shippingCosts',
       'deliveryTime',
       'returnPolicy',
-      'returnAddress',
       'warranty',
       'jurisdiction',
     ],
@@ -93,12 +93,11 @@ export const legalReadinessRequirements = {
       'shippingCosts',
       'deliveryTime',
       'returnPolicy',
-      'returnAddress',
       'email',
     ],
   },
   devoluciones: {
-    requiredFacts: ['returnPolicy', 'returnAddress', 'warranty', 'email', 'phone'],
+    requiredFacts: ['returnPolicy', 'warranty', 'email', 'phone'],
   },
 } as const satisfies Record<
   RequiredLaunchDocumentKey,
@@ -128,6 +127,7 @@ export const BUSINESS_FACT_CLASSIFICATION: Record<BusinessFactKey, BusinessFactC
   registeredAddress: 'required',
   email: 'required',
   phone: 'required',
+  website: 'required',
   registryData: 'required',
   activity: 'required',
   salesTerritory: 'required',
@@ -138,7 +138,7 @@ export const BUSINESS_FACT_CLASSIFICATION: Record<BusinessFactKey, BusinessFactC
   preparationTime: 'required',
   deliveryTime: 'required',
   returnPolicy: 'required',
-  returnAddress: 'required',
+  returnAddress: 'manual',
   warranty: 'required',
   jurisdiction: 'required',
   dataController: 'required',
@@ -171,7 +171,7 @@ export const manualLaunchDecisions: readonly ManualLaunchDecision[] = [
     id: 'withdrawalMechanism',
     resolved: true,
     summary:
-      'El mecanismo publicado es la Política de devoluciones: comunicación a contabilidad@cintuelx.com y modelo de desistimiento. /desistimiento permanece inactive y no es la vía operativa.',
+      'El desistimiento puede comunicarse por email o correo postal al domicilio social; las instrucciones logísticas de devolución se facilitan tras la solicitud.',
   },
   {
     id: 'shopifyPolicyReconciliation',
@@ -184,12 +184,12 @@ export const manualLaunchDecisions: readonly ManualLaunchDecision[] = [
     id: 'addressLegalFunction',
     resolved: true,
     summary:
-      'Domicilio social: Avenida de Novelda, 143, bajo, Elche (Aviso Legal → registeredAddress). Dirección de devoluciones: Carrús/Polígono (Política de devoluciones → returnAddress). Texto empresarial «Bueno e Hijos SL…» conservado en address sin función jurídica propia.',
+      'El domicilio social ha sido confirmado por la empresa y contrastado con el BORME; no se reutiliza como domicilio fiscal ni dirección logística de devoluciones.',
   },
   {
     id: 'dataControllerIdentity',
     resolved: true,
-    summary: 'La política de privacidad identifica a CintuElx S.L. como responsable del tratamiento.',
+    summary: 'CintuElx S.L. y su domicilio social constan como responsable del tratamiento en la política validada.',
   },
 ];
 
@@ -204,7 +204,7 @@ const FACT_DEPENDENT_SECTIONS: Record<LegalDocumentKey, Partial<Record<string, r
     entrega: ['deliveryTime', 'salesTerritory'],
     envio: ['carriers', 'shippingCosts'],
     desistimiento: ['returnPolicy'],
-    devoluciones: ['returnPolicy', 'returnAddress'],
+    devoluciones: ['returnPolicy'],
     conformidad: ['warranty'],
     'ley-aplicable': ['jurisdiction'],
     'resolucion-conflictos': ['jurisdiction'],
@@ -260,7 +260,20 @@ const STATIC_COMPLETED_SECTIONS: Record<LegalDocumentKey, readonly string[]> = {
     'actualizacion',
     'contacto',
   ],
-  condiciones: ['objeto', 'productos', 'proceso-compra', 'idioma', 'atencion', 'propiedad-intelectual'],
+  condiciones: [
+    'objeto',
+    'productos',
+    'proceso-compra',
+    'correccion-errores',
+    'idioma',
+    'archivo-contrato',
+    'disponibilidad',
+    'confirmacion',
+    'excepciones',
+    'atencion',
+    'propiedad-intelectual',
+    'fuerza-mayor',
+  ],
   envios: [
     'vendedor',
     'zonas',
@@ -303,9 +316,16 @@ const STATIC_COMPLETED_SECTIONS: Record<LegalDocumentKey, readonly string[]> = {
 };
 
 export const PUBLISHED_PLACEHOLDER_PATTERNS: readonly RegExp[] = [
+  /\bTODO\b/,
+  /\bTBD\b/i,
+  /\bFIXME\b/i,
+  /\bPLACEHOLDER\b/i,
+  /<\s*empty\s*>/i,
+  /\[(?:INSERTAR|COMPLETAR|PENDIENTE)(?:\s+[^\]]*)?\]/i,
+  /\bXXX\b/i,
   /pendiente de validación/i,
   /se completará/i,
-  /antes de activar/i,
+  /antes de activar(?: el ecommerce)?/i,
   /(?:en |durante la )fase de preparación/i,
   /fase de desarrollo/i,
   /fase interna/i,
@@ -317,10 +337,23 @@ export const PUBLISHED_PLACEHOLDER_PATTERNS: readonly RegExp[] = [
   /no constituye asesoramiento legal/i,
 ];
 
+export type LegalSectionStatus = 'complete' | 'pending';
+
+export interface LegalSectionReadiness {
+  status: LegalSectionStatus;
+  /** Contenido estructurado o textual de la sección; la key por sí sola nunca implica completitud. */
+  content: unknown;
+}
+
+export type LegalSectionReadinessByDocument = Record<
+  LegalDocumentKey,
+  Record<string, LegalSectionReadiness>
+>;
+
 export interface LegalReadinessInput {
   facts: BusinessFacts;
   documents: Record<LegalDocumentKey, LegalDocument>;
-  completedSectionIds: Record<LegalDocumentKey, ReadonlySet<string>>;
+  sectionReadiness: LegalSectionReadinessByDocument;
   contentByDocument: Partial<Record<LegalDocumentKey, string>>;
   publicNavHrefs: readonly string[];
   sitemapExcludedPaths: readonly string[];
@@ -335,6 +368,7 @@ export interface LegalReadinessReport {
   inactiveRequiredDocuments: LegalDocumentKey[];
   publishedPlaceholders: Array<{ document: LegalDocumentKey; match: string }>;
   publishedPendingSections: Array<{ document: LegalDocumentKey; sectionIds: string[] }>;
+  publishedEmptySections: Array<{ document: LegalDocumentKey; sectionIds: string[] }>;
   draftInPublicNav: string[];
   unpublishedMissingFromSitemapExclusion: string[];
   publishedExcludedFromSitemap: string[];
@@ -346,12 +380,14 @@ export interface LegalReadinessReport {
 const isConfirmed = (facts: BusinessFacts, key: BusinessFactKey): boolean =>
   confirmed(facts[key]) !== undefined;
 
-export const getCompletedLegalSectionIds = (
+const explicitCompletedSectionIds = (
   documentKey: LegalDocumentKey,
   facts: BusinessFacts = businessFacts
 ): Set<string> => {
-  const body = legalBodies[documentKey as keyof typeof legalBodies];
-  if (body) return new Set(Object.keys(body.sections));
+  const requiredFacts = documentKey in legalReadinessRequirements
+    ? legalReadinessRequirements[documentKey as RequiredLaunchDocumentKey].requiredFacts
+    : [];
+  if (!requiredFacts.every((key) => isConfirmed(facts, key))) return new Set();
 
   const completed = new Set<string>(STATIC_COMPLETED_SECTIONS[documentKey] ?? []);
   const dependent = FACT_DEPENDENT_SECTIONS[documentKey] ?? {};
@@ -363,14 +399,31 @@ export const getCompletedLegalSectionIds = (
   return completed;
 };
 
-export const getAllCompletedLegalSectionIds = (
-  facts: BusinessFacts = businessFacts
-): Record<LegalDocumentKey, Set<string>> => {
-  const keys = Object.keys(legalDocuments) as LegalDocumentKey[];
-  return Object.fromEntries(keys.map((key) => [key, getCompletedLegalSectionIds(key, facts)])) as Record<
-    LegalDocumentKey,
-    Set<string>
-  >;
+export const getLegalSectionReadiness = (
+  documentKey: LegalDocumentKey,
+  facts: BusinessFacts = businessFacts,
+  documents: Record<LegalDocumentKey, LegalDocument> = legalDocuments
+): Record<string, LegalSectionReadiness> => {
+  const completed = explicitCompletedSectionIds(documentKey, facts);
+  const body = legalBodies[documentKey as keyof typeof legalBodies];
+  return Object.fromEntries(documents[documentKey].sections.map((section) => [
+    section.id,
+    {
+      status: completed.has(section.id) ? 'complete' : 'pending',
+      content: body?.sections[section.id] ?? null,
+    },
+  ]));
+};
+
+export const getAllLegalSectionReadiness = (
+  facts: BusinessFacts = businessFacts,
+  documents: Record<LegalDocumentKey, LegalDocument> = legalDocuments
+): LegalSectionReadinessByDocument => {
+  const keys = Object.keys(documents) as LegalDocumentKey[];
+  return Object.fromEntries(keys.map((key) => [
+    key,
+    getLegalSectionReadiness(key, facts, documents),
+  ])) as LegalSectionReadinessByDocument;
 };
 
 const collectStrings = (value: unknown): string[] => {
@@ -417,11 +470,21 @@ export const collectAllLegalDocumentContent = (
 };
 
 const findPlaceholder = (text: string): string | undefined => {
+  const normalized = text.replace(/\s+/g, ' ').trim();
   for (const pattern of PUBLISHED_PLACEHOLDER_PATTERNS) {
-    const match = text.match(pattern);
+    const match = normalized.match(pattern);
     if (match?.[0]) return match[0];
   }
   return undefined;
+};
+
+export const hasMeaningfulLegalContent = (value: unknown): boolean => {
+  if (typeof value === 'string') return value.trim().length > 0;
+  if (Array.isArray(value)) return value.some(hasMeaningfulLegalContent);
+  if (value && typeof value === 'object') {
+    return Object.values(value).some(hasMeaningfulLegalContent);
+  }
+  return false;
 };
 
 const normalizePath = (pathname: string): string =>
@@ -439,6 +502,7 @@ export const evaluateLegalReadiness = (input: LegalReadinessInput): LegalReadine
   const inactiveRequiredDocuments: LegalDocumentKey[] = [];
   const publishedPlaceholders: LegalReadinessReport['publishedPlaceholders'] = [];
   const publishedPendingSections: LegalReadinessReport['publishedPendingSections'] = [];
+  const publishedEmptySections: LegalReadinessReport['publishedEmptySections'] = [];
 
   for (const key of REQUIRED_LAUNCH_DOCUMENTS) {
     const document = input.documents[key];
@@ -447,16 +511,25 @@ export const evaluateLegalReadiness = (input: LegalReadinessInput): LegalReadine
     if (status === 'inactive') inactiveRequiredDocuments.push(key);
     if (status !== 'published') continue;
 
-    const content = input.contentByDocument[key] ?? '';
+    const readiness = input.sectionReadiness[key] ?? {};
+    const sectionContent = document.sections
+      .map((section) => readiness[section.id]?.content)
+      .filter(hasMeaningfulLegalContent);
+    const content = [input.contentByDocument[key] ?? '', ...collectStrings(sectionContent)].join('\n');
     const placeholder = findPlaceholder(content);
     if (placeholder) publishedPlaceholders.push({ document: key, match: placeholder });
 
-    const completed = input.completedSectionIds[key] ?? new Set<string>();
     const pendingIds = document.sections
       .map((section) => section.id)
-      .filter((id) => !completed.has(id));
+      .filter((id) => readiness[id]?.status !== 'complete');
     if (pendingIds.length > 0) {
       publishedPendingSections.push({ document: key, sectionIds: pendingIds });
+    }
+    const emptyIds = document.sections
+      .map((section) => section.id)
+      .filter((id) => readiness[id]?.status === 'complete' && !hasMeaningfulLegalContent(readiness[id]?.content));
+    if (emptyIds.length > 0) {
+      publishedEmptySections.push({ document: key, sectionIds: emptyIds });
     }
   }
 
@@ -497,6 +570,7 @@ export const evaluateLegalReadiness = (input: LegalReadinessInput): LegalReadine
     && inactiveRequiredDocuments.length === 0
     && publishedPlaceholders.length === 0
     && publishedPendingSections.length === 0
+    && publishedEmptySections.length === 0
     && draftInPublicNav.length === 0
     && unpublishedMissingFromSitemapExclusion.length === 0
     && publishedExcludedFromSitemap.length === 0
@@ -511,6 +585,7 @@ export const evaluateLegalReadiness = (input: LegalReadinessInput): LegalReadine
     inactiveRequiredDocuments,
     publishedPlaceholders,
     publishedPendingSections,
+    publishedEmptySections,
     draftInPublicNav,
     unpublishedMissingFromSitemapExclusion,
     publishedExcludedFromSitemap,
@@ -529,7 +604,7 @@ export const evaluateCurrentLegalReadiness = (): LegalReadinessReport =>
   evaluateLegalReadiness({
     facts: businessFacts,
     documents: legalDocuments,
-    completedSectionIds: getAllCompletedLegalSectionIds(businessFacts),
+    sectionReadiness: getAllLegalSectionReadiness(businessFacts),
     contentByDocument: collectAllLegalDocumentContent(),
     publicNavHrefs: currentLegalPublicNavHrefs(),
     sitemapExcludedPaths: getLegalSitemapExcludedPaths(),

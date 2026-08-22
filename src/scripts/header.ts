@@ -3,6 +3,12 @@ import { lockBodyScroll, unlockBodyScroll } from '@shared/browser/scroll-lock';
 
 type Cleanup = () => void;
 
+const isMenuLayerElement = (element: HTMLElement, mobileMenu: HTMLElement, header: HTMLElement) => {
+  if (element === mobileMenu || element.contains(mobileMenu)) return true;
+  if (element === header || element.contains(header)) return true;
+  return false;
+};
+
 export function initHeader(header: HTMLElement): Cleanup {
   if (header.dataset.headerInitialized === 'true') return () => {};
 
@@ -33,7 +39,8 @@ export function initHeader(header: HTMLElement): Cleanup {
     if (inert) {
       outsideInertState.clear();
       Array.from(document.body.children).forEach((element) => {
-        if (!(element instanceof HTMLElement) || element === mobileMenu || element.contains(mobileMenu)) return;
+        if (!(element instanceof HTMLElement)) return;
+        if (isMenuLayerElement(element, mobileMenu, header)) return;
         outsideInertState.set(element, element.inert);
         element.inert = true;
       });
@@ -77,10 +84,10 @@ export function initHeader(header: HTMLElement): Cleanup {
     setOutsideInert(true);
     lockBodyScroll('mobile-navigation');
 
-    const focusDelay = reducedMotion.matches ? 0 : 400;
+    const focusDelay = reducedMotion.matches ? 0 : 280;
     focusTimer = window.setTimeout(() => {
       focusTimer = 0;
-      mobileMenu.querySelector<HTMLElement>('[data-mobile-nav-link]')?.focus();
+      mobileMenu.querySelector<HTMLElement>('[data-mobile-nav-link]')?.focus({ preventScroll: true });
     }, focusDelay);
   };
 
@@ -111,11 +118,26 @@ export function initHeader(header: HTMLElement): Cleanup {
     if (!frame) frame = requestAnimationFrame(updateHeader);
   };
 
+  const syncHeaderOffset = () => {
+    document.documentElement.style.setProperty(
+      '--kb-header-offset',
+      `${header.getBoundingClientRect().height}px`
+    );
+  };
+
+  const resizeObserver = typeof ResizeObserver !== 'undefined'
+    ? new ResizeObserver(syncHeaderOffset)
+    : null;
+
   menuToggle.addEventListener(
     'click',
     () => (isMenuOpen() ? closeMenu() : openMenu()),
     { signal }
   );
+
+  mobileMenu.querySelectorAll<HTMLElement>('[data-menu-close]').forEach((control) => {
+    control.addEventListener('click', () => closeMenu(), { signal });
+  });
 
   mobileMenu.addEventListener(
     'click',
@@ -165,12 +187,16 @@ export function initHeader(header: HTMLElement): Cleanup {
   );
   window.addEventListener('scroll', scheduleHeader, { passive: true, signal });
   window.addEventListener('resize', scheduleHeader, { passive: true, signal });
+  window.addEventListener('resize', syncHeaderOffset, { passive: true, signal });
   desktop.addEventListener('change', scheduleHeader);
+  resizeObserver?.observe(header);
   updateHeader();
+  syncHeaderOffset();
 
   return () => {
     controller.abort();
     desktop.removeEventListener('change', scheduleHeader);
+    resizeObserver?.disconnect();
     if (frame) cancelAnimationFrame(frame);
     if (focusTimer) window.clearTimeout(focusTimer);
     closeMenu({ restoreFocus: false });

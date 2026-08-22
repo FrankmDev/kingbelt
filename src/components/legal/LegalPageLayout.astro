@@ -33,7 +33,7 @@ const { status, updatedAt, version, sections } = document;
 const titleId = 'legal-document-title';
 const statusMeta =
   status === 'published' ? 'Vigente' : status === 'inactive' ? 'No operativo' : 'Borrador';
-const hasIntro = Astro.slots.has('intro');
+const hasIntro = status === 'published' && Astro.slots.has('intro');
 ---
 
 <div class="legal-page">

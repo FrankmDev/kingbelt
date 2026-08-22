@@ -1,5 +1,5 @@
 ---
-import SectionHeader from '@components/ui/SectionHeader.astro';
+import SectionHeaderHome from '../home/SectionHeaderHome.astro';
 import type { AboutPrinciple } from '@content/about';
 
 interface StandardsData {
@@ -19,35 +19,37 @@ const { data, class: className = '' } = Astro.props;
 ---
 
 <section
-  class:list={['about-standards section-spacing section-asphalt about-standards--chapter-end', className]}
+  class:list={['about-standards section-spacing section-asphalt', className]}
   aria-labelledby="about-standards-title"
 >
-  <div class="kb-shell-wide section-stack-lg">
-    <SectionHeader
+  <div class="kb-shell-wide about-standards__shell">
+    <SectionHeaderHome
+      index="02"
       eyebrow={data.eyebrow}
-      body={data.lede}
       meta={data.badge}
+      body={data.lede}
       tone="dark"
+      class="about-standards__header"
     >
       <Fragment slot="title">
         <span id="about-standards-title" set:html={data.title} />
       </Fragment>
-    </SectionHeader>
+    </SectionHeaderHome>
 
-    <ol class="about-standards-list">
+    <ol class="about-standards__grid" aria-label="Filtros de producto">
       {data.principles.map((principle) => (
-        <li class="about-standard">
-          <div class="about-standard-head">
-            <span class="about-standard-number" aria-hidden="true">{principle.number}</span>
-            <p class="kb-eyebrow about-standard-label">{principle.label}</p>
-          </div>
+        <li class="about-standard kb-card-dark">
+          <header class="about-standard__head">
+            <span class="about-standard__num kb-folio" aria-hidden="true">{principle.number}</span>
+            <p class="kb-eyebrow about-standard__label">{principle.label}</p>
+          </header>
 
-          <div class="about-standard-copy">
+          <div class="about-standard__copy">
             <h3>{principle.title}</h3>
             <p>{principle.text}</p>
           </div>
 
-          <p class="kb-meta-label about-standard-meta">{principle.meta}</p>
+          <p class="kb-meta-label about-standard__meta">{principle.meta}</p>
         </li>
       ))}
     </ol>
@@ -55,105 +57,91 @@ const { data, class: className = '' } = Astro.props;
 </section>
 
 <style>
-  .about-standards--chapter-end {
-    padding-bottom: clamp(2.5rem, 4.5vw, 4rem);
+  .about-standards__header:global(.section-header-home) {
+    margin-bottom: var(--kb-space-gap);
   }
 
-  .about-standards-list {
+  .about-standards__grid {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
+    gap: var(--kb-space-3);
     margin: 0;
     padding: 0;
     list-style: none;
-    border-top: 1px solid var(--kb-stroke-soft);
-    border-bottom: 1px solid var(--kb-stroke-soft);
   }
 
   .about-standard {
     display: flex;
-    min-width: 0;
     flex-direction: column;
-    gap: var(--kb-space-6);
-    padding: var(--kb-space-6) 0;
-    border-bottom: 1px solid var(--kb-stroke-soft);
+    gap: var(--kb-space-5);
+    min-width: 0;
+    min-height: 100%;
+    padding: clamp(1.25rem, 2.5vw, 1.75rem) var(--kb-space-5);
   }
 
-  .about-standard:last-child {
-    border-bottom: 0;
-  }
-
-  .about-standard-head {
+  .about-standard__head {
     display: flex;
     align-items: baseline;
     justify-content: space-between;
     gap: var(--kb-space-4);
+    padding-bottom: var(--kb-space-4);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   }
 
-  .about-standard-number {
-    font-family: var(--font-display);
-    font-size: var(--kb-text-h2);
-    font-variant-numeric: tabular-nums;
-    font-weight: var(--kb-w-heading-light);
-    line-height: 1;
+  .about-standard__num {
+    margin: 0;
     color: var(--color-king-accent-light);
+    opacity: 0.55;
   }
 
-  .about-standard-label,
-  .about-standard-meta {
+  .about-standard__label {
     margin: 0;
     color: var(--color-king-accent-light);
   }
 
-  .about-standard-copy {
+  .about-standard__copy {
     display: flex;
     flex-direction: column;
-    gap: var(--kb-space-4);
+    gap: var(--kb-space-3);
+    flex: 1 1 auto;
   }
 
-  .about-standard-copy h3,
-  .about-standard-copy p {
+  .about-standard__copy h3,
+  .about-standard__copy p {
     margin: 0;
   }
 
-  .about-standard-copy h3 {
+  .about-standard__copy h3 {
     max-width: 22ch;
-    font-size: var(--kb-text-h3);
-    line-height: 1.12;
+    font-family: var(--font-display);
+    font-size: var(--kb-text-h4);
+    font-weight: var(--kb-w-medium);
+    line-height: 1.15;
+    text-wrap: balance;
     color: var(--color-king-bone);
   }
 
-  .about-standard-copy p {
+  .about-standard__copy p {
     max-width: 40ch;
-    color: var(--color-king-secondary);
-    font-size: var(--kb-text-body-lg);
-    line-height: 1.72;
+    font-size: var(--kb-text-sm);
+    line-height: 1.65;
+    color: rgba(255, 250, 241, 0.64);
+    text-wrap: pretty;
   }
 
-  .about-standard-meta {
-    margin-top: auto;
+  .about-standard__meta {
+    margin: 0;
     padding-top: var(--kb-space-4);
-    border-top: 1px solid var(--kb-stroke-soft);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--color-king-accent-light);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
   }
 
   @media (min-width: 48rem) {
-    .about-standards-list {
+    .about-standards__grid {
       grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-
-    .about-standard {
-      gap: var(--kb-space-7);
-      padding: var(--kb-space-7) var(--kb-space-8);
-      border-right: 1px solid var(--kb-stroke-soft);
-      border-bottom: 0;
-    }
-
-    .about-standard:first-child {
-      padding-left: 0;
-    }
-
-    .about-standard:last-child {
-      padding-right: 0;
-      border-right: 0;
+      gap: var(--kb-space-4);
     }
   }
 </style>

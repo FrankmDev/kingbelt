@@ -33,3 +33,4 @@ service-account*.json
 
 # jetbrains setting folder
 .idea/
+.vercel

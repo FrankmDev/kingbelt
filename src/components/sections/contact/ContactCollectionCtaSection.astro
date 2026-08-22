@@ -6,9 +6,7 @@ import CTABox from '../../ui/CTABox.astro';
 <section class="contact-collection-cta" aria-labelledby="contact-collection-title">
   <div class="contact-collection-cta__inner kb-shell-wide">
     <CTABox
-      eyebrow="Colección"
       title="Piezas pensadas para durar."
-      description="Cuero vegetal, herrajes macizos y diseño español. Explora la colección antes de escribirnos."
       buttonLabel="Ver colección"
       buttonHref="/productos"
       buttonVariant="secondary"
@@ -37,6 +35,7 @@ import CTABox from '../../ui/CTABox.astro';
   .contact-collection-cta {
     padding-block: var(--kb-space-section);
     border-top: 1px solid var(--kb-stroke-hairline);
+    background: var(--color-king-bg);
   }
 
   .contact-collection-cta :global(.section-header-home) {

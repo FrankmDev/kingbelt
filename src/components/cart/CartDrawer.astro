@@ -3,6 +3,8 @@ import '../../styles/cart.css';
 import Button from '../ui/Button.astro';
 import Icon from '../ui/Icon.astro';
 import CartEmpty from './CartEmpty.astro';
+import { CART_UNRECOVERABLE_MESSAGE } from '../../commerce/application/cart-provider';
+import { CART_CHECKOUT_NOTE } from '@config/business';
 import { formatMoney, zeroMoney } from '../../commerce/domain/money';
 
 const emptySubtotal = formatMoney(zeroMoney());
@@ -64,6 +66,12 @@ const emptySubtotal = formatMoney(zeroMoney());
       <div data-cart-drawer-empty>
         <CartEmpty variant="drawer" />
       </div>
+      <div class="cart-recovery" data-cart-drawer-recovery hidden>
+        <p>{CART_UNRECOVERABLE_MESSAGE}</p>
+        <Button type="button" variant="primary" size="md" data-cart-reset>
+          Restablecer carrito
+        </Button>
+      </div>
     </div>
 
     <footer class="cart-drawer__footer" data-cart-drawer-footer hidden>
@@ -73,7 +81,7 @@ const emptySubtotal = formatMoney(zeroMoney());
       </div>
 
       <p class="cart-drawer__note kb-meta-label text-king-muted">
-        Envío e impuestos se calcularán en el checkout.
+        {CART_CHECKOUT_NOTE}
       </p>
 
       <div class="cart-drawer__actions">

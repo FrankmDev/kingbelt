@@ -151,9 +151,9 @@ const counts = items.reduce<Record<string, number>>((accumulator, item) => {
               <span class="faq-sidebar-label kb-micro-label">Soporte</span>
               <div class="faq-support-card">
                 <span class="faq-support-icon" aria-hidden="true">
-                  <Icon name="clock" class="w-4 h-4" />
+                  <Icon name="mail" class="w-4 h-4" />
                 </span>
-                <span class="faq-support-text">Respuesta en menos de 24h laborables.</span>
+                <span class="faq-support-text">Atención por email y teléfono.</span>
               </div>
             </div>
 
@@ -605,17 +605,20 @@ const counts = items.reduce<Record<string, number>>((accumulator, item) => {
     .faq-layout {
       grid-template-columns: minmax(22rem, 0.42fr) minmax(0, 0.58fr);
       gap: clamp(3rem, 5vw, 5rem);
+      align-items: stretch;
     }
 
     .faq-sidebar {
       position: sticky;
       top: 7rem;
+      align-self: start;
     }
 
     .faq-sidebar--static {
       position: relative;
       top: auto;
       align-self: stretch;
+      height: 100%;
     }
 
     .faq-sidebar-inner {

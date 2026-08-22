@@ -80,7 +80,7 @@ export const moneyFromMajor = (
   currency: CurrencyCode = 'EUR'
 ): Money => {
   if (!Number.isFinite(amount) || amount < 0) {
-    throw new TypeError('El importe debe ser un número positivo y finito.');
+    throw new TypeError('El importe debe ser un número no negativo y finito.');
   }
 
   const amountMinor = Math.round((amount + Number.EPSILON) * getMinorUnitScale(currency));
@@ -113,7 +113,7 @@ export const moneyToDecimal = (value: Money): string => {
 
 export const multiplyMoney = (value: Money, quantity: number): Money => {
   if (!Number.isInteger(quantity) || quantity < 0) {
-    throw new TypeError('La cantidad debe ser un entero positivo.');
+    throw new TypeError('La cantidad debe ser un entero no negativo.');
   }
 
   assertMinorAmount(value.amountMinor);

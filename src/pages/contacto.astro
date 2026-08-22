@@ -7,7 +7,6 @@ import ContactCollectionCtaSection from '../components/sections/contact/ContactC
 import ContactEmailBanner from '../components/sections/contact/ContactEmailBanner.astro';
 import ContactFaqSection from '../components/sections/contact/ContactFaqSection.astro';
 import ContactFormSection from '../components/sections/contact/ContactFormSection.astro';
-import ContactLegalSection from '../components/sections/contact/ContactLegalSection.astro';
 import PurchaseInfo from '../components/sections/contact/PurchaseInfo.astro';
 import { contactData } from '@content/contact';
 import { confirmed, businessFacts } from '@config/business';
@@ -37,7 +36,7 @@ const contactSchema = {
       ...(confirmed(businessFacts.phone)
         ? { telephone: confirmed(businessFacts.phone) }
         : {}),
-      url: site.social.instagram.href,
+      url: canonicalURL,
     },
   },
 };
@@ -61,10 +60,8 @@ const contactSchema = {
   <div class="contact-page">
     <ContactFormSection channels={contactData.channels} inquiryTypes={contactData.inquiryTypes} />
 
-    <ContactLegalSection />
-
     <PurchaseInfo
-      index="03"
+      index="02"
       eyebrow={contactData.purchaseInfo.eyebrow}
       title={contactData.purchaseInfo.title}
       description={contactData.purchaseInfo.description}

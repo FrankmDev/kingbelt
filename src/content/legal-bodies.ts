@@ -1,8 +1,11 @@
 import {
+  LEGAL_ACTIVITY,
+  LEGAL_EMAIL,
   LEGAL_NAME,
   LEGAL_PHONE_DISPLAY,
+  LEGAL_REGISTERED_ADDRESS,
+  LEGAL_REGISTRY_DATA,
   LEGAL_TAX_ID,
-  REGISTERED_ADDRESS_SINGLE_LINE,
 } from '@config/business';
 import { currentTechnologies, externalResources } from './legal-technologies';
 
@@ -56,8 +59,9 @@ const tel = (value: string): LegalInline => ({
 const page = (href: string, label: string): LegalInline => ({ href, label });
 const ext = (href: string, label: string): LegalInline => ({ href, label, external: true });
 
-export const LEGAL_CONTACT_EMAIL = 'contabilidad@cintuelx.com';
+export const LEGAL_CONTACT_EMAIL = LEGAL_EMAIL;
 export const LEGAL_CONTACT_PHONE = LEGAL_PHONE_DISPLAY;
+const LEGAL_REGISTERED_ADDRESS_SINGLE_LINE = LEGAL_REGISTERED_ADDRESS.replace(/\s*\n\s*/g, ', ');
 const SHOPIFY_CONSUMER_PRIVACY = 'https://www.shopify.com/legal/privacy/customers';
 const SHOPIFY_PRIVACY_PORTAL = 'https://privacy.shopify.com/en';
 const EDPB_MEMBERS = 'https://www.edpb.europa.eu/about-edpb/about-edpb/members_es';
@@ -119,14 +123,12 @@ export const avisoLegalBody: LegalDocumentBody = {
         LEGAL_NAME,
         'Nombre comercial: Kingbelt',
         `NIF: ${LEGAL_TAX_ID}`,
-        `Domicilio social: ${REGISTERED_ADDRESS_SINGLE_LINE}`,
+        `Domicilio social: ${LEGAL_REGISTERED_ADDRESS_SINGLE_LINE}`,
         `Correo electrónico: ${LEGAL_CONTACT_EMAIL}`,
-        `Teléfono: ${LEGAL_CONTACT_PHONE}`
+        `Teléfono: ${LEGAL_CONTACT_PHONE}`,
+        LEGAL_REGISTRY_DATA
       ),
-      p('Datos registrales:'),
-      p(
-        'Inscrita en el Registro Mercantil de Alicante, tomo 4280, folio 5, sección 8, hoja A-168894.'
-      ),
+      p(`Actividad: ${LEGAL_ACTIVITY}`),
       p('En adelante, “Kingbelt”, “CintuElx S.L.” o el “Titular”.'),
     ],
     objeto: [
@@ -374,9 +376,7 @@ export const avisoLegalBody: LegalDocumentBody = {
       address(
         `${LEGAL_NAME} – Kingbelt`,
         `NIF: ${LEGAL_TAX_ID}`,
-        'Avenida de Novelda, 143, bajo',
-        '03206 Elche (Alicante)',
-        'España'
+        ...LEGAL_REGISTERED_ADDRESS.split('\n')
       ),
       p('Correo electrónico: ', mail(LEGAL_CONTACT_EMAIL)),
       p('Teléfono: ', tel(LEGAL_CONTACT_PHONE)),
@@ -607,7 +607,7 @@ export const privacidadBody: LegalDocumentBody = {
         tel(LEGAL_CONTACT_PHONE),
         ', envíenos un correo electrónico a ',
         mail(LEGAL_CONTACT_EMAIL),
-        ` o póngase en contacto con nosotros en ${REGISTERED_ADDRESS_SINGLE_LINE}. A efectos de la legislación aplicable en materia de protección de datos, ${LEGAL_NAME} es el responsable del tratamiento de su información personal.`
+        `. El responsable del tratamiento es ${LEGAL_NAME}, con domicilio social en ${LEGAL_REGISTERED_ADDRESS_SINGLE_LINE}.`
       ),
     ],
   },
@@ -626,7 +626,7 @@ export const enviosBody: LegalDocumentBody = {
         LEGAL_NAME,
         'Nombre comercial: Kingbelt',
         `NIF: ${LEGAL_TAX_ID}`,
-        `Domicilio: ${REGISTERED_ADDRESS_SINGLE_LINE}`,
+        `Domicilio social: ${LEGAL_REGISTERED_ADDRESS_SINGLE_LINE}`,
         `Correo electrónico: ${LEGAL_CONTACT_EMAIL}`,
         `Teléfono: ${LEGAL_CONTACT_PHONE}`
       ),
@@ -650,18 +650,13 @@ export const enviosBody: LegalDocumentBody = {
     ],
     gastos: [
       p(
-        'Los gastos de envío aplicables a cada pedido se mostrarán al cliente durante el proceso de compra y antes de confirmar el pedido con obligación de pago.'
-      ),
-      p('El importe podrá variar en función de factores como:'),
-      ul(
-        'el destino;',
-        'la modalidad de envío seleccionada;',
-        'el importe del pedido;',
-        'las características del envío;',
-        'o las promociones vigentes.'
+        'Kingbelt ofrece envíos gratuitos a los destinos habilitados durante el proceso de compra.'
       ),
       p(
-        'Cuando Kingbelt ofrezca envío gratuito a partir de un determinado importe o bajo determinadas condiciones, dichas condiciones se indicarán claramente antes de finalizar la compra.'
+        'El coste del transporte está incluido en el precio de los productos mostrado en la tienda. No se añaden gastos de envío aparte en la modalidad ordinaria de compra.'
+      ),
+      p(
+        'Durante el proceso de compra, y antes de confirmar el pedido con obligación de pago, el cliente podrá comprobar que el envío ordinario es gratuito en las zonas cubiertas por esta política.'
       ),
       p(
         'No se añadirán posteriormente gastos ordinarios de transporte que no hayan sido comunicados al cliente antes de contratar.'
@@ -913,9 +908,7 @@ export const enviosBody: LegalDocumentBody = {
       address(
         `${LEGAL_NAME} – Kingbelt`,
         `NIF: ${LEGAL_TAX_ID}`,
-        'Avenida de Novelda, 143, bajo',
-        '03206 Elche (Alicante)',
-        'España'
+        ...LEGAL_REGISTERED_ADDRESS.split('\n')
       ),
       p('Correo electrónico: ', mail(LEGAL_CONTACT_EMAIL)),
       p('Teléfono: ', tel(LEGAL_CONTACT_PHONE)),
@@ -933,7 +926,7 @@ export const devolucionesBody: LegalDocumentBody = {
       LEGAL_NAME,
       'Nombre comercial: Kingbelt',
       `NIF: ${LEGAL_TAX_ID}`,
-      'Dirección: Avinguda de Novelda, 143, Polígono Industrial, 03206 Carrús, Alicante, España',
+      `Domicilio social: ${LEGAL_REGISTERED_ADDRESS_SINGLE_LINE}`,
       `Correo electrónico: ${LEGAL_CONTACT_EMAIL}`,
       `Teléfono: ${LEGAL_CONTACT_PHONE}`
     ),
@@ -984,14 +977,8 @@ export const devolucionesBody: LegalDocumentBody = {
         'y, cuando proceda, el motivo de la devolución, especialmente en caso de producto defectuoso, dañado o incorrecto.'
       ),
       p('No es obligatorio justificar el motivo cuando se ejerza el derecho legal de desistimiento.'),
-      p('Una vez recibida la solicitud, te facilitaremos las instrucciones necesarias para efectuar la devolución.'),
-      p('La devolución deberá enviarse a:'),
-      address(
-        `${LEGAL_NAME} – Kingbelt`,
-        'Avinguda de Novelda, 143',
-        'Polígono Industrial',
-        '03206 Carrús, Alicante',
-        'España'
+      p(
+        'Una vez recibida la solicitud, te facilitaremos las instrucciones y la dirección logística necesarias para efectuar la devolución. No envíes el producto al domicilio social salvo que esas instrucciones lo indiquen expresamente.'
       ),
       p(
         'La comunicación previa facilita la identificación y correcta tramitación de la devolución. No obstante, esta política no limita las demás formas legalmente válidas de comunicar el ejercicio del derecho de desistimiento mediante una declaración inequívoca.'
@@ -1082,10 +1069,7 @@ export const devolucionesBody: LegalDocumentBody = {
         'El reembolso se realizará utilizando el mismo medio de pago utilizado para la compra, salvo que el cliente acuerde expresamente otro medio y siempre que ello no le genere gastos adicionales.'
       ),
       p(
-        'Cuando el desistimiento afecte a la totalidad del pedido, se reembolsarán también, cuando legalmente corresponda, los gastos de entrega inicial correspondientes a la modalidad de envío ordinaria menos costosa ofrecida por Kingbelt.'
-      ),
-      p(
-        'Si el cliente hubiera elegido expresamente una modalidad de envío más cara que la modalidad ordinaria menos costosa disponible, Kingbelt no estará obligado a reembolsar la diferencia correspondiente a ese servicio adicional.'
+        'Como el envío ordinario está incluido en el precio del producto y no se cobra aparte, el reembolso del desistimiento comprende el precio pagado por los productos. No existe un cargo de envío separado que reembolsar.'
       ),
       p(
         'Una vez emitido el reembolso por Kingbelt, el tiempo necesario para que el importe aparezca en la cuenta del cliente dependerá de la entidad bancaria o del proveedor del método de pago utilizado.'
@@ -1100,12 +1084,11 @@ export const devolucionesBody: LegalDocumentBody = {
       p(
         'El uso de este modelo no es obligatorio. El consumidor podrá comunicar su decisión de desistir mediante cualquier declaración inequívoca que permita acreditar dicha decisión.'
       ),
-      p('Destinatario:'),
+      p('La declaración de desistimiento puede dirigirse a:'),
       address(
-        `${LEGAL_NAME} – Kingbelt`,
-        'Avinguda de Novelda, 143, Polígono Industrial',
-        '03206 Carrús, Alicante, España',
-        LEGAL_CONTACT_EMAIL
+        LEGAL_NAME,
+        ...LEGAL_REGISTERED_ADDRESS.split('\n'),
+        `Correo electrónico: ${LEGAL_CONTACT_EMAIL}`
       ),
       template(
         'Por medio de la presente comunico mi decisión de desistir del contrato correspondiente a los siguientes productos:',
@@ -1150,7 +1133,7 @@ export const contactLegalBody: LegalDocumentBody = {
         LEGAL_NAME,
         'Nombre comercial: Kingbelt',
         `NIF: ${LEGAL_TAX_ID}`,
-        `Dirección: ${REGISTERED_ADDRESS_SINGLE_LINE}`,
+        `Domicilio social: ${LEGAL_REGISTERED_ADDRESS_SINGLE_LINE}`,
         `Correo electrónico: ${LEGAL_CONTACT_EMAIL}`,
         `Teléfono: ${LEGAL_CONTACT_PHONE}`
       ),
@@ -1309,7 +1292,7 @@ export const condicionesBody: LegalDocumentBody = {
         LEGAL_NAME,
         'Nombre comercial: Kingbelt',
         `NIF: ${LEGAL_TAX_ID}`,
-        `Domicilio social: ${REGISTERED_ADDRESS_SINGLE_LINE}`,
+        `Domicilio social: ${LEGAL_REGISTERED_ADDRESS_SINGLE_LINE}`,
         `Correo electrónico: ${LEGAL_CONTACT_EMAIL}`,
         `Teléfono: ${LEGAL_CONTACT_PHONE}`
       ),
@@ -1403,7 +1386,7 @@ export const condicionesBody: LegalDocumentBody = {
     ],
     envio: [
       p(
-        'Los gastos de envío se muestran antes de confirmar el pedido y pueden variar según destino, modalidad, importe y promociones.'
+        'Los envíos son gratuitos: el coste del transporte está incluido en el precio del producto. Antes de confirmar el pedido, el cliente podrá comprobar que el envío ordinario se muestra como gratuito.'
       ),
       p(
         'El transporte lo realiza una empresa de transporte propuesta, seleccionada o contratada por Kingbelt. La modalidad concreta se comunica durante el proceso de compra. El detalle operativo está en la ',
@@ -1483,4 +1466,3 @@ export const legalBodies = {
   envios: enviosBody,
   devoluciones: devolucionesBody,
 } as const satisfies Record<string, LegalDocumentBody>;
-

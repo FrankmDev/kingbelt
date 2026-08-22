@@ -44,7 +44,7 @@ const {
 
 <style>
   .collection-head {
-    padding-top: clamp(7.5rem, 10vw, 9.5rem);
+    padding-top: var(--kb-page-offset-top);
     padding-bottom: var(--kb-space-8);
   }
 
@@ -96,7 +96,6 @@ const {
 
   @media (max-width: 47.99rem) {
     .collection-head {
-      padding-top: clamp(5.5rem, 14vw, 7.5rem);
       padding-bottom: var(--kb-space-6);
     }
 
@@ -133,6 +132,10 @@ const {
   }
 
   @media (min-width: 64rem) {
+    .collection-head {
+      padding-top: calc(var(--kb-header-offset) + var(--kb-space-6));
+    }
+
     .collection-head__grid {
       grid-template-columns: minmax(0, 1fr) minmax(0, 26rem);
       gap: var(--kb-space-10);

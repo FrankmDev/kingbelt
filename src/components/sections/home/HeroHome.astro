@@ -380,7 +380,7 @@ import { hero } from '@content/home';
     width: 100%;
     min-height: 100svh;
     padding-inline: var(--kb-gutter);
-    padding-block: clamp(5.5rem, 11vh, 7rem) clamp(1.5rem, 3.5vh, 2.5rem);
+    padding-block: calc(var(--kb-header-offset) + var(--kb-space-3)) clamp(1.5rem, 3.5vh, 2.5rem);
   }
 
   .hero-home__content {

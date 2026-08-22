@@ -40,7 +40,7 @@ const formattedIndex =
       : index
     : undefined;
 
-const cardClass = variant === 'steel' ? 'kb-card-steel' : 'kb-card';
+const cardClass = variant === 'steel' ? 'kb-card-steel' : 'kb-card-dry';
 const showFoot = Boolean(meta || href);
 const footLabel = meta ?? (href ? (isExternal ? 'Abrir enlace' : 'Ir al canal') : undefined);
 ---
@@ -58,33 +58,33 @@ const footLabel = meta ?? (href ? (isExternal ? 'Abrir enlace' : 'Ir al canal') 
   {...linkProps}
   {...rest}
 >
-  <header class="contact-method-head">
+  <header class="contact-method__head">
+    <div class="contact-method__kicker">
+      {formattedIndex && <span class="contact-method__index kb-folio" aria-hidden="true">{formattedIndex}</span>}
+      <p class="contact-method__label kb-eyebrow">{label}</p>
+    </div>
+
     {icon && (
-      <div class="contact-method-icon" aria-hidden="true">
+      <div class="contact-method__icon" aria-hidden="true">
         <Icon name={icon} strokeWidth={1.65} />
       </div>
     )}
-
-    <div class="contact-method-kicker">
-      {formattedIndex && <span class="contact-method-index">{formattedIndex}</span>}
-      <p class="contact-method-label kb-eyebrow kb-eyebrow-lined">{label}</p>
-    </div>
   </header>
 
-  <div class="contact-method-body">
-    <p class="contact-method-value">{value}</p>
-    {description && <p class="contact-method-description">{description}</p>}
+  <div class="contact-method__body">
+    <p class="contact-method__value">{value}</p>
+    {description && <p class="contact-method__description">{description}</p>}
   </div>
 
   {showFoot && (
-    <footer class="contact-method-foot">
+    <footer class="contact-method__foot">
       {footLabel && (
-        <span class="contact-method-meta">
+        <span class="contact-method__meta kb-meta-label">
           {footLabel}
           {href && !meta && (
             <Icon
               name={isExternal ? 'external-link' : 'arrow-right'}
-              class="contact-method-meta-icon"
+              class="contact-method__meta-icon"
               aria-hidden="true"
             />
           )}
@@ -96,197 +96,155 @@ const footLabel = meta ?? (href ? (isExternal ? 'Abrir enlace' : 'Ir al canal') 
 
 <style>
   .contact-method {
-    --cm-icon-bg: rgba(138, 90, 43, 0.07);
-    --cm-icon-border: rgba(138, 90, 43, 0.2);
-    --cm-icon-fg: var(--color-king-accent);
-    --cm-index-fg: var(--color-king-accent);
-    --cm-label-fg: var(--color-king-accent);
-    --cm-value-fg: var(--color-king-text);
-    --cm-body-fg: var(--color-king-muted);
-    --cm-divider: rgba(138, 90, 43, 0.12);
-    --cm-meta-fg: var(--color-king-accent);
-    --cm-meta-bg: rgba(138, 90, 43, 0.05);
-    --cm-meta-border: rgba(138, 90, 43, 0.16);
+    --cm-ink: var(--color-king-text);
+    --cm-muted: var(--color-king-muted);
     --cm-accent: var(--color-king-accent);
+    --cm-line: var(--kb-stroke-hairline);
+    --cm-icon-bg: color-mix(in srgb, var(--color-king-accent) 7%, transparent);
+    --cm-icon-border: color-mix(in srgb, var(--color-king-accent) 18%, var(--kb-stroke-hairline));
 
     position: relative;
     display: flex;
     flex-direction: column;
-    gap: var(--kb-space-5);
+    gap: var(--kb-space-4);
     min-width: 0;
     min-height: 100%;
-    padding: clamp(1.5rem, 3vw, 2rem);
+    padding: clamp(1.25rem, 2.5vw, 1.5rem);
     overflow: hidden;
     text-decoration: none;
   }
 
   .contact-method--steel {
+    --cm-ink: rgba(255, 255, 255, 0.94);
+    --cm-muted: rgba(255, 255, 255, 0.58);
+    --cm-accent: var(--color-king-accent-light);
+    --cm-line: rgba(255, 255, 255, 0.1);
     --cm-icon-bg: rgba(255, 255, 255, 0.08);
     --cm-icon-border: rgba(255, 255, 255, 0.14);
-    --cm-icon-fg: rgba(255, 255, 255, 0.92);
-    --cm-index-fg: var(--color-king-accent-light);
-    --cm-label-fg: var(--color-king-accent-light);
-    --cm-value-fg: rgba(255, 255, 255, 0.94);
-    --cm-body-fg: rgba(255, 255, 255, 0.56);
-    --cm-divider: rgba(255, 255, 255, 0.1);
-    --cm-meta-fg: var(--color-king-accent-light);
-    --cm-meta-bg: rgba(183, 138, 79, 0.1);
-    --cm-meta-border: rgba(183, 138, 79, 0.24);
-    --cm-accent: var(--color-king-accent-light);
-  }
-
-  .contact-method::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 3px;
-    height: 100%;
-    background: var(--cm-accent);
-    opacity: 0.65;
-    transform: scaleY(0.36);
-    transform-origin: top;
-    transition: transform var(--kb-dur-med) var(--kb-ease-out);
-    z-index: 2;
   }
 
   .contact-method--linked {
     cursor: pointer;
+    transition:
+      border-color var(--kb-dur-med) var(--kb-ease-out),
+      transform var(--kb-dur-med) var(--kb-ease-out);
   }
 
   @media (hover: hover) and (pointer: fine) {
-    .contact-method--linked:hover::before,
-    .contact-method--linked:focus-visible::before {
-      transform: scaleY(1);
+    .contact-method--linked:hover,
+    .contact-method--linked:focus-visible {
+      transform: translateY(-2px);
     }
 
-    .contact-method--linked:hover .contact-method-icon,
-    .contact-method--linked:focus-visible .contact-method-icon {
-      transform: scale(1.04);
+    .contact-method--linked:hover .contact-method__icon,
+    .contact-method--linked:focus-visible .contact-method__icon {
       border-color: color-mix(in srgb, var(--cm-accent) 35%, transparent);
       background-color: color-mix(in srgb, var(--cm-accent) 11%, transparent);
     }
   }
 
-  .contact-method-head {
+  .contact-method__head {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
     gap: var(--kb-space-4);
     min-width: 0;
+    padding-bottom: var(--kb-space-3);
+    border-bottom: 1px solid var(--cm-line);
   }
 
-  .contact-method-icon {
+  .contact-method__kicker {
+    display: flex;
+    flex-direction: column;
+    gap: var(--kb-space-1);
+    min-width: 0;
+  }
+
+  .contact-method__index {
+    margin: 0;
+    color: var(--cm-accent);
+    opacity: 0.5;
+  }
+
+  .contact-method__label {
+    margin: 0;
+    color: var(--cm-accent);
+  }
+
+  .contact-method__icon {
     display: flex;
     flex-shrink: 0;
     align-items: center;
     justify-content: center;
-    width: 3rem;
-    height: 3rem;
+    width: 2.5rem;
+    height: 2.5rem;
     border: 1px solid var(--cm-icon-border);
-    border-radius: var(--kb-radius-sm);
+    border-radius: var(--kb-radius-xs);
     background: var(--cm-icon-bg);
-    color: var(--cm-icon-fg);
-    box-shadow: var(--kb-shadow-xs);
+    color: var(--cm-accent);
     transition:
-      transform var(--kb-dur-med) var(--kb-ease-out),
       border-color var(--kb-dur-med) var(--kb-ease-out),
       background-color var(--kb-dur-med) var(--kb-ease-out);
   }
 
-  .contact-method-icon :global(svg) {
-    width: 1.25rem;
-    height: 1.25rem;
+  .contact-method__icon :global(svg) {
+    width: 1.125rem;
+    height: 1.125rem;
   }
 
-  .contact-method-kicker {
+  .contact-method__body {
     display: flex;
     flex-direction: column;
-    align-items: flex-end;
     gap: var(--kb-space-2);
     min-width: 0;
-    margin-left: auto;
-    text-align: right;
+    flex: 1 1 auto;
   }
 
-  .contact-method-index {
-    font-family: var(--font-display);
-    font-size: clamp(1.5rem, 2.4vw, 1.875rem);
-    font-weight: var(--kb-w-heading-light);
-    font-variant-numeric: tabular-nums;
-    line-height: 1;
-    letter-spacing: -0.01em;
-    color: var(--cm-index-fg);
-    opacity: 0.38;
-  }
-
-  .contact-method-label {
-    margin: 0;
-    color: var(--cm-label-fg);
-  }
-
-  .contact-method-body {
-    display: flex;
-    flex-direction: column;
-    gap: var(--kb-space-3);
-    min-width: 0;
-  }
-
-  .contact-method-value {
+  .contact-method__value {
     margin: 0;
     font-family: var(--font-display);
-    font-size: var(--kb-text-h4);
+    font-size: clamp(1.0625rem, 1.8vw, 1.25rem);
     font-weight: var(--kb-w-medium);
-    line-height: 1.16;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
     text-wrap: balance;
-    color: var(--cm-value-fg);
+    color: var(--cm-ink);
     word-break: break-word;
   }
 
-  .contact-method-description {
+  .contact-method__description {
     margin: 0;
     font-size: var(--kb-text-sm);
-    line-height: 1.68;
+    line-height: 1.6;
     text-wrap: pretty;
-    color: var(--cm-body-fg);
+    color: var(--cm-muted);
   }
 
-  .contact-method-foot {
+  .contact-method__foot {
     margin-top: auto;
-    padding-top: var(--kb-space-4);
-    border-top: 1px solid var(--cm-divider);
+    padding-top: var(--kb-space-3);
+    border-top: 1px solid var(--cm-line);
   }
 
-  .contact-method-meta {
+  .contact-method__meta {
     display: inline-flex;
     align-items: center;
     gap: 0.375rem;
-    padding: 0.3125rem 0.625rem;
-    border: 1px solid var(--cm-meta-border);
-    border-radius: var(--kb-radius-xs);
-    background: var(--cm-meta-bg);
-    color: var(--cm-meta-fg);
-    font-size: var(--kb-text-2xs);
-    font-weight: var(--kb-w-medium);
-    letter-spacing: 0.06em;
-    line-height: 1.2;
+    margin: 0;
+    color: var(--cm-accent);
+    letter-spacing: 0.08em;
     text-transform: uppercase;
   }
 
-  .contact-method-meta :global(svg) {
+  .contact-method__meta :global(svg) {
     width: 0.75rem;
     height: 0.75rem;
     flex-shrink: 0;
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .contact-method::before,
-    .contact-method-icon {
+    .contact-method--linked {
       transition: none;
-    }
-
-    .contact-method--linked::before {
-      transform: scaleY(1);
     }
   }
 </style>

@@ -1,4 +1,4 @@
-import { confirmed, businessFacts } from '@config/business';
+import { confirmed, businessFacts, FREE_SHIPPING_LABEL } from '@config/business';
 
 const madeInSpain = confirmed(businessFacts.madeInSpain);
 
@@ -11,6 +11,7 @@ export const hero = {
   ],
   signals: [
     { label: 'Selección curada', href: '/productos' },
+    { label: FREE_SHIPPING_LABEL, href: '/envios-y-devoluciones' },
     { label: 'Guía de tallas', href: '/guia-de-tallas' },
     { label: 'Atención directa', href: '/contacto' },
   ] as const,
@@ -20,7 +21,7 @@ export const hero = {
 } as const;
 
 export const brandStatement = {
-  index: '04',
+  index: '03',
   eyebrow: 'Sobre KingBelt',
   meta: 'Marca · Producto',
   lede: 'Una marca que empieza por el producto y avanza con criterio, no con ruido de escaparate.',
@@ -63,6 +64,7 @@ export const brandStatement = {
 } as const;
 
 export const categoriesSection = {
+  enabled: false,
   index: '03',
   eyebrow: 'Colección',
   title: 'Líneas distintas, <em>un mismo criterio.</em>',
@@ -80,7 +82,7 @@ export const featuredSection = {
 } as const;
 
 export const standardsSection = {
-  index: '05',
+  index: '04',
   eyebrow: 'Qué recibes',
   title: 'Tres cosas que buscamos <em>en cada pieza.</em>',
   lede: 'No es filosofía de marca: es lo que debe notarse cuando abrochas el cinturón y lo usas una semana.',
@@ -125,16 +127,16 @@ export const styleBanner = {
 } as const;
 
 export const journalSection = {
-  index: '06',
+  index: '05',
   eyebrow: 'Revista KingBelt',
   title: 'Lecturas que <em>acompañan</em> la compra.',
   body: 'Guías sobre medida, materiales y estilo. Contenido real para decidir con más contexto.',
-  meta: '3 lecturas de referencia',
+  meta: '1 destacado · 4 lecturas',
   cta: { label: 'Ir a la revista', href: '/blog' },
 } as const;
 
 export const trustSection = {
-  index: '07',
+  index: '06',
   eyebrow: 'Antes de elegir',
   title: 'Menos dudas, <em>más claridad.</em>',
   items: [
@@ -154,11 +156,11 @@ export const trustSection = {
 } as const;
 
 export const closingCta = {
-  index: '08',
+  index: '07',
   eyebrow: 'KingBelt',
   title: 'Descubre la colección <em>o conoce la marca.</em>',
   description:
-    'Empieza por las categorías, revisa la selección o escríbenos si necesitas orientación antes de elegir.',
+    'Revisa la selección o escríbenos si necesitas orientación antes de elegir.',
   primary: { label: 'Ver colección', href: '/productos' },
   secondary: { label: 'Contactar', href: '/contacto' },
   backgroundImage: '/images/blog/cinturon-negro.jpg',

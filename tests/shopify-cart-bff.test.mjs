@@ -1,5 +1,10 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test';
 import { emptyCart } from '../src/commerce/application/cart-service.ts';
+import {
+  CART_UNRECOVERABLE_MESSAGE,
+  UnrecoverableCartStateError,
+} from '../src/commerce/application/cart-provider.ts';
+import { ShopifyStorefrontRequestError } from '../src/commerce/infrastructure/shopify/storefront-gateway.ts';
 
 const VARIANT_ID = 'gid://shopify/ProductVariant/111';
 const LINE_ID = 'gid://shopify/CartLine/line-a';
@@ -338,6 +343,26 @@ describe('schema exacto de comandos /api/cart', () => {
     expect(serviceCalls).toEqual([{ method: 'checkout', cartId: 'gid://shopify/Cart/existing' }]);
   });
 
+  test('reset exacto es válido, no crea servicio y elimina solo la referencia de sesión', async () => {
+    const session = createSession({ shopifyCartId: REMOTE_CART_ID });
+    const result = await postCart({ session, json: { command: 'reset' } });
+    expect(result.response.status).toBe(200);
+    expect(result.body).toEqual({ success: true, cart: emptyCart() });
+    expect(session.store.shopifyCartId).toBeUndefined();
+    expect(serviceCreated).toBe(0);
+    expect(serviceCalls).toEqual([]);
+  });
+
+  test('reset rechaza propiedades extra y conserva la sesión', async () => {
+    const session = createSession({ shopifyCartId: REMOTE_CART_ID });
+    assertRejectedBeforeShopify(
+      await postCart({ session, json: { command: 'reset', cartId: REMOTE_CART_ID } }),
+      400,
+      'invalid_command'
+    );
+    expect(session.store.shopifyCartId).toBe(REMOTE_CART_ID);
+  });
+
   test('add exacto es válido', async () => {
     const result = await postCart({ json: { command: 'add', variantId: VARIANT_ID, quantity: 1 } });
     expect(result.response.status).toBe(200);
@@ -665,6 +690,61 @@ describe('flujo BFF de /api/cart', () => {
     expect(result.text).not.toContain('gid://shopify/Cart/');
     expect(result.session.store.shopifyCartId).toBe('gid://shopify/Cart/existing');
   });
+
+  test('un Cart remoto inválido permanece bloqueado hasta un reset explícito y después admite un Cart nuevo', async () => {
+    const unrecoverable = () => { throw new UnrecoverableCartStateError(); };
+    serviceHandlers = {
+      get: unrecoverable,
+      add: unrecoverable,
+      update: unrecoverable,
+      remove: unrecoverable,
+      checkout: unrecoverable,
+    };
+    const existingCartId = 'gid://shopify/Cart/existing';
+    const session = createSession({ shopifyCartId: existingCartId });
+
+    for (const command of [
+      { command: 'refresh' },
+      { command: 'refresh' },
+      { command: 'add', variantId: VARIANT_ID, quantity: 1 },
+      { command: 'update', lineId: LINE_ID, quantity: 2 },
+      { command: 'remove', lineId: LINE_ID },
+    ]) {
+      const result = await postCart({ session, json: command });
+      expect(result.response.status).toBe(409);
+      expect(result.body.error).toEqual({
+        code: 'cart_unrecoverable',
+        message: CART_UNRECOVERABLE_MESSAGE,
+      });
+      expect(result.body.cart.recovery).toBe('reset_required');
+      expect(result.body.cart.canCheckout).toBe(false);
+      expect(result.text).not.toContain(existingCartId);
+      expect(session.store.shopifyCartId).toBe(existingCartId);
+    }
+
+    const checkout = await postCart({ session, json: { command: 'checkout' } });
+    expect(checkout.response.status).toBe(409);
+    expect(checkout.body.status).toBe('blocked');
+    expect(checkout.body.message).toBe(CART_UNRECOVERABLE_MESSAGE);
+    expect(checkout.body.url).toBeUndefined();
+    expect(session.store.shopifyCartId).toBe(existingCartId);
+
+    const serviceCountBeforeReset = serviceCreated;
+    const reset = await postCart({ session, json: { command: 'reset' } });
+    expect(reset.response.status).toBe(200);
+    expect(reset.body).toEqual({ success: true, cart: emptyCart() });
+    expect(session.store.shopifyCartId).toBeUndefined();
+    expect(serviceCreated).toBe(serviceCountBeforeReset);
+
+    serviceHandlers = {};
+    const added = await postCart({
+      session,
+      json: { command: 'add', variantId: VARIANT_ID, quantity: 1 },
+    });
+    expect(added.response.status).toBe(200);
+    expect(added.body.success).toBe(true);
+    expect(session.store.shopifyCartId).toBe(REMOTE_CART_ID);
+  });
 });
 
 describe('recuperación de sesión en /api/cart', () => {
@@ -916,5 +996,21 @@ describe('recuperación de sesión en /api/cart', () => {
     expect(result.body).toEqual({ error: 'provider_error' });
     expect(session.store.shopifyCartId).toBe(existingCartId);
     expect(result.text).not.toContain('gid://shopify/Cart/');
+  });
+
+  test('un 429 sigue siendo transitorio y no ofrece reset', async () => {
+    serviceHandlers.get = () => {
+      throw new ShopifyStorefrontRequestError(
+        'http',
+        'Shopify Storefront request failed with HTTP 429.',
+        429
+      );
+    };
+    const session = createSession({ shopifyCartId: 'gid://shopify/Cart/existing' });
+    const result = await postCart({ session, json: { command: 'refresh' } });
+    expect(result.response.status).toBe(502);
+    expect(result.body).toEqual({ error: 'provider_error' });
+    expect(result.body.cart?.recovery).toBeUndefined();
+    expect(session.store.shopifyCartId).toBe('gid://shopify/Cart/existing');
   });
 });

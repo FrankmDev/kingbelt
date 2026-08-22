@@ -1,6 +1,6 @@
 # Datos empresariales y requisitos legales — KingBelt
 
-> **Advertencia interna:** Los textos legales deben ser revisados y aprobados por un profesional antes del lanzamiento. Este documento no constituye asesoramiento legal.
+> **Alcance del gate:** CintuElx S.L. declaró definitivos los textos legales el 22/08/2026. El preflight verifica facts, estado, contenido y ausencia de marcadores; no sustituye una revisión jurídica humana ni certifica automáticamente la validez de cada cláusula.
 
 ## Estado del sistema
 
@@ -20,57 +20,60 @@ Astro policy content must be reconciled with Shopify Admin before Payment QA. SH
 ### Identidad y contacto
 
 - [x] Razón social / denominación — CintuElx S.L. (`confirmed`)
-- [x] Nombre comercial — KingBelt (`confirmed`)
+- [x] Nombre comercial — Kingbelt (`confirmed`)
 - [x] NIF/CIF — B42696716 (`confirmed`)
-- [x] Dirección facilitada por la empresa (`address`; texto literal, sin función jurídica)
-- [x] Domicilio social — Avenida de Novelda, 143, bajo, Elche (`registeredAddress`; Aviso Legal)
+- [x] Domicilio social — Avenida de Novelda, 143, bajo, 03206 Elche (Alicante), España (`confirmed`)
+- [x] Email legal y de atención — contabilidad@cintuelx.com (`confirmed`)
 - [x] Teléfono de atención — 965 43 01 51 (`confirmed`)
-- [x] Datos registrales — inscrita en el Registro Mercantil de Alicante (fuente: Aviso Legal, 18 ago 2026)
-- [x] Actividad — comercialización de accesorios de cuero online (fuente: Aviso Legal)
+- [x] Web — https://kingbelt.com (`confirmed`)
+- [x] Datos registrales — Registro Mercantil de Alicante, sección 8, hoja A-168894, inscripción 3 (`confirmed`; BORME 02/01/2026)
+- [x] Actividad — fabricación y comercio de calzado, marroquinería y complementos de vestir (`confirmed`; BORME 21/02/2020)
+
+Fuentes registrales: [cambio de domicilio e inscripción vigente](https://www.boe.es/borme/dias/2026/01/02/pdfs/BORME-A-2026-1-03.pdf) y [constitución/objeto social](https://www.boe.es/borme/dias/2020/02/21/pdfs/BORME-A-2020-36-03.pdf).
 
 ### Comercio y operación
 
 Los importes, plazos y métodos deben coincidir con Shopify Admin. No inventarlos aquí ni en copy público. El checklist operativo está en `docs/SHOPIFY_LAUNCH_OPERATIONS.md`. Una contradicción entre estas páginas y Checkout es MANUAL BLOCKER.
 
-- [x] Territorios de venta — destinos habilitados en compra (fuente: Política de envíos)
-- [x] Política fiscal — impuestos comunicados en el checkout; IVA no nominado (fuente: Aviso Legal / Envíos)
-- [x] Métodos de pago — se muestran en el checkout; reembolso por el mismo medio (fuente: Aviso Legal / Devoluciones)
-- [x] Transportistas — empresa de transporte no nominada; modalidad en compra (fuente: Política de envíos)
-- [x] Costes de envío — se muestran antes de confirmar; varían (fuente: Política de envíos)
-- [x] Plazo de preparación — distinto del transporte (fuente: Política de envíos)
-- [x] Plazo de entrega — máximo 30 días naturales salvo otro acuerdo (fuente: Política de envíos)
-- [x] Política de devoluciones — 30 días / 14 de desistimiento (fuente: Política de devoluciones)
-- [x] Dirección para devoluciones — Carrús / Polígono (fuente: Política de devoluciones; distinta del texto empresarial facilitado)
-- [x] Garantía legal de conformidad, no sustituida (fuente: Política de devoluciones)
-- [x] Jurisdicción — legislación española (fuente: Aviso Legal)
+- [x] Territorios de venta — destinos habilitados en checkout
+- [x] Política fiscal — comunicación antes de confirmar la compra
+- [x] Métodos de pago y vía de reembolso — métodos del checkout; reembolso al mismo medio salvo acuerdo válido
+- [x] Transportistas — empresa propuesta, seleccionada o contratada por Kingbelt
+- [x] Costes de envío — incluidos en el precio del producto
+- [x] Plazo de preparación — integrado en la estimación comunicada al cliente
+- [x] Plazo de entrega — estimación por pedido; máximo general de 30 días salvo acuerdo distinto
+- [x] Política y plazo comercial de devoluciones — 14 días legales ampliados a 30
+- [x] Garantía y texto de conformidad
+- [x] Ley aplicable y jurisdicción del consumidor
+- [ ] Dirección logística fija para devoluciones (`returnAddress`, manual y no publicada): se comunica con las instrucciones; no se identifica con el domicilio social
 
 ### Claims de marketing (activables vía `businessFacts`)
 
 - [ ] Origen de fabricación (`madeInSpain`)
 - [ ] Embalaje incluido (`packagingIncluded`)
-- [ ] Envío gratuito (`freeShipping`)
+- [x] Envío gratuito (`freeShipping`)
 - [ ] Compromiso de tiempo de respuesta (`responseTime`)
 
 ### Privacidad y datos
 
-- [x] Responsable del tratamiento — CintuElx S.L. (fuente: Política de privacidad)
-- [x] Finalidades del tratamiento (fuente: Política de privacidad)
-- [x] Bases jurídicas — resumen del texto publicado; no hay tabla art. 6 por finalidad
-- [x] Plazos de conservación — criterios de la política publicada; sin número de años
-- [x] Destinatarios (fuente: Política de privacidad)
-- [x] Transferencias internacionales (fuente: Política de privacidad)
-- [x] Inventario de cookies del código (sesión Shopify + localStorage demo + fonts). Checkout Shopify no inventariado.
+- [x] Responsable del tratamiento y domicilio aplicable
+- [x] Finalidades del tratamiento
+- [x] Bases jurídicas por finalidad
+- [x] Plazos o criterios de conservación
+- [x] Categorías de destinatarios
+- [x] Transferencias internacionales y garantías
+- [x] Inventario de cookies y tecnologías declarado en la política
 
 ## Documentos legales
 
 | Ruta | Estado | Robots | Sitemap |
 |------|--------|--------|---------|
-| `/aviso-legal` | published | indexable | Incluido |
-| `/privacidad` | published | indexable | Incluido |
-| `/cookies` | published | indexable | Incluido |
-| `/condiciones` | published | indexable | Incluido |
-| `/envios-y-devoluciones` | published | indexable | Incluido |
-| `/devoluciones` | published | indexable | Incluido |
+| `/aviso-legal` | published | index | Incluido |
+| `/privacidad` | published | index | Incluido |
+| `/cookies` | published | index | Incluido |
+| `/condiciones` | published | index | Incluido |
+| `/envios-y-devoluciones` | published | index | Incluido |
+| `/devoluciones` | published | index | Incluido |
 | `/desistimiento` | inactivo | noindex,nofollow | Excluido |
 
 ### Activar un documento
@@ -85,8 +88,9 @@ Los borradores no aparecen en navegación pública. El footer y el sitemap solo 
 
 ## Mecanismo de desistimiento
 
-- Vía operativa publicada: `/devoluciones` (comunicación a `contabilidad@cintuelx.com` y modelo de formulario).
-- `/desistimiento` permanece inactive: no es la vía pública ni un requisito de lanzamiento por sí sola.
+- El desistimiento puede comunicarse a `contabilidad@cintuelx.com` o por correo postal al domicilio social. `/devoluciones` contiene el modelo y el procedimiento publicados.
+- La dirección logística para remitir el producto se facilita con las instrucciones de devolución y no se presupone que coincida con el domicilio social.
+- `/desistimiento` permanece inactive: el formulario Astro independiente no es la vía pública ni un requisito de lanzamiento por sí solo.
 
 ## Páginas de ayuda
 
@@ -95,7 +99,7 @@ Los borradores no aparecen en navegación pública. El footer y el sitemap solo 
 | `/ayuda` | Sí | Portada del centro de ayuda |
 | `/guia-de-tallas` | Sí | Tabla pendiente de datos por modelo |
 | `/cuidados` | Sí | Recomendaciones generales |
-| `/envios-y-devoluciones` | No (draft) | Política pendiente de validación |
+| `/envios-y-devoluciones` | Sí | Política publicada |
 
 ## SEO
 

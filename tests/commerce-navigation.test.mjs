@@ -187,10 +187,14 @@ describe('superficies alojadas en la interfaz', () => {
     expect(header).toContain('accountHref={accountHref}');
     expect(header).toContain('<HeaderAccountCta href={accountHref} />');
     expect(mobile).toContain('accountHref: string | null');
-    expect(mobile).toContain('href: accountHref');
+    expect(mobile).toContain('href={accountHref}');
     expect(headerCta).toContain('href={href}');
     expect(headerCta).not.toContain('target=');
-    expect(mobile).not.toContain('target="_blank"');
+    const mobileAccountCta = mobile.slice(
+      mobile.indexOf('{accountHref ?'),
+      mobile.indexOf(') : (', mobile.indexOf('{accountHref ?'))
+    );
+    expect(mobileAccountCta).not.toContain('target=');
     expect(navigation).not.toContain("href: '/cuenta/iniciar'");
     expect(headerCta).not.toContain('headerAccountCta.href');
     expect(mobile).not.toContain('headerAccountCta.href');

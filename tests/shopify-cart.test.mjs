@@ -26,6 +26,7 @@ import { MAX_CART_LINES, MAX_CART_LINES_MESSAGE } from '../src/commerce/domain/c
 import { TECHNICAL_LINE_QUANTITY_LIMIT } from '../src/commerce/domain/inventory.ts';
 import { isQuantityAllowed } from '../src/commerce/domain/inventory.ts';
 import { ShopifyStorefrontRequestError } from '../src/commerce/infrastructure/shopify/storefront-gateway.ts';
+import { UnrecoverableCartStateError } from '../src/commerce/application/cart-provider.ts';
 
 const root = resolve(import.meta.dir, '..');
 const checkoutHosts = ['kingbelt.myshopify.com'];
@@ -607,9 +608,8 @@ describe('disponibilidad real del ProductVariant en Cart', () => {
       height: 1000,
       altText: 'Portada de producto',
     };
-    expect(() => mapShopifyCart(remoteCart({ lines: [line] }))).toThrow(
-      'merchandise.image is missing'
-    );
+    expect(() => mapShopifyCart(remoteCart({ lines: [line] })))
+      .toThrow(UnrecoverableCartStateError);
   });
 
   test('acepta ImageSource como GID de Image devuelto por Storefront', () => {
@@ -629,17 +629,15 @@ describe('disponibilidad real del ProductVariant en Cart', () => {
   test('un Product.id CollectionImage no es un GID de Product en Cart', () => {
     const line = remoteLine(LINE_A, VARIANT_A, 1);
     line.merchandise.product.id = 'gid://shopify/CollectionImage/123456789';
-    expect(() => mapShopifyCart(remoteCart({ lines: [line] }))).toThrow(
-      'line.merchandise.product.id'
-    );
+    expect(() => mapShopifyCart(remoteCart({ lines: [line] })))
+      .toThrow(UnrecoverableCartStateError);
   });
 
   test('un Image ID no Shopify hace fallar el Cart completo', () => {
     const line = remoteLine(LINE_A, VARIANT_A, 1);
     line.merchandise.image.id = 'image-local-1';
-    expect(() => mapShopifyCart(remoteCart({ lines: [line] }))).toThrow(
-      'line.merchandise.image.id'
-    );
+    expect(() => mapShopifyCart(remoteCart({ lines: [line] })))
+      .toThrow(UnrecoverableCartStateError);
   });
 
   test('availableForSale false no es comprable y bloquea checkout', () => {
@@ -787,14 +785,14 @@ describe('disponibilidad real del ProductVariant en Cart', () => {
         cost: { amountPerQuantity: money(), totalAmount: money('178.00') },
         merchandise: null,
       }],
-    }))).toThrow('merchandise is missing');
+    }))).toThrow(UnrecoverableCartStateError);
   });
 
   test('un producto malformado hace fallar el mapping completo', () => {
     const line = remoteLine(LINE_A, VARIANT_A, 1);
     line.merchandise.product.id = '';
     expect(() => mapShopifyCart(remoteCart({ lines: [line] })))
-      .toThrow('line.merchandise.product.id');
+      .toThrow(UnrecoverableCartStateError);
   });
 
   test('una línea remota sin id utilizable hace fallar el mapping completo', () => {
@@ -808,7 +806,7 @@ describe('disponibilidad real del ProductVariant en Cart', () => {
           merchandise: null,
         },
       ],
-    }))).toThrow('line.id');
+    }))).toThrow(UnrecoverableCartStateError);
   });
 
   test('conserva el CartLine ID contextual que devuelve Storefront', () => {
@@ -826,7 +824,7 @@ describe('disponibilidad real del ProductVariant en Cart', () => {
       `${LINE_A}#fragment`,
     ]) {
       expect(() => mapShopifyCart(remoteCart({ lines: [remoteLine(id, VARIANT_A, 1)] })))
-        .toThrow('line.id');
+        .toThrow(UnrecoverableCartStateError);
     }
   });
 
@@ -1052,7 +1050,7 @@ describe('checkout preflight contra el Cart remoto', () => {
         }),
       }),
     }), checkoutHosts).checkout(CART_ID);
-    await expect(result).rejects.toThrow('merchandise is missing');
+    await expect(result).rejects.toThrow(UnrecoverableCartStateError);
   });
 
   test('una línea sin ProductVariant.image impide checkout ready y no expone checkoutUrl', async () => {
@@ -1067,9 +1065,7 @@ describe('checkout preflight contra el Cart remoto', () => {
     };
     await expect(createShopifyCartService(createGateway({
       get: () => ({ cart: remoteCart({ lines: [line] }) }),
-    }), checkoutHosts).checkout(CART_ID)).rejects.toThrow(
-      'merchandise.image is missing'
-    );
+    }), checkoutHosts).checkout(CART_ID)).rejects.toThrow(UnrecoverableCartStateError);
   });
 
   test('un precio unitario 0 impide checkout ready y no expone checkoutUrl', async () => {
@@ -1077,9 +1073,7 @@ describe('checkout preflight contra el Cart remoto', () => {
     line.cost.amountPerQuantity = money('0.00');
     await expect(createShopifyCartService(createGateway({
       get: () => ({ cart: remoteCart({ lines: [line] }) }),
-    }), checkoutHosts).checkout(CART_ID)).rejects.toThrow(
-      'unit price is not a commercial KingBelt price'
-    );
+    }), checkoutHosts).checkout(CART_ID)).rejects.toThrow(UnrecoverableCartStateError);
   });
 
   test('una quantityRule no soportada hace fallar la preparación de checkout', async () => {
@@ -1092,7 +1086,7 @@ describe('checkout preflight contra el Cart remoto', () => {
         }),
       }),
     }), checkoutHosts).checkout(CART_ID);
-    await expect(result).rejects.toThrow('minimum=1 and increment=1');
+    await expect(result).rejects.toThrow(UnrecoverableCartStateError);
   });
 
   test('un warning ya resuelto no impide checkout si el cart es comprable', async () => {
@@ -1270,39 +1264,45 @@ describe('contexto de mercado del carrito Shopify', () => {
       quantities: () => ({ cart: remoteCart() }),
       add: () => ({ cartLinesAdd: payload({ cart: usdCart }) }),
     });
-    await expect(service.add(CART_ID, VARIANT_A, 1)).rejects.toThrow(
-      'Shopify cart currency does not match EUR at cost.subtotalAmount.'
-    );
+    await expect(service.add(CART_ID, VARIANT_A, 1)).rejects.toThrow(UnrecoverableCartStateError);
   });
 
   test('mapShopifyCart rechaza un país distinto de ES', () => {
-    expect(() => mapShopifyCart(remoteCart({ buyerIdentity: { countryCode: 'FR' } }))).toThrow(
-      'Shopify cart country does not match ES.'
-    );
+    expect(() => mapShopifyCart(remoteCart({ buyerIdentity: { countryCode: 'FR' } })))
+      .toThrow(UnrecoverableCartStateError);
   });
 
   test('mapShopifyCart rechaza un subtotal que no sea EUR', () => {
     const cart = remoteCart();
     cart.cost.subtotalAmount.currencyCode = 'USD';
-    expect(() => mapShopifyCart(cart)).toThrow(
-      'Shopify cart currency does not match EUR at cost.subtotalAmount.'
-    );
+    expect(() => mapShopifyCart(cart)).toThrow(UnrecoverableCartStateError);
   });
 
   test('mapShopifyCart rechaza un precio unitario que no sea EUR', () => {
     const cart = remoteCart();
     cart.lines.nodes[0].cost.amountPerQuantity.currencyCode = 'USD';
-    expect(() => mapShopifyCart(cart)).toThrow(
-      'Shopify cart currency does not match EUR at lines[0].cost.amountPerQuantity.'
-    );
+    expect(() => mapShopifyCart(cart)).toThrow(UnrecoverableCartStateError);
   });
 
   test('mapShopifyCart rechaza un total de línea que no sea EUR', () => {
     const cart = remoteCart();
     cart.lines.nodes[0].cost.totalAmount.currencyCode = 'USD';
-    expect(() => mapShopifyCart(cart)).toThrow(
-      'Shopify cart currency does not match EUR at lines[0].cost.totalAmount.'
+    expect(() => mapShopifyCart(cart)).toThrow(UnrecoverableCartStateError);
+  });
+
+  test('mapShopifyCart clasifica importes y shapes remotos inválidos como estado irrecuperable', () => {
+    const invalidMoney = remoteCart();
+    invalidMoney.lines.nodes[0].cost.amountPerQuantity.amount = 'not-money';
+    expect(() => mapShopifyCart(invalidMoney)).toThrow(UnrecoverableCartStateError);
+    expect(() => mapShopifyCart({})).toThrow(UnrecoverableCartStateError);
+  });
+
+  test('el mapper no convierte cualquier TypeError de programación en reset requerido', () => {
+    const source = readFileSync(
+      join(root, 'src/commerce/infrastructure/shopify/shopify-cart-mappers.ts'),
+      'utf8'
     );
+    expect(source).not.toContain('error instanceof TypeError');
   });
 
   test('mapShopifyCart acepta ES con todos los importes en EUR', () => {
@@ -1323,9 +1323,8 @@ describe('contexto de mercado del carrito Shopify', () => {
     const line = remoteLine(LINE_A, VARIANT_A, 1);
     line.cost.amountPerQuantity = money('0.00');
     line.cost.totalAmount = money('0.00');
-    expect(() => mapShopifyCart(remoteCart({ lines: [line] }))).toThrow(
-      'unit price is not a commercial KingBelt price'
-    );
+    expect(() => mapShopifyCart(remoteCart({ lines: [line] })))
+      .toThrow(UnrecoverableCartStateError);
   });
 
   test('un total de línea 0 con precio unitario positivo no se rechaza', () => {

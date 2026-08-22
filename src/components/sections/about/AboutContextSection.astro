@@ -1,5 +1,5 @@
 ---
-import SectionHeader from '@components/ui/SectionHeader.astro';
+import SectionHeaderHome from '../home/SectionHeaderHome.astro';
 import EditorialBanner from '../../ui/EditorialBanner.astro';
 import type { AboutContextPoint } from '@content/about';
 
@@ -35,16 +35,18 @@ const { banner } = data;
   class:list={['about-context section-spacing', className]}
   aria-labelledby="about-context-title"
 >
-  <div class="kb-shell-wide section-stack-lg">
-    <SectionHeader
+  <div class="kb-shell-wide about-context__shell">
+    <SectionHeaderHome
+      index="04"
       eyebrow={data.eyebrow}
-      body={data.lede}
       meta="Vestuario / Integración"
+      body={data.lede}
+      class="about-context__header"
     >
       <Fragment slot="title">
         <span id="about-context-title" set:html={data.title} />
       </Fragment>
-    </SectionHeader>
+    </SectionHeaderHome>
 
     <EditorialBanner
       id="about-context-banner"
@@ -56,15 +58,16 @@ const { banner } = data;
       imageAlt={banner.imageAlt}
       imagePosition={banner.imagePosition}
       imageCaption={banner.imageCaption}
+      class="about-context__banner"
     />
 
-    <ol class="about-context-points">
+    <ol class="about-context__points" aria-label="Puntos de integración">
       {data.points.map((point) => (
-        <li class="about-context-point">
-          <div class="about-context-point-head">
-            <span class="about-context-point-num kb-section-num" aria-hidden="true">{point.number}</span>
+        <li class="about-context__point kb-card-dry">
+          <header class="about-context__point-head">
+            <span class="about-context__point-num kb-folio" aria-hidden="true">{point.number}</span>
             <p class="kb-eyebrow text-king-accent">{point.label}</p>
-          </div>
+          </header>
           <h3>{point.title}</h3>
           <p class="body-copy text-king-muted">{point.text}</p>
         </li>
@@ -74,76 +77,87 @@ const { banner } = data;
 </section>
 
 <style>
-  .about-context-points {
+  .about-context {
+    background: var(--color-king-bg);
+    border-top: 1px solid var(--kb-stroke-hairline);
+  }
+
+  .about-context__header:global(.section-header-home) {
+    margin-bottom: var(--kb-space-gap);
+  }
+
+  .about-context__banner {
+    margin-bottom: var(--kb-space-gap);
+  }
+
+  .about-context__points {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
+    gap: var(--kb-space-3);
     margin: 0;
     padding: 0;
     list-style: none;
-    border-top: 1px solid var(--kb-stroke-dark);
-    border-bottom: 1px solid var(--kb-stroke-dark);
   }
 
-  .about-context-point {
+  .about-context__point {
     display: flex;
-    min-width: 0;
     flex-direction: column;
     gap: var(--kb-space-4);
-    padding: var(--kb-space-6) 0;
-    border-bottom: 1px solid var(--kb-stroke-dark);
+    min-width: 0;
+    min-height: 100%;
+    padding: clamp(1.25rem, 2.5vw, 1.75rem) var(--kb-space-5);
   }
 
-  .about-context-point:last-child {
-    border-bottom: 0;
+  @media (hover: hover) and (pointer: fine) {
+    .about-context__point:hover {
+      transform: none;
+      border-color: var(--kb-stroke-dark);
+      box-shadow: var(--kb-shadow-sm);
+    }
   }
 
-  .about-context-point-head {
+  .about-context__point-head {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: var(--kb-space-4);
+    padding-bottom: var(--kb-space-3);
+    border-bottom: 1px solid var(--kb-stroke-hairline);
   }
 
-  .about-context-point-head p,
-  .about-context-point h3,
-  .about-context-point > p {
+  .about-context__point-head p,
+  .about-context__point h3,
+  .about-context__point > p {
     margin: 0;
   }
 
-  .about-context-point-num {
+  .about-context__point-num {
     color: var(--color-king-accent);
+    opacity: 0.55;
   }
 
-  .about-context-point h3 {
+  .about-context__point h3 {
     max-width: 22ch;
-    font-size: var(--kb-text-h4);
+    font-family: var(--font-display);
+    font-size: var(--kb-text-h5);
     font-weight: var(--kb-w-medium);
     line-height: 1.2;
     text-wrap: balance;
+    color: var(--color-king-text);
   }
 
-  .about-context-point > p {
+  .about-context__point > p {
     max-width: 40ch;
+    font-size: var(--kb-text-sm);
+    line-height: 1.65;
+    color: color-mix(in srgb, var(--color-king-text) 68%, var(--color-king-muted));
+    text-wrap: pretty;
   }
 
   @media (min-width: 48rem) {
-    .about-context-points {
+    .about-context__points {
       grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-
-    .about-context-point {
-      padding: var(--kb-space-7) var(--kb-space-6);
-      border-right: 1px solid var(--kb-stroke-dark);
-      border-bottom: 0;
-    }
-
-    .about-context-point:first-child {
-      padding-left: 0;
-    }
-
-    .about-context-point:last-child {
-      padding-right: 0;
-      border-right: 0;
+      gap: var(--kb-space-4);
     }
   }
 </style>

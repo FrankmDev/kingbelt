@@ -9,7 +9,7 @@ import Icon from '../components/ui/Icon.astro';
 <BaseLayout title="Página No Encontrada — KingBelt" description="La página que buscas no existe. Vuelve al inicio de KingBelt." robots="noindex,nofollow">
   <Header slot="header" initialTheme="light" scrolledTheme="light" compactThreshold={24} />
 
-  <div class="flex-1 flex items-center justify-center min-h-[60vh]">
+  <div class="not-found-page flex-1 flex items-center justify-center min-h-[60vh]">
     <div class="text-center mx-auto px-6">
       <span class="font-display text-7xl md:text-9xl text-king-accent/20 block mb-4">404</span>
       <h1 class="font-display text-3xl md:text-4xl text-king-text mb-4 tracking-tight">Página No Encontrada</h1>
@@ -25,3 +25,10 @@ import Icon from '../components/ui/Icon.astro';
 
   <Footer slot="footer" />
 </BaseLayout>
+
+<style>
+  .not-found-page {
+    padding-top: var(--kb-page-offset-top);
+    padding-bottom: var(--kb-space-8);
+  }
+</style>

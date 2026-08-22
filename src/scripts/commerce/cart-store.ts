@@ -191,6 +191,9 @@ export const createCartStore = (
     return request;
   };
 
+  const reset = (): Promise<CartOperationResult> =>
+    runMutation(() => provider.resetCart());
+
   const checkout = (): Promise<CheckoutResult> => {
     if (checkoutRequest) return checkoutRequest;
 
@@ -216,6 +219,7 @@ export const createCartStore = (
     add,
     updateQuantity,
     remove,
+    reset,
     checkout,
     subscribe(callback: (cart: Cart) => void) {
       subscribers.add(callback);
@@ -232,6 +236,7 @@ export const getCart = cartStore.getCart;
 export const addProductToCart = cartStore.add;
 export const changeLineQuantity = cartStore.updateQuantity;
 export const deleteLine = cartStore.remove;
+export const resetCurrentCart = cartStore.reset;
 export const startCheckout = cartStore.checkout;
 export const subscribeCart = cartStore.subscribe;
 

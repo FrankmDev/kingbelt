@@ -2,7 +2,7 @@
  * Contrato tipado para hechos empresariales y comerciales.
  * Los valores con status `pending` no deben renderizarse en contenido público.
  */
-import { site } from './site';
+import { siteUrl } from './site';
 
 export type BusinessFact<T = string> =
   | {
@@ -23,20 +23,17 @@ export const confirmed = <T>(fact: BusinessFact<T>): T | undefined =>
   fact.status === 'confirmed' ? fact.value : undefined;
 
 export const LEGAL_NAME = 'CintuElx S.L.';
+export const LEGAL_TRADE_NAME = 'Kingbelt';
 export const LEGAL_TAX_ID = 'B42696716';
 export const LEGAL_PHONE_DISPLAY = '965 43 01 51';
-export const COMPANY_SUPPLIED_ADDRESS = `Bueno e Hijos SL,
-Poligono Industrial,
-Avinguda de Novelda, 143,
-03206 Carrus,
-Alicante,
+export const LEGAL_EMAIL = 'contabilidad@cintuelx.com';
+export const LEGAL_REGISTERED_ADDRESS = `Avenida de Novelda, 143, bajo,
+03206 Elche (Alicante),
 España`;
-export const REGISTERED_ADDRESS = `Avenida de Novelda, 143, bajo
-03206 Elche (Alicante)
-España`;
-export const REGISTERED_ADDRESS_SINGLE_LINE =
-  'Avenida de Novelda, 143, bajo, 03206 Elche (Alicante), España';
-
+export const LEGAL_REGISTRY_DATA =
+  'Registro Mercantil de Alicante, sección 8, hoja A-168894, inscripción 3.';
+export const LEGAL_ACTIVITY =
+  'Fabricación y comercio mayorista y minorista de artículos de calzado, marroquinería y complementos de vestir.';
 export interface BusinessFacts {
   legalName: BusinessFact;
   tradeName: BusinessFact;
@@ -45,6 +42,7 @@ export interface BusinessFacts {
   registeredAddress: BusinessFact;
   email: BusinessFact;
   phone: BusinessFact;
+  website: BusinessFact;
   registryData: BusinessFact;
   activity: BusinessFact;
   salesTerritory: BusinessFact;
@@ -73,182 +71,174 @@ export interface BusinessFacts {
 
 export type BusinessFactKey = keyof BusinessFacts;
 
-const COMPANY_SUPPLIED_SOURCE = 'Datos empresariales facilitados por CintuElx S.L.';
-const AVISO_LEGAL_SOURCE = 'Aviso Legal, 18 de agosto de 2026';
-const ENVIOS_SOURCE = 'Política de envíos, 18 de agosto de 2026';
-const DEVOLUCIONES_SOURCE = 'Política de devoluciones, 18 de agosto de 2026';
-const PRIVACY_SOURCE = 'Política de privacidad, 22 de agosto de 2026';
-const CODE_INVENTORY_SOURCE = 'Inventario técnico de src/content/legal-technologies.ts y el código de sesión/fuentes';
+const COMPANY_CONFIRMATION_SOURCE =
+  'Confirmación empresarial facilitada por CintuElx S.L. el 22/08/2026.';
+const LEGAL_TEXT_VALIDATION_SOURCE =
+  'Textos legales declarados definitivos por CintuElx S.L. el 22/08/2026.';
+const BORME_REGISTERED_ADDRESS_SOURCE =
+  'BORME-A-2026-1-03, inscripción 55, publicado el 02/01/2026.';
+const BORME_ACTIVITY_SOURCE =
+  'BORME-A-2020-36-03, constitución de CintuElx S.L., publicado el 21/02/2020.';
 
-export const CONFIRMED_ADDRESS = COMPANY_SUPPLIED_ADDRESS;
+/** Copy pública: el transporte va incluido en el precio del producto. */
+export const FREE_SHIPPING_LABEL = 'Envíos gratuitos';
+export const FREE_SHIPPING_DETAIL =
+  'El coste del envío está incluido en el precio del producto; no añadimos gastos de transporte aparte.';
+export const CART_CHECKOUT_NOTE = `${FREE_SHIPPING_LABEL}. Los impuestos se calculan en el checkout.`;
 
 export const businessFacts: BusinessFacts = {
   legalName: {
     status: 'confirmed',
     value: LEGAL_NAME,
-    source: COMPANY_SUPPLIED_SOURCE,
+    source: COMPANY_CONFIRMATION_SOURCE,
   },
   tradeName: {
     status: 'confirmed',
-    value: site.name,
-    source: 'Marca comercial en uso',
+    value: LEGAL_TRADE_NAME,
+    source: COMPANY_CONFIRMATION_SOURCE,
   },
   taxId: {
     status: 'confirmed',
     value: LEGAL_TAX_ID,
-    source: COMPANY_SUPPLIED_SOURCE,
+    source: COMPANY_CONFIRMATION_SOURCE,
   },
   address: {
     status: 'confirmed',
-    value: COMPANY_SUPPLIED_ADDRESS,
-    source: COMPANY_SUPPLIED_SOURCE,
-    notes:
-      'Texto facilitado por la empresa, sin función jurídica propia. No es el domicilio social del Aviso Legal ni la dirección de devoluciones.',
+    value: LEGAL_REGISTERED_ADDRESS,
+    source: COMPANY_CONFIRMATION_SOURCE,
+    notes: 'Dirección de contacto y domicilio social confirmados; no se declara como dirección logística de devoluciones.',
   },
   registeredAddress: {
     status: 'confirmed',
-    value: REGISTERED_ADDRESS,
-    source: AVISO_LEGAL_SOURCE,
-    notes: 'Domicilio social declarado en el Aviso Legal.',
+    value: LEGAL_REGISTERED_ADDRESS,
+    source: BORME_REGISTERED_ADDRESS_SOURCE,
+    notes: 'Domicilio social confirmado por la empresa y contrastado con el BORME; no implica domicilio fiscal ni dirección logística de devoluciones.',
   },
   email: {
     status: 'confirmed',
-    value: site.contact.email,
-    source: 'src/config/site.ts',
+    value: LEGAL_EMAIL,
+    source: COMPANY_CONFIRMATION_SOURCE,
   },
   phone: {
     status: 'confirmed',
     value: LEGAL_PHONE_DISPLAY,
-    source: COMPANY_SUPPLIED_SOURCE,
+    source: COMPANY_CONFIRMATION_SOURCE,
+  },
+  website: {
+    status: 'confirmed',
+    value: siteUrl,
+    source: COMPANY_CONFIRMATION_SOURCE,
   },
   registryData: {
     status: 'confirmed',
-    value: 'Inscrita en el Registro Mercantil de Alicante, tomo 4280, folio 5, sección 8, hoja A-168894.',
-    source: AVISO_LEGAL_SOURCE,
+    value: LEGAL_REGISTRY_DATA,
+    source: BORME_REGISTERED_ADDRESS_SOURCE,
   },
   activity: {
     status: 'confirmed',
-    value:
-      'Comercialización de accesorios de cuero y productos relacionados a través de tienda online, bajo el nombre comercial Kingbelt.',
-    source: AVISO_LEGAL_SOURCE,
+    value: LEGAL_ACTIVITY,
+    source: BORME_ACTIVITY_SOURCE,
   },
   salesTerritory: {
     status: 'confirmed',
-    value: 'Destinos habilitados para entrega durante el proceso de compra.',
-    source: ENVIOS_SOURCE,
+    value: 'Destinos habilitados para entrega durante el checkout de Shopify.',
+    source: LEGAL_TEXT_VALIDATION_SOURCE,
   },
   taxPolicy: {
     status: 'confirmed',
-    value:
-      'Los impuestos aplicables se comunican durante el proceso de compra, antes de confirmar el pedido. Determinados destinos pueden estar sujetos a aranceles u otros conceptos fijados por las autoridades.',
-    source: `${AVISO_LEGAL_SOURCE}; ${ENVIOS_SOURCE}`,
-    notes: 'No hay un tipo de IVA nominado en las políticas publicadas.',
+    value: 'Los impuestos aplicables y, cuando proceda, los conceptos aduaneros se comunican antes de confirmar la compra.',
+    source: LEGAL_TEXT_VALIDATION_SOURCE,
   },
   paymentMethods: {
     status: 'confirmed',
-    value:
-      'Las modalidades de pago disponibles se muestran durante el proceso de compra, antes de confirmar el pedido. El reembolso se realiza por el mismo medio utilizado, salvo acuerdo expreso del cliente.',
-    source: `${AVISO_LEGAL_SOURCE}; ${DEVOLUCIONES_SOURCE}`,
-    notes: 'Las políticas publicadas no nombran Shopify Payments ni otros proveedores concretos.',
+    value: 'Las modalidades disponibles se muestran en el checkout de Shopify; los reembolsos usan el mismo medio salvo acuerdo expreso sin coste adicional.',
+    source: LEGAL_TEXT_VALIDATION_SOURCE,
   },
   carriers: {
     status: 'confirmed',
-    value:
-      'El transporte lo realiza una empresa de transporte propuesta, seleccionada o contratada por KingBelt. El transportista concreto no está nominado en las políticas publicadas; la modalidad se comunica durante el proceso de compra.',
-    source: ENVIOS_SOURCE,
+    value: 'Empresa de transporte propuesta, seleccionada o contratada por Kingbelt; la modalidad concreta se comunica durante la compra.',
+    source: LEGAL_TEXT_VALIDATION_SOURCE,
   },
   shippingCosts: {
     status: 'confirmed',
-    value:
-      'Los gastos de envío se muestran antes de confirmar el pedido. Pueden variar según destino, modalidad, importe y promociones.',
-    source: ENVIOS_SOURCE,
+    value: 'Incluidos en el precio del producto',
+    source: LEGAL_TEXT_VALIDATION_SOURCE,
+    notes: 'No se añaden gastos de transporte aparte en la compra ordinaria.',
   },
   preparationTime: {
     status: 'confirmed',
-    value:
-      'El plazo de preparación es distinto del de transporte. Los pedidos en festivos o fines de semana pueden comenzar el siguiente día laborable.',
-    source: ENVIOS_SOURCE,
+    value: 'La preparación comienza tras la confirmación del pedido y, cuando corresponda, la autorización del pago; su duración se integra en la estimación comunicada al cliente.',
+    source: LEGAL_TEXT_VALIDATION_SOURCE,
   },
   deliveryTime: {
     status: 'confirmed',
     value: 'Entrega en un máximo de 30 días naturales, salvo otro acuerdo',
-    source: ENVIOS_SOURCE,
-    notes: 'El plazo o fecha estimada concreta se comunica durante el proceso de compra.',
+    source: LEGAL_TEXT_VALIDATION_SOURCE,
+    notes: 'La fecha o el plazo estimado concreto se comunica durante la compra o en la confirmación del pedido.',
   },
   returnPolicy: {
     status: 'confirmed',
-    value:
-      '30 días naturales desde la recepción. Los primeros 14 cubren el desistimiento legal. Los gastos de devolución por cambio de opinión corren a cargo del cliente.',
-    source: DEVOLUCIONES_SOURCE,
+    value: 'Desistimiento legal de 14 días naturales, ampliado voluntariamente a 30 días naturales, conforme a la política publicada.',
+    source: LEGAL_TEXT_VALIDATION_SOURCE,
   },
   returnAddress: {
-    status: 'confirmed',
-    value: `CintuElx S.L. – Kingbelt
-Avinguda de Novelda, 143
-Polígono Industrial
-03206 Carrús, Alicante
-España`,
-    source: DEVOLUCIONES_SOURCE,
+    status: 'pending',
+    notes: 'Dirección operativa de devoluciones pendiente de confirmación expresa.',
   },
   warranty: {
     status: 'confirmed',
-    value:
-      'La política de devoluciones no limita ni sustituye los derechos legales derivados de la garantía legal de conformidad.',
-    source: DEVOLUCIONES_SOURCE,
+    value: 'Se preservan íntegramente los derechos legales de conformidad y garantía del consumidor.',
+    source: LEGAL_TEXT_VALIDATION_SOURCE,
   },
   jurisdiction: {
     status: 'confirmed',
-    value:
-      'Legislación española. Los consumidores podrán acudir a los juzgados y tribunales que resulten legalmente competentes.',
-    source: AVISO_LEGAL_SOURCE,
+    value: 'Legislación española y tribunales competentes conforme a la normativa aplicable al consumidor.',
+    source: LEGAL_TEXT_VALIDATION_SOURCE,
   },
   dataController: {
     status: 'confirmed',
-    value: `${LEGAL_NAME}, nombre comercial Kingbelt, NIF ${LEGAL_TAX_ID}`,
-    source: PRIVACY_SOURCE,
+    value: `${LEGAL_NAME}, ${LEGAL_REGISTERED_ADDRESS.replace(/\s*\n\s*/g, ', ')}`,
+    source: LEGAL_TEXT_VALIDATION_SOURCE,
   },
   processingPurposes: {
     status: 'confirmed',
-    value:
-      'Prestar y mejorar los servicios de compra, gestionar pedidos, pagos, envíos, devoluciones, atención al cliente, seguridad y, cuando proceda, comunicaciones comerciales.',
-    source: PRIVACY_SOURCE,
+    value: 'Prestar la tienda y sus servicios, gestionar compras, pagos, pedidos, envíos, devoluciones, atención, seguridad y comunicaciones permitidas.',
+    source: LEGAL_TEXT_VALIDATION_SOURCE,
   },
   legalBases: {
     status: 'confirmed',
-    value:
-      'La Política de privacidad describe el uso de la información para cumplir el contrato (prestación de los Servicios, pedidos y pagos), obligaciones legales, seguridad y prevención de fraude, comunicaciones y, cuando el tratamiento se base en él, consentimiento. Determinadas divulgaciones se realizan por los motivos descritos en esa política.',
-    source: PRIVACY_SOURCE,
-    notes: 'No hay una tabla artículo 6 por finalidad; el valor resume el texto publicado.',
+    value: 'Ejecución contractual, cumplimiento de obligaciones legales, intereses legítimos y consentimiento cuando resulte aplicable.',
+    source: LEGAL_TEXT_VALIDATION_SOURCE,
   },
   retentionPeriod: {
     status: 'confirmed',
-    value:
-      'El plazo de conservación depende de la necesidad de mantener la cuenta, prestar los Servicios, cumplir obligaciones legales, resolver conflictos o hacer cumplir contratos y políticas aplicables.',
-    source: PRIVACY_SOURCE,
-    notes: 'La política publicada no fija un número de años.',
+    value: 'Durante el tiempo necesario para prestar los servicios, mantener la relación y cumplir obligaciones legales, resolver conflictos o exigir responsabilidades.',
+    source: LEGAL_TEXT_VALIDATION_SOURCE,
   },
   recipients: {
     status: 'confirmed',
-    value:
-      'Shopify y otros proveedores que prestan servicios en nuestro nombre (pagos, logística, hosting, atención al cliente y análisis), partners de marketing cuando corresponda, y autoridades cuando la ley lo exija.',
-    source: PRIVACY_SOURCE,
+    value: 'Shopify y proveedores necesarios de tecnología, pagos, alojamiento, atención y logística; autoridades u otros terceros cuando exista obligación o base legal.',
+    source: LEGAL_TEXT_VALIDATION_SOURCE,
   },
   internationalTransfers: {
     status: 'confirmed',
-    value:
-      'Pueden existir transferencias fuera del EEA o del Reino Unido, cubiertas mediante cláusulas contractuales tipo u otros mecanismos reconocidos, salvo decisión de adecuación.',
-    source: PRIVACY_SOURCE,
+    value: 'Cuando existan transferencias fuera del EEE o Reino Unido se emplearán decisiones de adecuación, cláusulas contractuales tipo u otro mecanismo reconocido.',
+    source: LEGAL_TEXT_VALIDATION_SOURCE,
   },
   cookiesAndTechnologies: {
     status: 'confirmed',
-    value:
-      'Cookie de sesión __Host-kingbelt-session en modo Shopify; localStorage kingbelt-cart-v4 solo en modo demo; tipografías Fontshare y Google Fonts. Sin analítica, publicidad ni marketing en el código del sitio. Las cookies del checkout y cuentas Shopify se sirven en dominios de Shopify y no se inventarían aquí.',
-    source: CODE_INVENTORY_SOURCE,
+    value: 'Cookie de sesión opaca para el carrito Shopify, localStorage exclusivo del modo demo y recursos tipográficos externos declarados en la política.',
+    source: LEGAL_TEXT_VALIDATION_SOURCE,
   },
-  madeInSpain: { status: 'pending', notes: 'Origen de fabricación confirmado' },
-  packagingIncluded: { status: 'pending', notes: 'Tipo de embalaje incluido' },
-  freeShipping: { status: 'pending', notes: 'Condiciones de envío gratuito' },
-  responseTime: { status: 'pending', notes: 'Compromiso de tiempo de respuesta' },
+  madeInSpain: { status: 'pending', notes: 'Origen de fabricación pendiente de confirmación.' },
+  packagingIncluded: { status: 'pending', notes: 'Tipo de embalaje pendiente de confirmación.' },
+  freeShipping: {
+    status: 'confirmed',
+    value: FREE_SHIPPING_LABEL,
+    source: LEGAL_TEXT_VALIDATION_SOURCE,
+    notes: FREE_SHIPPING_DETAIL,
+  },
+  responseTime: { status: 'pending', notes: 'Compromiso de tiempo de respuesta pendiente de confirmación.' },
 };
 
 /** Normaliza el teléfono nacional publicado a un href `tel:`. */
@@ -263,5 +253,7 @@ export const publicHighlights = (): string[] => {
   if (delivery) highlights.push(delivery);
   const packaging = confirmed(businessFacts.packagingIncluded);
   if (packaging) highlights.push(packaging);
+  const freeShipping = confirmed(businessFacts.freeShipping);
+  if (freeShipping) highlights.push(freeShipping);
   return highlights;
 };

@@ -206,6 +206,21 @@ export const createDemoCartAdapter = (
     removeItem: (lineId: string) =>
       mutate((base) => cartService.removeLine(base, lineId)),
 
+    resetCart: () => runExclusive(async () => {
+      cart = emptyCart();
+      if (storage) {
+        [LOCAL_CART_STORAGE_KEY, ...LEGACY_CART_STORAGE_KEYS].forEach((key) => {
+          try {
+            storage.removeItem(key);
+          } catch {
+            storageDegraded = true;
+          }
+        });
+      }
+      if (browserStorageUnavailable) cart = appendNotice(cart, STORAGE_UNAVAILABLE_NOTICE);
+      return { success: true, cart };
+    }),
+
     checkout: requestDemoCheckout,
 
     subscribeToExternalChanges(listener) {

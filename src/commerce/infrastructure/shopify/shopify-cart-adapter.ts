@@ -43,7 +43,7 @@ const request = async (command: Record<string, unknown>): Promise<CartResponse> 
   });
   let body: CartResponse;
   try { body = await response.json(); } catch { throw new ShopifyCartHttpError(response.status, 'invalid_response'); }
-  if (!response.ok && response.status !== 410 && response.status !== 422) {
+  if (!response.ok && response.status !== 409 && response.status !== 410 && response.status !== 422) {
     throw new ShopifyCartHttpError(response.status, body.message ?? 'cart_request_failed');
   }
   return body;
@@ -66,6 +66,9 @@ export const createShopifyCartAdapter = (): CartProvider => ({
   },
   async removeItem(lineId: string) {
     return toOperationResult(await request({ command: 'remove', lineId }));
+  },
+  async resetCart() {
+    return toOperationResult(await request({ command: 'reset' }));
   },
   async checkout() {
     const response = await request({ command: 'checkout' });

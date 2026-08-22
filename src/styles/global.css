@@ -146,6 +146,7 @@
   --kb-space-12: 6rem;
   --kb-space-section: clamp(4rem, 7vw, 6.5rem);
   --kb-space-section-lg: clamp(5.5rem, 9.5vw, 10rem);
+  --kb-space-footer-gap: clamp(2.75rem, 5vw, 4.5rem);
   --kb-space-gap: clamp(1.25rem, 2vw, 2rem);
   --kb-space-gap-lg: clamp(2rem, 3vw, 3rem);
 
@@ -174,6 +175,11 @@
   --kb-z-sticky: 20;
   --kb-z-modal: 100;
   --kb-z-noise: 9999;
+
+  /* Fixed header clearance — synced from #site-header via header.ts */
+  --kb-header-offset: calc(env(safe-area-inset-top, 0px) + 6.5rem);
+  --kb-page-offset-top: calc(var(--kb-header-offset) + var(--kb-space-3));
+  --kb-sticky-below-header: calc(var(--kb-header-offset) + var(--kb-space-2));
 }
 
 /* ============================================================
@@ -188,6 +194,7 @@
 
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: var(--kb-header-offset);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
@@ -436,9 +443,14 @@ body::before {
   padding-bottom: var(--kb-space-section);
 }
 
-/* Ritmo de cierre de página — menos aire antes del footer/wordmark */
+/* Ritmo de cierre de página — mantiene el padding de sección estándar (sin comprimir) */
 .section-spacing-close {
-  padding-bottom: clamp(1.75rem, 3vw, 2.75rem);
+  padding-bottom: var(--kb-space-section);
+}
+
+/* Separación entre el contenido principal y el footer conectado */
+main#main:has(+ footer.site-footer--connected) {
+  padding-bottom: var(--kb-space-footer-gap);
 }
 
 /* Separación de capítulo — más aire al cambiar tono o bloque narrativo */
@@ -458,6 +470,11 @@ body::before {
 .kb-shell-wide {
   width: min(calc(100% - (var(--kb-gutter) * 2)), var(--kb-shell-wide));
   margin-inline: auto;
+}
+
+/* Clearance below fixed #site-header for pages without PageHeader */
+.kb-page-top {
+  padding-top: var(--kb-page-offset-top);
 }
 
 .kb-shell-copy {
@@ -2349,7 +2366,7 @@ a.kb-badge:focus-visible {
   --kb-breadcrumb-color: rgba(255, 255, 255, 0.58);
   --kb-breadcrumb-hover: var(--color-king-accent-light);
   --kb-breadcrumb-active: var(--color-king-bone);
-  margin-bottom: var(--kb-space-8);
+  margin-bottom: 0;
 }
 
 .page-header-breadcrumbs .kb-meta-label {
@@ -2368,12 +2385,24 @@ a.kb-badge:focus-visible {
   color: rgba(255, 255, 255, 0.28);
 }
 
+.page-header-content {
+  display: grid;
+  gap: var(--kb-space-4);
+  justify-items: start;
+}
+
+[data-page-header='blog'] .page-header-content {
+  justify-items: center;
+}
+
 .page-header-kicker {
   display: inline-flex;
   align-items: center;
-  gap: 0.65rem;
-  margin-bottom: var(--kb-space-5);
-  padding: 0.38rem 0.8rem 0.38rem 0.65rem;
+  gap: 0.5rem;
+  width: fit-content;
+  justify-self: start;
+  margin: 0;
+  padding: 0.28rem 0.65rem 0.28rem 0.5rem;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--kb-radius-pill);
   background: rgba(13, 13, 12, 0.22);
@@ -2381,12 +2410,12 @@ a.kb-badge:focus-visible {
 }
 
 [data-page-header='blog'] .page-header-kicker {
-  margin-inline: auto;
+  justify-self: center;
 }
 
 .page-header-kicker-mark {
   display: block;
-  width: 1.125rem;
+  width: 0.875rem;
   height: 1px;
   background: var(--color-king-brass);
   opacity: 0.85;
@@ -2394,8 +2423,9 @@ a.kb-badge:focus-visible {
 }
 
 .page-header-eyebrow {
+  font-size: var(--kb-micro-size);
   color: rgba(255, 255, 255, 0.72);
-  letter-spacing: var(--kb-label-tracking);
+  letter-spacing: 0.1em;
 }
 
 [data-page-header='blog'] .page-header-eyebrow {
@@ -2403,18 +2433,20 @@ a.kb-badge:focus-visible {
 }
 
 .page-header-title {
-  line-height: 1.0;
-  letter-spacing: -0.016em;
-  font-size: clamp(2.5rem, 5.5vw, 4rem);
+  margin: 0;
+  font-family: var(--font-display);
+  line-height: 1.04;
+  letter-spacing: -0.02em;
+  font-size: clamp(2.125rem, 4vw, 3.375rem);
   font-weight: var(--kb-w-heading-light);
-  max-width: 22ch;
+  max-width: 20ch;
   color: var(--color-king-bone);
-  text-wrap: pretty;
+  text-wrap: balance;
   text-rendering: optimizeLegibility;
 }
 
 [data-page-header='blog'] .page-header-title {
-  max-width: 26ch;
+  max-width: 24ch;
   margin-inline: auto;
 }
 
@@ -2454,45 +2486,80 @@ a.kb-badge:focus-visible {
   flex-wrap: wrap;
   justify-content: center;
   gap: var(--kb-space-2);
-  margin-top: var(--kb-space-6);
+  margin-top: 0;
   margin-bottom: 0;
 }
 
 .page-header-lede {
-  font-size: clamp(1rem, 0.94rem + 0.26vw, 1.175rem);
-  line-height: 1.72;
-  max-width: 42rem;
-  margin-top: var(--kb-space-6);
-  color: rgba(255, 255, 255, 0.7);
-  letter-spacing: 0.004em;
+  margin: 0;
+  font-size: var(--kb-text-body-lg);
+  line-height: 1.6;
+  max-width: 40ch;
+  color: rgba(255, 255, 255, 0.68);
+  letter-spacing: 0.002em;
+  text-wrap: pretty;
 }
 
 .page-header-lede--blog {
   margin-inline: auto;
 }
 
-.page-header-bar {
-  border-top: 1px solid rgba(255, 255, 255, 0.07);
-  background: rgba(13, 13, 12, 0.32);
-  backdrop-filter: blur(12px);
+.page-header-meta {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  justify-self: start;
+  margin: var(--kb-space-1) 0 0;
+  padding: 0.32rem 0.7rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--kb-radius-pill);
+  background: rgba(13, 13, 12, 0.28);
+  backdrop-filter: blur(8px);
 }
 
-.page-header-bar-inner {
-  max-width: var(--kb-shell-narrow);
+[data-page-header='blog'] .page-header-meta {
+  justify-self: center;
 }
 
-.page-header-bar-meta {
-  font-size: var(--kb-text-eyebrow);
-  font-weight: var(--kb-w-medium);
-  line-height: 1.3;
-  letter-spacing: 0.24em;
+.page-header-meta__text {
+  margin: 0;
+  font-size: var(--kb-micro-size);
+  font-weight: var(--kb-label-weight);
+  line-height: 1.2;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.56);
+  white-space: nowrap;
 }
 
-@media (max-width: 48rem) {
+@media (max-width: 47.99rem) {
   .page-header-title {
-    font-size: clamp(2rem, 8vw, 2.75rem);
+    font-size: clamp(1.75rem, 6.5vw, 2.25rem);
+    max-width: 16ch;
+    line-height: 1.06;
+  }
+
+  .page-header-kicker {
+    padding: 0.24rem 0.58rem 0.24rem 0.46rem;
+  }
+
+  .page-header-kicker-mark {
+    width: 0.75rem;
+  }
+
+  .page-header-lede {
+    font-size: var(--kb-text-sm);
+    line-height: 1.58;
+    max-width: 34ch;
+  }
+
+  .page-header-meta {
+    margin-top: 0;
+    padding: 0.28rem 0.62rem;
+  }
+
+  .page-header-meta__text {
+    letter-spacing: 0.08em;
   }
 
   .page-header-article-meta {

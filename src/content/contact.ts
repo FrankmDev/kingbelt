@@ -1,5 +1,5 @@
 import { site } from '@config/site';
-import { businessFacts, confirmed, toTelHref } from '@config/business';
+import { businessFacts, confirmed, toTelHref, FREE_SHIPPING_DETAIL, FREE_SHIPPING_LABEL } from '@config/business';
 import { LEGAL_CONTACT_EMAIL } from './legal-bodies';
 import type { IconName } from '../components/ui/icon-paths';
 import type { FAQItem } from './faq';
@@ -93,14 +93,6 @@ const contactChannels: ContactChannel[] = [
         },
       ]
     : []),
-  {
-    label: 'Instagram',
-    value: site.social.instagram.handle,
-    description: 'La actualidad visual de la marca.',
-    href: site.social.instagram.href,
-    icon: 'instagram',
-    meta: 'Red social',
-  },
 ];
 
 export const contactData = {
@@ -133,16 +125,15 @@ export const contactData = {
       icon: 'ruler',
     },
     {
-      question: '¿Dónde puedo ver información de envío?',
-      answer:
-        'Consulta la política de envíos para plazos, seguimiento e incidencias. El coste y la modalidad aplicables se muestran antes de confirmar el pedido.',
+      question: '¿Cuánto cuesta el envío?',
+      answer: `${FREE_SHIPPING_LABEL}. ${FREE_SHIPPING_DETAIL} Consulta plazos, destinos e incidencias en la política de envíos.`,
       category: 'Envío',
       icon: 'truck',
     },
     {
       question: '¿Qué hago si la talla no me conviene?',
       answer:
-        'Tienes 30 días naturales desde la recepción para devolver el producto. La vía recomendada para un cambio de talla es devolver la pieza y hacer un pedido nuevo. Consulta la política de devoluciones para plazos, gastos y reembolsos.',
+        'Escríbenos antes de enviar el producto. Te indicaremos el procedimiento disponible una vez confirmadas las condiciones definitivas de devolución.',
       category: 'Cambios',
       icon: 'rotate-ccw',
     },
@@ -155,8 +146,7 @@ export const contactData = {
     },
     {
       question: '¿Cómo puedo contactar con KingBelt?',
-      answer:
-        'Por email en contabilidad@cintuelx.com o por teléfono. Indica el número de pedido, el modelo o el contexto de tu consulta para que podamos orientarte con más precisión.',
+      answer: `Por email en ${contactEmail} o por teléfono. Indica el número de pedido, el modelo o el contexto de tu consulta para que podamos orientarte con más precisión.`,
       category: 'Atención',
       icon: 'mail',
     },
@@ -173,8 +163,8 @@ export const contactData = {
     eyebrow: 'Tu compra',
     title: 'Información clara, desde el pedido.',
     description:
-      'El plazo estimado de entrega se indica al comprar. Tienes 30 días para devolver. Si necesitas ayuda con un pedido, escríbenos a contabilidad@cintuelx.com.',
-    badge: undefined,
+      `${FREE_SHIPPING_LABEL}: el transporte va incluido en el precio del producto. Consulta plazos, devoluciones y atención en el centro de ayuda.`,
+    badge: { label: FREE_SHIPPING_LABEL },
     cta: {
       label: 'Centro de ayuda',
       href: '/ayuda',
@@ -193,14 +183,15 @@ export const contactData = {
         icon: 'ruler',
       },
       {
-        title: 'Envíos',
-        description: 'Zonas, plazos, seguimiento e incidencias de transporte.',
+        title: FREE_SHIPPING_LABEL,
+        description:
+          'El transporte va incluido en el precio. Consulta plazos, destinos e incidencias en la política de envíos.',
         label: 'Envío',
         icon: 'truck',
       },
       {
         title: 'Devoluciones',
-        description: '30 días desde la recepción, desistimiento y reembolsos.',
+        description: 'Solicita instrucciones antes de enviar un producto.',
         label: 'Cambios',
         icon: 'rotate-ccw',
       },

@@ -36,7 +36,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin)
     display: flex;
     justify-content: center;
     padding:
-      clamp(7.5rem, 10vw, 9.5rem)
+      var(--kb-page-offset-top)
       var(--kb-gutter)
       var(--kb-space-12);
   }

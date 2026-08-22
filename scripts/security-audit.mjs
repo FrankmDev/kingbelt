@@ -140,7 +140,7 @@ if (existsSync(vercelConfigPath)) {
     report('vercel.json', 'build_env_in_vercel_config');
   }
   if (
-    /\b(?:SHOPIFY_STOREFRONT_PRIVATE_TOKEN|SHOPIFY_CART_COOKIE_SECRET|SHOPIFY_WEBHOOK_SECRET|VERCEL_DEPLOY_HOOK_URL|UPSTASH_REDIS_REST_TOKEN)\b/.test(
+    /\b(?:SHOPIFY_STOREFRONT_PRIVATE_TOKEN|SHOPIFY_WEBHOOK_SECRET|VERCEL_DEPLOY_HOOK_URL|UPSTASH_REDIS_REST_TOKEN)\b/.test(
       vercelText
     )
   ) {

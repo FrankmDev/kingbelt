@@ -23,7 +23,7 @@ const MAX_VISIBLE_SWATCHES = 4;
 const {
   product,
   index,
-  sizes = '(min-width: 64rem) 25vw, (min-width: 48rem) 33vw, 50vw',
+  sizes = '(min-width: 64rem) 25vw, (min-width: 48rem) 33vw, 38vw',
   priority = false,
   class: className,
 } = Astro.props;
@@ -362,32 +362,85 @@ const badgeLabel = product.purchasable ? product.badge : 'Agotado';
   }
 
   @media (max-width: 47.99rem) {
+    .product-card {
+      flex-direction: row;
+      align-items: center;
+      gap: var(--kb-space-5);
+      padding-block: var(--kb-space-1);
+    }
+
+    .product-card__media {
+      flex: 0 0 clamp(7rem, 38vw, 11rem);
+      width: clamp(7rem, 38vw, 11rem);
+      height: clamp(8.875rem, 41vw, 12rem);
+      aspect-ratio: auto;
+      border-radius: calc(var(--kb-card-radius) - 1px);
+      box-shadow:
+        var(--kb-shadow-xs),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.24);
+    }
+
     .product-card__excerpt {
       display: none;
     }
 
     .product-card__info {
-      gap: var(--kb-space-2);
-      padding-top: var(--kb-space-4);
+      flex: 1;
+      justify-content: center;
+      gap: var(--kb-space-3);
+      min-height: clamp(8.875rem, 41vw, 12rem);
+      padding-top: 0;
+      padding-inline-end: var(--kb-space-1);
+    }
+
+    .product-card__category {
+      padding: 0.3125rem 0.5625rem;
+      font-size: var(--kb-text-xs);
+      letter-spacing: 0.13em;
+      background: color-mix(in srgb, var(--color-king-bone) 82%, transparent);
+    }
+
+    .product-card__head {
+      gap: 0.375rem;
     }
 
     .product-card__name {
-      font-size: clamp(1rem, 4.2vw, 1.1875rem);
+      font-size: clamp(1.0625rem, 4.8vw, 1.3125rem);
+      line-height: 1.14;
+      letter-spacing: -0.018em;
     }
 
     .product-card__price {
-      font-size: var(--kb-text-sm);
+      font-size: var(--kb-text-body);
+      color: color-mix(in srgb, var(--color-king-text) 90%, var(--color-king-muted));
+    }
+
+    .product-card__swatches {
+      gap: 0.375rem;
+    }
+
+    .product-card__swatch {
+      width: 0.875rem;
+      height: 0.875rem;
     }
 
     .product-card__action {
-      min-height: 2rem;
-      padding: 0.4rem 0.75rem;
-      font-size: var(--kb-text-meta);
-      letter-spacing: 0.12em;
+      align-self: flex-start;
+      width: auto;
+      min-height: 2.125rem;
+      margin-top: var(--kb-space-2);
+      padding: 0.4375rem 0.9375rem;
+      border-color: color-mix(in srgb, var(--color-king-text) 16%, transparent);
+      font-size: var(--kb-text-sm);
+      letter-spacing: 0.14em;
     }
 
     .product-card__tags {
-      padding: var(--kb-space-2);
+      padding: var(--kb-space-2) 0.625rem;
+    }
+
+    .product-card__folio {
+      font-size: var(--kb-text-xs);
     }
   }
 

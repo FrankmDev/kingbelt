@@ -1,4 +1,5 @@
 import { emptyCart } from '../../application/cart-service';
+import { UnrecoverableCartStateError } from '../../application/cart-provider';
 import type {
   Cart,
   CartLine,
@@ -144,15 +145,27 @@ const OPERATION_ERROR_MESSAGES: Record<CartOperationErrorCode, string> = {
   quantity_limit: 'La cantidad no cumple las reglas de esta variante.',
   unavailable: 'Este producto no está disponible.',
   not_found: 'La línea o variante ya no está en el carrito.',
+  cart_unrecoverable: 'El carrito actual necesita restablecerse antes de continuar.',
   provider_error: SHOPIFY_CART_PROVIDER_ERROR_MESSAGE,
 };
+
+class ShopifyCartMappingError extends Error {
+  readonly name = 'ShopifyCartMappingError';
+}
+
+const cartMappingFail = (message: string): never => {
+  throw new ShopifyCartMappingError(message);
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
 
 const fieldIncludes = (field: readonly string[] | null | undefined, name: string): boolean =>
   (field ?? []).some((part) => part === name);
 
 const requiredText = (value: unknown, path: string): string => {
   if (typeof value !== 'string' || !value || value !== value.trim() || /[\u0000-\u001f\u007f]/.test(value)) {
-    throw new Error(`Shopify cart field is invalid at ${path}.`);
+    throw new ShopifyCartMappingError(`Shopify cart field is invalid at ${path}.`);
   }
   return value;
 };
@@ -167,14 +180,14 @@ const requiredShopifyGid = (
     ? SHOPIFY_CART_LINE_ID_PATTERN.test(id)
     : new RegExp(`^gid://shopify/${resource}/[^/?#\\s]+$`).test(id);
   if (!valid) {
-    throw new Error(`Shopify cart field is invalid at ${path}.`);
+    throw new ShopifyCartMappingError(`Shopify cart field is invalid at ${path}.`);
   }
   return id;
 };
 
 const requiredShopifyImageGid = (value: unknown, path: string): string => {
   if (!isShopifyImageIdentifier(value)) {
-    throw new Error(`Shopify cart field is invalid at ${path}.`);
+    throw new ShopifyCartMappingError(`Shopify cart field is invalid at ${path}.`);
   }
   return value;
 };
@@ -182,22 +195,37 @@ const requiredShopifyImageGid = (value: unknown, path: string): string => {
 const requiredHandle = (value: unknown, path: string): string => {
   const handle = requiredText(value, path);
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(handle)) {
-    throw new Error(`Shopify cart field is invalid at ${path}.`);
+    throw new ShopifyCartMappingError(`Shopify cart field is invalid at ${path}.`);
   }
   return handle;
+};
+
+const mappedCartMoney = (value: unknown, path: string) => {
+  if (!isRecord(value)) {
+    throw new ShopifyCartMappingError(`Shopify cart money is invalid at ${path}.`);
+  }
+  try {
+    return moneyFromDecimal(
+      requiredText(value.amount, `${path}.amount`),
+      requiredText(value.currencyCode, `${path}.currencyCode`)
+    );
+  } catch (error) {
+    if (error instanceof ShopifyCartMappingError) throw error;
+    throw new ShopifyCartMappingError(`Shopify cart money is invalid at ${path}.`);
+  }
 };
 
 const quantityRuleParts = (
   rule: ShopifyCartQuantityRule
 ): { minimum: number; increment: number; maximum?: number } => {
   if (rule.minimum !== 1 || rule.increment !== 1) {
-    throw new Error('Shopify cart quantityRule only supports minimum=1 and increment=1.');
+    throw new ShopifyCartMappingError('Shopify cart quantityRule only supports minimum=1 and increment=1.');
   }
   const maximum = rule.maximum == null
     ? undefined
     : Number.isSafeInteger(rule.maximum) && rule.maximum >= 1
       ? rule.maximum
-      : (() => { throw new Error('Shopify cart quantityRule maximum is invalid.'); })();
+      : cartMappingFail('Shopify cart quantityRule maximum is invalid.');
   return {
     minimum: rule.minimum,
     increment: rule.increment,
@@ -329,19 +357,19 @@ const shopifyImageAlt = (image: ShopifyCartImage): string =>
   image.altText?.trim() || 'Producto KingBelt';
 
 const toCartImageRequired = (image: ShopifyCartImage | null | undefined) => {
-  if (!image) {
-    throw new Error('Shopify cart line merchandise.image is missing.');
+  if (!isRecord(image)) {
+    throw new ShopifyCartMappingError('Shopify cart line merchandise.image is missing.');
   }
   const id = requiredShopifyImageGid(image.id, 'line.merchandise.image.id');
   const url = requiredText(image.url, 'line.merchandise.image.url');
   if (!isAllowedImageUrl(url, publicSecurityConfig.remoteImageHosts)) {
-    throw new Error('Shopify cart image URL is not allowed.');
+    throw new ShopifyCartMappingError('Shopify cart image URL is not allowed.');
   }
   if (!Number.isSafeInteger(image.width) || image.width <= 0) {
-    throw new Error('Shopify cart image width is invalid.');
+    throw new ShopifyCartMappingError('Shopify cart image width is invalid.');
   }
   if (!Number.isSafeInteger(image.height) || image.height <= 0) {
-    throw new Error('Shopify cart image height is invalid.');
+    throw new ShopifyCartMappingError('Shopify cart image height is invalid.');
   }
   return {
     id,
@@ -359,7 +387,7 @@ const primaryCollectionTitle = (
     ? metafield.reference
     : undefined;
   if (reference?.__typename !== 'Collection') {
-    throw new Error('invalid primary collection');
+    throw new ShopifyCartMappingError('invalid primary collection');
   }
   requiredShopifyGid(reference.id, 'Collection', 'line.merchandise.product.primaryCollection.reference.id');
   requiredHandle(reference.handle, 'line.merchandise.product.primaryCollection.reference.handle');
@@ -368,36 +396,51 @@ const primaryCollectionTitle = (
 };
 
 const mapShopifyCartLine = (line: ShopifyCartLine): CartLine => {
+  if (!isRecord(line)) {
+    throw new ShopifyCartMappingError('Shopify cart line is invalid.');
+  }
   const lineId = requiredShopifyGid(line.id, 'CartLine', 'line.id');
   const merchandise = line.merchandise;
-  if (!merchandise) {
-    throw new Error('Shopify cart line merchandise is missing.');
+  if (!isRecord(merchandise)) {
+    throw new ShopifyCartMappingError('Shopify cart line merchandise is missing.');
+  }
+  if (!isRecord(merchandise.product)) {
+    throw new ShopifyCartMappingError('Shopify cart line merchandise.product is missing.');
+  }
+  if (!isRecord(line.cost)
+    || !isRecord(line.cost.amountPerQuantity)
+    || !isRecord(line.cost.totalAmount)) {
+    throw new ShopifyCartMappingError('Shopify cart line cost is invalid.');
+  }
+  if (!Array.isArray(merchandise.selectedOptions)
+    || merchandise.selectedOptions.some((selection) => !isRecord(selection))) {
+    throw new ShopifyCartMappingError('Shopify cart selectedOptions is invalid.');
+  }
+  if (!isRecord(merchandise.quantityRule)) {
+    throw new ShopifyCartMappingError('Shopify cart quantityRule is invalid.');
   }
   const merchandiseId = requiredShopifyGid(merchandise.id, 'ProductVariant', 'line.merchandise.id');
   const remoteProductId = requiredShopifyGid(merchandise.product?.id, 'Product', 'line.merchandise.product.id');
   const handle = requiredHandle(merchandise.product.handle, 'line.merchandise.product.handle');
   const title = requiredText(merchandise.product.title, 'line.merchandise.product.title');
   if (!Number.isSafeInteger(line.quantity) || line.quantity < 1) {
-    throw new Error('Shopify cart line quantity is invalid.');
+    throw new ShopifyCartMappingError('Shopify cart line quantity is invalid.');
   }
   const selectedOptions = merchandise.selectedOptions.map((selection, index) => ({
     name: requiredText(selection.name, `line.merchandise.selectedOptions[${index}].name`),
     value: requiredText(selection.value, `line.merchandise.selectedOptions[${index}].value`),
   }));
   if (new Set(selectedOptions.map((selection) => selection.name.toLocaleLowerCase('es'))).size !== selectedOptions.length) {
-    throw new Error('Shopify cart selectedOptions contains duplicate options.');
+    throw new ShopifyCartMappingError('Shopify cart selectedOptions contains duplicate options.');
   }
   const image = toCartImageRequired(merchandise.image);
   const reference = merchandise.product.modelReference?.value == null
     ? handle
     : requiredText(merchandise.product.modelReference.value, 'line.merchandise.product.modelReference.value');
   const collection = primaryCollectionTitle(merchandise.product.primaryCollection);
-  const unitPrice = moneyFromDecimal(
-    line.cost.amountPerQuantity.amount,
-    line.cost.amountPerQuantity.currencyCode
-  );
+  const unitPrice = mappedCartMoney(line.cost.amountPerQuantity, 'line.cost.amountPerQuantity');
   if (!isCommercialVariantPrice(unitPrice.amountMinor)) {
-    throw new Error('Shopify cart line unit price is not a commercial KingBelt price.');
+    throw new ShopifyCartMappingError('Shopify cart line unit price is not a commercial KingBelt price.');
   }
   return {
     id: lineId,
@@ -419,7 +462,7 @@ const mapShopifyCartLine = (line: ShopifyCartLine): CartLine => {
       currentlyNotInStock: merchandise.currentlyNotInStock,
       quantityRule: merchandise.quantityRule,
     }),
-    lineTotal: moneyFromDecimal(line.cost.totalAmount.amount, line.cost.totalAmount.currencyCode),
+    lineTotal: mappedCartMoney(line.cost.totalAmount, 'line.cost.totalAmount'),
   };
 };
 
@@ -520,13 +563,13 @@ const canCheckoutFrom = (lines: readonly CartLine[], lineErrors: readonly CartLi
 
 const assertCartCurrencyCode = (currencyCode: string | undefined, path: string): void => {
   if (currencyCode !== SHOPIFY_MARKET_CONTEXT.currency) {
-    throw new Error(`Shopify cart currency does not match ${SHOPIFY_MARKET_CONTEXT.currency} at ${path}.`);
+    cartMappingFail(`Shopify cart currency does not match ${SHOPIFY_MARKET_CONTEXT.currency} at ${path}.`);
   }
 };
 
 const assertShopifyCartMarket = (remote: ShopifyCart): void => {
   if (remote.buyerIdentity?.countryCode !== SHOPIFY_MARKET_CONTEXT.country) {
-    throw new Error(`Shopify cart country does not match ${SHOPIFY_MARKET_CONTEXT.country}.`);
+    cartMappingFail(`Shopify cart country does not match ${SHOPIFY_MARKET_CONTEXT.country}.`);
   }
   assertCartCurrencyCode(remote.cost?.subtotalAmount?.currencyCode, 'cost.subtotalAmount');
   for (const [index, line] of remote.lines.nodes.entries()) {
@@ -535,35 +578,54 @@ const assertShopifyCartMarket = (remote: ShopifyCart): void => {
   }
 };
 
+const assertShopifyCartShape = (remote: ShopifyCart): void => {
+  if (!isRecord(remote)
+    || !isRecord(remote.cost)
+    || !isRecord(remote.cost.subtotalAmount)
+    || !isRecord(remote.lines)
+    || !Array.isArray(remote.lines.nodes)) {
+    throw new ShopifyCartMappingError('Shopify cart payload shape is invalid.');
+  }
+};
+
 export const mapShopifyCart = (
   remote: ShopifyCart,
   warnings: readonly ShopifyCartWarning[] = []
 ): Cart => {
-  assertShopifyCartMarket(remote);
-  const lines = remote.lines.nodes.map(mapShopifyCartLine);
-  const warningResult = applyWarnings(lines, warnings);
-  const lineErrors = [...availabilityLineErrors(lines), ...warningResult.lineErrors];
-  const truncated = remote.lines.pageInfo?.hasNextPage === true;
-  const exceedsDistinctLineLimit = lines.length > MAX_CART_LINES;
-  const capacityExceeded = truncated || exceedsDistinctLineLimit;
-  const globalNotice = warningResult.globalMessages.reduce<string | undefined>(
-    (current, message) => mergeNotice(current, message),
-    undefined
-  );
-  return {
-    lines,
-    itemCount: lines.reduce((total, line) => total + line.quantity, 0),
-    subtotal: moneyFromDecimal(remote.cost.subtotalAmount.amount, remote.cost.subtotalAmount.currencyCode),
-    lineErrors,
-    status: 'idle',
-    canCheckout: !capacityExceeded && canCheckoutFrom(lines, lineErrors),
-    ...(truncated
-      ? { globalError: SHOPIFY_CART_OVERFLOW_MESSAGE }
-      : exceedsDistinctLineLimit
-        ? { globalError: MAX_CART_LINES_MESSAGE }
-        : {}),
-    ...(globalNotice ? { globalNotice } : {}),
-  };
+  try {
+    assertShopifyCartShape(remote);
+    assertShopifyCartMarket(remote);
+    const lines = remote.lines.nodes.map(mapShopifyCartLine);
+    const warningResult = applyWarnings(lines, warnings);
+    const lineErrors = [...availabilityLineErrors(lines), ...warningResult.lineErrors];
+    const truncated = remote.lines.pageInfo?.hasNextPage === true;
+    const exceedsDistinctLineLimit = lines.length > MAX_CART_LINES;
+    const capacityExceeded = truncated || exceedsDistinctLineLimit;
+    const globalNotice = warningResult.globalMessages.reduce<string | undefined>(
+      (current, message) => mergeNotice(current, message),
+      undefined
+    );
+    const subtotal = mappedCartMoney(remote.cost.subtotalAmount, 'cost.subtotalAmount');
+    return {
+      lines,
+      itemCount: lines.reduce((total, line) => total + line.quantity, 0),
+      subtotal,
+      lineErrors,
+      status: 'idle',
+      canCheckout: !capacityExceeded && canCheckoutFrom(lines, lineErrors),
+      ...(truncated
+        ? { globalError: SHOPIFY_CART_OVERFLOW_MESSAGE }
+        : exceedsDistinctLineLimit
+          ? { globalError: MAX_CART_LINES_MESSAGE }
+          : {}),
+      ...(globalNotice ? { globalNotice } : {}),
+    };
+  } catch (error) {
+    if (error instanceof ShopifyCartMappingError) {
+      throw new UnrecoverableCartStateError();
+    }
+    throw error;
+  }
 };
 
 const linesForVariant = (cart: Cart, merchandiseId: string): CartLine[] =>

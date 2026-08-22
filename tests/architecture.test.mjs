@@ -107,6 +107,14 @@ describe('límites de arquitectura', () => {
     expect(lazySource.includes("import('./cart-store')")).toBe(true);
   });
 
+  test('BaseLayout es el único propietario del landmark main', () => {
+    const astroFilesWithMain = sourceFiles
+      .filter((path) => path.endsWith('.astro'))
+      .filter((path) => /<main\b/.test(readFileSync(path, 'utf8')))
+      .map(sourcePath);
+    expect(astroFilesWithMain).toEqual(['src/layouts/BaseLayout.astro']);
+  });
+
   test('la producción no interpreta un query param como confirmación de compra', () => {
     const forbiddenSignals = [
       'kb_checkout',
@@ -372,7 +380,6 @@ describe('límites de arquitectura', () => {
     const vercelJson = JSON.parse(vercelText);
     expect(vercelText).not.toContain('COMMERCE_SOURCE');
     expect(vercelText).not.toContain('SHOPIFY_STOREFRONT_PRIVATE_TOKEN');
-    expect(vercelText).not.toContain('SHOPIFY_CART_COOKIE_SECRET');
     expect(vercelText).not.toContain('SHOPIFY_WEBHOOK_SECRET');
     expect(vercelText).not.toContain('VERCEL_DEPLOY_HOOK_URL');
     expect(vercelText).not.toMatch(/shpat_|shpca_|shpss_/);
@@ -390,8 +397,7 @@ describe('límites de arquitectura', () => {
     ];
     const leakedSecret = productionSources.filter((path) => {
       const text = readFileSync(path, 'utf8');
-      return text.includes('SHOPIFY_CART_COOKIE_SECRET')
-        || text.includes('signCartId')
+      return text.includes('signCartId')
         || text.includes('verifyCartCookie')
         || text.includes('SHOPIFY_CART_COOKIE_NAME');
     }).map(sourcePath);

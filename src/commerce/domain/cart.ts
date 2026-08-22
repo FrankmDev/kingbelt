@@ -67,6 +67,7 @@ export interface Cart {
   canCheckout: boolean;
   globalError?: string;
   globalNotice?: string;
+  recovery?: 'reset_required';
 }
 
 export interface AddToCartInput {
@@ -81,6 +82,7 @@ export type CartOperationErrorCode =
   | 'quantity_limit'
   | 'unavailable'
   | 'not_found'
+  | 'cart_unrecoverable'
   | 'provider_error';
 
 export interface CartOperationMessage {

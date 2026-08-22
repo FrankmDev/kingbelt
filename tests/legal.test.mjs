@@ -21,19 +21,23 @@ describe('registro legal', () => {
     expect(getLegalRobots({ status: 'inactive' })).toBe('noindex,nofollow');
     expect(getLegalRobots({ status: 'published' })).toBeUndefined();
     expect(visibleLegalNavItems.map((item) => item.href)).toEqual([
-      legalDocuments.avisoLegal.href,
-      legalDocuments.privacidad.href,
-      legalDocuments.cookies.href,
-      legalDocuments.condiciones.href,
+      '/aviso-legal',
+      '/privacidad',
+      '/cookies',
+      '/condiciones',
     ]);
     expect(legalFooterNav.map((item) => item.href)).toEqual([
-      legalDocuments.avisoLegal.href,
-      legalDocuments.privacidad.href,
-      legalDocuments.cookies.href,
-      legalDocuments.condiciones.href,
+      '/aviso-legal',
+      '/privacidad',
+      '/cookies',
+      '/condiciones',
     ]);
+    expect(legalDocuments.avisoLegal.status).toBe('published');
+    expect(legalDocuments.privacidad.status).toBe('published');
     expect(legalDocuments.cookies.status).toBe('published');
     expect(legalDocuments.condiciones.status).toBe('published');
+    expect(legalDocuments.envios.status).toBe('published');
+    expect(legalDocuments.devoluciones.status).toBe('published');
     expect(legalDocuments.desistimiento.status).toBe('inactive');
   });
 
@@ -50,9 +54,6 @@ describe('registro legal', () => {
     expect(isSitemapExcluded('/envios-y-devoluciones')).toBe(false);
     expect(isSitemapExcluded('/devoluciones')).toBe(false);
     expect(isSitemapExcluded('/condiciones')).toBe(false);
-    expect(getLegalSitemapExcludedPaths()).toContain('/desistimiento');
-    expect(getLegalSitemapExcludedPaths()).not.toContain('/cookies');
-    expect(getLegalSitemapExcludedPaths()).not.toContain('/condiciones');
-    expect(getLegalSitemapExcludedPaths()).not.toContain('/aviso-legal');
+    expect(getLegalSitemapExcludedPaths()).toEqual(['/desistimiento']);
   });
 });

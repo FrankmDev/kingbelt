@@ -46,12 +46,14 @@ const aboutSchema = {
     </Fragment>
   </PageHeader>
 
-  <AboutOriginSection data={origin} />
-  <AboutStandardsSection data={standards} />
-  <AboutDirectionSection data={direction} />
-  <AboutContextSection data={context} />
+  <div class="about-page">
+    <AboutOriginSection data={origin} />
+    <AboutStandardsSection data={standards} />
+    <AboutDirectionSection data={direction} />
+    <AboutContextSection data={context} />
 
-  <AboutCtaSection cta={cta} backgroundImage={hero.image} />
+    <AboutCtaSection cta={cta} backgroundImage={hero.image} />
+  </div>
 
   <Footer slot="footer" connected />
 </BaseLayout>

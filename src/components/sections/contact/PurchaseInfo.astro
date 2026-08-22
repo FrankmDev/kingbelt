@@ -142,7 +142,7 @@ const layerCount = items.length;
 <style>
   .purchase-info {
     padding-block: var(--kb-space-section);
-    background: var(--color-king-surface);
+    background: var(--color-king-bg);
     border-top: 1px solid var(--kb-stroke-hairline);
   }
 
@@ -154,7 +154,7 @@ const layerCount = items.length;
   .purchase-info__layout {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    gap: var(--kb-space-gap);
+    gap: var(--kb-space-gap-lg);
     align-items: start;
   }
 
@@ -162,13 +162,14 @@ const layerCount = items.length;
     .purchase-info__layout {
       grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
       align-items: stretch;
+      gap: var(--kb-space-10);
     }
 
     .purchase-info__layout .kb-reading-panel {
       height: 100%;
     }
 
-    .purchase-info__media:global(.media-frame) {
+    .purchase-info__media:global(.media-frame.media-frame--ratio-4-3) {
       height: 100%;
       min-height: 0;
       aspect-ratio: auto;

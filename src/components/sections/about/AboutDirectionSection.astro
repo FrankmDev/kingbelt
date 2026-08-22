@@ -1,5 +1,5 @@
 ---
-import SectionHeader from '@components/ui/SectionHeader.astro';
+import SectionHeaderHome from '../home/SectionHeaderHome.astro';
 import MediaFrame from '../../ui/MediaFrame.astro';
 import type { AboutReadingLayer } from '@content/about';
 
@@ -31,38 +31,37 @@ const layerCount = panel.layers.length;
 ---
 
 <section
-  class:list={['about-direction section-spacing about-direction--chapter-start', className]}
+  class:list={['about-direction section-spacing', className]}
   aria-labelledby="about-direction-title"
 >
-  <div class="kb-shell-wide section-stack-lg">
-    <SectionHeader
+  <div class="kb-shell-wide">
+    <SectionHeaderHome
+      index="03"
       eyebrow={data.eyebrow}
-      body={data.lede}
       meta="Material / Proporción / Cierre"
+      body={data.lede}
+      class="about-direction__header"
     >
       <Fragment slot="title">
         <span id="about-direction-title" set:html={data.title} />
       </Fragment>
-    </SectionHeader>
+    </SectionHeaderHome>
 
-    <div class="about-direction-layout">
+    <div class="about-direction__layout">
       <MediaFrame
         src={data.image}
         alt={data.imageAlt}
         ratio="4/3"
         label={data.imageLabel}
         caption={data.imageCaption}
-        captionNumber="02"
+        captionNumber="03"
         width={1600}
         height={1200}
         loading="lazy"
-        class="about-direction-media"
+        class="about-direction__media"
       />
 
-      <aside
-        class="kb-reading-panel"
-        aria-labelledby="about-direction-panel-title"
-      >
+      <aside class="kb-reading-panel" aria-labelledby="about-direction-panel-title">
         <header class="kb-reading-panel__head">
           <div class="kb-reading-panel__head-bar">
             <p class="kb-eyebrow kb-eyebrow-lined kb-reading-panel__eyebrow">
@@ -111,13 +110,14 @@ const layerCount = panel.layers.length;
 <style>
   .about-direction {
     background: var(--color-king-surface);
+    border-top: 1px solid var(--kb-stroke-hairline);
   }
 
-  .about-direction--chapter-start {
-    padding-top: clamp(4.25rem, 7.5vw, 6.5rem);
+  .about-direction__header:global(.section-header-home) {
+    margin-bottom: var(--kb-space-gap);
   }
 
-  .about-direction-layout {
+  .about-direction__layout {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
     gap: var(--kb-space-gap-lg);
@@ -125,16 +125,16 @@ const layerCount = panel.layers.length;
   }
 
   @media (min-width: 64rem) {
-    .about-direction-layout {
+    .about-direction__layout {
       grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
       align-items: stretch;
     }
 
-    .kb-reading-panel {
+    .about-direction__layout .kb-reading-panel {
       height: 100%;
     }
 
-    :global(.about-direction-media.media-frame) {
+    .about-direction__media:global(.media-frame.media-frame--ratio-4-3) {
       height: 100%;
       min-height: 0;
       aspect-ratio: auto;

@@ -118,7 +118,7 @@ const breadcrumbs = [
 
 <style>
   .pdp {
-    padding-top: clamp(5.75rem, 14vw, 9rem);
+    padding-top: var(--kb-page-offset-top);
     padding-bottom: var(--kb-space-section);
   }
 
@@ -332,13 +332,27 @@ const breadcrumbs = [
 
     .pdp__related-grid {
       grid-template-columns: minmax(0, 1fr);
-      gap: var(--kb-space-5);
+      gap: 0;
+    }
+
+    .pdp__related-grid > li {
+      padding-block: var(--kb-space-6);
+      border-bottom: 1px solid var(--kb-stroke-hairline);
+    }
+
+    .pdp__related-grid > li:first-child {
+      padding-top: 0;
+    }
+
+    .pdp__related-grid > li:last-child {
+      padding-bottom: 0;
+      border-bottom: 0;
     }
   }
 
   @media (min-width: 48rem) {
     .pdp {
-      padding-top: clamp(7rem, 9vw, 9rem);
+      padding-top: calc(var(--kb-header-offset) + var(--kb-space-5));
     }
 
     .pdp__gallery {
@@ -346,7 +360,7 @@ const breadcrumbs = [
       align-items: start;
       margin-inline: 0;
       position: sticky;
-      top: clamp(6.5rem, 9vw, 8.5rem);
+      top: var(--kb-sticky-below-header);
     }
 
     .pdp__main {

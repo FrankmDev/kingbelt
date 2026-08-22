@@ -184,20 +184,14 @@ const validateOptionalText = (
   if (value !== undefined) validateRequiredText(value, path, code, label, issues);
 };
 
-export interface CatalogValidationOptions {
-  requireColorGalleries?: boolean;
-}
-
 export const validateCatalog = (
   products: readonly Product[],
   collections: readonly Collection[],
   supportedCurrencies: readonly CurrencyCode[] = ['EUR'],
-  allowedRemoteImageHosts: readonly string[] = [],
-  options: CatalogValidationOptions = {}
+  allowedRemoteImageHosts: readonly string[] = []
 ): CatalogValidationIssue[] => {
   const issues: CatalogValidationIssue[] = [];
   const supported = new Set(supportedCurrencies);
-  const requireColorGalleries = options.requireColorGalleries !== false;
 
   if (!products.length) {
     issue(issues, 'empty_catalog', 'products', 'El catálogo normalizado no puede estar vacío.');
@@ -394,7 +388,7 @@ export const validateCatalog = (
       }
       if (!group.imageIds.length) {
         issue(issues, 'empty_media_group', `${groupPath}.imageIds`, 'El grupo de medios debe contener al menos una imagen.');
-      } else if (colorOption && requireColorGalleries && group.imageIds.length !== COLOR_GALLERY_IMAGE_COUNT) {
+      } else if (colorOption && group.imageIds.length !== COLOR_GALLERY_IMAGE_COUNT) {
         issue(
           issues,
           'invalid_color_gallery_cardinality',
@@ -411,7 +405,7 @@ export const validateCatalog = (
         }
       });
     });
-    if (colorOption && (requireColorGalleries || product.mediaGroups.length > 0)) {
+    if (colorOption) {
       colorOption.values.forEach((value, valueIndex) => {
         if (!mediaGroupByValue.has(value.id)) {
           issue(issues, 'missing_color_media_group', `${productPath}.options[${product.options.indexOf(colorOption)}].values[${valueIndex}]`, `El color ${value.label} no tiene una galería asociada.`);
@@ -536,7 +530,7 @@ export const validateCatalog = (
           issue(issues, 'variant_unknown_image', `${variantPath}.imageId`, `Imagen de variante inexistente: ${variant.imageId}.`);
         }
       }
-      if (colorOption && (requireColorGalleries || product.mediaGroups.length > 0)) {
+      if (colorOption) {
         const selectedColorId = selectionByOption.get(colorOption.id);
         const expectedImageId = selectedColorId ? mediaGroupByValue.get(selectedColorId)?.imageIds[0] : undefined;
         if (!variant.imageId) {
@@ -600,15 +594,13 @@ export const assertValidCatalog = (
   products: readonly Product[],
   collections: readonly Collection[],
   supportedCurrencies: readonly CurrencyCode[] = ['EUR'],
-  allowedRemoteImageHosts: readonly string[] = [],
-  options: CatalogValidationOptions = {}
+  allowedRemoteImageHosts: readonly string[] = []
 ): void => {
   const issues = validateCatalog(
     products,
     collections,
     supportedCurrencies,
-    allowedRemoteImageHosts,
-    options
+    allowedRemoteImageHosts
   );
   if (issues.length) throw new CatalogValidationError(issues);
 };

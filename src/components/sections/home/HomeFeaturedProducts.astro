@@ -48,7 +48,7 @@ const { products } = Astro.props;
             product={product}
             index={index}
             priority={index < 2}
-            sizes="(min-width: 64rem) 25vw, (min-width: 40rem) 50vw, 50vw"
+            sizes="(min-width: 64rem) 25vw, (min-width: 40rem) 50vw, 38vw"
           />
         </li>
       ))}
@@ -63,8 +63,8 @@ const { products } = Astro.props;
 
   .home-featured__grid {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--kb-space-gap) var(--kb-space-4);
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--kb-space-5);
     margin: 0;
     padding: 0;
     list-style: none;
@@ -76,12 +76,27 @@ const { products } = Astro.props;
 
   @media (max-width: 47.99rem) {
     .home-featured__grid {
-      gap: var(--kb-space-5) var(--kb-space-3);
+      gap: 0;
+    }
+
+    .home-featured__item {
+      padding-block: var(--kb-space-6);
+      border-bottom: 1px solid var(--kb-stroke-hairline);
+    }
+
+    .home-featured__item:first-child {
+      padding-top: 0;
+    }
+
+    .home-featured__item:last-child {
+      padding-bottom: 0;
+      border-bottom: 0;
     }
   }
 
   @media (min-width: 40rem) {
     .home-featured__grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: var(--kb-space-gap) var(--kb-space-5);
     }
   }

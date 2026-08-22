@@ -32,23 +32,24 @@ const titleId = `${id}-title`;
   aria-labelledby={titleId}
 >
   <div class="contact-email-banner__inner kb-shell-wide">
-    <SectionHeaderHome
-      index="05"
-      eyebrow={eyebrow}
-      meta="Canal directo"
-      titleId={titleId}
-      body={description}
-      density="compact"
-      asideLayout="panel"
-      class="contact-email-banner__header"
-    >
-      <Fragment slot="title">{title}</Fragment>
+    <div class="contact-email-banner__grid">
+      <SectionHeaderHome
+        index="05"
+        eyebrow={eyebrow}
+        meta="Canal directo"
+        titleId={titleId}
+        body={description}
+        density="compact"
+        class="contact-email-banner__header"
+      >
+        <Fragment slot="title">{title}</Fragment>
+      </SectionHeaderHome>
 
-      <div slot="aside" class="contact-email-banner__panel kb-reading-panel">
+      <aside class="contact-email-banner__panel kb-reading-panel" aria-label="Email de contacto">
         <header class="kb-reading-panel__head">
           <div class="kb-reading-panel__head-bar">
             <p class="kb-eyebrow kb-eyebrow-lined kb-reading-panel__eyebrow">Email</p>
-            <span class="contact-email-banner__status kb-reading-panel__tag">Respuesta en 24h</span>
+            <span class="contact-email-banner__status kb-reading-panel__tag">Canal directo</span>
           </div>
 
           <p class="kb-reading-panel__statement">Escríbenos con el contexto de tu consulta.</p>
@@ -78,8 +79,8 @@ const titleId = `${id}-title`;
           <span class="kb-reading-panel__track"></span>
           <span class="kb-reading-panel__track"></span>
         </div>
-      </div>
-    </SectionHeaderHome>
+      </aside>
+    </div>
   </div>
 </section>
 
@@ -87,6 +88,14 @@ const titleId = `${id}-title`;
   .contact-email-banner {
     padding-block: var(--kb-space-section);
     border-top: 1px solid var(--kb-stroke-hairline);
+    background: var(--color-king-surface);
+  }
+
+  .contact-email-banner__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--kb-space-gap-lg);
+    align-items: stretch;
   }
 
   .contact-email-banner__header:global(.section-header-home) {
@@ -168,5 +177,20 @@ const titleId = `${id}-title`;
   .contact-email-banner__actions :global(.kb-btn) {
     width: 100%;
     justify-content: center;
+  }
+
+  @media (min-width: 64rem) {
+    .contact-email-banner__grid {
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+      gap: var(--kb-space-10);
+      align-items: center;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .contact-email-banner__address,
+    .contact-email-banner__address-icon {
+      transition: none;
+    }
   }
 </style>

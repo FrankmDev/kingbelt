@@ -1,10 +1,12 @@
 import { publicSecurityConfig } from '@config/security';
+import { CatalogValidationError } from '../../application/catalog-validation';
 import type { ProductSummary } from '../../domain/catalog';
 import type { ShopifyCatalogQueries } from './catalog-adapter';
 import {
   mapShopifyCollections,
   mapShopifyProduct,
   mapShopifyProductSummary,
+  ShopifyCatalogMappingError,
 } from './catalog-mappers';
 import {
   COLLECTION_FIELDS,
@@ -39,6 +41,49 @@ const RUNTIME_PRODUCT_MAP = {
 interface HandleNode {
   handle: string;
 }
+
+export interface RuntimeCatalogWarning {
+  event: 'shopify_runtime_summary_skipped';
+  resourceType: 'product_summary' | 'featured_product' | 'collection_product' | 'related_product';
+  handle: string;
+  errorClass: 'ShopifyCatalogMappingError' | 'CatalogValidationError';
+}
+
+export type RuntimeCatalogWarningLogger = (warning: RuntimeCatalogWarning) => void;
+
+const safeHandleForLog = (node: ShopifyProductSummaryNode): string =>
+  typeof node.handle === 'string' && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(node.handle)
+    ? node.handle.slice(0, 128)
+    : '[invalid]';
+
+const defaultRuntimeCatalogWarningLogger: RuntimeCatalogWarningLogger = (warning) => {
+  console.warn(JSON.stringify(warning));
+};
+
+const isKnownCatalogDataError = (
+  error: unknown
+): error is ShopifyCatalogMappingError | CatalogValidationError =>
+  error instanceof ShopifyCatalogMappingError || error instanceof CatalogValidationError;
+
+export const mapValidRuntimeProductSummaries = (
+  nodes: readonly ShopifyProductSummaryNode[],
+  allowedRemoteImageHosts: readonly string[],
+  resourceType: RuntimeCatalogWarning['resourceType'],
+  warningLogger: RuntimeCatalogWarningLogger = defaultRuntimeCatalogWarningLogger
+): ProductSummary[] => nodes.flatMap((node) => {
+  try {
+    return [mapShopifyProductSummary(node, allowedRemoteImageHosts)];
+  } catch (error) {
+    if (!isKnownCatalogDataError(error)) throw error;
+    warningLogger({
+      event: 'shopify_runtime_summary_skipped',
+      resourceType,
+      handle: safeHandleForLog(node),
+      errorClass: error.name as RuntimeCatalogWarning['errorClass'],
+    });
+    return [];
+  }
+});
 
 const PRODUCT_BY_HANDLE_QUERY = `
   query KingBeltProductByHandle($handle: String!, ${SHOPIFY_IN_CONTEXT_VARIABLE_DEFINITIONS}) ${SHOPIFY_IN_CONTEXT_DIRECTIVE} {
@@ -151,23 +196,63 @@ const sortSummariesByTitle = (products: ProductSummary[]): ProductSummary[] =>
 
 export const createShopifyCatalogQueries = (
   gateway: GatewaySource,
-  allowedRemoteImageHosts: readonly string[] = publicSecurityConfig.remoteImageHosts
+  allowedRemoteImageHosts: readonly string[] = publicSecurityConfig.remoteImageHosts,
+  warningLogger: RuntimeCatalogWarningLogger = defaultRuntimeCatalogWarningLogger
 ): ShopifyCatalogQueries => {
   const getGateway = createGatewayAccessor(gateway);
 
-  const mapSummaries = (nodes: readonly ShopifyProductSummaryNode[]): ProductSummary[] =>
-    nodes.map((node) => mapShopifyProductSummary(node, allowedRemoteImageHosts));
+  const mapSummaries = (
+    nodes: readonly ShopifyProductSummaryNode[],
+    resourceType: RuntimeCatalogWarning['resourceType']
+  ): ProductSummary[] => mapValidRuntimeProductSummaries(
+    nodes,
+    allowedRemoteImageHosts,
+    resourceType,
+    warningLogger
+  );
 
-  const loadProductSummaries = async (limit?: number): Promise<ProductSummary[]> =>
-    mapSummaries(
-      await paginateRootConnection(
+  const loadProductSummaries = async (
+    resourceType: 'product_summary' | 'featured_product',
+    limit?: number
+  ): Promise<ProductSummary[]> => {
+    if (limit === 0) return [];
+    if (limit === undefined) {
+      const nodes = await paginateRootConnection(
         getGateway(),
         PRODUCT_SUMMARIES_PAGE_QUERY,
         'resúmenes de producto',
-        (payload) => (payload as { products: ShopifyConnection<ShopifyProductSummaryNode> }).products,
-        limit
-      )
-    );
+        (payload) => (payload as { products: ShopifyConnection<ShopifyProductSummaryNode> }).products
+      );
+      return mapSummaries(nodes, resourceType);
+    }
+
+    const mapped: ProductSummary[] = [];
+    let after: string | null = null;
+    let pages = 0;
+    while (mapped.length < limit) {
+      if (pages >= SHOPIFY_MAX_CONNECTION_PAGES) {
+        throw new Error('Shopify superó el límite de páginas de resúmenes de producto.');
+      }
+      pages += 1;
+      const first = shopifyPageSize(Math.max(limit - mapped.length, 1));
+      const payload: { products: ShopifyConnection<ShopifyProductSummaryNode> } =
+        await getGateway().graphql<
+          { products: ShopifyConnection<ShopifyProductSummaryNode> },
+          { first: number; after: string | null }
+        >(
+          PRODUCT_SUMMARIES_PAGE_QUERY,
+          withShopifyInContextVariables({ first, after })
+        );
+      mapped.push(...mapSummaries(payload.products.nodes, resourceType));
+      if (!payload.products.pageInfo.hasNextPage) break;
+      const next: string | null = payload.products.pageInfo.endCursor;
+      if (!next || next === after) {
+        throw new Error('Shopify devolvió un cursor que no avanza de resúmenes de producto.');
+      }
+      after = next;
+    }
+    return mapped.slice(0, limit);
+  };
 
   return {
     async getCollections() {
@@ -222,7 +307,7 @@ export const createShopifyCatalogQueries = (
       const [collection] = mapShopifyCollections([initial.collection], allowedRemoteImageHosts);
       return {
         collection,
-        products: mapSummaries(productNodes),
+        products: mapSummaries(productNodes, 'collection_product'),
       };
     },
 
@@ -248,11 +333,11 @@ export const createShopifyCatalogQueries = (
     },
 
     async getProductSummaries() {
-      return loadProductSummaries();
+      return loadProductSummaries('product_summary');
     },
 
     async getFeaturedProducts(limit) {
-      return loadProductSummaries(limit);
+      return loadProductSummaries('featured_product', limit);
     },
 
     async getRelatedProducts(product, limit) {
@@ -286,8 +371,10 @@ export const createShopifyCatalogQueries = (
         pending.forEach((item, index) => {
           const collection = data[`c${index}`];
           if (!collection) return;
-          mapSummaries(collection.products.nodes).forEach((candidate) => {
-            if (candidate.handle === product.handle || candidate.id === product.id) return;
+          collection.products.nodes.forEach((node) => {
+            if (node.handle === product.handle || node.id === product.id) return;
+            const [candidate] = mapSummaries([node], 'related_product');
+            if (!candidate) return;
             if (!collected.has(candidate.id)) collected.set(candidate.id, candidate);
           });
           if (collection.products.pageInfo.hasNextPage) {

@@ -40,6 +40,18 @@ const formatPendingSections = (report: LegalReadinessReport): string[] => {
   ];
 };
 
+const formatEmptySections = (report: LegalReadinessReport): string[] => {
+  if (report.publishedEmptySections.length === 0) {
+    return ['Published empty sections:', '- none'];
+  }
+  return [
+    'Published empty sections:',
+    ...report.publishedEmptySections.map(
+      (item) => `- ${item.document}: ${item.sectionIds.join(', ')}`
+    ),
+  ];
+};
+
 export const formatLegalPreflightSuccess = (report: LegalReadinessReport): string =>
   [
     'Legal preflight passed',
@@ -67,6 +79,8 @@ export const formatLegalPreflightFailure = (report: LegalReadinessReport): strin
     ...formatPublishedPlaceholders(report),
     '',
     ...formatPendingSections(report),
+    '',
+    ...formatEmptySections(report),
     '',
     ...list('Draft in public navigation', report.draftInPublicNav),
     '',

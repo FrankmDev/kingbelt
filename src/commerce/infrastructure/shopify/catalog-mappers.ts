@@ -74,6 +74,22 @@ const optionalText = (value: string | null | undefined): string | undefined => {
   return normalized || undefined;
 };
 
+const mappedMoney = (
+  amount: string | null | undefined,
+  currency: string | null | undefined,
+  path: string
+) => {
+  try {
+    return moneyFromDecimal(
+      requiredText(amount, `${path}.amount`),
+      requiredText(currency, `${path}.currencyCode`)
+    );
+  } catch (error) {
+    if (error instanceof ShopifyCatalogMappingError) throw error;
+    return fail(path, 'el importe monetario devuelto por Shopify no es válido.');
+  }
+};
+
 const requiredShopifyGid = (value: string | null | undefined, resource: string, path: string): string => {
   const id = requiredText(value, path);
   if (
@@ -358,14 +374,14 @@ const mapVariants = (
       const actualImage = required(
         variant.image,
         imagePath,
-        'falta ProductVariant.image; debe coincidir con la portada de su galería de color.'
+        'falta la imagen efectiva ProductVariant.image devuelta por Storefront; debe coincidir con la portada de su galería de color.'
       );
       const actualImageId = requiredShopifyImageGid(actualImage.id, `${path}.image.id`);
       if (actualImageId !== expectedCoverId) {
         const expectedImage = productImageById.get(expectedCoverId);
         fail(
           imagePath,
-          `la imagen de variante debe coincidir con la portada de su galería de color (esperada ${describeImageFile(expectedImage ?? { id: expectedCoverId, url: '' })}; recibida ${describeImageFile(actualImage)}). En Shopify Admin, asigna esa portada a todas las tallas de este color.`
+          `la imagen efectiva de variante devuelta por Storefront debe coincidir con la portada de su galería de color (esperada ${describeImageFile(expectedImage ?? { id: expectedCoverId, url: '' })}; recibida ${describeImageFile(actualImage)}). Revisa la configuración de imagen de todas las tallas de este color en Shopify Admin.`
         );
       }
       imageId = actualImageId;
@@ -397,7 +413,7 @@ const mapVariants = (
 };
 
 const IMAGE_FILE_STEM_PATTERN = /([^/?#]+)\.(?:avif|gif|jpe?g|png|webp)(?:$|[?#])/i;
-const IMAGE_FILE_FAMILY_PATTERN = /[_-](\d+)(?:_[0-9a-f-]{36})?$/i;
+const IMAGE_FILE_FAMILY_PATTERN = /_(\d{2})(?:_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})?$/i;
 
 const imageFileStem = (url: string): string | undefined => {
   const encoded = url.match(IMAGE_FILE_STEM_PATTERN)?.[1];
@@ -443,10 +459,9 @@ const normalizedMediaToken = (value: string): string =>
 const imageFamilyNamesColor = (family: string, color: string): boolean => {
   const normalizedFamily = normalizedMediaToken(family);
   const normalizedColor = normalizedMediaToken(color);
-  return Boolean(normalizedColor) && (
-    normalizedFamily === normalizedColor
-    || normalizedFamily.endsWith(`_${normalizedColor}`)
-  );
+  if (!normalizedColor) return false;
+  const colorSuffix = `_${normalizedColor}`;
+  return normalizedFamily.endsWith(colorSuffix) && normalizedFamily.length > colorSuffix.length;
 };
 
 const mapNativeColorGroups = (
@@ -642,19 +657,15 @@ export const mapShopifyProductSummary = (
   const description = requiredText(source.description, `${path}.description`);
   const primaryCollection = mapPrimaryCollectionReference(source);
   const options = mapOptions(source);
-  const minPrice = moneyFromDecimal(
-    requiredText(source.priceRange.minVariantPrice.amount, `${path}.priceRange.minVariantPrice.amount`),
-    requiredText(
-      source.priceRange.minVariantPrice.currencyCode,
-      `${path}.priceRange.minVariantPrice.currencyCode`
-    )
+  const minPrice = mappedMoney(
+    source.priceRange.minVariantPrice.amount,
+    source.priceRange.minVariantPrice.currencyCode,
+    `${path}.priceRange.minVariantPrice`
   );
-  const maxPrice = moneyFromDecimal(
-    requiredText(source.priceRange.maxVariantPrice.amount, `${path}.priceRange.maxVariantPrice.amount`),
-    requiredText(
-      source.priceRange.maxVariantPrice.currencyCode,
-      `${path}.priceRange.maxVariantPrice.currencyCode`
-    )
+  const maxPrice = mappedMoney(
+    source.priceRange.maxVariantPrice.amount,
+    source.priceRange.maxVariantPrice.currencyCode,
+    `${path}.priceRange.maxVariantPrice`
   );
   const badge = metafieldText(source, 'badge', 'single_line_text_field', false);
   const summary: ProductSummary = {

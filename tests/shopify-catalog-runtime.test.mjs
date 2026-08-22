@@ -3,10 +3,14 @@ import { CatalogValidationError } from '../src/commerce/application/catalog-vali
 import { createShopifyCatalogAdapter } from '../src/commerce/infrastructure/shopify/catalog-adapter.ts';
 import {
   mapShopifyCatalog,
+  mapShopifyProductSummary,
   ShopifyCatalogMappingError,
 } from '../src/commerce/infrastructure/shopify/catalog-mappers.ts';
 import { createResourceCache } from '../src/commerce/infrastructure/shopify/catalog-resource-cache.ts';
-import { createShopifyCatalogQueries } from '../src/commerce/infrastructure/shopify/catalog-runtime-query.ts';
+import {
+  createShopifyCatalogQueries,
+  mapValidRuntimeProductSummaries,
+} from '../src/commerce/infrastructure/shopify/catalog-runtime-query.ts';
 import {
   SHOPIFY_IN_CONTEXT_DIRECTIVE,
   SHOPIFY_MARKET_CONTEXT,
@@ -262,8 +266,9 @@ describe('consultas runtime Shopify por recurso', () => {
       .resolves.toBeUndefined();
   });
 
-  test('getProductSummaries rechaza un resumen inválido y no devuelve un listado parcial', async () => {
+  test('getProductSummaries omite solo el resumen inválido y registra un warning sanitizado', async () => {
     const payload = validPayload();
+    const warnings = [];
     const gateway = createRecordingGateway((query) => {
       if (query.includes('KingBeltProductSummariesPage')) {
         return {
@@ -283,14 +288,32 @@ describe('consultas runtime Shopify por recurso', () => {
       }
       throw new Error(`consulta inesperada: ${query.slice(0, 80)}`);
     });
-    await expect(createShopifyCatalogQueries(gateway, HOSTS).getProductSummaries())
-      .rejects.toMatchObject({
-        name: 'ShopifyCatalogMappingError',
-        message: expect.stringContaining('cinturon-roto.title'),
-      });
+    const summaries = await createShopifyCatalogQueries(gateway, HOSTS, (warning) => {
+      warnings.push(warning);
+    }).getProductSummaries();
+    expect(summaries.map((item) => item.handle)).toEqual(['cinturon-atlas', 'cinturon-gamma']);
+    expect(warnings).toEqual([{
+      event: 'shopify_runtime_summary_skipped',
+      resourceType: 'product_summary',
+      handle: 'cinturon-roto',
+      errorClass: 'ShopifyCatalogMappingError',
+    }]);
+    expect(JSON.stringify(warnings)).not.toContain('Catálogo Shopify inválido');
   });
 
-  test('getProductSummaries rechaza un precio mínimo 0 y no omite el producto', async () => {
+  test('la frontera runtime no convierte un TypeError arbitrario en dato inválido omitible', () => {
+    const unexpected = new Proxy({}, {
+      get() { throw new TypeError('programming bug sentinel'); },
+    });
+    expect(() => mapValidRuntimeProductSummaries(
+      [unexpected],
+      HOSTS,
+      'product_summary',
+      () => undefined
+    )).toThrow('programming bug sentinel');
+  });
+
+  test('getProductSummaries omite un precio mínimo 0 sin relajar el mapper estricto', async () => {
     const payload = validPayload();
     const zeroPrice = productSummaryNode(payload.products[0]);
     zeroPrice.priceRange.minVariantPrice = { amount: '0.00', currencyCode: 'EUR' };
@@ -312,16 +335,19 @@ describe('consultas runtime Shopify por recurso', () => {
       }
       throw new Error(`consulta inesperada: ${query.slice(0, 80)}`);
     });
-    await expect(createShopifyCatalogQueries(gateway, HOSTS).getProductSummaries())
-      .rejects.toMatchObject({
-        name: 'CatalogValidationError',
-        issues: expect.arrayContaining([
-          expect.objectContaining({ code: 'non_positive_variant_price' }),
-        ]),
-      });
+    const warnings = [];
+    const summaries = await createShopifyCatalogQueries(gateway, HOSTS, (warning) => {
+      warnings.push(warning);
+    }).getProductSummaries();
+    expect(summaries.map((item) => item.handle)).toEqual(['cinturon-gamma']);
+    expect(warnings[0]).toMatchObject({
+      resourceType: 'product_summary',
+      errorClass: 'CatalogValidationError',
+    });
+    expect(() => mapShopifyProductSummary(zeroPrice, HOSTS)).toThrow(CatalogValidationError);
   });
 
-  test('getFeaturedProducts rechaza un resumen inválido y no pagina para rellenar el hueco', async () => {
+  test('getFeaturedProducts omite un resumen inválido y conserva los válidos', async () => {
     const payload = validPayload();
     const gateway = createRecordingGateway((query) => {
       if (query.includes('KingBeltProductSummariesPage')) {
@@ -341,18 +367,23 @@ describe('consultas runtime Shopify por recurso', () => {
                 title: 'Delta',
               }),
             ],
-            pageInfo: { hasNextPage: true, endCursor: 'next-page' },
+            pageInfo,
           },
         };
       }
       throw new Error(`consulta inesperada: ${query.slice(0, 80)}`);
     });
-    await expect(createShopifyCatalogQueries(gateway, HOSTS).getFeaturedProducts(4))
-      .rejects.toBeInstanceOf(ShopifyCatalogMappingError);
+    const featured = await createShopifyCatalogQueries(gateway, HOSTS, () => undefined)
+      .getFeaturedProducts(4);
+    expect(featured.map((item) => item.handle)).toEqual([
+      'cinturon-atlas',
+      'cinturon-gamma',
+      'cinturon-delta',
+    ]);
     expect(gateway.calls).toHaveLength(1);
   });
 
-  test('getCollectionByHandle rechaza un producto inválido de la colección', async () => {
+  test('getCollectionByHandle omite un producto inválido y conserva el resto', async () => {
     const payload = validPayload();
     const gateway = createRecordingGateway((query) => {
       if (query.includes('KingBeltCollectionByHandle')) {
@@ -368,11 +399,12 @@ describe('consultas runtime Shopify por recurso', () => {
       }
       throw new Error(`consulta inesperada: ${query.slice(0, 80)}`);
     });
-    await expect(createShopifyCatalogQueries(gateway, HOSTS).getCollectionByHandle('sport'))
-      .rejects.toBeInstanceOf(ShopifyCatalogMappingError);
+    const page = await createShopifyCatalogQueries(gateway, HOSTS, () => undefined)
+      .getCollectionByHandle('sport');
+    expect(page?.products.map((item) => item.handle)).toEqual(['cinturon-atlas']);
   });
 
-  test('getRelatedProducts rechaza un resumen inválido y no lo sustituye por otro', async () => {
+  test('getRelatedProducts excluye el producto actual antes de mapear y omite otros inválidos', async () => {
     const catalog = mapShopifyCatalog(validPayload(), HOSTS);
     const payload = validPayload();
     const gateway = createRecordingGateway((query) => {
@@ -384,20 +416,26 @@ describe('consultas runtime Shopify por recurso', () => {
           products: {
             nodes: [
               brokenSummary(payload),
+              { ...productSummaryNode(payload.products[0]), title: '' },
               extraSummary(payload, {
                 id: 'gid://shopify/Product/3',
                 handle: 'cinturon-gamma',
                 title: 'Gamma',
               }),
+              extraSummary(payload, {
+                id: 'gid://shopify/Product/4',
+                handle: 'cinturon-delta',
+                title: 'Delta',
+              }),
             ],
-            pageInfo: { hasNextPage: true, endCursor: 'related-cursor' },
+            pageInfo,
           },
         },
       };
     });
-    await expect(
-      createShopifyCatalogQueries(gateway, HOSTS).getRelatedProducts(catalog.products[0], 2)
-    ).rejects.toBeInstanceOf(ShopifyCatalogMappingError);
+    const related = await createShopifyCatalogQueries(gateway, HOSTS, () => undefined)
+      .getRelatedProducts(catalog.products[0], 2);
+    expect(related.map((item) => item.handle)).toEqual(['cinturon-delta', 'cinturon-gamma']);
     expect(gateway.calls).toHaveLength(1);
   });
 

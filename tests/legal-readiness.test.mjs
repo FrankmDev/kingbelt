@@ -7,11 +7,13 @@ import {
   REQUIRED_LAUNCH_BUSINESS_FACTS,
   REQUIRED_LAUNCH_DOCUMENTS,
   evaluateLegalReadiness,
-  getCompletedLegalSectionIds,
+  getLegalSectionReadiness,
+  hasMeaningfulLegalContent,
   legalReadinessRequirements,
   manualLaunchDecisions,
 } from '../src/config/legal-readiness.ts';
 import { businessFacts, confirmed, toTelHref } from '../src/config/business.ts';
+import { site } from '../src/config/site.ts';
 import {
   currentTechnologies,
   getLegalRobots,
@@ -50,10 +52,13 @@ const allConfirmedFacts = Object.fromEntries(
   Object.keys(businessFacts).map((key) => [key, confirmedFact(`confirmed-${key}`)])
 );
 
-const completeCompletion = Object.fromEntries(
+const completeSectionReadiness = Object.fromEntries(
   Object.keys(legalDocuments).map((key) => [
     key,
-    new Set(legalDocuments[key].sections.map((section) => section.id)),
+    Object.fromEntries(legalDocuments[key].sections.map((section) => [
+      section.id,
+      { status: 'complete', content: `Contenido significativo de ${section.id}.` },
+    ])),
   ])
 );
 
@@ -73,7 +78,7 @@ const publishedDocuments = () => {
 const passingInput = (overrides = {}) => ({
   facts: allConfirmedFacts,
   documents: publishedDocuments(),
-  completedSectionIds: completeCompletion,
+  sectionReadiness: completeSectionReadiness,
   contentByDocument: Object.fromEntries(
     REQUIRED_LAUNCH_DOCUMENTS.map((key) => [key, 'Texto definitivo sin marcadores.'])
   ),
@@ -86,20 +91,24 @@ const passingInput = (overrides = {}) => ({
 describe('hechos empresariales confirmados', () => {
   test('devuelve la identidad empresarial confirmada', () => {
     expect(confirmed(businessFacts.legalName)).toBe('CintuElx S.L.');
-    expect(confirmed(businessFacts.tradeName)).toBe('KingBelt');
+    expect(confirmed(businessFacts.tradeName)).toBe('Kingbelt');
     expect(confirmed(businessFacts.taxId)).toBe('B42696716');
     expect(confirmed(businessFacts.phone)).toBe('965 43 01 51');
-    expect(confirmed(businessFacts.email)).toBe('hola@kingbelt.com');
-    expect(confirmed(businessFacts.address)).toContain('Bueno e Hijos SL');
-    expect(confirmed(businessFacts.address)).toContain('Avinguda de Novelda, 143');
-    expect(confirmed(businessFacts.registeredAddress)).toContain('Avenida de Novelda, 143, bajo');
-    expect(confirmed(businessFacts.legalBases)).toBeTruthy();
+    expect(confirmed(businessFacts.email)).toBe('contabilidad@cintuelx.com');
+    expect(site.contact.email).toBe(confirmed(businessFacts.email));
+    expect(confirmed(businessFacts.address)).toContain('Avenida de Novelda, 143, bajo');
+    expect(confirmed(businessFacts.address)).toContain('03206 Elche (Alicante)');
+    expect(confirmed(businessFacts.website)).toBe('https://kingbelt.com');
+    expect(confirmed(businessFacts.registeredAddress)).toBe(confirmed(businessFacts.address));
+    expect(confirmed(businessFacts.registryData)).toContain('hoja A-168894');
+    expect(confirmed(businessFacts.legalBases)).toContain('Ejecución contractual');
+    expect(confirmed(businessFacts.returnAddress)).toBeUndefined();
     expect(toTelHref(businessFacts.phone.value)).toBe('tel:+34965430151');
   });
 
   test('un hecho pending no se publica', () => {
     expect(confirmed(businessFacts.madeInSpain)).toBeUndefined();
-    expect(confirmed(businessFacts.freeShipping)).toBeUndefined();
+    expect(confirmed(businessFacts.freeShipping)).toBe('Envíos gratuitos');
     expect(confirmed(pendingFact)).toBeUndefined();
   });
 
@@ -112,8 +121,9 @@ describe('hechos empresariales confirmados', () => {
     expect(OPTIONAL_PUBLIC_CLAIM_FACTS).toContain('freeShipping');
     expect(legalReadinessRequirements.avisoLegal.requiredFacts).toContain('legalName');
     expect(legalReadinessRequirements.privacidad.requiredFacts).toContain('dataController');
-    expect(legalReadinessRequirements.envios.requiredFacts).toContain('returnAddress');
+    expect(legalReadinessRequirements.envios.requiredFacts).not.toContain('returnAddress');
     expect(legalReadinessRequirements.devoluciones.requiredFacts).toContain('returnPolicy');
+    expect(BUSINESS_FACT_CLASSIFICATION.returnAddress).toBe('manual');
   });
 });
 
@@ -170,6 +180,43 @@ describe('legal readiness gate', () => {
     expect(report.ok).toBe(true);
   });
 
+  test.each([
+    ['', 'vacío'],
+    ['   ', 'whitespace'],
+  ])('published con contenido %s en una sección complete bloquea', (content) => {
+    const sectionReadiness = structuredClone(completeSectionReadiness);
+    sectionReadiness.avisoLegal['informacion-general'].content = content;
+    const report = evaluateLegalReadiness(passingInput({ sectionReadiness }));
+    expect(report.ok).toBe(false);
+    expect(report.publishedEmptySections).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        document: 'avisoLegal',
+        sectionIds: expect.arrayContaining(['informacion-general']),
+      }),
+    ]));
+  });
+
+  test.each(['TODO', 'TBD', '[INSERTAR DOMICILIO]'])('published con marcador %s bloquea', (marker) => {
+    const report = evaluateLegalReadiness(passingInput({
+      contentByDocument: {
+        ...passingInput().contentByDocument,
+        avisoLegal: `Texto definitivo. ${marker}`,
+      },
+    }));
+    expect(report.ok).toBe(false);
+    expect(report.publishedPlaceholders.some((item) => item.document === 'avisoLegal')).toBe(true);
+  });
+
+  test('la palabra española "todo" no se confunde con el marcador técnico TODO', () => {
+    const report = evaluateLegalReadiness(passingInput({
+      contentByDocument: {
+        ...passingInput().contentByDocument,
+        avisoLegal: 'Texto definitivo aplicable a todo consumidor.',
+      },
+    }));
+    expect(report.ok).toBe(true);
+  });
+
   test('published con placeholder bloquea', () => {
     const report = evaluateLegalReadiness(
       passingInput({
@@ -190,9 +237,12 @@ describe('legal readiness gate', () => {
   test('published con sección pending bloquea', () => {
     const report = evaluateLegalReadiness(
       passingInput({
-        completedSectionIds: {
-          ...completeCompletion,
-          envios: new Set(['contacto']),
+        sectionReadiness: {
+          ...completeSectionReadiness,
+          envios: {
+            ...completeSectionReadiness.envios,
+            zonas: { status: 'pending', content: null },
+          },
         },
       })
     );
@@ -201,18 +251,18 @@ describe('legal readiness gate', () => {
     expect(report.publishedPendingSections[0]?.sectionIds).toContain('zonas');
   });
 
-  test('draft e inactive no aparecen en el footer; published sí', () => {
-    expect(visibleLegalNavItems.map((item) => item.href).sort()).toEqual([
+  test('published aparece en navegación; draft e inactive quedan fuera', () => {
+    expect(visibleLegalNavItems.map((item) => item.href)).toEqual([
       '/aviso-legal',
-      '/condiciones',
-      '/cookies',
       '/privacidad',
+      '/cookies',
+      '/condiciones',
     ]);
-    expect(legalFooterNav.map((item) => item.href).sort()).toEqual([
+    expect(legalFooterNav.map((item) => item.href)).toEqual([
       '/aviso-legal',
-      '/condiciones',
-      '/cookies',
       '/privacidad',
+      '/cookies',
+      '/condiciones',
     ]);
     expect(helpFooterNav.map((item) => item.href)).toContain('/envios-y-devoluciones');
     expect(helpFooterNav.map((item) => item.href)).toContain('/devoluciones');
@@ -249,10 +299,7 @@ describe('robots, sitemap y tecnologías', () => {
   });
 
   test('documentos no publicados quedan fuera del sitemap; published no por esta regla', () => {
-    expect(getLegalSitemapExcludedPaths()).toEqual(expect.arrayContaining(['/desistimiento']));
-    expect(getLegalSitemapExcludedPaths()).not.toEqual(
-      expect.arrayContaining(['/aviso-legal', '/privacidad', '/cookies', '/condiciones'])
-    );
+    expect(getLegalSitemapExcludedPaths()).toEqual(['/desistimiento']);
     expect(isSitemapExcluded('/aviso-legal')).toBe(false);
     expect(isSitemapExcluded('/desistimiento')).toBe(true);
 
@@ -278,7 +325,7 @@ describe('robots, sitemap y tecnologías', () => {
 });
 
 describe('legal:preflight sobre el repositorio actual', () => {
-  test('pasa el gate de repositorio y deja la conciliación Shopify para Payment QA', () => {
+  test('pasa con facts confirmados, documentos definitivos y claims opcionales aún pendientes', () => {
     const report = runLegalPreflight();
     expect(report.ok).toBe(true);
     expect(report.pendingRequiredFacts).toEqual([]);
@@ -287,10 +334,11 @@ describe('legal:preflight sobre el repositorio actual', () => {
     expect(report.paymentQaManualDecisions).toEqual(['shopifyPolicyReconciliation']);
     expect(report.incompletePrivacyFirstLayer).toBe(false);
     expect(report.optionalPendingFacts).toEqual(
-      expect.arrayContaining(['madeInSpain', 'packagingIncluded', 'freeShipping', 'responseTime'])
+      expect.arrayContaining(['madeInSpain', 'packagingIncluded', 'responseTime'])
     );
-    expect(getCompletedLegalSectionIds('avisoLegal').has('informacion-general')).toBe(true);
-    expect(getCompletedLegalSectionIds('condiciones').has('identidad')).toBe(true);
+    expect(report.optionalPendingFacts).not.toContain('freeShipping');
+    expect(getLegalSectionReadiness('avisoLegal')['informacion-general'].status).toBe('complete');
+    expect(hasMeaningfulLegalContent(getLegalSectionReadiness('avisoLegal')['informacion-general'].content)).toBe(true);
 
     const io = {
       stdout: { chunks: [], write(chunk) { this.chunks.push(String(chunk)); return true; } },

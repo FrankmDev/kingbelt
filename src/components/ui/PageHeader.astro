@@ -55,11 +55,7 @@ const objectStyle = `object-position:${heroImagePosition}`;
 ---
 
 <section
-  class:list={[
-    'page-header relative overflow-hidden',
-    'min-h-[min(52rem,92vh)]',
-    className,
-  ]}
+  class:list={['page-header', className]}
   data-page-header={variant}
   {...rest}
 >
@@ -82,10 +78,8 @@ const objectStyle = `object-position:${heroImagePosition}`;
 
   <div
     class:list={[
-      'page-header-inner relative z-10 mx-auto flex min-h-[inherit] w-full flex-col',
-      isBlog ? 'justify-center' : 'justify-end',
-      'px-5 md:px-10 lg:px-16',
-      isBlog ? 'py-28 md:py-32' : 'pb-24 md:pb-32 lg:pb-36 pt-28 md:pt-32',
+      'page-header-inner',
+      isBlog ? 'page-header-inner--blog' : 'page-header-inner--default',
     ]}
   >
     <div
@@ -131,21 +125,106 @@ const objectStyle = `object-position:${heroImagePosition}`;
       )}
 
       <slot />
+
+      {meta && (
+        <p class="page-header-meta">
+          <span class="page-header-meta__text kb-meta-label">{meta}</span>
+        </p>
+      )}
     </div>
   </div>
-
-  {meta && (
-    <div class="page-header-bar absolute bottom-0 left-0 right-0 z-[3]">
-      <div class="page-header-bar-inner mx-auto px-5 md:px-10">
-        <div class="flex items-center justify-center py-3.5 md:py-4">
-          <span class="page-header-bar-meta">{meta}</span>
-        </div>
-      </div>
-    </div>
-  )}
 </section>
 
 <style>
+  .page-header {
+    position: relative;
+    overflow: hidden;
+    min-height: min(38rem, 78svh);
+  }
+
+  .page-header[data-page-header='blog'] {
+    min-height: min(40rem, 82svh);
+  }
+
+  .page-header-inner {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    min-height: inherit;
+    width: 100%;
+    flex-direction: column;
+    margin-inline: auto;
+    padding-inline: var(--kb-gutter);
+    padding-top: calc(var(--kb-header-offset) + var(--kb-space-4));
+  }
+
+  .page-header-inner--default {
+    justify-content: flex-end;
+    padding-bottom: var(--kb-space-7);
+  }
+
+  .page-header-inner--blog {
+    justify-content: center;
+    padding-bottom: var(--kb-space-8);
+  }
+
+  .page-header-content {
+    display: grid;
+    gap: var(--kb-space-4);
+  }
+
+  @media (max-width: 47.99rem) {
+    .page-header-content {
+      gap: var(--kb-space-3);
+    }
+  }
+
+  @media (min-width: 48rem) {
+    .page-header {
+      min-height: min(45rem, 86svh);
+    }
+
+    .page-header[data-page-header='blog'] {
+      min-height: min(47rem, 88svh);
+    }
+
+    .page-header-inner {
+      padding-inline: 2.5rem;
+      padding-top: calc(var(--kb-header-offset) + var(--kb-space-5));
+    }
+
+    .page-header-inner--default {
+      padding-bottom: var(--kb-space-8);
+    }
+
+    .page-header-inner--blog {
+      padding-bottom: var(--kb-space-8);
+    }
+
+    .page-header-content {
+      gap: var(--kb-space-5);
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .page-header {
+      min-height: min(52rem, 92vh);
+    }
+
+    .page-header-inner {
+      padding-inline: 4rem;
+      padding-top: calc(var(--kb-header-offset) + var(--kb-space-6));
+    }
+
+    .page-header-inner--default {
+      padding-bottom: 9rem;
+    }
+
+    .page-header-inner--blog {
+      padding-bottom: var(--kb-space-8);
+    }
+  }
+
   @keyframes page-header-zoom-in {
     from {
       opacity: 0;
@@ -200,9 +279,9 @@ const objectStyle = `object-position:${heroImagePosition}`;
       animation: page-header-rise 0.85s var(--kb-ease-out) 1.05s both;
     }
 
-    [data-page-header] .page-header-bar {
+    [data-page-header] .page-header-meta {
       --page-header-rise: 0.875rem;
-      animation: page-header-rise 0.7s var(--kb-ease-out) 1.2s both;
+      animation: page-header-rise 0.7s var(--kb-ease-out) 1.15s both;
     }
   }
 </style>

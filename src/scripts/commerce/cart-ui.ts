@@ -26,6 +26,7 @@ export const cartSelectors = {
   drawerOpen: '[data-cart-drawer-open]',
   drawerLines: '[data-cart-drawer-lines]',
   drawerEmpty: '[data-cart-drawer-empty]',
+  drawerRecovery: '[data-cart-drawer-recovery]',
   drawerFooter: '[data-cart-drawer-footer]',
   drawerCount: '[data-cart-drawer-count]',
   drawerSubtotal: '[data-cart-drawer-subtotal]',
@@ -33,12 +34,14 @@ export const cartSelectors = {
   pageRoot: '[data-cart-page]',
   pageLines: '[data-cart-page-lines]',
   pageEmpty: '[data-cart-page-empty]',
+  pageRecovery: '[data-cart-page-recovery]',
   pageSummary: '[data-cart-page-summary]',
   pageCount: '[data-cart-page-count]',
   pageSubtotal: '[data-cart-page-subtotal]',
   pageStatus: '[data-cart-page-status]',
   pageIntro: '[data-cart-page-intro]',
   checkout: '[data-cart-checkout]',
+  reset: '[data-cart-reset]',
 } as const;
 
 let uiInitialized = false;
@@ -313,7 +316,9 @@ const renderStatus = (selector: string, cart: Cart) => {
   if (target.hasAttribute('data-persistent-message')) clearCartStatusMessage(target);
 
   const hasBlockingLineError = cart.lineErrors.some((error) => error.severity !== 'notice');
-  if (cart.globalError) {
+  if (cart.recovery === 'reset_required' && cart.status === 'idle') {
+    clearCartStatusMessage(target);
+  } else if (cart.globalError) {
     setCartStatusMessage(target, cart.globalError, false, true);
   } else if (hasBlockingLineError) {
     setCartStatusMessage(
@@ -355,6 +360,7 @@ export const renderCart = (cart: Cart) => {
   });
 
   const hasLines = cart.lines.length > 0;
+  const requiresReset = cart.recovery === 'reset_required';
   const recoveringEmptyCart = cart.status === 'recovering' && !hasLines;
   document.querySelector<HTMLElement>(cartSelectors.drawerPanel)
     ?.toggleAttribute('aria-busy', busy);
@@ -365,12 +371,14 @@ export const renderCart = (cart: Cart) => {
   setText(cartSelectors.pageIntro, countText);
   setText(cartSelectors.drawerSubtotal, formatMoney(cart.subtotal));
   setText(cartSelectors.pageSubtotal, formatMoney(cart.subtotal));
-  setHidden(cartSelectors.drawerEmpty, hasLines || recoveringEmptyCart);
-  setHidden(cartSelectors.pageEmpty, hasLines || recoveringEmptyCart);
-  setHidden(cartSelectors.drawerFooter, !hasLines);
-  setHidden(cartSelectors.pageSummary, !hasLines);
-  setHidden(cartSelectors.drawerLines, !hasLines);
-  setHidden(cartSelectors.pageLines, !hasLines);
+  setHidden(cartSelectors.drawerRecovery, !requiresReset);
+  setHidden(cartSelectors.pageRecovery, !requiresReset);
+  setHidden(cartSelectors.drawerEmpty, requiresReset || hasLines || recoveringEmptyCart);
+  setHidden(cartSelectors.pageEmpty, requiresReset || hasLines || recoveringEmptyCart);
+  setHidden(cartSelectors.drawerFooter, requiresReset || !hasLines);
+  setHidden(cartSelectors.pageSummary, requiresReset || !hasLines);
+  setHidden(cartSelectors.drawerLines, requiresReset || !hasLines);
+  setHidden(cartSelectors.pageLines, requiresReset || !hasLines);
 
   renderStatus(cartSelectors.drawerStatus, cart);
   renderStatus(cartSelectors.pageStatus, cart);

@@ -261,7 +261,7 @@ describe('datos estructurados de colección', () => {
 });
 
 describe('sitemap y redirecciones', () => {
-  test('excluye rutas internas, carrito y documentos no publicados', () => {
+  test('excluye rutas internas y carrito, pero indexa documentos publicados', () => {
     expect(isSitemapExcluded('/carrito')).toBe(true);
     expect(isSitemapExcluded('/cart-catalog.json')).toBe(true);
     expect(isSitemapExcluded('/cuenta/iniciar')).toBe(true);

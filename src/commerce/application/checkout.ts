@@ -121,5 +121,5 @@ export const withCheckoutTimeout = async <T>(
 export const requestDemoCheckout = async (): Promise<CheckoutResult> => ({
   status: 'unavailable',
   message:
-    'El checkout de demostración todavía no está conectado. Impuestos, envíos y descuentos se aplicarán en Shopify.',
+    'El checkout de demostración todavía no está conectado. Envíos gratuitos (incluidos en el precio), impuestos y descuentos se aplicarán en Shopify.',
 });

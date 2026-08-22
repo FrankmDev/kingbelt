@@ -51,12 +51,12 @@ const { items, sidebar } = Astro.props;
     />
 
     <div class="contact-faq__support">
-      <span class="contact-faq__support-label kb-micro-label">Soporte</span>
-      <div class="contact-faq__support-card">
+      <span class="contact-faq__support-label kb-meta-label">Soporte</span>
+      <div class="contact-faq__support-row">
         <span class="contact-faq__support-icon" aria-hidden="true">
-          <Icon name="clock" />
+          <Icon name="mail" />
         </span>
-        <span class="contact-faq__support-text">Respuesta en menos de 24h laborables.</span>
+        <span class="contact-faq__support-text">Atención por email y teléfono.</span>
       </div>
     </div>
   </aside>
@@ -66,11 +66,11 @@ const { items, sidebar } = Astro.props;
   .contact-faq:global(.faq-section) {
     padding-block: var(--kb-space-section);
     border-top: 1px solid var(--kb-stroke-hairline);
-    background: var(--color-king-bg);
+    background: var(--color-king-surface);
   }
 
   .contact-faq:global(.faq-section--light)::before {
-    opacity: 0.18;
+    opacity: 0.12;
   }
 
   .contact-faq__header:global(.section-header-home) {
@@ -87,15 +87,19 @@ const { items, sidebar } = Astro.props;
   .contact-faq__sidebar {
     display: flex;
     flex-direction: column;
-    gap: var(--kb-space-5);
+    gap: var(--kb-space-4);
     min-width: 0;
-    height: 100%;
+    min-height: 0;
   }
 
-  .contact-faq :global(.contact-faq__media.media-frame--ratio-3-4) {
+  .contact-faq :global(.contact-faq__media.media-frame.media-frame--ratio-3-4) {
     flex: 1 1 auto;
     min-height: 0;
     border-radius: var(--kb-panel-radius);
+  }
+
+  .contact-faq :global(.contact-faq__media.media-frame .media-frame__stage) {
+    min-height: 100%;
   }
 
   .contact-faq :global(.contact-faq__media .media-frame__image) {
@@ -107,23 +111,23 @@ const { items, sidebar } = Astro.props;
     flex-direction: column;
     gap: var(--kb-space-3);
     flex-shrink: 0;
+    padding: var(--kb-space-4);
+    border: 1px solid var(--kb-stroke-hairline);
+    border-radius: var(--kb-card-radius);
+    background: color-mix(in srgb, var(--color-king-bone) 18%, var(--color-king-bg));
   }
 
   .contact-faq__support-label {
     display: block;
-    color: var(--color-king-steel);
+    color: var(--color-king-muted);
     letter-spacing: 0.12em;
     text-transform: uppercase;
   }
 
-  .contact-faq__support-card {
+  .contact-faq__support-row {
     display: flex;
     align-items: center;
     gap: var(--kb-space-3);
-    padding: var(--kb-space-4);
-    border: 1px solid var(--kb-stroke-hairline);
-    border-radius: var(--kb-radius-sm);
-    background: var(--color-king-surface);
   }
 
   .contact-faq__support-icon {
@@ -134,8 +138,8 @@ const { items, sidebar } = Astro.props;
     width: 2rem;
     height: 2rem;
     border-radius: var(--kb-radius-xs);
-    border: 1px solid rgba(138, 90, 43, 0.14);
-    background: rgba(138, 90, 43, 0.08);
+    border: 1px solid var(--kb-stroke-hairline);
+    background: color-mix(in srgb, var(--color-king-accent) 7%, transparent);
     color: var(--color-king-accent);
   }
 
@@ -162,19 +166,24 @@ const { items, sidebar } = Astro.props;
     }
 
     .contact-faq :global(.faq-sidebar) {
+      display: flex;
       align-self: stretch;
+      min-height: 100%;
     }
 
     .contact-faq__sidebar {
+      flex: 1 1 auto;
+      width: 100%;
+      min-height: 100%;
       position: sticky;
-      top: 7rem;
-      height: auto;
+      top: var(--kb-sticky-below-header);
     }
 
-    .contact-faq :global(.contact-faq__media.media-frame--ratio-3-4) {
+    .contact-faq :global(.contact-faq__media.media-frame.media-frame--ratio-3-4) {
+      flex: 1 1 0;
+      height: 100%;
+      min-height: clamp(18rem, 42vh, 28rem);
       aspect-ratio: auto;
-      height: auto;
-      max-height: none;
     }
   }
 

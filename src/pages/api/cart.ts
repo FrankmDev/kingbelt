@@ -1,5 +1,9 @@
 import type { APIRoute } from 'astro';
 import { CHECKOUT_EXPIRED_MESSAGE, type CheckoutStatus } from '@commerce/application/checkout';
+import {
+  CART_UNRECOVERABLE_MESSAGE,
+  UnrecoverableCartStateError,
+} from '@commerce/application/cart-provider';
 import { emptyCart } from '@commerce/application/cart-service';
 import { isDemoCommerce } from '@commerce/commerce-source';
 import type { CartOperationResult } from '@commerce/domain/cart';
@@ -18,6 +22,7 @@ type Command =
   | { command: 'add'; variantId: string; quantity: number }
   | { command: 'update'; lineId: string; quantity: number }
   | { command: 'remove'; lineId: string }
+  | { command: 'reset' }
   | { command: 'checkout' };
 
 type LimitedBody =
@@ -100,6 +105,7 @@ const parseCommand = (value: unknown): Command | undefined => {
 
   switch (input.command) {
     case 'refresh':
+    case 'reset':
     case 'checkout':
       return hasExactKeys(input, ['command']) ? { command: input.command } : undefined;
     case 'remove':
@@ -143,6 +149,31 @@ const expiredCheckout = () =>
     { success: false, status: 'expired', cart: emptyCart(), message: CHECKOUT_EXPIRED_MESSAGE },
     410
   );
+
+const unrecoverableCart = () => ({
+  ...emptyCart('error'),
+  canCheckout: false,
+  globalError: CART_UNRECOVERABLE_MESSAGE,
+  recovery: 'reset_required' as const,
+});
+
+const unrecoverableResponse = (command: Command['command']) => {
+  const cart = unrecoverableCart();
+  if (command === 'checkout') {
+    return json(
+      { success: false, status: 'blocked', cart, message: CART_UNRECOVERABLE_MESSAGE },
+      409
+    );
+  }
+  return json(
+    {
+      success: false,
+      cart,
+      error: { code: 'cart_unrecoverable', message: CART_UNRECOVERABLE_MESSAGE },
+    },
+    409
+  );
+};
 
 type CartMutationResult = CartOperationResult & { cartId?: string };
 
@@ -230,6 +261,15 @@ export const POST: APIRoute = async ({ request, session, clientAddress }) => {
   const body = parseCommand(parsed);
   if (!body) return json({ error: 'invalid_command' }, 400);
 
+  if (body.command === 'reset') {
+    try {
+      session.delete(SHOPIFY_CART_SESSION_KEY);
+      return json({ success: true, cart: emptyCart() });
+    } catch {
+      return json({ error: 'commerce_unavailable' }, 503);
+    }
+  }
+
   const { createConfiguredShopifyCartService } = await import('@commerce/cart-server');
   let service: ReturnType<typeof createConfiguredShopifyCartService>;
   let shopifyCartId: string | undefined;
@@ -302,7 +342,10 @@ export const POST: APIRoute = async ({ request, session, clientAddress }) => {
       { success: result.status === 'ready', ...withoutRemoteCartId(result) },
       checkoutHttpStatus(result.status)
     );
-  } catch {
+  } catch (error) {
+    if (error instanceof UnrecoverableCartStateError) {
+      return unrecoverableResponse(body.command);
+    }
     return json({ error: 'provider_error' }, 502);
   }
 };

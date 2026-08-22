@@ -156,7 +156,7 @@ describe('catálogo Shopify', () => {
     expect(product.mediaGroups[0].imageIds).toEqual(colorImages('Cuero').map((item) => item.id));
   });
 
-  test('ProductVariant.image de un color coincide con la portada y se conserva', () => {
+  test('la imagen efectiva ProductVariant.image de un color coincide con la portada y se conserva', () => {
     const payload = validPayload();
     const cover = colorImages('Cuero')[0];
     expect(payload.products[0].variants.nodes[0].image.id).toBe(cover.id);
@@ -165,7 +165,7 @@ describe('catálogo Shopify', () => {
     expect(product.variants[0].imageId).toBe(product.mediaGroups[0].imageIds[0]);
   });
 
-  test('una ProductVariant.image de otro color no se sustituye por la portada', () => {
+  test('una imagen efectiva ProductVariant.image de otro color no se sustituye por la portada', () => {
     const payload = validPayload();
     const expected = colorImages('Cuero')[0];
     const actual = colorImages('Negro')[0];
@@ -184,7 +184,7 @@ describe('catálogo Shopify', () => {
     }
   });
 
-  test('una ProductVariant.image ajena al producto no se sustituye por la portada', () => {
+  test('una imagen efectiva ProductVariant.image ajena al producto no se sustituye por la portada', () => {
     const payload = validPayload();
     const foreign = image('foreign-variant', 'otro-modelo_01.jpg');
     payload.products[0].variants.nodes[0].image = foreign;
@@ -202,12 +202,12 @@ describe('catálogo Shopify', () => {
     }
   });
 
-  test('una variante con Color y ProductVariant.image null no fabrica la portada', () => {
+  test('una variante con Color y ProductVariant.image efectiva null no fabrica la portada', () => {
     const payload = validPayload();
     payload.products[0].variants.nodes[0].image = null;
     expect(() => mapShopifyCatalog(payload, HOSTS)).toThrow(ShopifyCatalogMappingError);
     expect(() => mapShopifyCatalog(payload, HOSTS)).toThrow('cinturon-atlas.variants[0].image');
-    expect(() => mapShopifyCatalog(payload, HOSTS)).toThrow('falta ProductVariant.image');
+    expect(() => mapShopifyCatalog(payload, HOSTS)).toThrow('falta la imagen efectiva ProductVariant.image');
     expect(() => mapShopifyCatalog(payload, HOSTS)).toThrow('Color: Cuero');
   });
 
@@ -262,8 +262,35 @@ describe('catálogo Shopify', () => {
 
     const wrongSequence = validPayload();
     wrongSequence.products[0].images.nodes.find((item) => item.id.endsWith('/cuero-3')).url =
-      'https://cdn.shopify.com/s/files/cuero-4.jpg';
+      'https://cdn.shopify.com/s/files/5365-35_CUERO_04.jpg';
     expectMappingError(wrongSequence, 'exactamente 3 imágenes únicas numeradas 01, 02 y 03');
+  });
+
+  test('rechaza secuencias de uno o tres dígitos aunque representen 1, 2 y 3', () => {
+    for (const digits of [
+      ['1', '2', '3'],
+      ['001', '002', '003'],
+    ]) {
+      const payload = validPayload();
+      payload.products[0].images.nodes
+        .filter((item) => item.id.includes('/cuero-'))
+        .forEach((item, index) => {
+          item.url = `https://cdn.shopify.com/s/files/5365-35_CUERO_${digits[index]}.jpg`;
+        });
+      expectMappingError(payload, 'cinturon-atlas.images.Cuero');
+      expectRuntimeMappingError(payload.products[0], 'cinturon-atlas.images.Cuero');
+    }
+  });
+
+  test('rechaza COLOR_01/02/03 sin un prefijo de modelo o familia', () => {
+    const payload = validPayload();
+    payload.products[0].images.nodes
+      .filter((item) => item.id.includes('/cuero-'))
+      .forEach((item, index) => {
+        item.url = `https://cdn.shopify.com/s/files/CUERO_0${index + 1}.jpg`;
+      });
+    expectMappingError(payload, 'no existe una familia cuyo nombre termine en Cuero');
+    expectRuntimeMappingError(payload.products[0], 'no existe una familia cuyo nombre termine en Cuero');
   });
 
   test('el contrato estricto detecta familias ambiguas para un mismo color', () => {
@@ -298,7 +325,7 @@ describe('catálogo Shopify', () => {
 
   test('una familia de cuatro imágenes no se recorta a tres', () => {
     const payload = validPayload();
-    payload.products[0].images.nodes.push(image('cuero-4', 'cuero-4.jpg'));
+    payload.products[0].images.nodes.push(image('cuero-4', '5365-35_CUERO_04.jpg'));
     expectMappingError(payload, 'exactamente 3 imágenes únicas numeradas 01, 02 y 03');
     expectRuntimeMappingError(payload.products[0], 'exactamente 3 imágenes únicas numeradas 01, 02 y 03');
   });
@@ -306,7 +333,7 @@ describe('catálogo Shopify', () => {
   test('una secuencia 01, 02, 04 falla en preflight y runtime', () => {
     const payload = validPayload();
     payload.products[0].images.nodes.find((item) => item.id.endsWith('/cuero-3')).url =
-      'https://cdn.shopify.com/s/files/cuero-4.jpg';
+      'https://cdn.shopify.com/s/files/5365-35_CUERO_04.jpg';
     expectMappingError(payload, 'exactamente 3 imágenes únicas numeradas 01, 02 y 03');
     expectRuntimeMappingError(payload.products[0], 'exactamente 3 imágenes únicas numeradas 01, 02 y 03');
   });
@@ -346,8 +373,8 @@ describe('catálogo Shopify', () => {
   test('el error de imagen de variante nombra el archivo de portada esperado', () => {
     const payload = validPayload();
     payload.products[0].variants.nodes[0].image = colorImages('Negro')[0];
-    expectRuntimeMappingError(payload.products[0], 'cuero-1');
-    expectRuntimeMappingError(payload.products[0], 'negro-1');
+    expectRuntimeMappingError(payload.products[0], '5365-35_CUERO_01');
+    expectRuntimeMappingError(payload.products[0], '5365-35_NEGRO_01');
     expectRuntimeMappingError(payload.products[0], 'todas las tallas de este color');
   });
 

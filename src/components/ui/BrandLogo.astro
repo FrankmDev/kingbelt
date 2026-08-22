@@ -1,0 +1,47 @@
+---
+import { site } from '@config/site';
+
+interface Props {
+  /** `ink` sobre fondos claros; `white` sobre fondos oscuros. */
+  tone: 'ink' | 'white';
+  alt?: string;
+  class?: string;
+  sizes?: string;
+  loading?: 'eager' | 'lazy';
+  fetchpriority?: 'high' | 'low' | 'auto';
+}
+
+const {
+  tone,
+  alt = '',
+  class: className,
+  sizes = '240px',
+  loading = 'lazy',
+  fetchpriority,
+} = Astro.props;
+
+const src = tone === 'white' ? site.logos.white : site.logos.ink;
+---
+
+<img
+  class:list={['brand-logo', className]}
+  src={src}
+  alt={alt}
+  width={site.logos.width}
+  height={site.logos.height}
+  sizes={sizes}
+  loading={loading}
+  fetchpriority={fetchpriority}
+  decoding="async"
+  draggable="false"
+/>
+
+<style>
+  .brand-logo {
+    display: block;
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    object-fit: contain;
+  }
+</style>

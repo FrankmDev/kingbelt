@@ -1,6 +1,7 @@
 ---
 import Button from '../ui/Button.astro';
 import Icon from '../ui/Icon.astro';
+import BrandLogo from '../ui/BrandLogo.astro';
 import {
   footerContact,
   footerHelpNav,
@@ -26,7 +27,7 @@ const highlights = footerHighlights;
 <footer
   id="site-footer"
   class:list={[
-    'site-footer sticky bottom-0 z-[var(--kb-z-base)] w-full max-w-full overflow-x-hidden',
+    'site-footer w-full max-w-full overflow-x-hidden',
     connected && 'site-footer--connected',
     className,
   ]}
@@ -42,9 +43,9 @@ const highlights = footerHighlights;
     <span class="footer-corner footer-corner--tl pointer-events-none absolute left-4 top-4 z-10 hidden h-5 w-5 border-l border-t border-king-accent/15 md:block" aria-hidden="true"></span>
     <span class="footer-corner footer-corner--tr pointer-events-none absolute right-4 top-4 z-10 hidden h-5 w-5 border-r border-t border-king-accent/15 md:block" aria-hidden="true"></span>
 
-    <div class="footer-inner kb-shell-wide relative z-10 pb-8 pt-10 md:pb-10 md:pt-12">
+    <div class="footer-inner kb-shell-wide relative z-10 pb-6 pt-8 md:pb-10 md:pt-12">
 
-      <div class="footer-top-rule mb-7 flex items-center md:mb-8">
+      <div class="footer-top-rule mb-6 flex items-center md:mb-8">
         <span class="h-px flex-1 bg-gradient-to-r from-transparent to-king-border/35"></span>
         <span class="mx-4 flex items-center gap-2.5">
           <span class="h-px w-5 bg-king-accent/30"></span>
@@ -54,25 +55,25 @@ const highlights = footerHighlights;
         <span class="h-px flex-1 bg-gradient-to-l from-transparent to-king-border/35"></span>
       </div>
 
-      <div class="footer-cta mb-8 overflow-hidden rounded-[var(--kb-radius-sm)] border border-king-border/20 bg-king-graphite shadow-[var(--kb-shadow-inset-steel)] md:mb-9">
+      <div class="footer-cta mb-6 overflow-hidden rounded-[var(--kb-radius-sm)] border border-king-border/20 bg-king-graphite shadow-[var(--kb-shadow-inset-steel)] md:mb-9">
         <div class="footer-cta-texture pointer-events-none absolute inset-0 opacity-[0.35]" aria-hidden="true"></div>
-        <div class="footer-cta-inner relative flex flex-col gap-4 px-5 py-4 md:flex-row md:items-center md:justify-between md:gap-6 md:px-6 md:py-4">
+        <div class="footer-cta-inner relative flex flex-col gap-4 px-4 py-4 sm:px-5 md:flex-row md:items-center md:justify-between md:gap-6 md:px-6">
           <div class="footer-cta-copy min-w-0">
             <p class="footer-cta-eyebrow kb-eyebrow mb-2 text-white/45">
               <span class="footer-cta-eyebrow-mark" aria-hidden="true"></span>
               <span>Colección</span>
             </p>
-            <p class="font-display text-[clamp(1.15rem,2.4vw,1.45rem)] leading-[1.15] tracking-[0.01em] text-white/92">
+            <p class="font-display text-[clamp(1.125rem,4.5vw,1.45rem)] leading-[1.15] tracking-[0.01em] text-white/92 text-balance">
               Cuero, hebilla y carácter para la ruta.
             </p>
           </div>
-          <div class="footer-cta-actions flex shrink-0 flex-wrap items-center gap-3">
-            <Button href="/productos" variant="secondary" size="sm">
+          <div class="footer-cta-actions flex w-full flex-col gap-2.5 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3 md:w-auto md:shrink-0">
+            <Button href="/productos" variant="secondary" size="sm" class="footer-cta-btn w-full sm:w-auto">
               Ver colección
             </Button>
             <a
               href="/contacto"
-              class="footer-cta-link kb-action-label group inline-flex items-center gap-2 text-white/55 transition-[color,transform] duration-[var(--kb-dur-med)] hover:text-king-accent-light"
+              class="footer-cta-link kb-action-label group inline-flex w-full items-center justify-center gap-2 rounded-[var(--kb-radius-xs)] border border-white/12 px-3 py-2.5 text-white/55 transition-[color,transform,background-color,border-color] duration-[var(--kb-dur-med)] hover:border-king-accent/35 hover:bg-white/[0.04] hover:text-king-accent-light sm:w-auto sm:justify-start sm:border-0 sm:bg-transparent sm:px-0 sm:py-0"
             >
               <span class="h-1.5 w-1.5 rounded-full bg-king-accent/50 transition-[background-color,transform] duration-[var(--kb-dur-fast)] group-hover:scale-110 group-hover:bg-king-accent-light"></span>
               Escribir
@@ -81,28 +82,30 @@ const highlights = footerHighlights;
         </div>
       </div>
 
-      <div class="footer-grid mb-7 grid grid-cols-2 gap-x-6 gap-y-8 md:mb-8 md:grid-cols-6 md:gap-x-8 lg:grid-cols-12 lg:gap-y-0">
+      <div class="footer-grid mb-6 grid grid-cols-1 md:mb-8 md:grid-cols-6 md:gap-x-8 lg:grid-cols-12">
 
-        <div class="footer-brand-col col-span-2 md:order-1 md:col-span-3">
-          <a href="/" class="group mb-3 inline-flex items-center gap-2.5">
-            <span class="font-display text-[1.2rem] tracking-[0.18em] uppercase text-king-text md:text-[1.35rem]">
-              {site.name}
-            </span>
+        <div class="footer-brand-col md:order-1 md:col-span-3">
+          <a href="/" class="footer-brand group mb-4 inline-flex items-center gap-2.5" aria-label={`${site.name} — Inicio`}>
+            <BrandLogo
+              tone="ink"
+              class="footer-brand__logo"
+              sizes="180px"
+            />
             <span class="hidden h-px w-8 bg-king-accent/25 transition-[background-color,width] duration-[var(--kb-dur-med)] group-hover:w-12 group-hover:bg-king-accent/50 md:block"></span>
           </a>
-          <p class="mb-4 max-w-xs text-[var(--kb-text-xs)] font-light leading-[1.7] text-king-muted/80">
+          <p class="mb-5 max-w-none text-[var(--kb-text-sm)] font-light leading-[1.65] text-king-muted/85 md:mb-4 md:max-w-xs md:text-[var(--kb-text-xs)] md:leading-[1.7]">
             Accesorios de cuero para el día a día. Para los que se mueven diferente.
           </p>
 
-          <div class="mb-4 flex flex-wrap items-center gap-3">
+          <div class="footer-brand-meta flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
             {madeInSpain && <span class="kb-badge-accent">Hecho en {madeInSpain}</span>}
-            <div class="flex items-center gap-2.5">
+            <div class="footer-social-row flex items-center gap-2.5">
               {socialLinks.map((s) => (
                 <a
                   href={s.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  class="footer-social group relative flex h-9 w-9 items-center justify-center rounded-full border border-king-border/45 text-king-muted/75 transition-[border-color,box-shadow,color,transform] duration-[var(--kb-dur-med)] hover:border-king-accent/55 hover:text-king-accent"
+                  class="footer-social group relative flex h-11 w-11 items-center justify-center rounded-full border border-king-border/45 text-king-muted/75 transition-[border-color,box-shadow,color,transform] duration-[var(--kb-dur-med)] hover:border-king-accent/55 hover:text-king-accent md:h-9 md:w-9"
                   aria-label={s.label}
                 >
                   <span class="absolute inset-0 rounded-full bg-king-accent/[0.06] opacity-0 transition-opacity duration-[var(--kb-dur-med)] group-hover:opacity-100"></span>
@@ -113,16 +116,16 @@ const highlights = footerHighlights;
           </div>
         </div>
 
-        <div class="footer-nav-col md:order-3 md:col-span-2 lg:order-2">
-          <h4 class="footer-col-title mb-3 flex items-center gap-2.5 text-king-text">
+        <div class="footer-nav-col footer-links-block md:order-3 md:col-span-2 lg:order-2">
+          <h4 class="footer-col-title mb-3 flex items-center gap-2.5 text-king-text md:mb-3">
             <span class="footer-col-mark h-px w-4 bg-king-accent/45" aria-hidden="true"></span>
             <span class="kb-action-label">Navegación</span>
           </h4>
-          <nav class="flex flex-col gap-1.5" aria-label="Navegación del sitio">
+          <nav class="footer-link-list flex flex-col gap-0.5" aria-label="Navegación del sitio">
             {footerNav.map((item, index) => (
               <a
                 href={item.href}
-                class="footer-link group relative inline-flex items-center gap-3 py-0.5 text-[var(--kb-text-xs)] font-light text-king-muted/80 transition-[color,transform] duration-[var(--kb-dur-med)] hover:text-king-text"
+                class="footer-link group relative inline-flex min-h-11 items-center gap-3 py-1 text-[var(--kb-text-sm)] font-light text-king-muted/85 transition-[color,transform] duration-[var(--kb-dur-med)] hover:text-king-text md:min-h-0 md:py-0.5 md:text-[var(--kb-text-xs)] md:text-king-muted/80"
               >
                 <span class="footer-link-index font-mono text-[0.62rem] tabular-nums tracking-[0.08em] text-king-accent/35 transition-colors duration-[var(--kb-dur-med)] group-hover:text-king-accent/70">
                   {String(index + 1).padStart(2, '0')}
@@ -133,16 +136,16 @@ const highlights = footerHighlights;
           </nav>
         </div>
 
-        <div class="footer-help-col md:order-4 md:col-span-2 lg:order-3">
-          <h4 class="footer-col-title mb-3 flex items-center gap-2.5 text-king-text">
+        <div class="footer-help-col footer-links-block md:order-4 md:col-span-2 lg:order-3">
+          <h4 class="footer-col-title mb-3 flex items-center gap-2.5 text-king-text md:mb-3">
             <span class="footer-col-mark h-px w-4 bg-king-accent/45" aria-hidden="true"></span>
             <span class="kb-action-label">Ayuda</span>
           </h4>
-          <nav class="flex flex-col gap-1.5" aria-label="Ayuda">
+          <nav class="footer-link-list flex flex-col gap-0.5" aria-label="Ayuda">
             {footerHelpNav.map((item, index) => (
               <a
                 href={item.href}
-                class="footer-link group relative inline-flex items-center gap-3 py-0.5 text-[var(--kb-text-xs)] font-light text-king-muted/80 transition-[color,transform] duration-[var(--kb-dur-med)] hover:text-king-text"
+                class="footer-link group relative inline-flex min-h-11 items-center gap-3 py-1 text-[var(--kb-text-sm)] font-light text-king-muted/85 transition-[color,transform] duration-[var(--kb-dur-med)] hover:text-king-text md:min-h-0 md:py-0.5 md:text-[var(--kb-text-xs)] md:text-king-muted/80"
               >
                 <span class="footer-link-index font-mono text-[0.62rem] tabular-nums tracking-[0.08em] text-king-accent/35 transition-colors duration-[var(--kb-dur-med)] group-hover:text-king-accent/70">
                   {String(index + 1).padStart(2, '0')}
@@ -154,16 +157,16 @@ const highlights = footerHighlights;
         </div>
 
         {footerLegalNav.length > 0 && (
-        <div class="footer-legal-col md:order-5 md:col-span-2 lg:order-4">
-          <h4 class="footer-col-title mb-3 flex items-center gap-2.5 text-king-text">
+        <div class="footer-legal-col footer-links-block md:order-5 md:col-span-2 lg:order-4">
+          <h4 class="footer-col-title mb-3 flex items-center gap-2.5 text-king-text md:mb-3">
             <span class="footer-col-mark h-px w-4 bg-king-accent/45" aria-hidden="true"></span>
             <span class="kb-action-label">Legal</span>
           </h4>
-          <nav class="flex flex-col gap-1.5" aria-label="Legal">
+          <nav class="footer-link-list flex flex-col gap-0.5" aria-label="Legal">
             {footerLegalNav.map((item, index) => (
               <a
                 href={item.href}
-                class="footer-link group relative inline-flex items-center gap-3 py-0.5 text-[var(--kb-text-xs)] font-light text-king-muted/80 transition-[color,transform] duration-[var(--kb-dur-med)] hover:text-king-text"
+                class="footer-link group relative inline-flex min-h-11 items-center gap-3 py-1 text-[var(--kb-text-sm)] font-light text-king-muted/85 transition-[color,transform] duration-[var(--kb-dur-med)] hover:text-king-text md:min-h-0 md:py-0.5 md:text-[var(--kb-text-xs)] md:text-king-muted/80"
               >
                 <span class="footer-link-index font-mono text-[0.62rem] tabular-nums tracking-[0.08em] text-king-accent/35 transition-colors duration-[var(--kb-dur-med)] group-hover:text-king-accent/70">
                   {String(index + 1).padStart(2, '0')}
@@ -176,26 +179,26 @@ const highlights = footerHighlights;
         )}
 
         <div class="footer-contact-col md:order-2 md:col-span-3 lg:order-5">
-          <h4 class="footer-col-title mb-3 flex items-center gap-2.5 text-king-text">
+          <h4 class="footer-col-title mb-3 flex items-center gap-2.5 text-king-text md:mb-3">
             <span class="footer-col-mark h-px w-4 bg-king-accent/45" aria-hidden="true"></span>
             <span class="kb-action-label">Contacto</span>
           </h4>
-          <div class="flex flex-col gap-2">
+          <div class="footer-contact-list flex flex-col gap-2.5">
             {footerContact.map((item) => (
               <a
                 href={item.href}
                 target={item.external ? '_blank' : undefined}
                 rel={item.external ? 'noopener noreferrer' : undefined}
-                class="footer-contact-card group flex items-center gap-3 rounded-[var(--kb-radius-xs)] border border-king-border/30 bg-king-surface/60 px-3 py-2.5 transition-[border-color,box-shadow,transform,background-color] duration-[var(--kb-dur-med)] hover:border-king-accent/35 hover:bg-king-surface hover:shadow-[0_10px_28px_rgba(138,90,43,0.07)]"
+                class="footer-contact-card group flex min-h-[3.25rem] items-center gap-3 rounded-[var(--kb-radius-xs)] border border-king-border/30 bg-king-surface/60 px-3.5 py-3 transition-[border-color,box-shadow,transform,background-color] duration-[var(--kb-dur-med)] hover:border-king-accent/35 hover:bg-king-surface hover:shadow-[0_10px_28px_rgba(138,90,43,0.07)] md:min-h-0 md:px-3 md:py-2.5"
               >
-                <span class="footer-contact-icon flex h-8 w-8 shrink-0 items-center justify-center rounded-[var(--kb-radius-xs)] border border-king-border/35 bg-king-bg text-king-muted/70 transition-[border-color,color,transform] duration-[var(--kb-dur-med)] group-hover:border-king-accent/40 group-hover:text-king-accent">
-                  <Icon name={item.icon} class="h-3.5 w-3.5" />
+                <span class="footer-contact-icon flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--kb-radius-xs)] border border-king-border/35 bg-king-bg text-king-muted/70 transition-[border-color,color,transform] duration-[var(--kb-dur-med)] group-hover:border-king-accent/40 group-hover:text-king-accent md:h-8 md:w-8">
+                  <Icon name={item.icon} class="h-4 w-4 md:h-3.5 md:w-3.5" />
                 </span>
-                <span class="min-w-0">
+                <span class="min-w-0 flex-1">
                   <span class="mb-0.5 block text-[var(--kb-text-2xs)] font-medium uppercase tracking-[0.14em] text-king-muted/60 transition-colors duration-[var(--kb-dur-med)] group-hover:text-king-accent">
                     {item.label}
                   </span>
-                  <span class="block truncate text-[var(--kb-text-xs)] font-light text-king-text/85 transition-colors duration-[var(--kb-dur-med)] group-hover:text-king-text">
+                  <span class="block text-[var(--kb-text-sm)] font-light leading-snug text-king-text/90 transition-colors duration-[var(--kb-dur-med)] group-hover:text-king-text md:truncate md:text-[var(--kb-text-xs)] md:text-king-text/85">
                     {item.value}
                   </span>
                 </span>
@@ -206,10 +209,10 @@ const highlights = footerHighlights;
       </div>
 
       {highlights.length > 0 && (
-        <ul class="footer-meta-strip mb-7 flex flex-wrap gap-2 md:mb-8" aria-label="Información de compra">
+        <ul class="footer-meta-strip mb-6 flex flex-col gap-2 sm:flex-row sm:flex-wrap md:mb-8" aria-label="Información de compra">
           {highlights.map((item) => (
-            <li>
-              <span class="kb-tag-accent footer-meta-tag inline-flex items-center gap-2">
+            <li class="w-full sm:w-auto">
+              <span class="kb-tag-accent footer-meta-tag inline-flex w-full items-center justify-center gap-2 sm:w-auto sm:justify-start">
                 <span class="h-1 w-1 rotate-45 bg-king-accent/70" aria-hidden="true"></span>
                 {item}
               </span>
@@ -218,22 +221,19 @@ const highlights = footerHighlights;
         </ul>
       )}
 
-      <div class="footer-bottom-bar relative flex flex-col items-center gap-4 border-t border-king-border/25 pt-5 md:flex-row md:justify-between">
-        <div class="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 md:justify-start">
-          <span class="footer-dot-marker h-1.5 w-1.5 rotate-45 bg-king-accent/20"></span>
-          <p class="text-[var(--kb-text-2xs)] font-light tracking-[0.06em] text-king-muted/70">
+      <div class="footer-bottom-bar relative flex flex-col items-stretch gap-4 border-t border-king-border/25 pt-5 md:flex-row md:items-center md:justify-between">
+        <div class="flex flex-col items-center gap-3 text-center md:flex-row md:flex-wrap md:items-center md:justify-start md:gap-x-4 md:gap-y-2 md:text-left">
+          <span class="footer-dot-marker hidden h-1.5 w-1.5 rotate-45 bg-king-accent/20 md:block"></span>
+          <p class="text-[var(--kb-text-2xs)] font-light leading-relaxed tracking-[0.06em] text-king-muted/70">
             &copy; {new Date().getFullYear()} {site.name}. Todos los derechos reservados.
           </p>
           {footerLegalNav.some((item) => item.href === '/privacidad') && (
-            <>
-          <span class="hidden h-3 w-px bg-king-border/30 md:block" aria-hidden="true"></span>
-          <a
-            href="/privacidad"
-            class="footer-legal-link text-[var(--kb-text-2xs)] font-light tracking-[0.06em] text-king-muted/70 transition-colors duration-[var(--kb-dur-fast)] hover:text-king-accent"
-          >
-            Privacidad
-          </a>
-            </>
+            <a
+              href="/privacidad"
+              class="footer-legal-link text-[var(--kb-text-2xs)] font-light tracking-[0.06em] text-king-muted/70 transition-colors duration-[var(--kb-dur-fast)] hover:text-king-accent"
+            >
+              Privacidad
+            </a>
           )}
         </div>
 
@@ -243,20 +243,20 @@ const highlights = footerHighlights;
           <span class="h-px w-6 bg-gradient-to-l from-transparent to-king-border/35"></span>
         </div>
 
-        <div class="flex items-center gap-4">
-          <p class="hidden text-[var(--kb-text-2xs)] font-light tracking-[0.06em] text-king-muted/70 sm:block">
+        <div class="footer-bottom-actions flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between md:justify-end md:gap-4">
+          <p class="text-center text-[var(--kb-text-2xs)] font-light tracking-[0.06em] text-king-muted/70 sm:text-left md:block">
             Asfalto, cuero y carácter.
           </p>
           <button
             type="button"
             data-footer-scroll-top
-            class="footer-scroll-top group inline-flex items-center gap-2 rounded-full border border-king-border/35 bg-king-surface/70 px-3 py-1.5 text-[var(--kb-text-2xs)] font-medium uppercase tracking-[0.14em] text-king-muted/80 transition-[border-color,box-shadow,color,transform,background-color] duration-[var(--kb-dur-med)] hover:border-king-accent/40 hover:bg-king-surface hover:text-king-accent"
+            class="footer-scroll-top group inline-flex w-full items-center justify-center gap-2 rounded-full border border-king-border/35 bg-king-surface/70 px-4 py-2.5 text-[var(--kb-text-2xs)] font-medium uppercase tracking-[0.14em] text-king-muted/80 transition-[border-color,box-shadow,color,transform,background-color] duration-[var(--kb-dur-med)] hover:border-king-accent/40 hover:bg-king-surface hover:text-king-accent sm:w-auto sm:px-3 sm:py-1.5"
             aria-label="Volver arriba"
             hidden
           >
-            <span class="hidden sm:inline">Arriba</span>
-            <span class="flex h-5 w-5 items-center justify-center rounded-full border border-king-border/35 transition-[border-color,transform] duration-[var(--kb-dur-fast)] group-hover:border-king-accent/45 group-hover:-translate-y-0.5">
-              <Icon name="arrow-up" class="h-2.5 w-2.5 transition-transform duration-[var(--kb-dur-fast)] group-hover:-translate-y-0.5" strokeWidth={1.75} />
+            <span>Arriba</span>
+            <span class="flex h-6 w-6 items-center justify-center rounded-full border border-king-border/35 transition-[border-color,transform] duration-[var(--kb-dur-fast)] group-hover:border-king-accent/45 group-hover:-translate-y-0.5 md:h-5 md:w-5">
+              <Icon name="arrow-up" class="h-3 w-3 transition-transform duration-[var(--kb-dur-fast)] group-hover:-translate-y-0.5 md:h-2.5 md:w-2.5" strokeWidth={1.75} />
             </span>
           </button>
         </div>
@@ -282,20 +282,34 @@ const highlights = footerHighlights;
   }
 
   .site-footer {
-    transform: translateZ(0);
+    position: relative;
+    z-index: auto;
+  }
+
+  @media (min-width: 48rem) {
+    .site-footer {
+      position: sticky;
+      bottom: 0;
+      z-index: var(--kb-z-base);
+      transform: translateZ(0);
+    }
   }
 
   .site-footer--connected .footer-inner {
-    padding-top: clamp(2rem, 3.5vw, 2.75rem);
+    padding-top: calc(var(--kb-space-6) + var(--kb-space-footer-gap) * 0.35);
   }
 
   .site-footer--connected .footer-giant-wrap {
-    margin-top: 0.125rem;
+    margin-top: var(--kb-space-3);
   }
 
   @media (min-width: 48rem) {
     .site-footer--connected .footer-inner {
-      padding-top: clamp(2.25rem, 3.5vw, 3rem);
+      padding-top: calc(clamp(2rem, 3.5vw, 2.75rem) + var(--kb-space-footer-gap) * 0.45);
+    }
+
+    .site-footer--connected .footer-giant-wrap {
+      margin-top: var(--kb-space-4);
     }
   }
 
@@ -431,6 +445,16 @@ const highlights = footerHighlights;
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
   }
 
+  .footer-brand :global(.footer-brand__logo) {
+    width: 9.25rem;
+    height: auto;
+    transition: opacity var(--kb-dur-med) var(--kb-ease-out);
+  }
+
+  .footer-brand:hover :global(.footer-brand__logo) {
+    opacity: 0.82;
+  }
+
   .footer-giant {
     font-size: 20vw;
     font-weight: 300;
@@ -451,6 +475,89 @@ const highlights = footerHighlights;
     height: clamp(7rem, 16vw, 14rem);
     mask-image: linear-gradient(to bottom, black 0%, black 72%, transparent 100%);
     -webkit-mask-image: linear-gradient(to bottom, black 0%, black 72%, transparent 100%);
+  }
+
+  @media (max-width: 47.99rem) {
+    .footer-inner {
+      padding-bottom: calc(var(--kb-space-5) + env(safe-area-inset-bottom, 0px));
+    }
+
+    .footer-top-rule {
+      margin-bottom: var(--kb-space-5);
+    }
+
+    .footer-top-rule .mx-4 {
+      margin-inline: var(--kb-space-3);
+    }
+
+    .footer-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .footer-brand-col {
+      order: 1;
+      padding-bottom: var(--kb-space-5);
+      border-bottom: 1px solid color-mix(in srgb, var(--kb-stroke-hairline) 90%, transparent);
+    }
+
+    .footer-contact-col {
+      order: 2;
+      padding-block: var(--kb-space-5);
+      border-bottom: 1px solid color-mix(in srgb, var(--kb-stroke-hairline) 90%, transparent);
+    }
+
+    .footer-nav-col {
+      order: 3;
+    }
+
+    .footer-help-col {
+      order: 4;
+    }
+
+    .footer-legal-col {
+      order: 5;
+    }
+
+    .footer-links-block {
+      padding-block: var(--kb-space-4);
+      border-bottom: 1px solid color-mix(in srgb, var(--kb-stroke-hairline) 90%, transparent);
+    }
+
+    .footer-links-block:last-of-type {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .footer-col-title {
+      margin-bottom: var(--kb-space-2);
+    }
+
+    .footer-link::after {
+      left: 1.65rem;
+      width: calc(100% - 1.65rem);
+    }
+
+    .footer-meta-strip {
+      gap: var(--kb-space-2);
+    }
+
+    .footer-meta-tag {
+      justify-content: flex-start;
+      padding-inline: var(--kb-space-3);
+      padding-block: 0.55rem;
+    }
+
+    .footer-giant {
+      font-size: clamp(3.5rem, 22vw, 5.5rem);
+      transform: translateY(0.75rem);
+    }
+
+    .footer-giant-wrap {
+      height: clamp(4.5rem, 18vw, 6.5rem);
+      margin-top: var(--kb-space-2);
+    }
   }
 
   .footer-dot-marker {

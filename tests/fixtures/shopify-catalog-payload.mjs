@@ -34,7 +34,14 @@ export const image = (id, filename = `${id}.jpg`) => ({
 
 export const colorImages = (colorName) => {
   const slug = colorName.toLocaleLowerCase('es');
-  return [image(`${slug}-1`), image(`${slug}-2`), image(`${slug}-3`)];
+  const colorToken = colorName
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLocaleUpperCase('es')
+    .replace(/[^A-Z0-9]+/g, '_');
+  return [1, 2, 3].map((sequence) =>
+    image(`${slug}-${sequence}`, `5365-35_${colorToken}_${String(sequence).padStart(2, '0')}.jpg`)
+  );
 };
 
 export const metafield = (key, type, value) => ({

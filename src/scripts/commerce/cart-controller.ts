@@ -6,6 +6,7 @@ import {
   deleteLine,
   getCart,
   openCartDrawer,
+  resetCurrentCart,
   startCheckout,
 } from './cart-store';
 import {
@@ -190,6 +191,23 @@ const bindCartInteractions = () => {
 
     if (target.closest(cartSelectors.drawerOverlay) && isDrawerOpen) {
       closeDrawer();
+      return;
+    }
+
+    const reset = target.closest<HTMLButtonElement>(cartSelectors.reset);
+    if (reset) {
+      event.preventDefault();
+      const view = getView(reset);
+      const statusTarget = getStatusTarget(view);
+      clearCartStatusMessage(statusTarget);
+      const result = await resetCurrentCart();
+      if (!result.success && result.error) {
+        setCartStatusMessage(statusTarget, result.error.message, true, true);
+        requestAnimationFrame(() => statusTarget?.focus());
+      } else {
+        setCartStatusMessage(statusTarget, 'El carrito se ha restablecido.', true);
+        requestAnimationFrame(() => statusTarget?.focus());
+      }
       return;
     }
 

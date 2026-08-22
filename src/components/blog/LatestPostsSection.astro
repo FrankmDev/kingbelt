@@ -17,6 +17,7 @@ const { posts, showHeader = true, embedded = false, class: className = '' } = As
   class:list={[
     'blog-latest',
     !embedded && 'section-spacing section-spacing-chapter',
+    embedded && 'blog-latest--embedded',
     className,
   ]}
   aria-labelledby={showHeader ? 'blog-latest-title' : undefined}
@@ -169,6 +170,32 @@ const { posts, showHeader = true, embedded = false, class: className = '' } = As
   .blog-latest-stage__corner.kb-corner-bracket-br {
     right: 0.9rem;
     bottom: 0.9rem;
+  }
+
+  .blog-latest--embedded .blog-latest-inner {
+    gap: var(--kb-space-gap);
+  }
+
+  .blog-latest--embedded .blog-latest-stage {
+    width: 100%;
+    margin-inline: 0;
+    padding: var(--kb-space-3);
+    border-radius: var(--kb-radius-md);
+  }
+
+  .blog-latest--embedded .blog-latest-stage__corner {
+    display: none;
+  }
+
+  .blog-latest--embedded .blog-latest-grid :global(.kb-blog-card__body) {
+    gap: var(--kb-space-2);
+    padding: var(--kb-space-3);
+  }
+
+  @media (min-width: 40rem) {
+    .blog-latest--embedded .blog-latest-stage {
+      padding: var(--kb-space-4);
+    }
   }
 
   .blog-latest-grid {

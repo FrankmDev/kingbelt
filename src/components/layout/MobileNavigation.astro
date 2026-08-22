@@ -1,6 +1,7 @@
 ---
+import Button from '../ui/Button.astro';
 import Icon from '../ui/Icon.astro';
-import { headerAccountCta, type NavItem } from '@config/navigation';
+import { headerAccountCta, socialLinks, type NavItem } from '@config/navigation';
 
 interface Props {
   links: readonly NavItem[];
@@ -8,12 +9,25 @@ interface Props {
 }
 
 const { links, accountHref } = Astro.props;
-const AccountCta = accountHref ? 'a' : 'span';
+const instagram = socialLinks[0];
+
+const linkNotes: Record<string, string> = {
+  '/productos': 'Colección',
+  '/sobre': 'Criterio y origen',
+  '/blog': 'Lecturas',
+  '/contacto': 'Atención directa',
+};
+
+const utilities: readonly NavItem[] = [
+  { label: 'Tallas', href: '/guia-de-tallas' },
+  { label: 'Cuidados', href: '/cuidados' },
+  { label: 'Envíos', href: '/envios-y-devoluciones' },
+];
 ---
 
 <nav
   id="mobile-menu"
-  class="fixed inset-0 z-40 flex flex-col justify-center lg:hidden"
+  class="mobile-nav"
   aria-label="Navegación móvil"
   aria-modal="true"
   role="dialog"
@@ -21,122 +35,453 @@ const AccountCta = accountHref ? 'a' : 'span';
   data-open="false"
   inert
 >
-  <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(138,106,61,0.08),transparent_50%)]"></div>
-  <div class="mobile-nav-texture pointer-events-none absolute inset-0 opacity-[0.025]"></div>
+  <div class="mobile-nav__veil" aria-hidden="true"></div>
+  <div class="mobile-nav__grain" aria-hidden="true"></div>
+  <span class="mobile-nav__hash mobile-nav__hash--left" aria-hidden="true"></span>
+  <span class="mobile-nav__hash mobile-nav__hash--right" aria-hidden="true"></span>
 
-  <div class="absolute left-6 top-6 h-6 w-6 border-l border-t border-white/[0.05]"></div>
-  <div class="absolute right-6 top-6 h-6 w-6 border-r border-t border-white/[0.05]"></div>
-  <div class="absolute bottom-6 left-6 h-6 w-6 border-b border-l border-white/[0.05]"></div>
-  <div class="absolute bottom-6 right-6 h-6 w-6 border-b border-r border-white/[0.05]"></div>
-
-  <div class="relative flex h-full flex-col items-center justify-center px-6">
-    <div class="mobile-nav-eyebrow absolute top-24 left-1/2 flex -translate-x-1/2 items-center gap-3">
-      <span class="h-px w-8 bg-white/[0.06]"></span>
-      <span class="text-[var(--kb-text-eyebrow)] font-medium uppercase tracking-[0.28em] text-white/[0.12]">Navegación</span>
-      <span class="h-px w-8 bg-white/[0.06]"></span>
-    </div>
-
-    <div class="flex flex-col items-center gap-2">
+  <div class="mobile-nav__stage">
+    <ul class="mobile-nav__list">
       {links.map((link, index) => (
-        <a
-          href={link.href}
-          class="mobile-nav-link group relative flex items-center gap-5 text-white/70 transition-[color,opacity,transform] duration-[var(--kb-dur-med)] hover:text-king-accent"
-          data-mobile-nav-link
-        >
-          <span class="font-mono text-[var(--kb-text-eyebrow)] tabular-nums text-white/15 transition-colors duration-[var(--kb-dur-fast)] group-hover:text-king-accent/40">0{index + 1}</span>
-          <span class="font-serif text-[clamp(1.75rem,8vw,2.75rem)] tracking-[0.02em] transition-transform duration-[var(--kb-dur-med)] group-hover:translate-x-1">{link.label}</span>
-        </a>
+        <li class="mobile-nav__item">
+          <a href={link.href} class="mobile-nav__link" data-mobile-nav-link>
+            <span class="mobile-nav__index kb-meta-label" aria-hidden="true">
+              {String(index + 1).padStart(2, '0')}
+            </span>
+            <span class="mobile-nav__copy">
+              <span class="mobile-nav__title font-display">{link.label}</span>
+              <span class="mobile-nav__note kb-meta-label">{linkNotes[link.href] ?? ''}</span>
+            </span>
+            <Icon name="arrow-up-right" class="mobile-nav__arrow h-3.5 w-3.5" strokeWidth={1.6} />
+          </a>
+        </li>
       ))}
-    </div>
+    </ul>
 
-    <div class="mobile-nav-divider my-8 h-px w-16 bg-white/[0.06]"></div>
-
-    <a
-      href="/carrito"
-      class="mobile-nav-cta mobile-nav-cta--cart kb-action-label group inline-flex items-center gap-3 border border-white/15 px-5 py-3 text-white/60 transition-[background-color,border-color,color,opacity,transform] duration-[var(--kb-dur-med)] hover:border-king-accent hover:bg-king-accent/10 hover:text-white"
-      data-cart-drawer-open
-      data-cart-count-wrapper
-      aria-label="Carrito vacío"
-      aria-controls="cart-drawer"
-      aria-expanded="false"
-    >
-      <Icon name="shopping-bag" class="h-3.5 w-3.5" strokeWidth={1.65} />
-      Carrito <span data-cart-count class="tabular-nums" aria-hidden="true"></span>
+    <a href="/productos" class="mobile-nav__media" data-mobile-nav-link>
+      <img
+        src="/images/brand/cinturones-en-taller.jpg"
+        alt=""
+        width="960"
+        height="540"
+        loading="lazy"
+        decoding="async"
+        class="mobile-nav__media-img"
+      />
+      <span class="mobile-nav__media-veil" aria-hidden="true"></span>
+      <span class="mobile-nav__media-copy">
+        <span class="mobile-nav__media-kicker kb-meta-label">Colección</span>
+        <span class="mobile-nav__media-title font-display">Cuero, hebilla y carácter</span>
+        <span class="mobile-nav__media-cta kb-action-label">
+          Ver selección
+          <Icon name="arrow-right" class="h-3.5 w-3.5" strokeWidth={1.7} />
+        </span>
+      </span>
     </a>
 
-    <AccountCta
-      class:list={[
-        'mobile-nav-cta kb-action-label group mt-3 inline-flex items-center gap-3 border border-white/15 px-5 py-3',
-        accountHref
-          ? 'text-white/60 transition-[background-color,border-color,color,opacity,transform] duration-[var(--kb-dur-med)] hover:border-king-accent hover:bg-king-accent/10 hover:text-white'
-          : 'text-white/40',
-      ]}
-      aria-label={accountHref ? headerAccountCta.ariaLabel : headerAccountCta.unavailableAriaLabel}
-      {...(accountHref
-        ? { href: accountHref }
-        : { 'aria-disabled': 'true' })}
-    >
-      <Icon name="user" class="h-3.5 w-3.5" strokeWidth={1.75} />
-      {headerAccountCta.label}
-    </AccountCta>
+    <ul class="mobile-nav__utils">
+      {utilities.map((item) => (
+        <li>
+          <a href={item.href} class="mobile-nav__util kb-meta-label">{item.label}</a>
+        </li>
+      ))}
+      <li>
+        <a
+          href={instagram.href}
+          class="mobile-nav__util kb-meta-label"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {instagram.label}
+        </a>
+      </li>
+    </ul>
+
+    <footer class="mobile-nav__dock">
+      <Button
+        href="/carrito"
+        variant="surface"
+        size="sm"
+        class="mobile-nav__btn"
+        data-cart-drawer-open
+        data-cart-count-wrapper
+        aria-label="Carrito vacío"
+        aria-controls="cart-drawer"
+        aria-expanded="false"
+      >
+        <Icon name="shopping-bag" strokeWidth={1.65} />
+        Carrito
+        <span class="mobile-nav__count" data-cart-count aria-hidden="true"></span>
+      </Button>
+
+      {accountHref ? (
+        <Button
+          href={accountHref}
+          variant="surfaceOutline"
+          size="sm"
+          class="mobile-nav__btn"
+          aria-label={headerAccountCta.ariaLabel}
+        >
+          <Icon name="user" strokeWidth={1.75} />
+          {headerAccountCta.label}
+        </Button>
+      ) : (
+        <Button
+          disabled
+          variant="surfaceOutline"
+          size="sm"
+          class="mobile-nav__btn"
+          aria-label={headerAccountCta.unavailableAriaLabel}
+        >
+          <Icon name="user" strokeWidth={1.75} />
+          {headerAccountCta.label}
+        </Button>
+      )}
+    </footer>
   </div>
 </nav>
 
 <style>
-  #mobile-menu {
+  .mobile-nav {
+    position: fixed;
+    inset: 0;
+    z-index: 45;
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    max-height: 100dvh;
     background: var(--color-king-oil);
-    transform: translateY(-100%);
-    pointer-events: none;
-    transition: transform 800ms var(--kb-ease-out);
-  }
-
-  #mobile-menu[data-open='true'] {
-    transform: translateY(0);
-    pointer-events: auto;
-  }
-
-  .mobile-nav-texture {
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-    background-size: 200px 200px;
-  }
-
-  .mobile-nav-link,
-  .mobile-nav-divider,
-  .mobile-nav-cta,
-  .mobile-nav-eyebrow {
+    color: var(--color-king-bone);
+    overflow: hidden;
+    overscroll-behavior: none;
+    visibility: hidden;
+    transform: translateY(-12px);
     opacity: 0;
-    transform: translateY(24px);
+    pointer-events: none;
     transition:
-      opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
-      transform 0.6s cubic-bezier(0.22, 1, 0.36, 1),
-      color 0.4s ease,
-      border-color 0.4s ease,
-      background-color 0.4s ease;
+      transform 560ms var(--kb-ease-out),
+      opacity 420ms var(--kb-ease-out),
+      visibility 0s linear 560ms;
   }
 
-  #mobile-menu[data-open='true'] .mobile-nav-link,
-  #mobile-menu[data-open='true'] .mobile-nav-divider,
-  #mobile-menu[data-open='true'] .mobile-nav-cta,
-  #mobile-menu[data-open='true'] .mobile-nav-eyebrow {
-    opacity: 1;
+  .mobile-nav[data-open='true'] {
+    visibility: visible;
     transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+    transition:
+      transform 560ms var(--kb-ease-out),
+      opacity 320ms var(--kb-ease-out),
+      visibility 0s linear 0s;
   }
 
-  #mobile-menu[data-open='true'] .mobile-nav-eyebrow { transition-delay: 0.2s; }
-  #mobile-menu[data-open='true'] .mobile-nav-link:nth-child(1) { transition-delay: 0.28s; }
-  #mobile-menu[data-open='true'] .mobile-nav-link:nth-child(2) { transition-delay: 0.36s; }
-  #mobile-menu[data-open='true'] .mobile-nav-link:nth-child(3) { transition-delay: 0.44s; }
-  #mobile-menu[data-open='true'] .mobile-nav-divider { transition-delay: 0.52s; }
-  #mobile-menu[data-open='true'] .mobile-nav-cta--cart { transition-delay: 0.58s; }
-  #mobile-menu[data-open='true'] .mobile-nav-cta:nth-of-type(2) { transition-delay: 0.66s; }
+  @media (min-width: 64rem) {
+    .mobile-nav {
+      display: none;
+    }
+  }
+
+  .mobile-nav__veil {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(ellipse at 50% 0%, rgba(138, 106, 61, 0.16), transparent 46%),
+      linear-gradient(180deg, rgba(13, 12, 11, 0.2) 0%, transparent 28%);
+  }
+
+  .mobile-nav__grain {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.04;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 220px 220px;
+  }
+
+  .mobile-nav__hash {
+    position: absolute;
+    top: calc(var(--kb-header-offset) + 0.5rem);
+    bottom: 5.5rem;
+    width: 1px;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.12) 0 7px,
+      transparent 7px 16px
+    );
+    opacity: 0.28;
+  }
+
+  .mobile-nav__hash--left { left: 1.15rem; }
+  .mobile-nav__hash--right { right: 1.15rem; }
+
+  .mobile-nav__stage {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) minmax(5rem, 7.25rem) auto auto;
+    gap: 0.65rem;
+    height: 100%;
+    overflow: hidden;
+    padding:
+      calc(var(--kb-header-offset) + 0.25rem)
+      1.5rem
+      calc(0.95rem + env(safe-area-inset-bottom, 0px));
+    min-height: 0;
+  }
+
+  .mobile-nav__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .mobile-nav__item + .mobile-nav__item {
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .mobile-nav__link {
+    display: grid;
+    grid-template-columns: 2.1rem minmax(0, 1fr) auto;
+    gap: 0.85rem;
+    align-items: center;
+    padding: 0.55rem 0;
+    text-decoration: none;
+    color: rgba(255, 255, 255, 0.88);
+  }
+
+  .mobile-nav__link:hover,
+  .mobile-nav__link:focus-visible {
+    color: var(--color-king-accent-light);
+  }
+
+  .mobile-nav__link:focus-visible {
+    outline: 2px solid var(--color-king-accent-light);
+    outline-offset: 4px;
+  }
+
+  .mobile-nav__index {
+    color: rgba(255, 255, 255, 0.28);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.14em;
+  }
+
+  .mobile-nav__copy {
+    display: grid;
+    gap: 0.18rem;
+    min-width: 0;
+  }
+
+  .mobile-nav__title {
+    font-size: clamp(1.4rem, 6.2vw, 1.95rem);
+    font-weight: var(--kb-w-heading-light);
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+  }
+
+  .mobile-nav__note {
+    color: rgba(255, 255, 255, 0.32);
+    letter-spacing: 0.16em;
+  }
+
+  .mobile-nav__arrow {
+    color: rgba(255, 255, 255, 0.28);
+    transition: transform var(--kb-dur-fast) var(--kb-ease-out), color var(--kb-dur-fast) var(--kb-ease-out);
+  }
+
+  .mobile-nav__link:hover .mobile-nav__arrow,
+  .mobile-nav__link:focus-visible .mobile-nav__arrow {
+    color: var(--color-king-accent-light);
+    transform: translate(2px, -2px);
+  }
+
+  .mobile-nav__media {
+    position: relative;
+    display: grid;
+    min-height: 0;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .mobile-nav__media-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 42%;
+    filter: saturate(0.78) contrast(1.05);
+  }
+
+  .mobile-nav__media-veil {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      90deg,
+      rgba(13, 12, 11, 0.78) 12%,
+      rgba(13, 12, 11, 0.28) 72%,
+      rgba(13, 12, 11, 0.12) 100%
+    );
+  }
+
+  .mobile-nav__media-copy {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    align-content: center;
+    align-items: start;
+    gap: 0.28rem;
+    padding: 0.9rem 1rem;
+  }
+
+  .mobile-nav__media-kicker {
+    color: var(--color-king-accent-light);
+    letter-spacing: 0.2em;
+  }
+
+  .mobile-nav__media-title {
+    font-size: 1.15rem;
+    font-weight: var(--kb-w-heading-light);
+    letter-spacing: -0.01em;
+    line-height: 1.15;
+    max-width: 14ch;
+  }
+
+  .mobile-nav__media-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 0.35rem;
+    color: rgba(255, 255, 255, 0.72);
+  }
+
+  .mobile-nav__media:hover .mobile-nav__media-cta,
+  .mobile-nav__media:focus-visible .mobile-nav__media-cta {
+    color: #fff;
+  }
+
+  .mobile-nav__media:focus-visible {
+    outline: 2px solid var(--color-king-accent-light);
+    outline-offset: 3px;
+  }
+
+  .mobile-nav__utils {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem 1.1rem;
+  }
+
+  .mobile-nav__util {
+    color: rgba(255, 255, 255, 0.42);
+    letter-spacing: 0.16em;
+    text-decoration: none;
+  }
+
+  .mobile-nav__util:hover,
+  .mobile-nav__util:focus-visible {
+    color: var(--color-king-accent-light);
+  }
+
+  .mobile-nav__dock {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.65rem;
+    padding-top: 0.7rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .mobile-nav__dock :global(.kb-btn) {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .mobile-nav__dock :global(.kb-btn-rivet) {
+    display: none;
+  }
+
+  .mobile-nav__util:focus-visible {
+    outline: 2px solid var(--color-king-accent-light);
+    outline-offset: 3px;
+  }
+
+  .mobile-nav__count:not(:empty)::before {
+    content: '·';
+    margin-right: 0.3rem;
+    opacity: 0.5;
+  }
+
+  .mobile-nav__item,
+  .mobile-nav__media,
+  .mobile-nav__utils,
+  .mobile-nav__dock {
+    opacity: 0;
+    transform: translateY(0.85rem);
+    transition:
+      opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+      transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .mobile-nav[data-open='true'] .mobile-nav__item,
+  .mobile-nav[data-open='true'] .mobile-nav__media,
+  .mobile-nav[data-open='true'] .mobile-nav__utils,
+  .mobile-nav[data-open='true'] .mobile-nav__dock {
+    opacity: 1;
+    transform: none;
+  }
+
+  .mobile-nav[data-open='true'] .mobile-nav__item:nth-child(1) { transition-delay: 0.1s; }
+  .mobile-nav[data-open='true'] .mobile-nav__item:nth-child(2) { transition-delay: 0.2s; }
+  .mobile-nav[data-open='true'] .mobile-nav__item:nth-child(3) { transition-delay: 0.26s; }
+  .mobile-nav[data-open='true'] .mobile-nav__item:nth-child(4) { transition-delay: 0.32s; }
+  .mobile-nav[data-open='true'] .mobile-nav__media { transition-delay: 0.38s; }
+  .mobile-nav[data-open='true'] .mobile-nav__utils { transition-delay: 0.44s; }
+  .mobile-nav[data-open='true'] .mobile-nav__dock { transition-delay: 0.5s; }
+
+  @media (max-height: 740px) {
+    .mobile-nav__stage {
+      grid-template-rows: minmax(0, 1fr) minmax(4.5rem, 5.75rem) auto auto;
+      gap: 0.45rem;
+    }
+
+    .mobile-nav__title {
+      font-size: clamp(1.25rem, 5.6vw, 1.65rem);
+    }
+
+    .mobile-nav__link {
+      padding: 0.42rem 0;
+    }
+
+    .mobile-nav__note {
+      display: none;
+    }
+  }
 
   @media (prefers-reduced-motion: reduce) {
-    #mobile-menu,
-    .mobile-nav-link,
-    .mobile-nav-divider,
-    .mobile-nav-cta,
-    .mobile-nav-eyebrow {
+    .mobile-nav,
+    .mobile-nav__item,
+    .mobile-nav__media,
+    .mobile-nav__utils,
+    .mobile-nav__dock,
+    .mobile-nav__arrow {
       transition: none !important;
+    }
+
+    .mobile-nav__item,
+    .mobile-nav__media,
+    .mobile-nav__utils,
+    .mobile-nav__dock {
+      opacity: 1;
+      transform: none;
     }
   }
 </style>

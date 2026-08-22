@@ -37,7 +37,7 @@ export const legalDocuments = {
     description:
       'Identificación del titular del sitio web KingBelt, condiciones de uso, propiedad intelectual y responsabilidad.',
     status: 'published',
-    updatedAt: '18 de agosto de 2026',
+    updatedAt: '22 de agosto de 2026',
     sections: [
       { id: 'informacion-general', title: 'Información general e identificación del titular' },
       { id: 'objeto', title: 'Objeto del sitio web' },
@@ -144,11 +144,11 @@ export const legalDocuments = {
     description:
       'Preparación, expedición, plazos, seguimiento e incidencias de los pedidos realizados en KingBelt.',
     status: 'published',
-    updatedAt: '18 de agosto de 2026',
+    updatedAt: '22 de agosto de 2026',
     sections: [
       { id: 'vendedor', title: 'Datos del vendedor' },
       { id: 'zonas', title: 'Zonas de envío' },
-      { id: 'gastos', title: 'Gastos de envío' },
+      { id: 'gastos', title: 'Envíos gratuitos' },
       { id: 'preparacion', title: 'Preparación y procesamiento de pedidos' },
       { id: 'plazos', title: 'Plazos de entrega' },
       { id: 'computo', title: 'Cómputo de los plazos' },
@@ -176,11 +176,11 @@ export const legalDocuments = {
     navLabel: 'Devoluciones',
     title: 'Política de devoluciones, desistimiento y reembolsos — KingBelt',
     description:
-      'Plazo de 30 días, desistimiento, estado del producto, gastos de devolución y reembolsos en KingBelt.',
+      'Condiciones de devolución, desistimiento y reembolso aplicables a las compras en KingBelt.',
     status: 'published',
-    updatedAt: '18 de agosto de 2026',
+    updatedAt: '22 de agosto de 2026',
     sections: [
-      { id: 'plazo', title: 'Plazo de devolución de 30 días' },
+      { id: 'plazo', title: 'Plazo de devolución' },
       { id: 'estado', title: 'Estado de los productos devueltos' },
       { id: 'solicitar', title: 'Cómo solicitar una devolución' },
       { id: 'gastos', title: 'Gastos de devolución' },
@@ -265,8 +265,8 @@ export const legalPages = {
     section: {
       index: '01',
       eyebrow: 'Documento',
-      title: 'Solo lo demostrable en el código.',
-      body: 'Cookie de sesión, almacenamiento de demostración y tipografías externas. Sin analítica ni marketing de primera parte.',
+      title: 'Inventario de tecnologías del sitio.',
+      body: 'Cookies, almacenamiento local y recursos externos utilizados actualmente por KingBelt.',
     },
   },
   condiciones: {
@@ -302,7 +302,7 @@ export const legalPages = {
   envios: {
     heading: 'Política de envíos',
     titleHtml: 'Preparación, transporte y <em>entrega</em>.',
-    lede: 'Condiciones de envío, plazos, seguimiento e incidencias de los pedidos KingBelt.',
+    lede: 'Envíos gratuitos con transporte incluido en el precio. Plazos, seguimiento e incidencias de los pedidos KingBelt.',
     image: '/images/brand/cinturones-en-taller.jpg',
     imageAlt: 'Persona sujetando varios cinturones de cuero en un taller',
     imagePosition: 'center 48%',
@@ -311,13 +311,13 @@ export const legalPages = {
       index: '01',
       eyebrow: 'Documento',
       title: 'Cómo llega el pedido.',
-      body: 'Zonas, gastos, plazos, seguimiento y qué ocurre si hay una incidencia en el transporte.',
+      body: 'Envíos gratuitos, plazos, seguimiento y qué ocurre si hay una incidencia en el transporte.',
     },
   },
   devoluciones: {
     heading: 'Devoluciones y reembolsos',
-    titleHtml: '30 días para <em>devolver</em>.',
-    lede: 'Desistimiento, estado del producto, gastos de devolución y reembolsos.',
+    titleHtml: 'Devoluciones y <em>desistimiento</em>.',
+    lede: 'Condiciones aplicables a devoluciones, desistimiento y reembolsos.',
     image: '/images/blog/cinturon-marron.jpg',
     imageAlt: 'Cinturón de cuero marrón sobre fondo neutro',
     imagePosition: 'center 42%',
@@ -326,7 +326,7 @@ export const legalPages = {
       index: '01',
       eyebrow: 'Documento',
       title: 'Cambios, desistimiento y reembolsos.',
-      body: 'El plazo de 30 días, cómo solicitar una devolución y en qué casos KingBelt asume los gastos.',
+      body: 'Plazos, procedimiento, gastos de devolución y reglas de reembolso.',
     },
   },
 } as const;

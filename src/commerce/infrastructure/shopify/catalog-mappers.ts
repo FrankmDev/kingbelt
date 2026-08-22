@@ -47,7 +47,6 @@ export interface ShopifyCatalog {
 
 export interface ShopifyProductMapOptions {
   requireCommercialSku?: boolean;
-  requireCompleteColorGalleries?: boolean;
 }
 
 export class ShopifyCatalogMappingError extends Error {
@@ -287,6 +286,7 @@ const mapVariants = (
   product: ShopifyProductNode,
   options: ProductOption[],
   mediaGroups: Product['mediaGroups'],
+  productImages: readonly ProductImage[],
   {
     requireCommercialSku = true,
   }: { requireCommercialSku?: boolean } = {}
@@ -296,6 +296,7 @@ const mapVariants = (
   const colorImageByValue = new Map(
     mediaGroups.map((group) => [group.optionValueId, group.imageIds[0]])
   );
+  const productImageById = new Map(productImages.map((image) => [image.id, image]));
   return product.variants.nodes.map((variant, variantIndex) => {
     const path = `${product.handle}.variants[${variantIndex}]`;
     const optionHint = variant.selectedOptions
@@ -346,13 +347,31 @@ const mapVariants = (
       fail(`${path}.selectedOptions`, 'la variante no selecciona un color.');
     }
     const expectedColorImageId = colorValueId ? colorImageByValue.get(colorValueId) : undefined;
-    const actualImageId = variant.image
-      ? requiredShopifyImageGid(variant.image.id, `${path}.image.id`)
-      : undefined;
-    if (colorValueId && !expectedColorImageId) {
-      fail(`${path}.image`, 'la variante tiene un color sin galería nativa segura.');
+    const imagePath = optionHint ? `${path}.image (${optionHint})` : `${path}.image`;
+    let imageId: string | undefined;
+    if (colorValueId) {
+      const expectedCoverId = required(
+        expectedColorImageId,
+        `${path}.image`,
+        'la variante tiene un color sin galería nativa segura.'
+      );
+      const actualImage = required(
+        variant.image,
+        imagePath,
+        'falta ProductVariant.image; debe coincidir con la portada de su galería de color.'
+      );
+      const actualImageId = requiredShopifyImageGid(actualImage.id, `${path}.image.id`);
+      if (actualImageId !== expectedCoverId) {
+        const expectedImage = productImageById.get(expectedCoverId);
+        fail(
+          imagePath,
+          `la imagen de variante debe coincidir con la portada de su galería de color (esperada ${describeImageFile(expectedImage ?? { id: expectedCoverId, url: '' })}; recibida ${describeImageFile(actualImage)}). En Shopify Admin, asigna esa portada a todas las tallas de este color.`
+        );
+      }
+      imageId = actualImageId;
+    } else if (variant.image) {
+      imageId = requiredShopifyImageGid(variant.image.id, `${path}.image.id`);
     }
-    const imageId = expectedColorImageId ?? actualImageId;
 
     return {
       id: variantId(mappedVariantId),
@@ -403,6 +422,16 @@ const imageFileSequence = (url: string): number => {
   return match ? Number(match[1]) : Number.MAX_SAFE_INTEGER;
 };
 
+const describeImageFile = (image: { id: string; url: string }): string => {
+  const stem = image.url ? imageFileStem(image.url) : undefined;
+  return stem ? `${stem} (${image.id})` : image.id;
+};
+
+const formatFamilySequence = (url: string): string => {
+  const sequence = imageFileSequence(url);
+  return sequence === Number.MAX_SAFE_INTEGER ? 'sin número' : String(sequence).padStart(2, '0');
+};
+
 const normalizedMediaToken = (value: string): string =>
   value
     .normalize('NFD')
@@ -423,8 +452,7 @@ const imageFamilyNamesColor = (family: string, color: string): boolean => {
 const mapNativeColorGroups = (
   product: ShopifyProductNode,
   colorOption: ProductOption,
-  productImages: readonly ProductImage[],
-  { requireComplete }: { requireComplete: boolean }
+  productImages: readonly ProductImage[]
 ): Product['mediaGroups'] => {
   const nativeImages = product.images.nodes.map((image, index) => ({
     image,
@@ -441,93 +469,43 @@ const mapNativeColorGroups = (
     nativeFamilies.set(familyKey, familyImages);
   });
 
-  const firstVariantImageByColor = new Map<string, ShopifyImageNode>();
-  const firstVariantFamilyByColor = new Map<string, string>();
-  product.variants.nodes.forEach((variant) => {
-    const selectedColor = variant.selectedOptions.find((selection) =>
-      normalizeOptionName(selection.name) === 'color'
-    );
-    const colorValue = selectedColor
-      ? colorOption.values.find((value) =>
-        normalizeOptionName(value.label) === normalizeOptionName(selectedColor.value)
-      )
-      : undefined;
-    if (!colorValue || !variant.image) return;
-    if (!firstVariantImageByColor.has(colorValue.id)) {
-      firstVariantImageByColor.set(colorValue.id, variant.image);
-    }
-    const family = imageFileFamily(variant.image.url);
-    const familyKey = family ? normalizedMediaToken(family) : '';
-    if (familyKey && !firstVariantFamilyByColor.has(colorValue.id)) {
-      firstVariantFamilyByColor.set(colorValue.id, familyKey);
-    }
-  });
-
   return colorOption.values.map((value) => {
     const path = `${product.handle}.images.${value.label}`;
-    const variantImage = firstVariantImageByColor.get(value.id);
-    const variantFamily = firstVariantFamilyByColor.get(value.id);
     const namedFamilies = [...nativeFamilies.keys()].filter((family) =>
       imageFamilyNamesColor(family, value.label)
     );
-    if (requireComplete && namedFamilies.length !== 1) {
+    if (namedFamilies.length !== 1) {
       fail(
         path,
         namedFamilies.length === 0
           ? `no existe una familia cuyo nombre termine en ${value.label}. Usa MODELO_${normalizedMediaToken(value.label).toUpperCase()}_01/02/03.`
-          : `hay ${namedFamilies.length} familias cuyos nombres terminan en ${value.label}; debe haber exactamente una.`
+          : `hay ${namedFamilies.length} familias cuyos nombres terminan en ${value.label}; debe haber exactamente una (${namedFamilies.join(', ')}).`
       );
     }
-    const selectedFamily = namedFamilies.length === 1
-      ? namedFamilies[0]
-      : variantFamily
-        && nativeFamilies.has(variantFamily)
-        && imageFamilyNamesColor(variantFamily, value.label)
-        ? variantFamily
-        : undefined;
-
-    const familyCandidates = selectedFamily
-      ? [...(nativeFamilies.get(selectedFamily) ?? [])]
-        .sort((left, right) => imageFileSequence(left.image.url) - imageFileSequence(right.image.url))
-      : [];
-    if (requireComplete) {
-      const sequences = familyCandidates.map(({ image }) => imageFileSequence(image.url));
-      const uniqueIds = new Set(familyCandidates.map(({ mapped }) => mapped.id));
-      if (
-        familyCandidates.length !== COLOR_GALLERY_IMAGE_COUNT
-        || uniqueIds.size !== COLOR_GALLERY_IMAGE_COUNT
-        || sequences.some((sequence, index) => sequence !== index + 1)
-      ) {
-        fail(
-          path,
-          `la familia ${selectedFamily} debe contener exactamente ${COLOR_GALLERY_IMAGE_COUNT} imágenes únicas numeradas 01, 02 y 03.`
-        );
-      }
-    }
-
-    const candidates = familyCandidates.length
-      ? familyCandidates
-        .slice(0, COLOR_GALLERY_IMAGE_COUNT)
-        .map(({ mapped }) => mapped)
-      : variantImage
-        ? nativeImages
-          .filter(({ image }) => image.id === variantImage.id || image.url === variantImage.url)
-          .slice(0, 1)
-          .map(({ mapped }) => mapped)
-        : [];
-    if (!candidates.length) {
+    const selectedFamily = namedFamilies[0];
+    const familyCandidates = [...(nativeFamilies.get(selectedFamily) ?? [])]
+      .sort((left, right) => imageFileSequence(left.image.url) - imageFileSequence(right.image.url));
+    const sequences = familyCandidates.map(({ image }) => imageFileSequence(image.url));
+    const uniqueIds = new Set(familyCandidates.map(({ mapped }) => mapped.id));
+    if (
+      familyCandidates.length !== COLOR_GALLERY_IMAGE_COUNT
+      || uniqueIds.size !== COLOR_GALLERY_IMAGE_COUNT
+      || sequences.some((sequence, index) => sequence !== index + 1)
+    ) {
+      const found = familyCandidates.length
+        ? familyCandidates
+          .map(({ image }) => `${imageFileStem(image.url) ?? image.id} [${formatFamilySequence(image.url)}]`)
+          .join(', ')
+        : 'ninguna';
       fail(
         path,
-        `no se puede resolver una galería nativa segura para el color ${value.label}.`
+        `la familia ${selectedFamily} debe contener exactamente ${COLOR_GALLERY_IMAGE_COUNT} imágenes únicas numeradas 01, 02 y 03; encontradas: ${found}.`
       );
     }
-    const uniqueCandidates = candidates.filter((image, index, all) =>
-      all.findIndex((candidate) => candidate.id === image.id) === index
-    );
     return {
       id: value.id,
       optionValueId: value.id,
-      imageIds: uniqueCandidates.map((image) => image.id),
+      imageIds: familyCandidates.map(({ mapped }) => mapped.id),
     };
   });
 };
@@ -556,7 +534,6 @@ const mapProduct = (
   source: ShopifyProductNode,
   {
     requireCommercialSku = true,
-    requireCompleteColorGalleries = true,
   }: ShopifyProductMapOptions = {}
 ): Product => {
   const path = source.handle || source.id || 'product';
@@ -567,9 +544,7 @@ const mapProduct = (
   );
   const colorOption = options.find((option) => option.purpose === 'color');
   const mediaGroups = colorOption
-    ? mapNativeColorGroups(source, colorOption, productImages, {
-      requireComplete: requireCompleteColorGalleries,
-    })
+    ? mapNativeColorGroups(source, colorOption, productImages)
     : [];
   const primaryCollection = mapPrimaryCollectionReference(source);
   const badge = metafieldText(source, 'badge', 'single_line_text_field', false);
@@ -599,7 +574,7 @@ const mapProduct = (
     ),
     ...(badge ? { badge } : {}),
     options,
-    variants: mapVariants(source, options, mediaGroups, { requireCommercialSku }),
+    variants: mapVariants(source, options, mediaGroups, productImages, { requireCommercialSku }),
     images: productImages,
     primaryImageId: firstColorImageId
       ?? requiredShopifyImageGid(source.featuredImage?.id, `${path}.featuredImage.id`),
@@ -645,17 +620,14 @@ export const mapShopifyProduct = (
   allowedRemoteImageHosts: readonly string[],
   options: ShopifyProductMapOptions = {}
 ): Product => {
-  const requireCompleteColorGalleries = options.requireCompleteColorGalleries !== false;
   const product = mapProduct(source, {
     requireCommercialSku: options.requireCommercialSku !== false,
-    requireCompleteColorGalleries,
   });
   assertValidCatalog(
     [product],
     collectionStubsFromProduct(source),
     SHOPIFY_SUPPORTED_CURRENCIES,
-    allowedRemoteImageHosts,
-    { requireColorGalleries: requireCompleteColorGalleries }
+    allowedRemoteImageHosts
   );
   return product;
 };

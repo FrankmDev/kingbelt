@@ -5,13 +5,8 @@ import {
   applyCheckoutSyncNotice,
   buildCheckoutBlockedMessage,
   CHECKOUT_EXPIRED_MESSAGE,
-  CHECKOUT_RETURN_CANCELLED,
-  CHECKOUT_RETURN_COMPLETED,
-  CHECKOUT_RETURN_PARAM,
   CheckoutTimeoutError,
   detectCheckoutSyncDelta,
-  getCheckoutReturnNotice,
-  parseCheckoutReturn,
   withCheckoutTimeout,
 } from '../src/commerce/application/checkout.ts';
 import { createShopifyCartAdapter } from '../src/commerce/infrastructure/shopify/shopify-cart-adapter.ts';
@@ -639,19 +634,5 @@ describe('adaptador HTTP Shopify de checkout', () => {
     } finally {
       globalThis.fetch = originalFetch;
     }
-  });
-});
-
-describe('vuelta desde checkout', () => {
-  test('interpreta parámetros de retorno y ofrece mensajes coherentes', () => {
-    expect(parseCheckoutReturn(new URLSearchParams(`${CHECKOUT_RETURN_PARAM}=${CHECKOUT_RETURN_COMPLETED}`)))
-      .toBe(CHECKOUT_RETURN_COMPLETED);
-    expect(parseCheckoutReturn(new URLSearchParams(`${CHECKOUT_RETURN_PARAM}=${CHECKOUT_RETURN_CANCELLED}`)))
-      .toBe(CHECKOUT_RETURN_CANCELLED);
-    expect(parseCheckoutReturn(new URLSearchParams(`${CHECKOUT_RETURN_PARAM}=javascript:alert(1)`)))
-      .toBeNull();
-    expect(parseCheckoutReturn(new URLSearchParams(`${CHECKOUT_RETURN_PARAM}=${'a'.repeat(40)}`)))
-      .toBeNull();
-    expect(getCheckoutReturnNotice(CHECKOUT_RETURN_CANCELLED)).toContain('carrito');
   });
 });

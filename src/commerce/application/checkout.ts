@@ -47,15 +47,6 @@ export {
   normalizeCheckoutHost,
 } from './checkout-redirect';
 
-export {
-  CHECKOUT_RETURN_CANCELLED,
-  CHECKOUT_RETURN_COMPLETED,
-  CHECKOUT_RETURN_PARAM,
-  getCheckoutReturnNotice,
-  parseCheckoutReturn,
-  type CheckoutReturnKind,
-} from './checkout-return';
-
 const mergeNotices = (existing: string | undefined, addition: string): string =>
   existing?.includes(addition) ? existing : existing ? `${existing} ${addition}` : addition;
 

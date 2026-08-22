@@ -153,6 +153,7 @@ const highlights = footerHighlights;
           </nav>
         </div>
 
+        {footerLegalNav.length > 0 && (
         <div class="footer-legal-col md:order-5 md:col-span-2 lg:order-4">
           <h4 class="footer-col-title mb-3 flex items-center gap-2.5 text-king-text">
             <span class="footer-col-mark h-px w-4 bg-king-accent/45" aria-hidden="true"></span>
@@ -172,6 +173,7 @@ const highlights = footerHighlights;
             ))}
           </nav>
         </div>
+        )}
 
         <div class="footer-contact-col md:order-2 md:col-span-3 lg:order-5">
           <h4 class="footer-col-title mb-3 flex items-center gap-2.5 text-king-text">
@@ -222,6 +224,8 @@ const highlights = footerHighlights;
           <p class="text-[var(--kb-text-2xs)] font-light tracking-[0.06em] text-king-muted/70">
             &copy; {new Date().getFullYear()} {site.name}. Todos los derechos reservados.
           </p>
+          {footerLegalNav.some((item) => item.href === '/privacidad') && (
+            <>
           <span class="hidden h-3 w-px bg-king-border/30 md:block" aria-hidden="true"></span>
           <a
             href="/privacidad"
@@ -229,6 +233,8 @@ const highlights = footerHighlights;
           >
             Privacidad
           </a>
+            </>
+          )}
         </div>
 
         <div class="footer-bar-separator hidden items-center gap-2.5 md:flex">

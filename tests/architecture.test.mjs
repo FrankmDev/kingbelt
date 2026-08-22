@@ -107,15 +107,41 @@ describe('límites de arquitectura', () => {
     expect(lazySource.includes("import('./cart-store')")).toBe(true);
   });
 
-  test('el retorno de checkout no acopla el store ni la UI completa del carrito', () => {
-    const returnScript = readFileSync(
-      join(sourceRoot, 'scripts/commerce/checkout-return.ts'),
-      'utf8'
-    );
-    expect(returnScript.includes('cart-store')).toBe(false);
-    expect(returnScript.includes('cart-ui')).toBe(false);
-    expect(returnScript.includes('cart-status')).toBe(true);
-    expect(returnScript.includes('application/checkout-return')).toBe(true);
+  test('la producción no interpreta un query param como confirmación de compra', () => {
+    const forbiddenSignals = [
+      'kb_checkout',
+      'CHECKOUT_RETURN_COMPLETED',
+      'CHECKOUT_RETURN_CANCELLED',
+      'CHECKOUT_RETURN_PARAM',
+      'parseCheckoutReturn',
+      'getCheckoutReturnNotice',
+      'CheckoutReturnKind',
+    ];
+    const forbiddenCopy = [
+      'gracias por tu compra',
+      'has vuelto del checkout',
+    ];
+    const forbiddenImports = /commerce\/checkout-return/;
+    const violations = sourceFiles.flatMap((path) => {
+      const source = readFileSync(path, 'utf8');
+      const lower = source.toLowerCase();
+      const hits = [
+        ...forbiddenSignals.filter((needle) => source.includes(needle)),
+        ...forbiddenCopy.filter((needle) => lower.includes(needle)),
+      ];
+      if (forbiddenImports.test(source)) hits.push('commerce/checkout-return');
+      return hits.map((hit) => `${sourcePath(path)}: ${hit}`);
+    });
+    expect(violations).toEqual([]);
+    expect(existsSync(join(sourceRoot, 'commerce/application/checkout-return.ts'))).toBe(false);
+    expect(existsSync(join(sourceRoot, 'scripts/commerce/checkout-return.ts'))).toBe(false);
+
+    const cartPage = readFileSync(join(sourceRoot, 'pages/carrito.astro'), 'utf8');
+    expect(cartPage).toContain('data-cart-page-status');
+    expect(cartPage).not.toMatch(/location\.search|kb_checkout|checkout-return/);
+
+    const architecture = readFileSync(join(root, 'docs/ARCHITECTURE.md'), 'utf8');
+    expect(architecture).toContain('Astro no renderiza una confirmación post-pago');
   });
 
   test('la presentación de comercio no consume campos de respuestas externas ni datos administrativos', () => {
@@ -294,7 +320,8 @@ describe('límites de arquitectura', () => {
     expect(readiness).toContain('exactamente tres imágenes únicas');
     expect(readiness).toContain('MODELO_COLOR_01');
     expect(readiness).toContain('ProductVariant.image');
-    expect(readiness).toContain('no necesita coincidir');
+    expect(readiness).toContain('debe corresponder a esa portada');
+    expect(readiness).not.toContain('no necesita coincidir');
     expect(readiness).toContain('familia nativa');
     expect(readiness).toContain('no reparte `Product.images` por posición');
     expect(readiness).toContain('nunca copia media de otro producto');
@@ -609,8 +636,11 @@ describe('límites de arquitectura', () => {
     expect(mapper).not.toMatch(/::native-color::/);
     expect(mapper).toContain('imageFamilyNamesColor');
     expect(mapper).not.toContain('rebalanceColorGalleries');
-    expect(mapper).toContain('requireCompleteColorGalleries');
-    expect(runtimeQuery).toContain('requireCompleteColorGalleries: false');
+    expect(mapper).not.toContain('requireCompleteColorGalleries');
+    expect(mapper).not.toContain('firstVariantImageByColor');
+    expect(mapper).not.toMatch(/expectedColorImageId\s*\?\?\s*actualImageId/);
+    expect(runtimeQuery).not.toContain('requireCompleteColorGalleries');
+    expect(runtimeQuery).toContain('requireCommercialSku: false');
     expect(mapper).not.toMatch(/new URL\([^)]*\)\.pathname/);
     expect(mapper).toMatch(/decodeURIComponent\(/);
     expect(readiness).toContain('MODELO_COLOR_01');
@@ -675,6 +705,8 @@ describe('límites de arquitectura', () => {
     expect(cartFields).not.toContain('key: "primary_collection"');
     expect(cartFields).toContain('namespace: "kingbelt", key: "model_reference"');
     expect(cartFields).not.toMatch(/collections\s*\(/);
+    expect(cartFields).not.toContain('featuredImage');
+    expect(cartFields).toMatch(/image\s*\{\s*\$\{IMAGE_FIELDS\}\s*\}/);
   });
 
   test('el runtime de catálogo no descarga el catálogo Shopify completo', () => {

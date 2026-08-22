@@ -43,7 +43,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin)
     showContactCta={false}
   >
     <Prose variant="document">
-      <LegalSection id="proceso" title="Proceso de desistimiento">
+      <LegalSection id="proceso" title="Proceso de desistimiento" documentStatus={doc.status}>
         <p>
           El consumidor dispone de un plazo para ejercer el derecho de desistimiento conforme a la normativa de consumo aplicable.
           Este formulario permitirá comunicar la decisión de desistir de forma inequívoca cuando el ecommerce esté operativo.
@@ -53,22 +53,22 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin)
         </p>
       </LegalSection>
 
-      <LegalSection id="datos-pedido" title="Datos del pedido">
+      <LegalSection id="datos-pedido" title="Datos del pedido" documentStatus={doc.status}>
         <p>Se solicitará: número de pedido, fecha de compra y productos afectados.</p>
       </LegalSection>
 
-      <LegalSection id="identificacion" title="Identificación del cliente">
+      <LegalSection id="identificacion" title="Identificación del cliente" documentStatus={doc.status}>
         <p>Se solicitará: nombre completo y email de contacto asociado al pedido.</p>
       </LegalSection>
 
-      <LegalSection id="declaracion" title="Declaración inequívoca">
+      <LegalSection id="declaracion" title="Declaración inequívoca" documentStatus={doc.status}>
         <p>
           El formulario incluirá una declaración explícita de la voluntad de desistir del contrato,
           conforme al modelo previsto en la normativa de consumo.
         </p>
       </LegalSection>
 
-      <LegalSection id="confirmacion" title="Confirmación">
+      <LegalSection id="confirmacion" title="Confirmación" documentStatus={doc.status}>
         <p>
           Tras el envío, se mostrará un acuse de recibo y se enviará confirmación por el canal configurado.
           Actualmente no existe endpoint ni envío de email.

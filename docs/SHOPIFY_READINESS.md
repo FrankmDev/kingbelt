@@ -10,7 +10,7 @@ La Storefront API está fijada en `2026-07` y usa exclusivamente el token privad
 
 Los adaptadores demo y Shopify pasan por `assertValidCatalog()` antes de exponer datos. Las respuestas externas quedan confinadas a `infrastructure/shopify/`; páginas y componentes no conocen tipos de Shopify.
 
-La auditoría real del 21 de agosto de 2026 confirma `cdn.shopify.com` como host exacto de imágenes y que `Product.images` ya contiene una familia propia por color con la convención `MODELO_COLOR_01/02/03`. Esa media nativa es la única autoridad de galerías. El preflight exige una sola familia y exactamente tres imágenes únicas numeradas por cada valor de Color. El runtime puede servir temporalmente una familia incompleta o, si el nombre no es resoluble, una imagen de variante que pertenezca exactamente a `Product.images`; nunca incorpora archivos externos ni reparte imágenes por posición. `ProductVariant.image` es opcional para construir la galería y no necesita coincidir con su portada. Los metafields `kingbelt.*` de copy y especificaciones pueden caer a campos nativos si aún no están visibles en Storefront. No se inventa material, ancho ni copy comercial. Un fallo transitorio de obtención sin catálogo previo no se renderiza; con uno válido, se sirve el último conocido (stale-if-error). Un error de mapping o validación falla cerrado, no usa stale y no omite el producto del listado.
+La auditoría real del 21 de agosto de 2026 confirma `cdn.shopify.com` como host exacto de imágenes y que `Product.images` ya contiene una familia propia por color con la convención `MODELO_COLOR_01/02/03`. Esa media nativa es la única autoridad de galerías. Preflight y runtime exigen una sola familia y exactamente tres imágenes únicas numeradas por cada valor de Color; nunca incorporan archivos externos ni reparten imágenes por posición. `ProductVariant.image` de todas las tallas de un Color debe corresponder a la portada (`COLOR_01`); el mapper no sustituye una imagen incorrecta o ausente. Los metafields `kingbelt.*` de copy y especificaciones pueden caer a campos nativos si aún no están visibles en Storefront. No se inventa material, ancho ni copy comercial. Un fallo transitorio de obtención sin catálogo previo no se renderiza; con uno válido, se sirve el último conocido (stale-if-error). Un error de mapping o validación falla cerrado, no usa stale y no omite el producto del listado.
 
 ## 2. Arquitectura objetivo
 
@@ -85,9 +85,9 @@ Para activarlo:
 | `quantityRule` | mínimo e incremento obligatorios; máximo opcional | `quantityRule`; inicialmente solo 1/1 es compatible |
 | título y cuerpo | título y descripción obligatorios, texto saneado | `title` y `description` |
 | SEO nativo | título/description opcionales | `seo`; fallback determinista a título y resumen, sin inventar copy |
-| `Product.images` | con Color: una familia nativa `MODELO_COLOR_01/02/03` por valor; preflight exige exactamente tres imágenes únicas; sin Color: `mediaGroups = []` y portada de `featuredImage` | `images`, `primaryImageId`, `mediaGroups` e `imageId` de variante |
+| `Product.images` | con Color: una familia nativa `MODELO_COLOR_01/02/03` por valor; preflight y runtime exigen exactamente tres imágenes únicas; `ProductVariant.image` debe ser `COLOR_01` en todas las tallas; sin Color: `mediaGroups = []` y portada de `featuredImage` | `images`, `primaryImageId`, `mediaGroups` e `imageId` de variante |
 
-`reference`, `summary`, `badge`, material, ancho y hebilla/acabado se resuelven con los metafields `kingbelt.*` cuando están publicados para Storefront. Si aún no lo están, el importador usa campos nativos: `handle` como referencia, `description` nativa, título de colección si falta descripción y título de producto como `alt`. El catálogo completo y `shopify:preflight` exigen `ProductVariant.sku` comercial no vacío. La ficha runtime usa un identificador técnico estable derivado del GID de variante cuando falta; no se presenta como SKU comercial, se omite de JSON-LD y no hace pasar el preflight. El prefijo `shopify-variant-` está reservado para evitar colisiones con SKU comerciales. Para Color, el preflight valida las familias de filename de `Product.images`; el runtime usa exclusivamente media del mismo producto. No se inventa copy comercial, material ni medidas. No se importa coste, margen, tags administrativos ni HTML sin sanear.
+`reference`, `summary`, `badge`, material, ancho y hebilla/acabado se resuelven con los metafields `kingbelt.*` cuando están publicados para Storefront. Si aún no lo están, el importador usa campos nativos: `handle` como referencia, `description` nativa, título de colección si falta descripción y título de producto como `alt`. El catálogo completo y `shopify:preflight` exigen `ProductVariant.sku` comercial no vacío. La ficha runtime usa un identificador técnico estable derivado del GID de variante cuando falta; no se presenta como SKU comercial, se omite de JSON-LD y no hace pasar el preflight. El prefijo `shopify-variant-` está reservado para evitar colisiones con SKU comerciales. Para Color, preflight y runtime validan las mismas familias de filename de `Product.images` y exigen cardinalidad 01/02/03. No se inventa copy comercial, material ni medidas. No se importa coste, margen, tags administrativos ni HTML sin sanear.
 
 ### 8.1 Metafields y galerías nativas
 
@@ -111,7 +111,7 @@ MODELO_COLOR_02.jpg  → detalle
 MODELO_COLOR_03.jpg  → contexto
 ```
 
-La extensión puede ser JPG, PNG, WebP, AVIF o GIF y Shopify puede añadir un UUID después del número. El nombre se normaliza sin tildes, mayúsculas ni separadores; el color debe ocupar el sufijo completo de la familia para que `Cuero` no coincida con `Cuero oscuro`. El preflight rechaza familias ausentes, duplicadas, ambiguas, incompletas o con una secuencia distinta de `01/02/03`.
+La extensión puede ser JPG, PNG, WebP, AVIF o GIF y Shopify puede añadir un UUID después del número. El nombre se normaliza sin tildes, mayúsculas ni separadores; el color debe ocupar el sufijo completo de la familia para que `Cuero` no coincida con `Cuero oscuro`. Preflight y runtime rechazan familias ausentes, duplicadas, ambiguas, incompletas o con una secuencia distinta de `01/02/03`. Todas las tallas de un Color deben tener `ProductVariant.image` igual a `MODELO_COLOR_01`.
 
 Definición esperada de la colección principal (no se crea desde el frontend ni con Admin API):
 
@@ -158,9 +158,9 @@ Las categorías públicas se modelan como colecciones. Una colección destacada 
 
 ## 11. Estrategia inequívoca de imágenes
 
-`Product.images` es la única fuente autoritativa. Para cada valor de `Color`, el mapper busca exactamente una familia cuyo nombre termine en el color normalizado y la ordena por sufijo numérico. El preflight exige exactamente tres imágenes únicas `01`, `02` y `03`; `01` se convierte en la portada interna del color. `ProductVariant.image` no necesita coincidir con esa portada y puede estar ausente: Shopify la define como una asociación de variante, no como autoridad de nuestra galería personalizada. El mapper conserva el ID de imagen legítimo si llega, pero proyecta `ProductVariant.imageId` a la portada resuelta de su color para mantener un dominio interno coherente.
+`Product.images` es la única fuente autoritativa. Para cada valor de `Color`, el mapper busca exactamente una familia cuyo nombre termine en el color normalizado y la ordena por sufijo numérico. Preflight y runtime exigen exactamente tres imágenes únicas `01`, `02` y `03`; `01` se convierte en la portada del color. `ProductVariant.image` de todas las variantes de ese color debe corresponder a esa portada. El mapper compara `Image.id` de la misma consulta de producto y no sustituye una imagen incorrecta o ausente por la portada inferida. Un mismatch o una variante de Color sin imagen falla cerrado. El Cart usa únicamente `merchandise.image` (`ProductVariant.image`); no hay segundo fallback a `product.featuredImage`.
 
-La ficha no reparte `Product.images` por posición, orden global ni huecos entre portadas y nunca copia media de otro producto. En runtime, una familia inequívoca puede mostrarse aunque esté temporalmente incompleta; si no existe una familia nombrada, solo puede usarse la imagen de variante cuando coincide por ID o URL absoluta con una imagen del mismo producto. Si no hay relación segura, falla cerrado. Un producto sin opción Color conserva `mediaGroups = []` y su imagen principal sale de `featuredImage`. Cada archivo debe tener un GID Shopify de imagen estructuralmente válido, URL permitida, `alt` no vacío y dimensiones positivas conocidas. Los metaobjects heredados de galería no se consultan y nunca pueden incorporar media de otro producto.
+La ficha no reparte `Product.images` por posición, orden global ni huecos entre portadas y nunca copia media de otro producto. Una familia ausente, ambigua, incompleta o con secuencia distinta de `01/02/03` hace fallar el producto en preflight y en la ficha. Un producto sin opción Color conserva `mediaGroups = []` y su imagen principal sale de `featuredImage`. Cada archivo debe tener un GID Shopify de imagen estructuralmente válido, URL permitida, `alt` no vacío y dimensiones positivas conocidas. Los metaobjects heredados de galería no se consultan y nunca pueden incorporar media de otro producto.
 
 ## 12. Filtros
 
@@ -207,7 +207,7 @@ Checklist operativo por cada producto del manifiesto:
 - [ ] Precio correcto.
 - [ ] Opciones Color/Talla correctas.
 - [ ] Si tiene Color: una única familia nativa `MODELO_COLOR_01/02/03` por valor.
-- [ ] `Variant image` opcionalmente configurada para Shopify; no necesita coincidir con la portada interna.
+- [ ] Si tiene Color: todas las variantes de cada color tienen `ProductVariant.image` igual a la portada `COLOR_01`.
 - [ ] Galerías contienen exactamente 3 MediaImage.
 - [ ] Producto puede resolverse mediante su handle.
 
@@ -251,7 +251,7 @@ KingBelt no inspecciona si el usuario está autenticado en Customer Accounts (`i
 
 Customer Account es opcional: el frontend no exige login para añadir al carrito, ver el carrito ni ir a checkout.
 
-Checkout, Thank You y Order Status los sirve Shopify desde `checkoutUrl`. No hay `SHOPIFY_CHECKOUT_URL` ni páginas Astro equivalentes. El gate Admin —incluidas Thank You / Order Status no-legacy— está en [`SHOPIFY_LAUNCH_OPERATIONS.md`](SHOPIFY_LAUNCH_OPERATIONS.md).
+Checkout, Thank You y Order Status los sirve Shopify desde `checkoutUrl`. No hay `SHOPIFY_CHECKOUT_URL` ni páginas Astro equivalentes. Astro no confirma compras: un query param en `/carrito` no prueba un pedido. El gate Admin —incluidas Thank You / Order Status no-legacy— está en [`SHOPIFY_LAUNCH_OPERATIONS.md`](SHOPIFY_LAUNCH_OPERATIONS.md).
 
 La arquitectura de Customer Account API con BFF y sesión propia sigue documentada en [`plans/2026-08-06-shopify-customer-accounts-design.md`](plans/2026-08-06-shopify-customer-accounts-design.md) como opción **post-lanzamiento**, no como requisito de esta integración hosted.
 
@@ -301,17 +301,17 @@ La paginación es una preocupación interna del adaptador de importación, no de
 
 La normalización vive en `catalog-mappers.ts` y no conoce página ni componente:
 
-- `MoneyV2 { amount, currencyCode }` → `moneyFromDecimal(amount, currencyCode)`; nunca aritmética de coma flotante.
+- `MoneyV2 { amount, currencyCode }` → `moneyFromDecimal(amount, currencyCode)`; nunca aritmética de coma flotante. `Money` admite 0; el precio comercial de variante no (`ProductVariant.price`, `ProductSummary.priceRange.min`, `CartLineCost.amountPerQuantity`). Un total 0 tras descuento no se rechaza. Product, ProductSummary y Cart fallan cerrado; el preflight bloquea el catálogo.
 - IDs opacos `gid://shopify/...` → `productId()` / `variantId()` tal cual.
 - `options` → `ProductOption`; `purpose` solo cuando el nombre coincide con los conocidos (Color→color, Talla/Tamaño→size). `swatch` solo si el origen lo expone.
 - `selectedOptions` de variante → `OptionSelection[]` contra valores existentes; las combinaciones no declaradas no producen variante (§5).
 - Inventario y política según §9.1: `availableForSale`, `currentlyNotInStock`, `quantityAvailable` (cuando esté autorizado) y `quantityRule { minimum, increment, maximum }` → `inventory`, `inventoryPolicy`, `salesStatus` y `quantityRule`. Un mínimo/incremento distinto de 1/1 falla explícitamente hasta que todas las capas amplíen su política.
-- Imágenes: una sola vez en `Product.images`. Con opción Color, el catálogo completo y preflight exigen una familia nativa `MODELO_COLOR_01/02/03` por valor; la ficha runtime solo utiliza media propia segura (§11). `primaryImageId` y `variant.imageId` apuntan a la portada resuelta de su color. Sin opción Color, `mediaGroups = []` y la imagen principal sale de `featuredImage`. El host real `cdn.shopify.com` está autorizado de forma exacta en `imagePolicy.transformableHosts`, `publicSecurityConfig.remoteImageHosts` y CSP; no se usan comodines. El render aplica `width`/`height`, `srcset`, `sizes` y `loading`/`fetchpriority` sin JavaScript de cliente.
+- Imágenes: una sola vez en `Product.images`. Con opción Color, el catálogo completo, el preflight y la ficha runtime exigen una familia nativa `MODELO_COLOR_01/02/03` por valor (§11). `primaryImageId` es la portada del primer color; `variant.imageId` conserva el `ProductVariant.image` real, validado contra esa portada cuando hay Color. Sin opción Color, `mediaGroups = []` y la imagen principal sale de `featuredImage`. El host real `cdn.shopify.com` está autorizado de forma exacta en `imagePolicy.transformableHosts`, `publicSecurityConfig.remoteImageHosts` y CSP; no se usan comodines. El render aplica `width`/`height`, `srcset`, `sizes` y `loading`/`fetchpriority` sin JavaScript de cliente.
 - `descriptionHtml` se sanea a texto plano antes de usarse en ficha y meta.
 
 ### 17.5 Validación antes del uso
 
-Tras normalizar el catálogo completo, el adaptador ejecuta `assertValidCatalog()` con las monedas de `SHOPIFY_MARKET_CONTEXT` (`EUR`): la misma frontera que ya ejecuta la demo. Un `CatalogValidationError` no hace fallar `bun run build`: el build es una compilación reproducible y no consulta Shopify. En runtime, cada `ProductSummary` se valida antes de exponerse; un producto inválido hace fallar el recurso y no se elimina del listado. Mapping y validación son fail-closed y no sirven stale; un fallo transitorio del proveedor puede reutilizar la última respuesta válida del mismo recurso (stale-if-error). La barrera previa al deploy es `bun run shopify:preflight`: primero comprueba la localización activa de Storefront y, solo si España / español / EUR coinciden, carga el catálogo real bajo el mismo `@inContext(country: ES, language: ES)`, exige el manifiesto exacto, lo mapea y exige que `assertValidCatalog()` pase. En carrito, `CartErrorCode` de `userErrors` se traduce a `CartOperationErrorCode` y `CartWarningCode` a avisos de dominio; nunca se clasifican errores o warnings buscando palabras en `message` (§9.1).
+Tras normalizar el catálogo completo, el adaptador ejecuta `assertValidCatalog()` con las monedas de `SHOPIFY_MARKET_CONTEXT` (`EUR`): la misma frontera que ya ejecuta la demo, incluida la política de precio comercial estrictamente positivo. Un `CatalogValidationError` no hace fallar `bun run build`: el build es una compilación reproducible y no consulta Shopify. En runtime, cada `ProductSummary` se valida antes de exponerse; un producto inválido hace fallar el recurso y no se elimina del listado. Mapping y validación son fail-closed y no sirven stale; un fallo transitorio del proveedor puede reutilizar la última respuesta válida del mismo recurso (stale-if-error). La barrera previa al deploy es `bun run shopify:preflight`: primero comprueba la localización activa de Storefront y, solo si España / español / EUR coinciden, carga el catálogo real bajo el mismo `@inContext(country: ES, language: ES)`, exige el manifiesto exacto, lo mapea y exige que `assertValidCatalog()` pase. En carrito, `CartErrorCode` de `userErrors` se traduce a `CartOperationErrorCode` y `CartWarningCode` a avisos de dominio; nunca se clasifican errores o warnings buscando palabras en `message` (§9.1).
 
 ### 17.6 Respuestas parciales
 
@@ -389,8 +389,10 @@ Barreras. Ninguna sustituye a las otras.
 
 1. `bun run shopify:preflight` — Storefront: config, auth, market ES / ES / EUR, manifiesto y mapping. No certifica envío, impuestos, pagos ni emails.
 2. `bun run shopify:cart-smoke` — deployment real + BFF `/api/cart` + Cart API hasta `checkoutUrl`. No certifica pago ni Order.
-3. `bun run shopify:release-gate` — orquesta validate + session + preflight + cart smoke + HTTP del deployment. Si pasa: `AUTOMATED PRE-PAYMENT GATE: PASSED` y `PAYMENT QA READINESS: BLOCKED`. No certifica Admin ni pagos.
+3. `bun run shopify:release-gate` — orquesta validate + legal:preflight + session + preflight + cart smoke + HTTP del deployment. Si pasa: `AUTOMATED PRE-PAYMENT GATE: PASSED` y `PAYMENT QA READINESS: BLOCKED`. No certifica Admin ni pagos.
 4. [`SHOPIFY_LAUNCH_OPERATIONS.md`](SHOPIFY_LAUNCH_OPERATIONS.md) — Shopify Admin: checkout, cuentas, envío, tax, pagos, notificaciones, fulfillment, políticas, Thank You / Order Status.
 5. Pedido de prueba (después) — tarifa, tax, pago, pedido, email e inventario.
 
-`bun run validate` = código. `bun run session:preflight` = Upstash. `bun run shopify:cart-smoke` = carrito real sin pedido. `bun run shopify:release-gate` = gate único pre-pagos. Sin flags `*_READY` y sin Admin API.
+`bun run validate` = código. `bun run legal:preflight` = hechos y documentos legales versionados (fail-closed; sin red ni Admin API). Es obligatorio antes de Payment QA / live. Un FAIL por información pendiente requiere verificación manual y actualización de `src/config/business.ts` y `src/content/legal.ts`. No desactivar el gate. `bun run session:preflight` = Upstash. `bun run shopify:cart-smoke` = carrito real sin pedido. `bun run shopify:release-gate` = gate único pre-pagos, incluye legal readiness porque Payment QA no debe seguir con documentos draft. Sin flags `*_READY` y sin Admin API.
+
+`launch:preflight` = `legal:preflight` + `session:preflight` + `shopify:preflight`.

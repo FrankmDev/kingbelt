@@ -21,6 +21,7 @@ import {
 import {
   COLORS,
   SHOPIFY_COLOR_GALLERIES_METAFIELD,
+  colorImages,
   pageInfo,
   productSummaryNode,
   sportCollection,
@@ -107,6 +108,19 @@ describe('consultas runtime Shopify por recurso', () => {
     expect(product?.mediaGroups).toHaveLength(COLORS.length);
     expect(product?.mediaGroups.every((group) => group.imageIds.length === 3)).toBe(true);
     expect(gateway.calls[0].query).not.toContain('color_galleries');
+  });
+
+  test('getProductByHandle rechaza una familia nativa incompleta', async () => {
+    const payload = validPayload();
+    payload.products[0].images.nodes = payload.products[0].images.nodes.filter((item) =>
+      !item.id.endsWith('/cuero-3')
+    );
+    const gateway = createRecordingGateway((query) => {
+      if (query.includes('KingBeltProductByHandle')) return { product: payload.products[0] };
+      throw new Error(`consulta inesperada: ${query.slice(0, 80)}`);
+    });
+    await expect(createShopifyCatalogQueries(gateway, HOSTS).getProductByHandle('cinturon-atlas'))
+      .rejects.toThrow('exactamente 3 imágenes únicas numeradas 01, 02 y 03');
   });
 
   test('getProductByHandle pagina variantes e imágenes del producto solicitado', async () => {
@@ -273,6 +287,37 @@ describe('consultas runtime Shopify por recurso', () => {
       .rejects.toMatchObject({
         name: 'ShopifyCatalogMappingError',
         message: expect.stringContaining('cinturon-roto.title'),
+      });
+  });
+
+  test('getProductSummaries rechaza un precio mínimo 0 y no omite el producto', async () => {
+    const payload = validPayload();
+    const zeroPrice = productSummaryNode(payload.products[0]);
+    zeroPrice.priceRange.minVariantPrice = { amount: '0.00', currencyCode: 'EUR' };
+    const gateway = createRecordingGateway((query) => {
+      if (query.includes('KingBeltProductSummariesPage')) {
+        return {
+          products: {
+            nodes: [
+              zeroPrice,
+              extraSummary(payload, {
+                id: 'gid://shopify/Product/3',
+                handle: 'cinturon-gamma',
+                title: 'Gamma',
+              }),
+            ],
+            pageInfo,
+          },
+        };
+      }
+      throw new Error(`consulta inesperada: ${query.slice(0, 80)}`);
+    });
+    await expect(createShopifyCatalogQueries(gateway, HOSTS).getProductSummaries())
+      .rejects.toMatchObject({
+        name: 'CatalogValidationError',
+        issues: expect.arrayContaining([
+          expect.objectContaining({ code: 'non_positive_variant_price' }),
+        ]),
       });
   });
 

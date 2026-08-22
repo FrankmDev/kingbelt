@@ -4,24 +4,15 @@ import Header from '../components/layout/Header.astro';
 import Footer from '../components/layout/Footer.astro';
 import PageHeader from '../components/ui/PageHeader.astro';
 import LegalPageLayout from '../components/legal/LegalPageLayout.astro';
-import LegalSection from '../components/legal/LegalSection.astro';
+import LegalDocumentView from '../components/legal/LegalDocumentView.astro';
+import LegalBlocks from '../components/legal/LegalBlocks.astro';
 import Prose from '../components/ui/Prose.astro';
 import { getLegalRobots, legalDocuments, legalPages } from '@content/legal';
-import { confirmed, businessFacts } from '@config/business';
-import { site } from '@config/site';
+import { condicionesBody } from '@content/legal-bodies';
 
 const doc = legalDocuments.condiciones;
 const page = legalPages.condiciones;
 const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href;
-const email = confirmed(businessFacts.email) ?? site.contact.email;
-const completedSectionIds = new Set([
-  'objeto',
-  'productos',
-  'proceso-compra',
-  'idioma',
-  'atencion',
-  'propiedad-intelectual',
-]);
 ---
 
 <BaseLayout
@@ -47,48 +38,12 @@ const completedSectionIds = new Set([
   </PageHeader>
 
   <LegalPageLayout document={doc} section={page.section}>
-    <Prose variant="document">
-      {doc.sections.map((section) => (
-        <LegalSection
-          id={section.id}
-          title={section.title}
-          pending={!completedSectionIds.has(section.id)}
-        >
-          {section.id === 'objeto' && (
-            <p>
-              Estas condiciones regulan la compra de productos a través del sitio web de KingBelt.
-              El documento definitivo se publicará antes de la activación del ecommerce.
-            </p>
-          )}
-          {section.id === 'productos' && (
-            <p>
-              Antes de activar la venta, cada ficha deberá indicar de forma clara las características
-              esenciales de la referencia. Este contenido se revisará junto con la información
-              precontractual definitiva.
-            </p>
-          )}
-          {section.id === 'proceso-compra' && (
-            <p>
-              El proceso de compra incluirá la selección de producto, revisión del carrito y acceso al checkout externo
-              cuando Shopify esté configurado. Hasta entonces, el carrito local es solo de demostración.
-            </p>
-          )}
-          {section.id === 'idioma' && (
-            <p>El contrato se formalizará en español, que será el idioma de referencia.</p>
-          )}
-          {section.id === 'atencion' && (
-            <p>
-              Para atención al cliente: <a href={`mailto:${email}`}>{email}</a>.
-            </p>
-          )}
-          {section.id === 'propiedad-intelectual' && (
-            <p>
-              Todo el contenido del sitio y de los productos está protegido por derechos de propiedad intelectual e industrial.
-            </p>
-          )}
-        </LegalSection>
-      ))}
-    </Prose>
+    {condicionesBody.intro && (
+      <Prose slot="intro" variant="document">
+        <LegalBlocks blocks={condicionesBody.intro} />
+      </Prose>
+    )}
+    <LegalDocumentView documentKey="condiciones" />
   </LegalPageLayout>
 
   <Footer slot="footer" connected />

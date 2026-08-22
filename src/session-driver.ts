@@ -3,15 +3,13 @@ import fsLiteDriver from 'unstorage/drivers/fs-lite';
 import upstashDriver from 'unstorage/drivers/upstash';
 import {
   LOCAL_SESSION_PATH,
+  SESSION_COOKIE_NAME,
   SESSION_STORE_PREFIX,
   SESSION_TTL_SECONDS,
   resolveUpstashSessionCredentials,
 } from './session-storage-config';
 
-/** Cookie opaca de sesión. El prefijo `__Host-` exige Secure, Path=/ y ausencia de Domain. */
-export const SESSION_COOKIE_NAME = '__Host-kingbelt-session';
-
-export { SESSION_STORE_PREFIX, SESSION_TTL_SECONDS };
+export { SESSION_COOKIE_NAME, SESSION_STORE_PREFIX, SESSION_TTL_SECONDS };
 
 export const sessionDriverConfig = {
   entrypoint: new URL(import.meta.url),

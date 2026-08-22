@@ -45,7 +45,6 @@ const merchandise = (id) => ({
         title: 'Sport',
       },
     },
-    featuredImage: null,
   },
 });
 

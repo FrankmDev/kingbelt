@@ -10,21 +10,22 @@ No guardar en Git: capturas de Payments, IBAN, VAT ID, KYC, direcciones personal
 
 | Comando / doc | Cubre | No cubre |
 | --- | --- | --- |
-| `bun run validate` | Código | Shopify Admin |
+| `bun run validate` | Código | Shopify Admin, legal data |
+| `bun run legal:preflight` | Hechos y documentos legales versionados | Shopify Admin, textos de políticas Admin |
 | `bun run session:preflight` | Upstash | Catálogo, checkout |
 | `bun run shopify:preflight` | Storefront + catálogo + market ES | Envío, impuestos, pagos, emails |
 | `bun run shopify:cart-smoke` | Deployment real + Cart API + `checkoutUrl` | Pago, Order, Admin API |
-| `bun run shopify:release-gate` | Orquesta validate + session + Shopify + cart smoke + HTTP del deployment | Pago, Order, Admin API, promoción |
+| `bun run shopify:release-gate` | Orquesta validate + legal + session + Shopify + cart smoke + HTTP del deployment | Pago, Order, Admin API, promoción |
 | Este documento | Admin: checkout → pedido | Un pedido de prueba |
 | Pedido de prueba *(después)* | Tarifa, tax, pago, pedido, email, inventario | — |
 
-`shopify:release-gate` ya engloba A/B/C/E + comprobaciones HTTP. Los comandos individuales siguen documentados para diagnosticar un fallo. No promociona, no hace rollback y no crea pedidos. Si los gates automáticos pasan, imprime `AUTOMATED PRE-PAYMENT GATE: PASSED` y `PAYMENT QA READINESS: BLOCKED`. No declara READY FOR PAYMENT QA: Shipping, Taxes, Payment provider, Notifications, Fulfillment y Thank You / Order Status se confirman a mano en este runbook.
+`shopify:release-gate` ya engloba validate + legal:preflight + session + Shopify + cart smoke + comprobaciones HTTP. `legal:preflight` FAIL por datos pendientes es blocker: no se desactiva. Los comandos individuales siguen documentados para diagnosticar un fallo. No promociona, no hace rollback y no crea pedidos. Si los gates automáticos pasan, imprime `AUTOMATED PRE-PAYMENT GATE: PASSED` y `PAYMENT QA READINESS: BLOCKED`. No declara READY FOR PAYMENT QA: Shipping, Taxes, Payment provider, Notifications, Fulfillment y Thank You / Order Status se confirman a mano en este runbook. Astro policy content must be reconciled with Shopify Admin before Payment QA.
 
 ## Código (ya garantizado)
 
 No sustituye Admin. Sin checkboxes: no es trabajo de tienda.
 
-- Sin checkout, pago, thank-you ni order-status en Astro.
+- Sin checkout, pago, thank-you ni order-status en Astro. Un query param en `/carrito` no confirma un pedido.
 - Salida única: `Cart.checkoutUrl` → `getSafeCheckoutUrl()` → `window.location.assign`. Sin `SHOPIFY_CHECKOUT_URL`, sin query `country`/`currency`/`locale`/`cartId`, sin iframe.
 - Customer Accounts: CTA «Mi cuenta» (desktop y móvil) → `/cuenta/iniciar`. En Shopify: 307 a `SHOPIFY_CUSTOMER_ACCOUNT_URL`. Si falta o es inválida: CTA desactivado y la ruta responde 503 `Cache-Control: no-store`. Nunca panel demo. Preflight estructural; sin `fetch`, OTP ni Admin API.
 - Guest checkout en frontend: sin login para add-to-cart, carrito ni checkout.
@@ -64,6 +65,7 @@ No forma parte de `bun run validate`, del job `quality` ni de `shopify:preflight
 ### Launch sequence
 
 A. CODE — `bun run validate` (`COMMERCE_SOURCE=demo`)
+A2. LEGAL — `bun run legal:preflight`
 B. STORAGE — `bun run session:preflight`
 C. SHOPIFY DATA — `COMMERCE_SOURCE=shopify bun run shopify:preflight`
 D. DEPLOY CANDIDATE — deployment HTTPS real
@@ -371,7 +373,7 @@ Configurarlas en Shopify Checkout. No inyectarlas desde Astro.
 - [ ] Privacidad, devoluciones/reembolsos, términos, envío e información legal requeridas.
 - [ ] Coherentes con las páginas KingBelt. Dos versiones contradictorias = MANUAL BLOCKER.
 
-**MANUAL BLOCKER actual:** `/aviso-legal`, `/privacidad`, `/cookies`, `/condiciones`, `/envios-y-devoluciones` están `draft`. `shippingCosts`, `deliveryTime`, `freeShipping` están `pending`. No hay copy público de envío gratuito ni 24/48 h. Completar y alinear con Admin antes de publicar.
+**MANUAL BLOCKER actual:** `shopifyPolicyReconciliation` — las políticas Astro deben alinearse a mano con Shopify Admin antes de Payment QA. `bun run legal:preflight` puede pasar el contrato versionado del repositorio; no declara coincidencia con Admin. SHOPIFY POLICY CONTENT REQUIRED MANUALLY.
 
 Web «gratis» + Checkout que cobra, o web «24/48 h» + operación que no puede, es BLOCKER.
 

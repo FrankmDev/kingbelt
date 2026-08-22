@@ -4,6 +4,7 @@ import { createCartService, emptyCart } from '../src/commerce/application/cart-s
 import { filterProductSummaries, getCollectionFacets, matchesCatalogSelection, matchesPriceRange, normalizeFilterValue, parseCatalogFilterParams, serializeCatalogFilterParams, toFilterableProduct, COLLECTION_PRICE_RANGES } from '../src/commerce/domain/catalog-filters.ts';
 import {
   assertValidCatalog,
+  assertValidProductSummary,
   CatalogValidationError,
   SHOPIFY_MAX_PRODUCT_OPTIONS,
   SHOPIFY_MAX_PRODUCT_VARIANTS,
@@ -22,7 +23,8 @@ import {
   readPersistedCart,
 } from '../src/commerce/infrastructure/demo/cart-storage.ts';
 import { getVariantAvailability } from '../src/commerce/domain/inventory.ts';
-import { moneyFromDecimal, moneyFromMajor, moneyToDecimal, multiplyMoney, sumMoney } from '../src/commerce/domain/money.ts';
+import { isCommercialVariantPrice } from '../src/commerce/domain/commerce-rules.ts';
+import { moneyFromDecimal, moneyFromMajor, moneyToDecimal, multiplyMoney, sumMoney, zeroMoney } from '../src/commerce/domain/money.ts';
 import { getProductGalleryImages, getVariantGallery, getVariantImage, getColorGalleries } from '../src/commerce/domain/product-media.ts';
 import { toCollectionReference, toProductSummary } from '../src/commerce/domain/product-mappers.ts';
 import {
@@ -176,6 +178,10 @@ describe('dinero y precios', () => {
     expect(moneyFromDecimal('1.234', 'BHD')).toEqual({ amountMinor: 1_234, currency: 'BHD' });
     expect(moneyToDecimal({ amountMinor: 1_234, currency: 'BHD' })).toBe('1.234');
     expect(() => moneyFromDecimal('10.001')).toThrow();
+    expect(moneyFromDecimal('0.00', 'EUR')).toEqual({ amountMinor: 0, currency: 'EUR' });
+    expect(zeroMoney()).toEqual({ amountMinor: 0, currency: 'EUR' });
+    expect(isCommercialVariantPrice(0)).toBe(false);
+    expect(isCommercialVariantPrice(1)).toBe(true);
     expect(() => moneyFromMajor(Number.MAX_SAFE_INTEGER)).toThrow();
     expect(() => multiplyMoney({ amountMinor: Number.MAX_SAFE_INTEGER, currency: 'EUR' }, 2)).toThrow();
     expect(() => sumMoney([
@@ -626,6 +632,62 @@ describe('validación exhaustiva de catálogo', () => {
       'invalid_product_category',
     ]));
     expect(validateCatalog([], []).map((entry) => entry.code)).toEqual(['empty_catalog', 'empty_catalog']);
+  });
+
+  test('precio 0 invalida cualquier variante publicada, también unavailable', () => {
+    for (const salesStatus of ['active', 'unavailable']) {
+      const product = structuredClone(asymmetricProduct);
+      product.variants[0].price = { amountMinor: 0, currency: 'EUR' };
+      product.variants[0].salesStatus = salesStatus;
+      const issues = validateCatalog([product], [collection]);
+      expect(issues).toEqual(expect.arrayContaining([
+        expect.objectContaining({
+          code: 'non_positive_variant_price',
+          path: 'products[0].variants[0].price',
+        }),
+      ]));
+      expect(issues.map((entry) => entry.code)).not.toContain('invalid_money');
+    }
+  });
+
+  test('una unidad mínima de moneda es un precio comercial válido', () => {
+    const product = structuredClone(asymmetricProduct);
+    product.variants[0].price = { amountMinor: 1, currency: 'EUR' };
+    expect(validateCatalog([product], [collection]).map((entry) => entry.code))
+      .not.toContain('non_positive_variant_price');
+  });
+});
+
+describe('precio comercial de ProductSummary', () => {
+  const expectCommercialPriceFailure = (summary) => {
+    try {
+      assertValidProductSummary(summary);
+      throw new Error('expected CatalogValidationError');
+    } catch (error) {
+      expect(error).toBeInstanceOf(CatalogValidationError);
+      expect(error.issues).toEqual(expect.arrayContaining([
+        expect.objectContaining({
+          code: 'non_positive_variant_price',
+          path: expect.stringMatching(/priceRange\.min$/),
+        }),
+      ]));
+    }
+  };
+
+  test('un precio mínimo 0 invalida la tarjeta, también si no es purchasable', () => {
+    const base = toProductSummary(asymmetricProduct, collectionRef);
+    const zeroMin = { ...base, priceRange: { min: { amountMinor: 0, currency: 'EUR' }, max: { amountMinor: 8_900, currency: 'EUR' } } };
+    expectCommercialPriceFailure(zeroMin);
+    expectCommercialPriceFailure({
+      ...base,
+      priceRange: { min: { amountMinor: 0, currency: 'EUR' }, max: { amountMinor: 0, currency: 'EUR' } },
+    });
+    expectCommercialPriceFailure({ ...zeroMin, purchasable: false });
+
+    expect(() => assertValidProductSummary({
+      ...base,
+      priceRange: { min: { amountMinor: 1, currency: 'EUR' }, max: { amountMinor: 1, currency: 'EUR' } },
+    })).not.toThrow();
   });
 });
 

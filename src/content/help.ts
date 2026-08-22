@@ -1,3 +1,4 @@
+import { legalDocuments, type DocumentStatus } from './legal';
 import type { FAQItem } from './faq';
 import type { IconName } from '../components/ui/icon-paths';
 
@@ -9,7 +10,14 @@ interface HelpNavItem {
   icon?: IconName;
 }
 
-export const helpNavItems: HelpNavItem[] = [
+const isPublishedStatus = (status: DocumentStatus): boolean => status === 'published';
+
+const isPublishedLegalHref = (href: string): boolean => {
+  const document = Object.values(legalDocuments).find((item) => item.href === href);
+  return !document || isPublishedStatus(document.status);
+};
+
+const allHelpNavItems: HelpNavItem[] = [
   {
     label: 'Guía de tallas',
     href: '/guia-de-tallas',
@@ -18,11 +26,18 @@ export const helpNavItems: HelpNavItem[] = [
     icon: 'ruler',
   },
   {
-    label: 'Envíos y devoluciones',
+    label: 'Envíos',
     href: '/envios-y-devoluciones',
-    description: 'Políticas de envío, cambios y devoluciones cuando estén confirmadas.',
+    description: 'Plazos, seguimiento e incidencias de los pedidos.',
     priority: 'primary',
     icon: 'truck',
+  },
+  {
+    label: 'Devoluciones',
+    href: '/devoluciones',
+    description: 'Plazo de 30 días, desistimiento, gastos de devolución y reembolsos.',
+    priority: 'secondary',
+    icon: 'rotate-ccw',
   },
   {
     label: 'Cuidados',
@@ -47,13 +62,16 @@ export const helpNavItems: HelpNavItem[] = [
   },
 ];
 
+export const helpNavItems = allHelpNavItems.filter((item) => isPublishedLegalHref(item.href));
+
 export const helpFooterNav = [
   { label: 'Centro de ayuda', href: '/ayuda' },
   { label: 'Guía de tallas', href: '/guia-de-tallas' },
   { label: 'Cuidados', href: '/cuidados' },
-  { label: 'Envíos y devoluciones', href: '/envios-y-devoluciones' },
+  { label: 'Envíos', href: '/envios-y-devoluciones' },
+  { label: 'Devoluciones', href: '/devoluciones' },
   { label: 'Contacto', href: '/contacto' },
-] as const;
+].filter((item) => isPublishedLegalHref(item.href));
 
 export const sizeGuideMethods = [
   {
@@ -228,7 +246,7 @@ export const helpHub = {
         label: 'Después de comprar',
         title: 'Envíos, cambios y atención',
         text:
-          'Revisa políticas de envío y devoluciones cuando estén publicadas. Para consultas concretas, escríbenos desde contacto.',
+          'Consulta plazos, seguimiento e incidencias en la política de envíos. Las devoluciones y el desistimiento están en su propia página.',
       },
     ],
   },
@@ -364,9 +382,9 @@ export const carePage = {
 export const shippingPage = {
   hero: {
     eyebrow: 'Ayuda',
-    title: 'Envíos y cambios, <em>cuando estén confirmados</em>.',
+    title: 'Preparación, transporte y <em>entrega</em>.',
     description:
-      'Política de envío, cambios y devoluciones. Pendiente de validación por la empresa.',
+      'Condiciones de envío, plazos, seguimiento e incidencias de los pedidos KingBelt.',
     image: '/images/brand/cinturones-en-taller.jpg',
     imageAlt: 'Persona sujetando varios cinturones de cuero en un taller',
     imagePosition: 'center 48%',
@@ -375,10 +393,9 @@ export const shippingPage = {
   section: {
     index: '01',
     eyebrow: 'Documento',
-    meta: 'Borrador',
-    title: 'Lo que cubrirá esta política.',
-    body:
-      'Zonas, costes, seguimiento, cambios y desistimiento. Cada apartado se completará cuando la empresa confirme los datos.',
+    meta: 'Vigente',
+    title: 'Cómo llega el pedido.',
+    body: 'Zonas, gastos, plazos, seguimiento y qué ocurre si hay una incidencia en el transporte.',
   },
 } as const;
 
@@ -403,10 +420,10 @@ export const helpMeta = {
     indexable: true,
   },
   shipping: {
-    title: 'Envíos y devoluciones — KingBelt',
+    title: 'Política de envíos — KingBelt',
     description:
-      'Información sobre envíos, cambios y devoluciones. Documento pendiente de validación por la empresa.',
-    indexable: false,
+      'Preparación, expedición, plazos, seguimiento e incidencias de los pedidos realizados en KingBelt.',
+    indexable: true,
   },
 } as const;
 

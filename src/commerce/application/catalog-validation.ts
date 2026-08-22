@@ -5,6 +5,7 @@ import {
   type ProductImage,
   type ProductSummary,
 } from '../domain/catalog';
+import { isCommercialVariantPrice } from '../domain/commerce-rules';
 import type {
   CurrencyCode,
   Money,
@@ -124,6 +125,24 @@ const validateMoney = (
     issue(issues, 'invalid_currency', `${path}.currency`, 'La moneda debe ser un código ISO 4217 de tres letras mayúsculas.');
   } else if (!supported.has(money.currency)) {
     issue(issues, 'unsupported_currency', `${path}.currency`, `Moneda no soportada: ${money.currency}.`);
+  }
+};
+
+const validateVariantUnitPrice = (
+  money: Money,
+  path: string,
+  supported: ReadonlySet<CurrencyCode>,
+  issues: CatalogValidationIssue[]
+) => {
+  validateMoney(money, path, supported, issues);
+  if (!Number.isSafeInteger(money.amountMinor) || money.amountMinor < 0) return;
+  if (!isCommercialVariantPrice(money.amountMinor)) {
+    issue(
+      issues,
+      'non_positive_variant_price',
+      path,
+      'Una variante comercial de KingBelt debe tener un precio superior a cero.'
+    );
   }
 };
 
@@ -452,7 +471,7 @@ export const validateCatalog = (
       }
       combinations.add(combination);
 
-      validateMoney(variant.price, `${variantPath}.price`, supported, issues);
+      validateVariantUnitPrice(variant.price, `${variantPath}.price`, supported, issues);
       productCurrencies.add(variant.price.currency);
       if (variant.compareAtPrice) {
         validateMoney(variant.compareAtPrice, `${variantPath}.compareAtPrice`, supported, issues);
@@ -658,7 +677,7 @@ export const assertValidProductSummary = (
   if (product.primaryImage) {
     validateImage(product.primaryImage, `${path}.primaryImage`, issues, allowedRemoteImageHosts);
   }
-  validateMoney(product.priceRange.min, `${path}.priceRange.min`, supported, issues);
+  validateVariantUnitPrice(product.priceRange.min, `${path}.priceRange.min`, supported, issues);
   validateMoney(product.priceRange.max, `${path}.priceRange.max`, supported, issues);
   if (product.priceRange.min.currency !== product.priceRange.max.currency) {
     issue(issues, 'mixed_product_currencies', `${path}.priceRange`, 'El rango de precio debe usar una sola moneda.');

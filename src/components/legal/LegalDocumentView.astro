@@ -1,0 +1,41 @@
+---
+import LegalSection from './LegalSection.astro';
+import LegalBlocks from './LegalBlocks.astro';
+import Prose from '../ui/Prose.astro';
+import { legalDocuments, type LegalDocumentKey } from '@content/legal';
+import { legalBodies } from '@content/legal-bodies';
+import { getCompletedLegalSectionIds } from '@config/legal-readiness';
+
+interface Props {
+  documentKey: keyof typeof legalBodies;
+}
+
+const { documentKey } = Astro.props;
+const doc = legalDocuments[documentKey as LegalDocumentKey];
+const body = legalBodies[documentKey];
+const completed = getCompletedLegalSectionIds(documentKey);
+
+const missing = doc.sections.filter((section) => !body.sections[section.id]);
+if (missing.length > 0) {
+  throw new Error(
+    `Legal body for "${documentKey}" is missing sections: ${missing.map((section) => section.id).join(', ')}`
+  );
+}
+
+if (doc.status === 'published') {
+  const pending = doc.sections.filter((section) => !completed.has(section.id));
+  if (pending.length > 0) {
+    throw new Error(
+      `Published legal document "${documentKey}" has pending sections: ${pending.map((section) => section.id).join(', ')}`
+    );
+  }
+}
+---
+
+<Prose variant="document">
+  {doc.sections.map((section) => (
+    <LegalSection id={section.id} title={section.title} documentStatus={doc.status}>
+      <LegalBlocks blocks={body.sections[section.id]} />
+    </LegalSection>
+  ))}
+</Prose>

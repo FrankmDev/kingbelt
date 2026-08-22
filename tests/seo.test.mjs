@@ -266,7 +266,7 @@ describe('sitemap y redirecciones', () => {
     expect(isSitemapExcluded('/cart-catalog.json')).toBe(true);
     expect(isSitemapExcluded('/cuenta/iniciar')).toBe(true);
     expect(isSitemapExcluded('/guia-de-tallas')).toBe(true);
-    expect(isSitemapExcluded('/aviso-legal')).toBe(true);
+    expect(isSitemapExcluded('/aviso-legal')).toBe(false);
     expect(isSitemapExcluded('/')).toBe(false);
     expect(isSitemapExcluded('/productos')).toBe(false);
     expect(isSitemapExcluded('/productos/cinturon-bandera')).toBe(false);

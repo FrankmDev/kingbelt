@@ -102,12 +102,6 @@ const cartSchema = {
   <Footer slot="footer" connected />
 </BaseLayout>
 
-<script>
-  if (new URLSearchParams(location.search).has('kb_checkout')) {
-    void import('@scripts/commerce/checkout-return');
-  }
-</script>
-
 <style>
   .cart-page {
     padding-top: clamp(5.5rem, 14vw, 9.5rem);

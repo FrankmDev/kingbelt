@@ -142,6 +142,7 @@ describe('orquestación del release gate', () => {
     });
     expect(io.commands.map((item) => item.script)).toEqual([
       'validate',
+      'legal:preflight',
       'session:preflight',
       'shopify:preflight',
       'shopify:cart-smoke',
@@ -150,6 +151,7 @@ describe('orquestación del release gate', () => {
     expect(io.commands[1].env.COMMERCE_SOURCE).toBe('shopify');
     expect(io.commands[2].env.COMMERCE_SOURCE).toBe('shopify');
     expect(io.commands[3].env.COMMERCE_SOURCE).toBe('shopify');
+    expect(io.commands[4].env.COMMERCE_SOURCE).toBe('shopify');
   });
 
   test('validate usa demo aunque el entorno exterior sea shopify', async () => {
@@ -170,6 +172,21 @@ describe('orquestación del release gate', () => {
     expect(io.commands.map((item) => item.script)).toEqual(['validate']);
   });
 
+  test('si legal preflight falla no ejecuta session ni Shopify', async () => {
+    const io = passingIO({
+      runCommand(input) {
+        io.commands.push(input);
+        return { status: input.script === 'legal:preflight' ? 1 : 0 };
+      },
+    });
+    await expectRejected(
+      () => runReleaseGate(validEnv(), io),
+      'legal:preflight',
+      'command exited with status 1'
+    );
+    expect(io.commands.map((item) => item.script)).toEqual(['validate', 'legal:preflight']);
+  });
+
   test('si session preflight falla no ejecuta Shopify preflight', async () => {
     const io = passingIO({
       runCommand(input) {
@@ -182,7 +199,11 @@ describe('orquestación del release gate', () => {
       'session:preflight',
       'command exited with status 1'
     );
-    expect(io.commands.map((item) => item.script)).toEqual(['validate', 'session:preflight']);
+    expect(io.commands.map((item) => item.script)).toEqual([
+      'validate',
+      'legal:preflight',
+      'session:preflight',
+    ]);
   });
 
   test('si Shopify preflight falla no ejecuta cart smoke', async () => {
@@ -199,6 +220,7 @@ describe('orquestación del release gate', () => {
     );
     expect(io.commands.map((item) => item.script)).toEqual([
       'validate',
+      'legal:preflight',
       'session:preflight',
       'shopify:preflight',
     ]);
@@ -415,6 +437,7 @@ describe('contrato del comando shopify:release-gate', () => {
 
     expect(RELEASE_GATE_COMMANDS.map((item) => item.script)).toEqual([
       'validate',
+      'legal:preflight',
       'session:preflight',
       'shopify:preflight',
       'shopify:cart-smoke',

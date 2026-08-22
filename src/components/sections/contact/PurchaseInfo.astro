@@ -23,6 +23,7 @@ interface ImageData {
 
 interface Props {
   id?: string;
+  index?: string;
   eyebrow: string;
   title: string;
   description: string;
@@ -35,6 +36,7 @@ interface Props {
 
 const {
   id = 'purchase-info',
+  index = '02',
   eyebrow,
   title,
   description,
@@ -56,7 +58,7 @@ const layerCount = items.length;
 >
   <div class="purchase-info__inner kb-shell-wide">
     <HomeSectionHead
-      index="02"
+      index={index}
       eyebrow={eyebrow}
       meta={badge ? badge.label : 'Tu compra'}
       titleId={titleId}

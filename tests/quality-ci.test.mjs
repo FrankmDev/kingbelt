@@ -74,6 +74,7 @@ describe('contrato de CI quality', () => {
     expect(source).not.toContain('shopify:release-gate');
     expect(source).not.toContain('shopify:preflight');
     expect(source).not.toContain('session:preflight');
+    expect(source).not.toContain('legal:preflight');
     expect(source).not.toContain('launch:preflight');
     expect(source).not.toMatch(/\$\{\{\s*secrets\./);
     expect(source).not.toMatch(/\b(?:shpat|shpca|shpss)_[A-Za-z0-9]{20,}\b/);
@@ -90,12 +91,16 @@ describe('contrato de CI quality', () => {
     expect(scripts.validate).not.toContain('shopify:release-gate');
     expect(scripts.validate).not.toContain('shopify:preflight');
     expect(scripts.validate).not.toContain('session:preflight');
+    expect(scripts.validate).not.toContain('legal:preflight');
     expect(scripts.validate).not.toContain('launch:preflight');
     expect(scripts['shopify:preflight']).toBe('bun scripts/shopify-preflight.mjs');
     expect(scripts['shopify:cart-smoke']).toBe('bun scripts/shopify-cart-smoke.mjs');
     expect(scripts['shopify:release-gate']).toBe('bun scripts/shopify-release-gate.mjs');
     expect(scripts['session:preflight']).toBe('bun scripts/session-preflight.mjs');
-    expect(scripts['launch:preflight']).toBe('bun run session:preflight && bun run shopify:preflight');
+    expect(scripts['legal:preflight']).toBe('bun scripts/legal-preflight.mjs');
+    expect(scripts['launch:preflight']).toBe(
+      'bun run legal:preflight && bun run session:preflight && bun run shopify:preflight'
+    );
     expect(scripts.validate).not.toContain('|| true');
     expect(scripts['audit:dependencies']).toBe('bun audit');
     expect(scripts['security:scan:history']).toContain('--history');

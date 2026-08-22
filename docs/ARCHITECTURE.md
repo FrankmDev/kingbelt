@@ -44,7 +44,7 @@ src/
     cart/         # cajón (drawer) y disparador; solo presentación
     help/         # layouts y componentes del centro de ayuda
     legal/        # layouts, avisos y formulario de desistimiento (inactivo)
-  config/                   # configuración global y hechos empresariales
+  config/                   # configuración global, hechos empresariales y legal readiness
   content/                  # datos editoriales tipados; no contiene integración
   demo-catalog.ts           # catálogo ficticio, fuera de los contratos de producción
   layouts/
@@ -131,7 +131,7 @@ Todo adaptador valida el catálogo normalizado antes de exponerlo. `assertValidC
 
 `Product`, `ProductVariant`, `ProductOption`, `ProductImage`, `Collection`, `Money`, `Cart` y `CartLine` son nombres de dominio. Interfaces y tipos usan `PascalCase`; funciones, valores y archivos usan `camelCase` y `kebab-case`; una implementación externa termina en `-adapter.ts`. No se usan barrels `index.ts`: cada import declara su dependencia concreta.
 
-`Product` es el agregado canónico y no almacena precio mínimo/máximo, disponibilidad global, colores para grid, referencias expandidas de colección ni objetos de imagen dentro de variantes. Esos datos se derivan en `ProductSummary`, carrito y ficha mediante funciones puras. La pertenencia a colecciones vive solo en `Product.collectionIds`; `Collection` no mantiene una lista inversa de productos. `Product.primaryCollectionId` es un atributo comercial explícito: en Shopify proviene de `custom.kingbelt_primary_collection`. Preflight y runtime lo exigen siempre. No hay fallback a la única colección asignada ni a `collections[0]`. El orden de las colecciones del producto no es autoridad. `Product.images` es la única autoridad de galerías: por cada valor de Color, el preflight exige una familia `MODELO_COLOR_01/02/03` inequívoca y completa. El runtime puede degradar a una familia parcial o a una imagen de variante que pertenezca al mismo producto, pero nunca reparte imágenes por posición ni consulta metaobjects de galería. `ProductVariant.image` no tiene que coincidir con la portada resuelta del color.
+`Product` es el agregado canónico y no almacena precio mínimo/máximo, disponibilidad global, colores para grid, referencias expandidas de colección ni objetos de imagen dentro de variantes. Esos datos se derivan en `ProductSummary`, carrito y ficha mediante funciones puras. La pertenencia a colecciones vive solo en `Product.collectionIds`; `Collection` no mantiene una lista inversa de productos. `Product.primaryCollectionId` es un atributo comercial explícito: en Shopify proviene de `custom.kingbelt_primary_collection`. Preflight y runtime lo exigen siempre. No hay fallback a la única colección asignada ni a `collections[0]`. El orden de las colecciones del producto no es autoridad. `Product.images` es la única autoridad de galerías: por cada valor de Color, la familia `MODELO_COLOR_01/02/03` define el orden y la primera imagen es la portada. Preflight y runtime exigen esa familia inequívoca y completa. Nunca se reparten imágenes por posición ni se consultan metaobjects de galería. `ProductVariant.image` de todas las tallas de un Color debe corresponder a esa portada; el mapper no sustituye discrepancias y un mismatch falla cerrado.
 
 Una variante selecciona IDs de valores de opción existentes. El inventario es una unión explícita `known` | `unknown`, separada de `inventoryPolicy` (`deny` | `continue`), `salesStatus` y la regla `quantityRule` (`minimum`, `increment`, `maximum?`) declarada por el origen. La disponibilidad se deriva exclusivamente con `getVariantAvailability()`: una variante agotada continúa existiendo, una combinación no declarada no produce variante, una variante eliminada deja de resolverse y la venta sin stock solo ocurre con política `continue`.
 
@@ -139,7 +139,7 @@ El límite efectivo de una línea conserva su motivo: inventario, máximo comerc
 
 La reconciliación vuelve a resolver cada línea desde el catálogo autoritativo. Si el stock conocido disminuye pero sigue siendo positivo, reduce la cantidad y deja un aviso no impeditivo; si llega a cero o la variante deja de estar disponible, conserva la línea con error para que la persona decida retirarla. Una variante que ya no existe se retira con aviso. Al pulsar checkout, el proveedor remoto reconcilia el Cart autoritativo en esa misma operación: cualquier error de línea impide continuar, mientras que `inventoryPolicy: 'continue'` mantiene el checkout permitido.
 
-Las imágenes viven una sola vez en `Product.images`. `primaryImageId`, `ProductVariant.imageId` y los grupos por valor de opción solo contienen referencias; los resolutores aplican fallback seguro cuando una asociación opcional no está presente. Los grids reciben `ProductSummary` y nunca el array de variantes.
+Las imágenes viven una sola vez en `Product.images`. `primaryImageId`, `ProductVariant.imageId` y los grupos por valor de opción solo contienen referencias. Con Color, `ProductVariant.imageId` es la imagen real del proveedor ya validada contra la portada; sin Color, se usa `ProductVariant.image` si existe. Los grids reciben `ProductSummary` y nunca el array de variantes.
 
 ### Filtros, selección y paginación de catálogo
 
@@ -149,7 +149,7 @@ Los rangos de precio son declarativos y disjuntos (`COLLECTION_PRICE_RANGES`), c
 
 El controlador revela la primera página (por defecto 24) con «Mostrar más» y mantiene ocultas las tarjetas fuera de la ventana para aligerar el coste de render. El grid SSR conserva todas las tarjetas para SEO y funcionamiento sin JavaScript, con `content-visibility` para colecciones grandes. Al conectar Shopify, el adaptador traducirá `CatalogFilterSelection` a sus filtros y devolverá `CollectionPage` (productos y facets) ya filtrado y paginado; los componentes y su contrato no cambian.
 
-Los importes usan unidades mínimas y un código ISO 4217; las conversiones respetan la precisión de la moneda. El tipo `Money` es genérico, pero el despliegue actual valida exclusivamente `EUR`. En Shopify, país, idioma y moneda operativos (`ES` / `ES` / `EUR`) viven en `SHOPIFY_MARKET_CONTEXT`: el catálogo consulta Storefront con `@inContext` y el carrito crea con `buyerIdentity.countryCode`. No se infieren de hostname, `Accept-Language` ni geolocalización IP.
+Los importes usan unidades mínimas y un código ISO 4217; las conversiones respetan la precisión de la moneda. `Money` admite 0; KingBelt no admite ese 0 como precio comercial de variante. Full Product, ProductSummary y Shopify Cart fallan cerrado, y `shopify:preflight` bloquea ese catálogo. El despliegue actual valida exclusivamente `EUR`. En Shopify, país, idioma y moneda operativos (`ES` / `ES` / `EUR`) viven en `SHOPIFY_MARKET_CONTEXT`: el catálogo consulta Storefront con `@inContext` y el carrito crea con `buyerIdentity.countryCode`. No se infieren de hostname, `Accept-Language` ni geolocalización IP.
 
 Dirección permitida:
 
@@ -193,7 +193,7 @@ Los scripts interactivos dentro de `src/` deben mantenerse procesados por Astro 
 
 Mantén datos editoriales en `src/content/`, configuración en `src/config/` y datos ficticios en `src/demo-catalog.ts`. Ninguno sustituye contratos de producción ni debe contener transformación propia de un adaptador.
 
-No se crea una carpeta de autenticación hasta que exista un caso de uso real. Cuando se implemente, tendrá contratos propios en aplicación y adaptadores en infraestructura; los componentes consumirán un estado neutral, nunca SDKs del proveedor. El checkout ya tiene contrato y validación en `commerce/application/checkout.ts`, pero el adaptador demo continúa devolviendo `unavailable` y no simula pagos. Envío, impuestos, pagos, Thank You y Order Status los cubre Shopify; el gate Admin es `docs/SHOPIFY_LAUNCH_OPERATIONS.md`.
+No se crea una carpeta de autenticación hasta que exista un caso de uso real. Cuando se implemente, tendrá contratos propios en aplicación y adaptadores en infraestructura; los componentes consumirán un estado neutral, nunca SDKs del proveedor. El checkout ya tiene contrato y validación en `commerce/application/checkout.ts`, pero el adaptador demo continúa devolviendo `unavailable` y no simula pagos. KingBelt inicia Shopify Checkout con `Cart.checkoutUrl`. Una compra real se confirma únicamente en Shopify Thank You y posteriormente en Shopify Order Status. Astro no renderiza una confirmación post-pago. El gate Admin es `docs/SHOPIFY_LAUNCH_OPERATIONS.md`.
 
 ## CSS y sistema global
 
@@ -245,7 +245,8 @@ Promueve un patrón a global o a componente cuando se repita con la misma intenc
 - `BaseLayout` acepta `robots`, `ogImageAlt` (vía `imageAlt`), `publishedAt` y `updatedAt`.
 - Sitemap: `@astrojs/sitemap` con filtro en `isSitemapExcluded()` (`src/config/sitemap.ts`). Excluye `/carrito`, `/cart-catalog.json` y `/cuenta/iniciar`.
 - `robots.txt`: endpoint en `src/pages/robots.txt.ts`; `Disallow` del snapshot de catálogo del carrito y de `/api/`.
-- Documentos legales en `draft` usan `noindex,follow` y quedan fuera del sitemap hasta publicación.
+- Documentos legales en `draft` o `inactive` usan `noindex` y quedan fuera del sitemap y del footer hasta `published`.
+- `bun run legal:preflight` es el gate fail-closed de hechos y documentos legales. No forma parte de `bun run validate`; `validate` sí ejecuta los tests del gate.
 - No añadas dependencias, hydration o JavaScript para resolver algo que Astro/CSS/HTML ya cubre.
 - Evita trabajo duplicado en cliente y assets desproporcionados para su tamaño visible.
 
@@ -260,7 +261,7 @@ Según el cambio, `bun run validate` agrupa sin duplicar:
 5. Inspección visual de móvil y escritorio para UI.
 6. Comprobación de overflow, focus, reduced motion, estados hover/active/disabled y contenido largo cuando apliquen.
 
-Un catálogo Shopify inválido no hace fallar `bun run build`. La barrera autenticada contra Storefront es `bun run shopify:preflight`, exclusiva de entornos confiables con `COMMERCE_SOURCE=shopify`. El preflight mapea todos los productos y agrupa hasta diez diagnósticos antes de fallar, de modo que una ejecución permita corregir varios registros; después mantiene la validación global para detectar colisiones entre productos. No forma parte del job `quality` de Pull Requests. El smoke autenticado de carrito es `bun run shopify:cart-smoke`: llama al BFF `/api/cart` de un deployment real hasta `checkoutUrl` y tampoco forma parte de `validate`. El orquestador pre-pagos es `bun run shopify:release-gate`: reutiliza `validate` (en demo), `session:preflight`, `shopify:preflight` y `shopify:cart-smoke`, y añade comprobaciones HTTP del deployment. No promueve, no paga y no crea un Order.
+Un catálogo Shopify inválido no hace fallar `bun run build`. La barrera autenticada contra Storefront es `bun run shopify:preflight`, exclusiva de entornos confiables con `COMMERCE_SOURCE=shopify`. El preflight mapea todos los productos y agrupa hasta diez diagnósticos antes de fallar, de modo que una ejecución permita corregir varios registros; después mantiene la validación global para detectar colisiones entre productos. No forma parte del job `quality` de Pull Requests. El smoke autenticado de carrito es `bun run shopify:cart-smoke`: llama al BFF `/api/cart` de un deployment real hasta `checkoutUrl` y tampoco forma parte de `validate`. El orquestador pre-pagos es `bun run shopify:release-gate`: reutiliza `validate` (en demo), `legal:preflight`, `session:preflight`, `shopify:preflight` y `shopify:cart-smoke`, y añade comprobaciones HTTP del deployment. No promueve, no paga y no crea un Order. `legal:preflight` FAIL por datos pendientes es un blocker real: no se desactiva el gate.
 
 No declares completada una tarea si el check relevante falla por tus cambios. Distingue claramente errores previos del proyecto.
 

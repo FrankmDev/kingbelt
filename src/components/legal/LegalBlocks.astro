@@ -1,0 +1,203 @@
+---
+import type { LegalBlock, LegalInline } from '@content/legal-bodies';
+
+interface Props {
+  blocks: readonly LegalBlock[];
+}
+
+const { blocks } = Astro.props;
+
+const isExternal = (part: Exclude<LegalInline, string>) =>
+  part.external || /^https?:/i.test(part.href);
+---
+
+{
+  blocks.map((block) => {
+    switch (block.type) {
+      case 'p':
+        return (
+          <p>
+            {block.children.map((part) =>
+              typeof part === 'string' ? (
+                part
+              ) : (
+                <a
+                  href={part.href}
+                  target={isExternal(part) ? '_blank' : undefined}
+                  rel={isExternal(part) ? 'noopener noreferrer' : undefined}
+                >
+                  {part.label}
+                </a>
+              )
+            )}
+          </p>
+        );
+      case 'ul':
+        return (
+          <ul>
+            {block.items.map((item) => (
+              <li>
+                {item.map((part) =>
+                  typeof part === 'string' ? (
+                    part
+                  ) : (
+                    <a
+                      href={part.href}
+                      target={isExternal(part) ? '_blank' : undefined}
+                      rel={isExternal(part) ? 'noopener noreferrer' : undefined}
+                    >
+                      {part.label}
+                    </a>
+                  )
+                )}
+              </li>
+            ))}
+          </ul>
+        );
+      case 'h3':
+        return <h3>{block.text}</h3>;
+      case 'address':
+        return (
+          <address>
+            {block.lines.map((line) => (
+              <>
+                {line}
+                <br />
+              </>
+            ))}
+          </address>
+        );
+      case 'dl':
+        return (
+          <dl class="legal-blocks__dl">
+            {block.items.map((item) => (
+              <div class="legal-blocks__dl-item">
+                <dt>{item.term}</dt>
+                <dd>{item.description}</dd>
+              </div>
+            ))}
+          </dl>
+        );
+      case 'table':
+        return (
+          <div class="legal-blocks__table-wrap">
+            <table class="legal-blocks__table">
+              {block.caption && <caption class="sr-only">{block.caption}</caption>}
+              <thead>
+                <tr>
+                  {block.headers.map((header) => (
+                    <th scope="col">{header}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {block.rows.map((row) => (
+                  <tr>
+                    {row.map((cell, index) =>
+                      index === 0 ? <th scope="row">{cell}</th> : <td>{cell}</td>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        );
+      case 'template':
+        return (
+          <div class="legal-blocks__template kb-reading-panel">
+            {block.lines.map((line) => (
+              <p>{line}</p>
+            ))}
+          </div>
+        );
+    }
+  })
+}
+
+<style>
+  address {
+    display: block;
+    font-style: normal;
+    color: var(--color-king-text);
+    line-height: 1.7;
+  }
+
+  .legal-blocks__dl {
+    margin: 0;
+    display: grid;
+    gap: var(--kb-space-4);
+  }
+
+  .legal-blocks__dl-item {
+    display: grid;
+    gap: 0.35rem;
+    padding-block: 0.15rem;
+  }
+
+  .legal-blocks__dl-item dt {
+    font-size: var(--kb-text-2xs);
+    font-weight: var(--kb-w-medium);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-king-accent);
+  }
+
+  .legal-blocks__dl-item dd {
+    margin: 0;
+    color: var(--color-king-muted);
+  }
+
+  .legal-blocks__template:global(.kb-reading-panel) {
+    margin-top: var(--kb-space-4);
+    padding-block: var(--kb-space-5);
+  }
+
+  .legal-blocks__template p {
+    margin: 0;
+    color: var(--color-king-text);
+  }
+
+  .legal-blocks__template p + p {
+    margin-top: 0.85em;
+  }
+
+  .legal-blocks__table-wrap {
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    margin: 1.25rem 0;
+    border-top: 1px solid var(--kb-stroke-hairline);
+  }
+
+  .legal-blocks__table {
+    width: 100%;
+    min-width: 36rem;
+    border-collapse: collapse;
+    font-size: var(--kb-text-2xs);
+  }
+
+  .legal-blocks__table th,
+  .legal-blocks__table td {
+    padding: 0.85rem 0.9rem;
+    text-align: left;
+    border-bottom: 1px solid var(--kb-stroke-hairline);
+    vertical-align: top;
+  }
+
+  .legal-blocks__table thead th {
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-king-muted);
+    background: var(--color-king-surface);
+  }
+
+  .legal-blocks__table tbody th {
+    font-family: var(--font-display);
+    font-weight: var(--kb-w-medium);
+    color: var(--color-king-text);
+  }
+
+  .legal-blocks__table tbody td {
+    color: var(--color-king-muted);
+  }
+</style>

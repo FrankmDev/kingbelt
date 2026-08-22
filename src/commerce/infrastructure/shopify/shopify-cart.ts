@@ -62,7 +62,6 @@ const CART_FIELDS = `
                   ... on Collection { id handle title }
                 }
               }
-              featuredImage { ${IMAGE_FIELDS} }
             }
           }
         }

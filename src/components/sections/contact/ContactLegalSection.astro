@@ -1,0 +1,66 @@
+---
+import SectionHeaderHome from '../home/SectionHeaderHome.astro';
+import LegalSection from '../../legal/LegalSection.astro';
+import LegalBlocks from '../../legal/LegalBlocks.astro';
+import Prose from '../../ui/Prose.astro';
+import { contactLegalBody } from '@content/legal-bodies';
+import { businessFacts, confirmed } from '@config/business';
+
+const legalName = confirmed(businessFacts.legalName);
+
+const sections = [
+  { id: 'datos', title: 'Datos de contacto' },
+  { id: 'pedidos', title: 'Consultas sobre pedidos' },
+  { id: 'devoluciones', title: 'Devoluciones y reembolsos' },
+  { id: 'defectuosos', title: 'Productos dañados, incorrectos o defectuosos' },
+  { id: 'proteccion-datos', title: 'Protección de datos' },
+  { id: 'empresarial', title: 'Información empresarial' },
+] as const;
+---
+
+<section class="contact-legal" aria-labelledby="contact-legal-title">
+  <div class="contact-legal__inner kb-shell-wide">
+    <SectionHeaderHome
+      index="02"
+      eyebrow="Información de contacto"
+      meta={legalName}
+      titleId="contact-legal-title"
+      body="Datos de la empresa, pedidos, devoluciones y el canal para ejercer derechos sobre tus datos."
+    >
+      <Fragment slot="title">Cómo contactar con Kingbelt.</Fragment>
+    </SectionHeaderHome>
+
+    {contactLegalBody.intro && (
+      <div class="contact-legal__intro">
+        <Prose variant="document">
+          <LegalBlocks blocks={contactLegalBody.intro} />
+        </Prose>
+      </div>
+    )}
+
+    <Prose variant="document" class="contact-legal__document">
+      {sections.map((section) => (
+        <LegalSection id={section.id} title={section.title}>
+          <LegalBlocks blocks={contactLegalBody.sections[section.id]} />
+        </LegalSection>
+      ))}
+    </Prose>
+  </div>
+</section>
+
+<style>
+  .contact-legal {
+    padding-block: var(--kb-space-section);
+    background: var(--color-king-bg);
+    border-top: 1px solid var(--kb-stroke-hairline);
+  }
+
+  .contact-legal__intro {
+    margin: var(--kb-space-5) 0 var(--kb-space-gap);
+    max-width: var(--kb-shell-copy);
+  }
+
+  .contact-legal__document:global(.kb-prose) {
+    margin-inline: 0;
+  }
+</style>

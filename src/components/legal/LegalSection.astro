@@ -1,13 +1,20 @@
 ---
+import type { DocumentStatus } from '@content/legal';
+
 interface Props {
   id: string;
   title: string;
   pending?: boolean;
+  documentStatus?: DocumentStatus;
 }
 
-const { id, title, pending: pendingProp } = Astro.props;
+const { id, title, pending: pendingProp, documentStatus } = Astro.props;
 const hasContent = Astro.slots.has('default');
 const pending = pendingProp ?? !hasContent;
+
+if (pending && documentStatus === 'published') {
+  throw new Error(`Published legal document cannot render pending section "${id}".`);
+}
 ---
 
 <section id={id} class="legal-section">
@@ -60,7 +67,16 @@ const pending = pendingProp ?? !hasContent;
     background: var(--color-king-surface);
   }
 
-  .legal-section__body :global(p:first-child) {
+  .legal-section__body :global(p:first-child),
+  .legal-section__body :global(address:first-child),
+  .legal-section__body :global(ul:first-child),
+  .legal-section__body :global(dl:first-child) {
     margin-top: 0;
+  }
+
+  .legal-section__body :global(h3) {
+    font-size: var(--kb-text-h5);
+    margin-top: 1.5em;
+    margin-bottom: 0.4em;
   }
 </style>

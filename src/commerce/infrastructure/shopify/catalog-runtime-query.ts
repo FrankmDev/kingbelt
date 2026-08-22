@@ -34,7 +34,6 @@ type GatewaySource = ShopifyStorefrontGateway | (() => ShopifyStorefrontGateway)
 
 const RUNTIME_PRODUCT_MAP = {
   requireCommercialSku: false,
-  requireCompleteColorGalleries: false,
 } as const;
 
 interface HandleNode {

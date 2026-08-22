@@ -16,6 +16,7 @@ import {
   TECHNICAL_LINE_QUANTITY_LIMIT,
   type LineAvailability,
 } from '../../domain/inventory';
+import { isCommercialVariantPrice } from '../../domain/commerce-rules';
 import { moneyFromDecimal } from '../../domain/money';
 import { isAllowedImageUrl } from '../../domain/url-policy';
 import { publicSecurityConfig } from '../../../config/security';
@@ -63,7 +64,6 @@ export interface ShopifyCartMerchandise {
         title?: string;
       } | null;
     } | null;
-    featuredImage?: ShopifyCartImage | null;
   };
 }
 
@@ -328,8 +328,10 @@ const mapUserErrors = (errors: readonly ShopifyCartUserError[]): CartOperationMe
 const shopifyImageAlt = (image: ShopifyCartImage): string =>
   image.altText?.trim() || 'Producto KingBelt';
 
-const toCartImage = (image: ShopifyCartImage | null | undefined) => {
-  if (!image) return undefined;
+const toCartImageRequired = (image: ShopifyCartImage | null | undefined) => {
+  if (!image) {
+    throw new Error('Shopify cart line merchandise.image is missing.');
+  }
   const id = requiredShopifyImageGid(image.id, 'line.merchandise.image.id');
   const url = requiredText(image.url, 'line.merchandise.image.url');
   if (!isAllowedImageUrl(url, publicSecurityConfig.remoteImageHosts)) {
@@ -385,11 +387,18 @@ const mapShopifyCartLine = (line: ShopifyCartLine): CartLine => {
   if (new Set(selectedOptions.map((selection) => selection.name.toLocaleLowerCase('es'))).size !== selectedOptions.length) {
     throw new Error('Shopify cart selectedOptions contains duplicate options.');
   }
-  const image = toCartImage(merchandise.image ?? merchandise.product.featuredImage);
+  const image = toCartImageRequired(merchandise.image);
   const reference = merchandise.product.modelReference?.value == null
     ? handle
     : requiredText(merchandise.product.modelReference.value, 'line.merchandise.product.modelReference.value');
   const collection = primaryCollectionTitle(merchandise.product.primaryCollection);
+  const unitPrice = moneyFromDecimal(
+    line.cost.amountPerQuantity.amount,
+    line.cost.amountPerQuantity.currencyCode
+  );
+  if (!isCommercialVariantPrice(unitPrice.amountMinor)) {
+    throw new Error('Shopify cart line unit price is not a commercial KingBelt price.');
+  }
   return {
     id: lineId,
     variantId: variantId(merchandiseId),
@@ -399,11 +408,8 @@ const mapShopifyCartLine = (line: ShopifyCartLine): CartLine => {
       title,
       collection,
       reference,
-      unitPrice: moneyFromDecimal(
-        line.cost.amountPerQuantity.amount,
-        line.cost.amountPerQuantity.currencyCode
-      ),
-      ...(image ? { image } : {}),
+      unitPrice,
+      image,
       href: `/productos/${handle}`,
     },
     selectedOptions,

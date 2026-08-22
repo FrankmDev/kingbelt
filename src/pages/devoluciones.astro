@@ -8,10 +8,10 @@ import LegalDocumentView from '../components/legal/LegalDocumentView.astro';
 import LegalBlocks from '../components/legal/LegalBlocks.astro';
 import Prose from '../components/ui/Prose.astro';
 import { getLegalRobots, legalDocuments, legalPages } from '@content/legal';
-import { enviosBody } from '@content/legal-bodies';
+import { devolucionesBody } from '@content/legal-bodies';
 
-const doc = legalDocuments.envios;
-const page = legalPages.envios;
+const doc = legalDocuments.devoluciones;
+const page = legalPages.devoluciones;
 const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href;
 ---
 
@@ -38,12 +38,12 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin)
   </PageHeader>
 
   <LegalPageLayout document={doc} section={page.section} relatedNav="help" ctaIndex="02">
-    {enviosBody.intro && (
+    {devolucionesBody.intro && (
       <Prose slot="intro" variant="document">
-        <LegalBlocks blocks={enviosBody.intro} />
+        <LegalBlocks blocks={devolucionesBody.intro} />
       </Prose>
     )}
-    <LegalDocumentView documentKey="envios" />
+    <LegalDocumentView documentKey="devoluciones" />
   </LegalPageLayout>
 
   <Footer slot="footer" connected />

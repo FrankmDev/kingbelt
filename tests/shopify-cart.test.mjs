@@ -81,7 +81,6 @@ const merchandise = (id, {
     title: 'Cinturón de prueba',
     modelReference,
     primaryCollection,
-    featuredImage: null,
     ...(productType === undefined ? {} : { productType }),
   },
 });
@@ -570,6 +569,49 @@ describe('warnings de mutación', () => {
 });
 
 describe('disponibilidad real del ProductVariant en Cart', () => {
+  test('conserva ProductVariant.image y no la sustituye por featuredImage', () => {
+    const line = remoteLine(LINE_A, VARIANT_A, 1);
+    const variantImage = {
+      id: 'gid://shopify/ProductImage/variant-cover-a',
+      url: 'https://cdn.shopify.com/s/files/variant-cover-a.jpg',
+      width: 900,
+      height: 1200,
+      altText: 'Portada de variante',
+    };
+    line.merchandise.image = variantImage;
+    line.merchandise.product.featuredImage = {
+      id: 'gid://shopify/ProductImage/product-featured',
+      url: 'https://cdn.shopify.com/s/files/product-featured.jpg',
+      width: 800,
+      height: 1000,
+      altText: 'Portada de producto',
+    };
+    const cart = mapShopifyCart(remoteCart({ lines: [line] }));
+    expect(cart.lines[0].product.image).toEqual({
+      id: variantImage.id,
+      url: variantImage.url,
+      width: variantImage.width,
+      height: variantImage.height,
+      altText: variantImage.altText,
+    });
+    expect(cart.lines[0].product.image.id).not.toBe(line.merchandise.product.featuredImage.id);
+  });
+
+  test('una línea sin ProductVariant.image falla cerrado aunque exista featuredImage', () => {
+    const line = remoteLine(LINE_A, VARIANT_A, 1);
+    line.merchandise.image = null;
+    line.merchandise.product.featuredImage = {
+      id: 'gid://shopify/ProductImage/product-featured',
+      url: 'https://cdn.shopify.com/s/files/product-featured.jpg',
+      width: 800,
+      height: 1000,
+      altText: 'Portada de producto',
+    };
+    expect(() => mapShopifyCart(remoteCart({ lines: [line] }))).toThrow(
+      'merchandise.image is missing'
+    );
+  });
+
   test('acepta ImageSource como GID de Image devuelto por Storefront', () => {
     const line = remoteLine(LINE_A, VARIANT_A, 1);
     line.merchandise.image.id = 'gid://shopify/ImageSource/real-storefront-image-1';
@@ -671,6 +713,14 @@ describe('disponibilidad real del ProductVariant en Cart', () => {
     expect(cart.lines[0].product.reference).toBe('ATLAS-35');
     expect(cart.lines[0].product.collection).toBe('Sport');
     expect(cart.lines[0].product.collection).not.toBe('NO-DEBE-USARSE');
+  });
+
+  test('CART_FIELDS pide ProductVariant.image y no product.featuredImage', () => {
+    const source = readFileSync(join(root, 'src/commerce/infrastructure/shopify/shopify-cart.ts'), 'utf8');
+    const cartFields = source.match(/const CART_FIELDS = `([\s\S]*?)`;/)?.[1] ?? '';
+    expect(cartFields).toMatch(/image\s*\{\s*\$\{IMAGE_FIELDS\}\s*\}/);
+    expect(cartFields).not.toContain('featuredImage');
+    expect(cartFields).toContain('... on ProductVariant');
   });
 
   test('CART_FIELDS pide custom.kingbelt_primary_collection y no product.collections', () => {
@@ -1005,6 +1055,33 @@ describe('checkout preflight contra el Cart remoto', () => {
     await expect(result).rejects.toThrow('merchandise is missing');
   });
 
+  test('una línea sin ProductVariant.image impide checkout ready y no expone checkoutUrl', async () => {
+    const line = remoteLine(LINE_A, VARIANT_A, 1);
+    line.merchandise.image = null;
+    line.merchandise.product.featuredImage = {
+      id: 'gid://shopify/ProductImage/product-featured',
+      url: 'https://cdn.shopify.com/s/files/product-featured.jpg',
+      width: 800,
+      height: 1000,
+      altText: 'Portada de producto',
+    };
+    await expect(createShopifyCartService(createGateway({
+      get: () => ({ cart: remoteCart({ lines: [line] }) }),
+    }), checkoutHosts).checkout(CART_ID)).rejects.toThrow(
+      'merchandise.image is missing'
+    );
+  });
+
+  test('un precio unitario 0 impide checkout ready y no expone checkoutUrl', async () => {
+    const line = remoteLine(LINE_A, VARIANT_A, 1);
+    line.cost.amountPerQuantity = money('0.00');
+    await expect(createShopifyCartService(createGateway({
+      get: () => ({ cart: remoteCart({ lines: [line] }) }),
+    }), checkoutHosts).checkout(CART_ID)).rejects.toThrow(
+      'unit price is not a commercial KingBelt price'
+    );
+  });
+
   test('una quantityRule no soportada hace fallar la preparación de checkout', async () => {
     const result = createShopifyCartService(createGateway({
       get: () => ({
@@ -1240,6 +1317,25 @@ describe('contexto de mercado del carrito Shopify', () => {
     expect(cart.lines[0].availability.status).toBe('available');
     expect(cart.canCheckout).toBe(true);
     expect(cart.lineErrors).toEqual([]);
+  });
+
+  test('mapShopifyCart rechaza un precio unitario comercial de 0.00 EUR', () => {
+    const line = remoteLine(LINE_A, VARIANT_A, 1);
+    line.cost.amountPerQuantity = money('0.00');
+    line.cost.totalAmount = money('0.00');
+    expect(() => mapShopifyCart(remoteCart({ lines: [line] }))).toThrow(
+      'unit price is not a commercial KingBelt price'
+    );
+  });
+
+  test('un total de línea 0 con precio unitario positivo no se rechaza', () => {
+    const line = remoteLine(LINE_A, VARIANT_A, 1);
+    line.cost.amountPerQuantity = money('89.00');
+    line.cost.totalAmount = money('0.00');
+    const cart = mapShopifyCart(remoteCart({ lines: [line] }));
+    expect(cart.lines[0].product.unitPrice).toEqual({ amountMinor: 8_900, currency: 'EUR' });
+    expect(cart.lines[0].lineTotal).toEqual({ amountMinor: 0, currency: 'EUR' });
+    expect(cart.canCheckout).toBe(true);
   });
 });
 

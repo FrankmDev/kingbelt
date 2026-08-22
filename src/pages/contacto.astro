@@ -7,8 +7,10 @@ import ContactCollectionCtaSection from '../components/sections/contact/ContactC
 import ContactEmailBanner from '../components/sections/contact/ContactEmailBanner.astro';
 import ContactFaqSection from '../components/sections/contact/ContactFaqSection.astro';
 import ContactFormSection from '../components/sections/contact/ContactFormSection.astro';
+import ContactLegalSection from '../components/sections/contact/ContactLegalSection.astro';
 import PurchaseInfo from '../components/sections/contact/PurchaseInfo.astro';
 import { contactData } from '@content/contact';
+import { confirmed, businessFacts } from '@config/business';
 import { site } from '@config/site';
 
 const contactTitle = 'Contacto — KingBelt';
@@ -16,6 +18,7 @@ const contactDescription =
   'Contacta con KingBelt para consultas sobre producto, pedidos, colaboraciones y atención general.';
 const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href;
 const emailChannel = contactData.channels[0];
+const legalName = confirmed(businessFacts.legalName);
 
 const contactSchema = {
   '@context': 'https://schema.org',
@@ -26,10 +29,14 @@ const contactSchema = {
   mainEntity: {
     '@type': 'Organization',
     name: site.name,
+    ...(legalName ? { legalName } : {}),
     contactPoint: {
       '@type': 'ContactPoint',
       contactType: 'Atención al cliente',
-      email: site.contact.email,
+      email: emailChannel.value,
+      ...(confirmed(businessFacts.phone)
+        ? { telephone: confirmed(businessFacts.phone) }
+        : {}),
       url: site.social.instagram.href,
     },
   },
@@ -54,7 +61,10 @@ const contactSchema = {
   <div class="contact-page">
     <ContactFormSection channels={contactData.channels} inquiryTypes={contactData.inquiryTypes} />
 
+    <ContactLegalSection />
+
     <PurchaseInfo
+      index="03"
       eyebrow={contactData.purchaseInfo.eyebrow}
       title={contactData.purchaseInfo.title}
       description={contactData.purchaseInfo.description}

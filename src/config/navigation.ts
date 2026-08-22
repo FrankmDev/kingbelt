@@ -1,7 +1,7 @@
 import type { IconName } from '../components/ui/icon-paths';
 import { legalFooterNav } from '@content/legal';
 import { helpFooterNav } from '@content/help';
-import { publicHighlights } from './business';
+import { publicHighlights, businessFacts, confirmed, toTelHref } from './business';
 import { site } from './site';
 
 export interface NavItem {
@@ -42,14 +42,34 @@ export const footerLegalNav: NavItem[] = [...legalFooterNav];
 
 export const footerHighlights = publicHighlights();
 
-export const footerContact = [
+const footerEmail = confirmed(businessFacts.email) ?? site.contact.email;
+const footerPhone = confirmed(businessFacts.phone);
+
+export const footerContact: readonly {
+  label: string;
+  value: string;
+  href: string;
+  external: boolean;
+  icon: IconName;
+}[] = [
   {
     label: 'Email',
-    value: site.contact.email,
-    href: `mailto:${site.contact.email}`,
+    value: footerEmail,
+    href: `mailto:${footerEmail}`,
     external: false,
     icon: 'mail',
   },
+  ...(footerPhone
+    ? [
+        {
+          label: 'Teléfono',
+          value: footerPhone,
+          href: toTelHref(footerPhone),
+          external: false,
+          icon: 'phone' as IconName,
+        },
+      ]
+    : []),
   {
     label: 'Instagram',
     value: site.social.instagram.handle,
@@ -57,13 +77,7 @@ export const footerContact = [
     external: true,
     icon: 'instagram',
   },
-] as const satisfies readonly {
-  label: string;
-  value: string;
-  href: string;
-  external: boolean;
-  icon: IconName;
-}[];
+];
 
 export const socialLinks = [
   { label: 'Instagram', href: site.social.instagram.href, icon: 'instagram' },

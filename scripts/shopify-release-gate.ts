@@ -42,6 +42,7 @@ const SENSITIVE_ENV_KEYS = [
 export type ReleaseGateStage =
   | 'configuration'
   | 'validate'
+  | 'legal:preflight'
   | 'session:preflight'
   | 'shopify:preflight'
   | 'shopify:cart-smoke'
@@ -87,6 +88,7 @@ export interface ReleaseGateSummary {
 
 export const RELEASE_GATE_COMMANDS = [
   { stage: 'validate', script: 'validate', commerceSource: 'demo' },
+  { stage: 'legal:preflight', script: 'legal:preflight' },
   { stage: 'session:preflight', script: 'session:preflight' },
   { stage: 'shopify:preflight', script: 'shopify:preflight', commerceSource: 'shopify' },
   { stage: 'shopify:cart-smoke', script: 'shopify:cart-smoke', commerceSource: 'shopify' },
@@ -365,6 +367,7 @@ const commandEnv = (
 const STAGE_LABELS: Record<ReleaseGateStage, string> = {
   configuration: 'configuration',
   validate: 'validate',
+  'legal:preflight': 'legal preflight',
   'session:preflight': 'session preflight',
   'shopify:preflight': 'Shopify preflight',
   'shopify:cart-smoke': 'Shopify cart smoke',
@@ -376,6 +379,7 @@ export const formatReleaseGateSuccess = (): string =>
     'KingBelt pre-payment release gate passed',
     '',
     'Code validation: OK',
+    'Legal readiness: OK',
     'Session storage: OK',
     'Shopify catalog: OK',
     'Shopify market: OK',

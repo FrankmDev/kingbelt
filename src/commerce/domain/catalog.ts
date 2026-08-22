@@ -71,6 +71,7 @@ export interface ProductVariant {
   inventoryPolicy: InventoryPolicy;
   /** Regla comercial autoritativa de cantidad normalizada desde el origen. */
   quantityRule: QuantityRule;
+  /** Imagen asociada realmente a la variante por el proveedor. Con Color, validada contra la portada de su galería. */
   imageId?: string;
   weight?: ProductWeight;
 }

@@ -12,15 +12,17 @@ interface Props extends Omit<HTMLAttributes<'aside'>, 'class'> {
 const { class: className, compact = false, ...rest } = Astro.props;
 const layer = privacyFirstLayer();
 const email = confirmed(businessFacts.email) ?? site.contact.email;
-const pendingValue = 'Pendiente de confirmación antes de publicar esta política.';
+const isComplete = Boolean(layer.controller && layer.purpose && layer.legalBasis && layer.recipients);
 
-const items = [
-  { label: 'Responsable', value: layer.controller ?? pendingValue },
-  { label: 'Finalidad', value: layer.purpose ?? pendingValue },
-  { label: 'Legitimación', value: layer.legalBasis ?? pendingValue },
-  ...(layer.recipients ? [{ label: 'Destinatarios', value: layer.recipients }] : []),
-  { label: 'Derechos', value: layer.rights },
-];
+const items = isComplete
+  ? [
+      { label: 'Responsable', value: layer.controller as string },
+      { label: 'Finalidad', value: layer.purpose as string },
+      { label: 'Legitimación', value: layer.legalBasis as string },
+      { label: 'Destinatarios', value: layer.recipients as string },
+      { label: 'Derechos', value: layer.rights },
+    ]
+  : [];
 ---
 
 <aside
@@ -40,8 +42,13 @@ const items = [
     </h2>
   </header>
 
-  <dl class="privacy-summary__list">
-    {items.map((item, index) => (
+    {!isComplete && (
+      <p class="privacy-summary__incomplete">
+        Esta primera capa no está completa: faltan hechos de privacidad pendientes de confirmación. Consulta la política completa.
+      </p>
+    )}
+    <dl class="privacy-summary__list">
+      {items.map((item, index) => (
       <div class="privacy-summary__item">
         <dt>
           <span class="privacy-summary__num" aria-hidden="true">
@@ -118,5 +125,14 @@ const items = [
 
   .privacy-summary--compact .privacy-summary__item {
     padding-block: var(--kb-space-3);
+  }
+
+  .privacy-summary__incomplete {
+    margin: 0 0 var(--kb-space-4);
+    padding: var(--kb-space-4) 0 0;
+    border-top: 1px solid var(--kb-stroke-hairline);
+    font-size: var(--kb-text-sm);
+    line-height: 1.65;
+    color: var(--color-king-muted);
   }
 </style>

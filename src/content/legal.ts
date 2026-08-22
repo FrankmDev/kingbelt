@@ -1,4 +1,7 @@
 import { businessFacts, confirmed } from '@config/business';
+import { flattenLegalBodySections, legalBodies } from './legal-bodies';
+
+export { currentTechnologies, externalResources } from './legal-technologies';
 
 export type DocumentStatus = 'draft' | 'inactive' | 'published';
 
@@ -25,32 +28,37 @@ export interface LegalDocument {
   sections: LegalSection[];
 }
 
-/** Muestra enlaces a documentos en borrador en navegación pública (fase interna). */
-export const showDraftLegalInNav = true;
-
 export const legalDocuments = {
   avisoLegal: {
     slug: 'aviso-legal',
     href: '/aviso-legal',
     navLabel: 'Aviso legal',
     title: 'Aviso legal — KingBelt',
-    description: 'Información legal del titular del sitio web KingBelt. Documento pendiente de validación.',
-    status: 'draft',
-    version: '0.1',
+    description:
+      'Identificación del titular del sitio web KingBelt, condiciones de uso, propiedad intelectual y responsabilidad.',
+    status: 'published',
+    updatedAt: '18 de agosto de 2026',
     sections: [
-      { id: 'titular', title: 'Titular del sitio web' },
-      { id: 'denominacion', title: 'Denominación social' },
-      { id: 'identificacion-fiscal', title: 'Identificación fiscal' },
-      { id: 'domicilio', title: 'Domicilio' },
-      { id: 'contacto', title: 'Contacto' },
-      { id: 'datos-registrales', title: 'Datos registrales' },
-      { id: 'actividad', title: 'Actividad' },
-      { id: 'condiciones-uso', title: 'Condiciones de uso' },
+      { id: 'informacion-general', title: 'Información general e identificación del titular' },
+      { id: 'objeto', title: 'Objeto del sitio web' },
+      { id: 'condiciones-acceso', title: 'Condiciones de acceso y utilización' },
       { id: 'propiedad-intelectual', title: 'Propiedad intelectual e industrial' },
-      { id: 'enlaces-externos', title: 'Enlaces externos' },
-      { id: 'responsabilidad', title: 'Responsabilidad' },
+      { id: 'marca', title: 'Marca y signos distintivos' },
+      { id: 'contenidos', title: 'Contenidos e información del sitio web' },
+      { id: 'disponibilidad', title: 'Disponibilidad del sitio web' },
+      { id: 'seguridad', title: 'Seguridad' },
+      { id: 'enlaces-terceros', title: 'Enlaces a sitios de terceros' },
+      { id: 'enlaces-hacia', title: 'Enlaces hacia el sitio web de Kingbelt' },
+      { id: 'responsabilidad-usuario', title: 'Responsabilidad del usuario' },
+      { id: 'responsabilidad-kingbelt', title: 'Responsabilidad de Kingbelt' },
+      { id: 'comercio-electronico', title: 'Comercio electrónico' },
+      { id: 'proteccion-datos', title: 'Protección de datos personales' },
+      { id: 'cookies', title: 'Cookies y tecnologías similares' },
+      { id: 'proveedores', title: 'Proveedores tecnológicos' },
+      { id: 'comunicaciones', title: 'Comunicaciones comerciales' },
+      { id: 'modificacion', title: 'Modificación del Aviso Legal' },
       { id: 'legislacion', title: 'Legislación aplicable' },
-      { id: 'jurisdiccion', title: 'Jurisdicción' },
+      { id: 'contacto', title: 'Contacto' },
     ],
   },
   privacidad: {
@@ -58,24 +66,24 @@ export const legalDocuments = {
     href: '/privacidad',
     navLabel: 'Privacidad',
     title: 'Política de privacidad — KingBelt',
-    description: 'Información sobre el tratamiento de datos personales en KingBelt. Documento pendiente de validación.',
-    status: 'draft',
-    version: '0.1',
+    description:
+      'Cómo recopilamos, utilizamos y divulgamos tu información personal cuando visitas o compras en KingBelt.',
+    status: 'published',
+    updatedAt: '22 de agosto de 2026',
     sections: [
-      { id: 'responsable', title: 'Responsable del tratamiento' },
-      { id: 'datos-tratados', title: 'Datos que tratamos' },
-      { id: 'finalidades', title: 'Finalidades del tratamiento' },
-      { id: 'bases-juridicas', title: 'Bases jurídicas' },
-      { id: 'conservacion', title: 'Plazo de conservación' },
-      { id: 'destinatarios', title: 'Destinatarios' },
-      { id: 'encargados', title: 'Encargados del tratamiento' },
+      { id: 'informacion-personal', title: 'Información personal que recopilamos o tratamos' },
+      { id: 'fuentes', title: 'Fuentes de información personal' },
+      { id: 'usos', title: 'Cómo utilizamos su información personal' },
+      { id: 'divulgacion', title: 'Cómo divulgamos la información personal' },
+      { id: 'shopify', title: 'Relación con Shopify' },
+      { id: 'sitios-terceros', title: 'Sitios web y enlaces de terceros' },
+      { id: 'menores', title: 'Datos de menores' },
+      { id: 'seguridad-retencion', title: 'Seguridad y retención de su información' },
+      { id: 'derechos', title: 'Sus derechos y opciones' },
+      { id: 'reclamaciones', title: 'Reclamaciones' },
       { id: 'transferencias', title: 'Transferencias internacionales' },
-      { id: 'derechos', title: 'Derechos de las personas interesadas' },
-      { id: 'ejercicio-derechos', title: 'Procedimiento para ejercer los derechos' },
-      { id: 'reclamacion-aepd', title: 'Reclamación ante la AEPD' },
-      { id: 'menores', title: 'Menores de edad' },
-      { id: 'seguridad', title: 'Medidas de seguridad' },
-      { id: 'modificaciones', title: 'Modificaciones de la política' },
+      { id: 'cambios', title: 'Cambios en esta Política de privacidad' },
+      { id: 'contacto', title: 'Contacto' },
     ],
   },
   cookies: {
@@ -84,14 +92,14 @@ export const legalDocuments = {
     navLabel: 'Cookies',
     title: 'Política de cookies y tecnologías — KingBelt',
     description: 'Información sobre cookies y almacenamiento local utilizados en KingBelt.',
-    status: 'draft',
-    version: '0.1',
+    status: 'published',
+    updatedAt: '22 de agosto de 2026',
     sections: [
       { id: 'que-son', title: 'Qué son las cookies y el almacenamiento local' },
       { id: 'tecnologias-actuales', title: 'Tecnologías utilizadas actualmente' },
       { id: 'recursos-externos', title: 'Recursos externos' },
       { id: 'gestion', title: 'Cómo gestionar las preferencias' },
-      { id: 'cambios-futuros', title: 'Cambios previstos' },
+      { id: 'actualizacion', title: 'Actualización de esta política' },
       { id: 'contacto', title: 'Contacto' },
     ],
   },
@@ -100,9 +108,9 @@ export const legalDocuments = {
     href: '/condiciones',
     navLabel: 'Condiciones',
     title: 'Condiciones generales de compra — KingBelt',
-    description: 'Condiciones contractuales de compra en KingBelt. Documento pendiente de validación.',
-    status: 'draft',
-    version: '0.1',
+    description: 'Condiciones contractuales de compra en KingBelt, junto con las políticas de envíos y devoluciones.',
+    status: 'published',
+    updatedAt: '22 de agosto de 2026',
     sections: [
       { id: 'identidad', title: 'Identidad del vendedor' },
       { id: 'objeto', title: 'Objeto y ámbito' },
@@ -131,24 +139,58 @@ export const legalDocuments = {
   envios: {
     slug: 'envios-y-devoluciones',
     href: '/envios-y-devoluciones',
-    navLabel: 'Envíos y devoluciones',
-    title: 'Envíos y devoluciones — KingBelt',
-    description: 'Política de envíos, cambios y devoluciones. Documento pendiente de validación.',
-    status: 'draft',
-    version: '0.1',
+    navLabel: 'Envíos',
+    title: 'Política de envíos — KingBelt',
+    description:
+      'Preparación, expedición, plazos, seguimiento e incidencias de los pedidos realizados en KingBelt.',
+    status: 'published',
+    updatedAt: '18 de agosto de 2026',
     sections: [
+      { id: 'vendedor', title: 'Datos del vendedor' },
       { id: 'zonas', title: 'Zonas de envío' },
-      { id: 'preparacion', title: 'Preparación del pedido' },
-      { id: 'transporte', title: 'Transporte' },
-      { id: 'costes', title: 'Costes de envío' },
-      { id: 'seguimiento', title: 'Seguimiento' },
-      { id: 'incidencias', title: 'Incidencias' },
-      { id: 'cambios', title: 'Cambios' },
+      { id: 'gastos', title: 'Gastos de envío' },
+      { id: 'preparacion', title: 'Preparación y procesamiento de pedidos' },
+      { id: 'plazos', title: 'Plazos de entrega' },
+      { id: 'computo', title: 'Cómputo de los plazos' },
+      { id: 'seguimiento', title: 'Seguimiento del pedido' },
+      { id: 'direccion', title: 'Dirección de entrega' },
+      { id: 'entrega', title: 'Entrega del pedido' },
+      { id: 'ausencia', title: 'Ausencia del destinatario' },
+      { id: 'retrasos', title: 'Retrasos en la entrega' },
+      { id: 'perdido', title: 'Pedido perdido durante el transporte' },
+      { id: 'danado', title: 'Pedido dañado durante el transporte' },
+      { id: 'incorrecto', title: 'Producto incorrecto o pedido incompleto' },
+      { id: 'riesgo', title: 'Transmisión del riesgo' },
+      { id: 'divididos', title: 'Envíos divididos' },
+      { id: 'aduanas', title: 'Aduanas, impuestos y territorios con régimen fiscal especial' },
+      { id: 'modificaciones', title: 'Modificaciones y cancelaciones de pedidos' },
       { id: 'devoluciones', title: 'Devoluciones' },
-      { id: 'desistimiento', title: 'Derecho de desistimiento' },
-      { id: 'excepciones', title: 'Excepciones' },
-      { id: 'estado-producto', title: 'Estado del producto' },
+      { id: 'fuerza-mayor', title: 'Fuerza mayor y circunstancias extraordinarias' },
+      { id: 'relacion', title: 'Relación con las Condiciones Generales' },
+      { id: 'contacto', title: 'Contacto' },
+    ],
+  },
+  devoluciones: {
+    slug: 'devoluciones',
+    href: '/devoluciones',
+    navLabel: 'Devoluciones',
+    title: 'Política de devoluciones, desistimiento y reembolsos — KingBelt',
+    description:
+      'Plazo de 30 días, desistimiento, estado del producto, gastos de devolución y reembolsos en KingBelt.',
+    status: 'published',
+    updatedAt: '18 de agosto de 2026',
+    sections: [
+      { id: 'plazo', title: 'Plazo de devolución de 30 días' },
+      { id: 'estado', title: 'Estado de los productos devueltos' },
+      { id: 'solicitar', title: 'Cómo solicitar una devolución' },
+      { id: 'gastos', title: 'Gastos de devolución' },
+      { id: 'danados', title: 'Productos dañados, defectuosos o incorrectos' },
+      { id: 'excepciones', title: 'Excepciones al derecho de desistimiento' },
+      { id: 'rebajados', title: 'Productos rebajados y promociones' },
+      { id: 'cambios', title: 'Cambios de talla, color o producto' },
       { id: 'reembolsos', title: 'Reembolsos' },
+      { id: 'modelo', title: 'Modelo de comunicación de desistimiento' },
+      { id: 'derechos', title: 'Derechos legales del consumidor' },
       { id: 'contacto', title: 'Contacto' },
     ],
   },
@@ -174,7 +216,7 @@ export const legalCta = {
   eyebrow: 'Consultas',
   title: '¿Tienes una duda sobre este documento?',
   description:
-    'Si necesitas aclarar un apartado, escríbenos con el documento y el punto concreto. No sustituye la revisión legal pendiente.',
+    'Si necesitas aclarar un apartado, escríbenos con el documento y el punto concreto.',
   buttonLabel: 'Ir a contacto',
   buttonHref: '/contacto',
   image: '/images/blog/cinturon-marron.jpg',
@@ -185,7 +227,7 @@ export const legalPages = {
   avisoLegal: {
     heading: 'Aviso legal',
     titleHtml: 'Información del <em>titular</em>.',
-    lede: 'Información legal del titular del sitio web.',
+    lede: `Identificación de ${confirmed(businessFacts.legalName) ?? 'CintuElx S.L.'}, condiciones de uso del sitio y marco de responsabilidad.`,
     image: '/images/brand/cinturones-en-taller.jpg',
     imageAlt: 'Persona sujetando varios cinturones de cuero en un taller',
     imagePosition: 'center 52%',
@@ -194,13 +236,13 @@ export const legalPages = {
       index: '01',
       eyebrow: 'Documento',
       title: 'Titular, uso del sitio y responsabilidad.',
-      body: 'Los apartados pendientes se completarán cuando la empresa confirme los datos societarios.',
+      body: 'Quién opera KingBelt, cómo puede usarse este sitio y qué derechos y obligaciones rigen la navegación.',
     },
   },
   privacidad: {
     heading: 'Política de privacidad',
     titleHtml: 'Cómo tratamos tus <em>datos</em>.',
-    lede: 'Información sobre el tratamiento de datos personales.',
+    lede: 'Información sobre la recopilación, el uso y la divulgación de tu información personal.',
     image: '/images/blog/cinturon-negro.jpg',
     imageAlt: 'Cinturón negro de vestir sobre fondo neutro',
     imagePosition: 'center 55%',
@@ -209,7 +251,7 @@ export const legalPages = {
       index: '01',
       eyebrow: 'Documento',
       title: 'Tratamiento, derechos y ejercicio.',
-      body: 'El resumen de primera capa recoge lo confirmado. El resto del documento sigue en revisión.',
+      body: 'Qué información tratamos, con quién la compartimos y cómo puedes ejercer tus derechos.',
     },
   },
   cookies: {
@@ -224,13 +266,13 @@ export const legalPages = {
       index: '01',
       eyebrow: 'Documento',
       title: 'Solo lo demostrable en el código.',
-      body: 'No hay cookies de analítica, publicidad ni marketing. Esta política describe el almacenamiento local y las tipografías externas.',
+      body: 'Cookie de sesión, almacenamiento de demostración y tipografías externas. Sin analítica ni marketing de primera parte.',
     },
   },
   condiciones: {
     heading: 'Condiciones generales de compra',
     titleHtml: 'Condiciones de <em>compra</em>.',
-    lede: 'Condiciones contractuales aplicables a las compras en KingBelt.',
+    lede: 'Identidad del vendedor, proceso de pedido y remisión a envíos, devoluciones y garantías.',
     image: '/images/brand/cinturones-en-taller.jpg',
     imageAlt: 'Persona sujetando varios cinturones de cuero en un taller',
     imagePosition: 'center 46%',
@@ -238,8 +280,8 @@ export const legalPages = {
     section: {
       index: '01',
       eyebrow: 'Documento',
-      title: 'El contrato, cuando el ecommerce esté activo.',
-      body: 'El texto definitivo se publicará antes de activar la venta. Mientras tanto, solo constan los apartados ya redactados.',
+      title: 'El contrato de compraventa.',
+      body: 'Quién vende, cómo se formaliza el pedido y dónde están las reglas de envío, desistimiento y garantía.',
     },
   },
   desistimiento: {
@@ -257,9 +299,39 @@ export const legalPages = {
       body: 'Esta ruta no permite presentar solicitudes. Servirá para comunicar el desistimiento cuando el ecommerce esté operativo.',
     },
   },
+  envios: {
+    heading: 'Política de envíos',
+    titleHtml: 'Preparación, transporte y <em>entrega</em>.',
+    lede: 'Condiciones de envío, plazos, seguimiento e incidencias de los pedidos KingBelt.',
+    image: '/images/brand/cinturones-en-taller.jpg',
+    imageAlt: 'Persona sujetando varios cinturones de cuero en un taller',
+    imagePosition: 'center 48%',
+    meta: 'KingBelt · Envíos',
+    section: {
+      index: '01',
+      eyebrow: 'Documento',
+      title: 'Cómo llega el pedido.',
+      body: 'Zonas, gastos, plazos, seguimiento y qué ocurre si hay una incidencia en el transporte.',
+    },
+  },
+  devoluciones: {
+    heading: 'Devoluciones y reembolsos',
+    titleHtml: '30 días para <em>devolver</em>.',
+    lede: 'Desistimiento, estado del producto, gastos de devolución y reembolsos.',
+    image: '/images/blog/cinturon-marron.jpg',
+    imageAlt: 'Cinturón de cuero marrón sobre fondo neutro',
+    imagePosition: 'center 42%',
+    meta: 'KingBelt · Devoluciones',
+    section: {
+      index: '01',
+      eyebrow: 'Documento',
+      title: 'Cambios, desistimiento y reembolsos.',
+      body: 'El plazo de 30 días, cómo solicitar una devolución y en qué casos KingBelt asume los gastos.',
+    },
+  },
 } as const;
 
-type LegalDocumentKey = keyof typeof legalDocuments;
+export type LegalDocumentKey = keyof typeof legalDocuments;
 const allLegalDocuments: LegalDocument[] = Object.values(legalDocuments);
 
 const legalNavigationOrder = [
@@ -278,9 +350,7 @@ export const legalNavItems: LegalNavItem[] = legalNavigationOrder.map((key) => {
   };
 });
 
-export const visibleLegalNavItems = legalNavItems.filter(
-  (item) => item.status === 'published' || (item.status === 'draft' && showDraftLegalInNav)
-);
+export const visibleLegalNavItems = legalNavItems.filter((item) => item.status === 'published');
 
 export const legalFooterNav = visibleLegalNavItems.map(({ label, href }) => ({ label, href }));
 
@@ -299,47 +369,6 @@ export const getLegalSitemapExcludedPaths = (): string[] =>
     .filter((document) => document.status !== 'published')
     .map((document) => normalizePathname(document.href));
 
-interface CookieTechnology {
-  name: string;
-  type: 'localStorage' | 'sessionStorage' | 'cookie';
-  purpose: string;
-  duration: string;
-  provider: string;
-}
-
-/** Solo tecnologías actualmente demostrables en el código. */
-export const currentTechnologies: CookieTechnology[] = [
-  {
-    name: 'kingbelt-cart-v4',
-    type: 'localStorage',
-    purpose: 'Conservar las líneas del carrito local (identificador de variante y cantidad) entre visitas.',
-    duration: 'Hasta que el usuario borre los datos del sitio o se migre a una versión posterior.',
-    provider: 'KingBelt (primera parte)',
-  },
-];
-
-interface ExternalResource {
-  name: string;
-  domains: string[];
-  purpose: string;
-  cookieNote: string;
-}
-
-export const externalResources: ExternalResource[] = [
-  {
-    name: 'Fontshare (API)',
-    domains: ['api.fontshare.com'],
-    purpose: 'Carga de la tipografía Satoshi.',
-    cookieNote: 'No se declaran cookies desde la configuración del sitio; debe verificarse en el entorno de producción.',
-  },
-  {
-    name: 'Google Fonts',
-    domains: ['fonts.googleapis.com', 'fonts.gstatic.com'],
-    purpose: 'Carga de la tipografía Bitter.',
-    cookieNote: 'No se declaran cookies desde la configuración del sitio; debe verificarse en el entorno de producción.',
-  },
-];
-
 /** Texto de primera capa de privacidad reutilizable (sin datos pendientes). */
 export const privacyFirstLayer = (): {
   controller: string | null;
@@ -355,3 +384,8 @@ export const privacyFirstLayer = (): {
   rights:
     'Acceso, rectificación, supresión, oposición, limitación del tratamiento y portabilidad, cuando proceda. También puedes presentar reclamación ante la Agencia Española de Protección de Datos (AEPD).',
 });
+
+const filledLegalCopy = flattenLegalBodySections(legalBodies);
+
+/** Cuerpos de apartado inspectables por el gate. Las páginas legales los renderizan. */
+export const legalStaticSectionCopy: Partial<Record<LegalDocumentKey, Record<string, string>>> = filledLegalCopy;

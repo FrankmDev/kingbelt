@@ -1,6 +1,8 @@
 export const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30;
 export const SESSION_STORE_PREFIX = 'kingbelt-session';
 export const LOCAL_SESSION_PATH = '.astro/session';
+/** Cookie opaca de sesión. El prefijo `__Host-` exige Secure, Path=/ y ausencia de Domain. */
+export const SESSION_COOKIE_NAME = '__Host-kingbelt-session';
 
 const CONTROL_CHARACTER_PATTERN = /[\u0000-\u001f\u007f]/;
 const MAX_UPSTASH_TOKEN_LENGTH = 4_096;

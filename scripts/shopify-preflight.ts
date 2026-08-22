@@ -466,8 +466,15 @@ export const mapShopifyCatalogForPreflight = (
     try {
       products.push(mapShopifyProduct(source, allowedRemoteImageHosts));
     } catch (error) {
-      if (!(error instanceof ShopifyCatalogMappingError)) throw error;
-      mappingErrors.push(error.message);
+      if (error instanceof CatalogValidationError) {
+        mappingErrors.push(
+          `${source.handle}: ${error.issues.map((issue) => `${issue.code} at ${issue.path}`).join('; ')}`
+        );
+      } else if (error instanceof ShopifyCatalogMappingError) {
+        mappingErrors.push(error.message);
+      } else {
+        throw error;
+      }
     }
   });
 

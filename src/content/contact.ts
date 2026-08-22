@@ -1,6 +1,12 @@
 import { site } from '@config/site';
+import { businessFacts, confirmed, toTelHref } from '@config/business';
+import { LEGAL_CONTACT_EMAIL } from './legal-bodies';
 import type { IconName } from '../components/ui/icon-paths';
 import type { FAQItem } from './faq';
+
+const contactEmail = confirmed(businessFacts.email) ?? site.contact.email;
+const contactPhone = confirmed(businessFacts.phone);
+const contactLegalName = confirmed(businessFacts.legalName);
 
 export interface ContactChannel {
   label: string;
@@ -66,6 +72,37 @@ interface ContactData {
   };
 }
 
+const contactChannels: ContactChannel[] = [
+  {
+    label: 'Email',
+    value: contactEmail,
+    description: 'Pedidos, devoluciones, incidencias y atención general.',
+    href: `mailto:${contactEmail}`,
+    icon: 'mail',
+  },
+  ...(contactPhone
+    ? [
+        {
+          label: 'Teléfono',
+          value: contactPhone,
+          description: contactLegalName
+            ? `Atención telefónica de ${contactLegalName}.`
+            : 'Atención telefónica.',
+          href: toTelHref(contactPhone),
+          icon: 'phone' as const,
+        },
+      ]
+    : []),
+  {
+    label: 'Instagram',
+    value: site.social.instagram.handle,
+    description: 'La actualidad visual de la marca.',
+    href: site.social.instagram.href,
+    icon: 'instagram',
+    meta: 'Red social',
+  },
+];
+
 export const contactData = {
   hero: {
     eyebrow: 'Contacto',
@@ -77,27 +114,12 @@ export const contactData = {
     meta: 'KingBelt · Contacto',
   },
 
-  channels: [
-    {
-      label: 'Email',
-      value: site.contact.email,
-      description: 'Para consultas de producto, pedidos y atención general.',
-      href: `mailto:${site.contact.email}`,
-      icon: 'mail',
-    },
-    {
-      label: 'Instagram',
-      value: site.social.instagram.handle,
-      description: 'La actualidad visual de la marca.',
-      href: site.social.instagram.href,
-      icon: 'instagram',
-      meta: 'Red social',
-    },
-  ] satisfies ContactChannel[],
+  channels: contactChannels,
 
   inquiryTypes: [
     { value: 'producto', label: 'Producto y materiales' },
     { value: 'pedido', label: 'Pedido' },
+    { value: 'devolucion', label: 'Devolución o incidencia' },
     { value: 'colaboracion', label: 'Colaboración o prensa' },
     { value: 'otro', label: 'Otra consulta' },
   ],
@@ -113,14 +135,14 @@ export const contactData = {
     {
       question: '¿Dónde puedo ver información de envío?',
       answer:
-        'Las políticas de envío se publicarán en la página de envíos y devoluciones cuando estén confirmadas. Mientras tanto, escríbenos si tienes una consulta concreta.',
+        'Consulta la política de envíos para plazos, seguimiento e incidencias. El coste y la modalidad aplicables se muestran antes de confirmar el pedido.',
       category: 'Envío',
       icon: 'truck',
     },
     {
       question: '¿Qué hago si la talla no me conviene?',
       answer:
-        'La política de cambios y devoluciones se publicará cuando esté confirmada. Consulta la guía de tallas antes de comprar y escríbenos si necesitas orientación.',
+        'Tienes 30 días naturales desde la recepción para devolver el producto. La vía recomendada para un cambio de talla es devolver la pieza y hacer un pedido nuevo. Consulta la política de devoluciones para plazos, gastos y reembolsos.',
       category: 'Cambios',
       icon: 'rotate-ccw',
     },
@@ -134,7 +156,7 @@ export const contactData = {
     {
       question: '¿Cómo puedo contactar con KingBelt?',
       answer:
-        'Por email o Instagram. Indica el modelo, la medida o el contexto de tu consulta para que podamos orientarte con más precisión.',
+        'Por email en contabilidad@cintuelx.com o por teléfono. Indica el número de pedido, el modelo o el contexto de tu consulta para que podamos orientarte con más precisión.',
       category: 'Atención',
       icon: 'mail',
     },
@@ -151,7 +173,7 @@ export const contactData = {
     eyebrow: 'Tu compra',
     title: 'Información clara, desde el pedido.',
     description:
-      'Envío, embalaje y cambios se detallarán cuando las políticas estén confirmadas. Mientras tanto, consulta el centro de ayuda o escríbenos.',
+      'El plazo estimado de entrega se indica al comprar. Tienes 30 días para devolver. Si necesitas ayuda con un pedido, escríbenos a contabilidad@cintuelx.com.',
     badge: undefined,
     cta: {
       label: 'Centro de ayuda',
@@ -171,14 +193,22 @@ export const contactData = {
         icon: 'ruler',
       },
       {
-        title: 'Envíos y devoluciones',
-        description: 'Políticas de envío y cambios pendientes de validación por la empresa.',
+        title: 'Envíos',
+        description: 'Zonas, plazos, seguimiento e incidencias de transporte.',
         label: 'Envío',
         icon: 'truck',
       },
       {
+        title: 'Devoluciones',
+        description: '30 días desde la recepción, desistimiento y reembolsos.',
+        label: 'Cambios',
+        icon: 'rotate-ccw',
+      },
+      {
         title: 'Atención directa',
-        description: 'Escríbenos con tu consulta concreta por email o Instagram.',
+        description: contactPhone
+          ? `Escríbenos a ${LEGAL_CONTACT_EMAIL} o llama al ${contactPhone}.`
+          : `Escríbenos a ${LEGAL_CONTACT_EMAIL}.`,
         label: 'Contacto',
         icon: 'mail',
       },

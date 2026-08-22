@@ -4,25 +4,15 @@ import Header from '../components/layout/Header.astro';
 import Footer from '../components/layout/Footer.astro';
 import PageHeader from '../components/ui/PageHeader.astro';
 import LegalPageLayout from '../components/legal/LegalPageLayout.astro';
-import LegalSection from '../components/legal/LegalSection.astro';
+import LegalDocumentView from '../components/legal/LegalDocumentView.astro';
+import LegalBlocks from '../components/legal/LegalBlocks.astro';
 import Prose from '../components/ui/Prose.astro';
 import { getLegalRobots, legalDocuments, legalPages } from '@content/legal';
-import { confirmed, businessFacts } from '@config/business';
-import { site } from '@config/site';
+import { avisoLegalBody } from '@content/legal-bodies';
 
 const doc = legalDocuments.avisoLegal;
 const page = legalPages.avisoLegal;
 const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href;
-const email = confirmed(businessFacts.email) ?? site.contact.email;
-const tradeName = confirmed(businessFacts.tradeName);
-const completedSectionIds = new Set([
-  ...(tradeName ? ['titular'] : []),
-  'contacto',
-  'condiciones-uso',
-  'propiedad-intelectual',
-  'enlaces-externos',
-  'responsabilidad',
-]);
 ---
 
 <BaseLayout
@@ -48,46 +38,12 @@ const completedSectionIds = new Set([
   </PageHeader>
 
   <LegalPageLayout document={doc} section={page.section}>
-    <Prose variant="document">
-      {doc.sections.map((section) => (
-        <LegalSection
-          id={section.id}
-          title={section.title}
-          pending={!completedSectionIds.has(section.id)}
-        >
-          {section.id === 'titular' && tradeName && <p>Marca comercial: {tradeName}.</p>}
-          {section.id === 'contacto' && (
-            <p>
-              Email de contacto: <a href={`mailto:${email}`}>{email}</a>.
-            </p>
-          )}
-          {section.id === 'condiciones-uso' && (
-            <p>
-              El acceso y uso de este sitio web implica la aceptación de las condiciones aquí descritas.
-              El contenido tiene carácter informativo y puede modificarse sin previo aviso mientras el sitio esté en fase de preparación.
-            </p>
-          )}
-          {section.id === 'propiedad-intelectual' && (
-            <p>
-              Los contenidos de este sitio —textos, imágenes, diseño y código— están protegidos por la legislación
-              de propiedad intelectual e industrial. Queda prohibida su reproducción sin autorización expresa del titular.
-            </p>
-          )}
-          {section.id === 'enlaces-externos' && (
-            <p>
-              Este sitio puede incluir enlaces a sitios de terceros. KingBelt no se responsabiliza del contenido
-              ni de las políticas de privacidad de dichos sitios.
-            </p>
-          )}
-          {section.id === 'responsabilidad' && (
-            <p>
-              KingBelt no garantiza la disponibilidad continua del sitio ni la ausencia de errores en su contenido
-              mientras se encuentre en fase de desarrollo o revisión.
-            </p>
-          )}
-        </LegalSection>
-      ))}
-    </Prose>
+    {avisoLegalBody.intro && (
+      <Prose slot="intro" variant="document">
+        <LegalBlocks blocks={avisoLegalBody.intro} />
+      </Prose>
+    )}
+    <LegalDocumentView documentKey="avisoLegal" />
   </LegalPageLayout>
 
   <Footer slot="footer" connected />

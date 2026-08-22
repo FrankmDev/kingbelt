@@ -297,6 +297,30 @@ describe('preflight Shopify', () => {
     }
   });
 
+  test('una variante a 0.00 EUR falla el preflight identificando producto y path', () => {
+    const payload = validShopifyCatalogPayload();
+    payload.products[0].variants.nodes[0].price = { amount: '0.00', currencyCode: 'EUR' };
+    expect(() => mapShopifyCatalogForPreflight(payload, ['cdn.shopify.com'])).toThrow(
+      'cinturon-atlas: non_positive_variant_price at products[0].variants[0].price'
+    );
+  });
+
+  test('una ProductVariant.image distinta de la portada falla el preflight localizando la variante', () => {
+    const payload = validShopifyCatalogPayload();
+    const actual = payload.products[0].images.nodes.find((item) => item.id.endsWith('/negro-1'));
+    payload.products[0].variants.nodes[0].image = actual;
+    expect(() => mapShopifyCatalogForPreflight(payload, ['cdn.shopify.com']))
+      .toThrow('1 producto(s) no superan el mapping');
+    try {
+      mapShopifyCatalogForPreflight(payload, ['cdn.shopify.com']);
+      throw new Error('se esperaba un preflight inválido');
+    } catch (error) {
+      expect(error.message).toContain('cinturon-atlas.variants[0].image');
+      expect(error.message).toContain('Color: Cuero');
+      expect(error.message).toContain('Talla: 90');
+    }
+  });
+
   test('el formato conserva hasta diez diagnósticos de producto y sigue redactando secretos', () => {
     const payload = validShopifyCatalogPayload();
     payload.products = Array.from({ length: 11 }, (_, index) => {
@@ -636,6 +660,7 @@ describe('preflight Shopify', () => {
     expect(pkg.scripts.validate).not.toContain('shopify:cart-smoke');
     expect(pkg.scripts.validate).not.toContain('shopify:release-gate');
     expect(pkg.scripts.validate).not.toContain('session:preflight');
+    expect(pkg.scripts.validate).not.toContain('legal:preflight');
     expect(pkg.scripts.build).not.toContain('shopify:preflight');
     expect(pkg.scripts.build).not.toContain('shopify:cart-smoke');
     expect(pkg.scripts.build).not.toContain('shopify');
@@ -770,12 +795,19 @@ describe('preflight Shopify', () => {
     expect(io.failure()).toContain('unsupported_currency');
   });
 
-  test('una imagen de variante distinta de la portada no invalida la galería nativa', async () => {
+  test('una ProductVariant.image que no es la portada del color hace fallar el preflight', async () => {
     const catalog = validShopifyCatalogPayload();
-    catalog.products[0].variants.nodes[0].image = catalog.products[0].images.nodes[1];
+    const expected = catalog.products[0].images.nodes[0];
+    const actual = catalog.products[0].images.nodes[1];
+    catalog.products[0].variants.nodes[0].image = actual;
     const { code, io } = await runCli(validEnv(), { catalog });
-    expect(code).toBe(0);
-    expect(io.success()).toContain('preflight passed');
+    expect(code).toBe(1);
+    expect(io.failure()).toContain('catalog error');
+    expect(io.failure()).toContain('cinturon-atlas.variants[0].image');
+    expect(io.failure()).toContain('Color: Cuero');
+    expect(io.failure()).toContain(expected.id);
+    expect(io.failure()).toContain(actual.id);
+    expect(io.success()).not.toContain('preflight passed');
   });
 
   test('una categoría oficial ausente falla el preflight', async () => {

@@ -11,6 +11,10 @@ export const commerceRules = {
     technicalLineQuantityLimit: 99,
     maximumDistinctLines: 50,
   },
+  pricing: {
+    /** Precio comercial mínimo de una variante, en unidades mínimas de moneda. */
+    minimumVariantUnitPriceMinor: 1,
+  },
   quantity: {
     /** Política admitida hasta que la interfaz soporte reglas escalonadas. */
     supportedMinimum: 1,
@@ -26,3 +30,7 @@ export const commerceRules = {
     decisionStatus: 'pending',
   },
 } as const;
+
+export const isCommercialVariantPrice = (amountMinor: number): boolean =>
+  Number.isSafeInteger(amountMinor)
+  && amountMinor >= commerceRules.pricing.minimumVariantUnitPriceMinor;

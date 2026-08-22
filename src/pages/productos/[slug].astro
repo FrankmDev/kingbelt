@@ -11,8 +11,10 @@ import { getCatalogProvider } from '@commerce/catalog';
 import { getRedirectedProductHandles } from '@commerce/application/product-redirects';
 import { CATALOG_INDEX_PATH } from '@commerce/application/paths';
 import { resolveProductPageHead, type CommercePageHead } from '@commerce/application/seo';
+import { isShopifyCommerce } from '@commerce/commerce-source';
 import { getFirstAvailableVariant } from '@commerce/domain/variants';
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import { createBreadcrumbListSchema } from '@shared/seo/structured-data';
 
 const handle = Astro.params.slug;
 const redirectedHandles = getRedirectedProductHandles();
@@ -29,7 +31,10 @@ if (!product) {
 // HTML anónimo: el estado del carrito llega solo por cliente. Caché CDN breve
 // alineada con la del catálogo; un redeploy purga la CDN de Vercel.
 Astro.response.headers.set('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=600');
-const pageHead: CommercePageHead = resolveProductPageHead(product, site, siteUrl);
+const pageHead: CommercePageHead = resolveProductPageHead(product, site, siteUrl, {
+  searchParams: Astro.url.searchParams,
+  indexable: isShopifyCommerce(),
+});
 const [collections, related] = await Promise.all([
   catalogProvider.getCollections(),
   catalogProvider.getRelatedProducts(product, 4),
@@ -46,7 +51,17 @@ const breadcrumbs = [
 ];
 ---
 
-<BaseLayout seo={pageHead.seo} schema={pageHead.schema}>
+<BaseLayout
+  seo={pageHead.seo}
+  schema={[
+    pageHead.schema,
+    createBreadcrumbListSchema([
+      { name: 'Productos', path: CATALOG_INDEX_PATH },
+      { name: category.title, path: `/categorias/${category.handle}` },
+      { name: product.title, path: `/productos/${product.handle}` },
+    ]),
+  ]}
+>
   <Header slot="header" initialTheme="light" scrolledTheme="light" compactThreshold={32} />
 
   <article class="pdp" data-product-page>

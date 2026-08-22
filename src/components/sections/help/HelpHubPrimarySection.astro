@@ -1,5 +1,5 @@
 ---
-import HomeSectionHead from '../home/HomeSectionHead.astro';
+import SectionHeader from '@components/ui/SectionHeader.astro';
 import FeatureCard from '../../ui/FeatureCard.astro';
 import type { IconName } from '../../ui/icon-paths';
 
@@ -34,7 +34,7 @@ const titleId = 'help-hub-primary-title';
   aria-labelledby={titleId}
 >
   <div class="help-hub-primary__inner kb-shell-wide">
-    <HomeSectionHead
+    <SectionHeader
       index={section.index}
       eyebrow={section.eyebrow}
       meta={section.meta}
@@ -43,7 +43,7 @@ const titleId = 'help-hub-primary-title';
       class="help-hub-primary__header"
     >
       <Fragment slot="title">{section.title}</Fragment>
-    </HomeSectionHead>
+    </SectionHeader>
 
     <div class="help-hub-primary__grid">
       {items.map((item, index) => (
@@ -71,7 +71,7 @@ const titleId = 'help-hub-primary-title';
     border-top: 1px solid var(--kb-stroke-hairline);
   }
 
-  .help-hub-primary__header:global(.section-header-home) {
+  .help-hub-primary__header:global(.section-header) {
     width: 100%;
     margin-bottom: var(--kb-space-gap);
   }

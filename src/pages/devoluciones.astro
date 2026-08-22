@@ -1,4 +1,6 @@
 ---
+export const prerender = true;
+
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Header from '../components/layout/Header.astro';
 import Footer from '../components/layout/Footer.astro';
@@ -7,20 +9,16 @@ import LegalPageLayout from '../components/legal/LegalPageLayout.astro';
 import LegalDocumentView from '../components/legal/LegalDocumentView.astro';
 import LegalBlocks from '../components/legal/LegalBlocks.astro';
 import Prose from '../components/ui/Prose.astro';
-import { getLegalRobots, legalDocuments, legalPages } from '@content/legal';
+import { legalDocuments, legalPages } from '@content/legal';
 import { devolucionesBody } from '@content/legal-bodies';
+import { createLegalPageHead } from '@shared/seo/legal-page';
 
 const doc = legalDocuments.devoluciones;
 const page = legalPages.devoluciones;
-const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href;
+const { seo, schema } = createLegalPageHead(doc, page);
 ---
 
-<BaseLayout
-  title={doc.title}
-  description={doc.description}
-  canonicalURL={canonicalURL}
-  robots={getLegalRobots(doc)}
->
+<BaseLayout seo={seo} schema={schema}>
   <Header slot="header" initialTheme="dark" scrolledTheme="light" compactThreshold={32} />
 
   <PageHeader

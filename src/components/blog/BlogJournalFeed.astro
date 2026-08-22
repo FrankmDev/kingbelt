@@ -1,0 +1,62 @@
+---
+import FeaturedArticleSection from './FeaturedArticleSection.astro';
+import LatestPostsSection from './LatestPostsSection.astro';
+import type { BlogPost } from '@content/blog';
+
+interface Props {
+  posts: BlogPost[];
+  splitLabel?: string;
+  class?: string;
+}
+
+const { posts, splitLabel = 'Más lecturas', class: className } = Astro.props;
+const [lead, ...secondary] = posts;
+---
+
+<div class:list={['blog-journal-feed', className]}>
+  {lead && <FeaturedArticleSection post={lead} showHeader={false} embedded />}
+
+  {secondary.length > 0 && (
+    <>
+      <div class="blog-journal-feed__split" aria-hidden="true">
+        <span class="blog-journal-feed__split-label kb-meta-label">{splitLabel}</span>
+      </div>
+
+      <LatestPostsSection posts={secondary} showHeader={false} embedded />
+    </>
+  )}
+</div>
+
+<style>
+  .blog-journal-feed {
+    display: flex;
+    flex-direction: column;
+    gap: var(--kb-space-gap);
+  }
+
+  .blog-journal-feed :global(.blog-featured.blog-featured--embedded),
+  .blog-journal-feed :global(.blog-latest.blog-latest--embedded) {
+    padding: 0;
+  }
+
+  .blog-journal-feed__split {
+    display: flex;
+    align-items: center;
+    gap: var(--kb-space-4);
+  }
+
+  .blog-journal-feed__split::before,
+  .blog-journal-feed__split::after {
+    content: '';
+    flex: 1 1 auto;
+    height: 1px;
+    background: var(--kb-stroke-hairline);
+  }
+
+  .blog-journal-feed__split-label {
+    flex-shrink: 0;
+    color: var(--color-king-muted);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+</style>

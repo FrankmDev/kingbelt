@@ -1,5 +1,5 @@
 ---
-import SectionHeaderHome from '../home/SectionHeaderHome.astro';
+import SectionHeader from '@components/ui/SectionHeader.astro';
 import MediaFrame from '../../ui/MediaFrame.astro';
 
 interface GuidePhase {
@@ -41,7 +41,7 @@ const layerCount = section.phases.length;
   aria-labelledby={titleId}
 >
   <div class="help-hub-guide__inner kb-shell-wide">
-    <SectionHeaderHome
+    <SectionHeader
       index={section.index}
       eyebrow={section.eyebrow}
       meta={section.meta}
@@ -51,18 +51,18 @@ const layerCount = section.phases.length;
       class="help-hub-guide__header"
     >
       <Fragment slot="title">{section.title}</Fragment>
-    </SectionHeaderHome>
+    </SectionHeader>
 
     <div class="help-hub-guide__layout">
       <MediaFrame
         src={section.image.src}
         alt={section.image.alt}
-        ratio="4/3"
+        ratio="16/9"
         label={section.image.label}
         caption={section.image.caption}
         captionNumber={section.index}
-        width={960}
-        height={720}
+        width={1672}
+        height={941}
         loading="lazy"
         class="help-hub-guide__media"
       />
@@ -118,7 +118,7 @@ const layerCount = section.phases.length;
     border-top: 1px solid rgba(255, 255, 255, 0.08);
   }
 
-  .help-hub-guide__header:global(.section-header-home) {
+  .help-hub-guide__header:global(.section-header) {
     width: 100%;
     margin-bottom: var(--kb-space-gap);
   }
@@ -133,17 +133,11 @@ const layerCount = section.phases.length;
   @media (min-width: 64rem) {
     .help-hub-guide__layout {
       grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
-      align-items: stretch;
-    }
-
-    .help-hub-guide__layout .kb-reading-panel {
-      height: 100%;
+      align-items: start;
     }
 
     .help-hub-guide__media:global(.media-frame) {
-      height: 100%;
-      min-height: 0;
-      aspect-ratio: auto;
+      width: 100%;
     }
   }
 </style>

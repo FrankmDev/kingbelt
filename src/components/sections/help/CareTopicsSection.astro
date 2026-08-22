@@ -1,6 +1,5 @@
 ---
-import HomeSectionHead from '../home/HomeSectionHead.astro';
-import SectionHeaderHome from '../home/SectionHeaderHome.astro';
+import SectionHeader from '@components/ui/SectionHeader.astro';
 
 interface Topic {
   id: string;
@@ -34,30 +33,17 @@ const isDark = chapter.tone === 'dark';
   aria-labelledby={titleId}
 >
   <div class="care-topics__inner kb-shell-wide">
-    {isDark ? (
-      <SectionHeaderHome
-        index={chapter.index}
-        eyebrow={chapter.eyebrow}
-        meta={chapter.meta}
-        titleId={titleId}
-        body={chapter.body}
-        tone="dark"
-        class="care-topics__header"
-      >
-        <Fragment slot="title">{chapter.title}</Fragment>
-      </SectionHeaderHome>
-    ) : (
-      <HomeSectionHead
-        index={chapter.index}
-        eyebrow={chapter.eyebrow}
-        meta={chapter.meta}
-        titleId={titleId}
-        body={chapter.body}
-        class="care-topics__header"
-      >
-        <Fragment slot="title">{chapter.title}</Fragment>
-      </HomeSectionHead>
-    )}
+    <SectionHeader
+      index={chapter.index}
+      eyebrow={chapter.eyebrow}
+      meta={chapter.meta}
+      titleId={titleId}
+      body={chapter.body}
+      tone={isDark ? 'dark' : 'light'}
+      class="care-topics__header"
+    >
+      <Fragment slot="title">{chapter.title}</Fragment>
+    </SectionHeader>
 
     <ol class="care-topics__list">
       {items.map((item, index) => (
@@ -86,7 +72,7 @@ const isDark = chapter.tone === 'dark';
     border-top-color: rgba(255, 255, 255, 0.08);
   }
 
-  .care-topics__header:global(.section-header-home) {
+  .care-topics__header:global(.section-header) {
     width: 100%;
     margin-bottom: var(--kb-space-gap);
   }
@@ -133,7 +119,7 @@ const isDark = chapter.tone === 'dark';
   }
 
   .section-asphalt .care-topics__num {
-    color: var(--color-king-accent-light);
+    color: var(--color-king-on-dark-muted);
   }
 
   .care-topics__title {

@@ -61,7 +61,7 @@ scripts/          # herramientas de build/validación, no se envían al navegado
 
 La estructura es una guía, no un motivo para crear carpetas vacías. Coloca cada pieza en el nivel más pequeño que refleje su responsabilidad real.
 
-`astro.config.mjs` mantiene `compressHTML: true` para reducir el HTML, `fetchFile: null` para no activar Advanced Routing y `devToolbar.enabled: false` para desactivar el astronauta/Dev Toolbar en desarrollo. El proyecto renderiza bajo demanda con `output: 'server'` y el adapter `@astrojs/vercel`; solo los artículos del blog se prerenderizan por ser contenido editorial del repositorio. No usa flags experimentales.
+`astro.config.mjs` mantiene `compressHTML: true` para reducir el HTML, `fetchFile: null` para no activar Advanced Routing, `trailingSlash: 'never'` para una sola forma canónica de URL y `devToolbar.enabled: false` para desactivar el astronauta/Dev Toolbar en desarrollo. El proyecto renderiza bajo demanda con `output: 'server'` y el adapter `@astrojs/vercel`. Las páginas editoriales, legales y de ayuda se prerenderizan; la portada, el catálogo y el carrito permanecen SSR porque dependen del comercio. No usa flags experimentales.
 
 ## Responsabilidades
 
@@ -243,9 +243,10 @@ Promueve un patrón a global o a componente cuando se repita con la misma intenc
 - Botón para acciones; enlace para navegación. No simules interacción con `div`.
 - Imágenes con dimensiones para evitar CLS, `alt` contextual y lazy loading salvo contenido crítico/hero.
 - Un H1 por página, `title`, description, canonical y schema cuando corresponda.
-- `BaseLayout` acepta `robots`, `ogImageAlt` (vía `imageAlt`), `publishedAt` y `updatedAt`.
-- Sitemap: `@astrojs/sitemap` con filtro en `isSitemapExcluded()` (`src/config/sitemap.ts`). Excluye `/carrito`, `/cart-catalog.json` y `/cuenta/iniciar`.
-- `robots.txt`: endpoint en `src/pages/robots.txt.ts`; `Disallow` del snapshot de catálogo del carrito y de `/api/`.
+- `BaseLayout` acepta `robots`, `ogImageAlt` (vía `imageAlt`), `publishedAt` y `updatedAt`. Emite Organization + WebSite en JSON-LD, `hreflang`, RSS y `X-Robots-Tag`. El canonical sale siempre de `siteUrl`, no del host de la petición.
+- Sitemap: `@astrojs/sitemap` con filtro en `isSitemapExcluded()` (`src/config/sitemap.ts`) y `customPages` para la portada SSR. Excluye `/carrito`, `/cart-catalog.json`, `/cuenta/iniciar` y `/rss.xml`. El catálogo vive en `/sitemap-commerce.xml` y solo incluye productos cuando `COMMERCE_SOURCE=shopify`.
+- `robots.txt`: endpoint en `src/pages/robots.txt.ts`; `Disallow` de `/api/`, `/carrito`, `/cuenta/`, `/desistimiento` y del snapshot de catálogo. En Preview de Vercel responde `Disallow: /`.
+- El catálogo demo usa `noindex,follow` para no indexar productos ficticios. Los filtros de colección (`tipo`, `color`, `precio`, etc.) también van en `noindex,follow`. `VERCEL_ENV` solo decide si un deployment de Preview se indexa; no selecciona comercio.
 - Documentos legales en `draft` o `inactive` usan `noindex` y quedan fuera del sitemap y del footer hasta `published`.
 - `bun run legal:preflight` es el gate fail-closed de hechos y documentos legales. No forma parte de `bun run validate`; `validate` sí ejecuta los tests del gate.
 - No añadas dependencias, hydration o JavaScript para resolver algo que Astro/CSS/HTML ya cubre.

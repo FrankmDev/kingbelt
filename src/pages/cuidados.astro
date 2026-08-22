@@ -1,4 +1,6 @@
 ---
+export const prerender = true;
+
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Header from '../components/layout/Header.astro';
 import Footer from '../components/layout/Footer.astro';
@@ -7,10 +9,17 @@ import EditorialCtaSection from '../components/sections/EditorialCtaSection.astr
 import CareIntroSection from '../components/sections/help/CareIntroSection.astro';
 import CareTopicsSection from '../components/sections/help/CareTopicsSection.astro';
 import { carePage, careSections, helpHub, helpMeta } from '@content/help';
+import { createPageSeo, toSeoImage } from '@shared/seo/page-head';
+import { createBreadcrumbListSchema, createWebPageSchema } from '@shared/seo/structured-data';
 
 const { title, description } = helpMeta.care;
-const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href;
 const { hero, intro, chapters } = carePage;
+const seo = createPageSeo({
+  title,
+  description,
+  pathname: '/cuidados',
+  image: toSeoImage(hero.image, hero.imageAlt),
+});
 
 const chapterItems = chapters.map((chapter) => ({
   chapter,
@@ -22,9 +31,21 @@ const chapterItems = chapters.map((chapter) => ({
     return item;
   }),
 }));
+
+const careSchema = [
+  createWebPageSchema({
+    name: title,
+    description,
+    url: seo.canonicalUrl,
+  }),
+  createBreadcrumbListSchema([
+    { name: 'Ayuda', path: '/ayuda' },
+    { name: 'Cuidados', path: '/cuidados' },
+  ]),
+];
 ---
 
-<BaseLayout title={title} description={description} canonicalURL={canonicalURL}>
+<BaseLayout seo={seo} schema={careSchema}>
   <Header slot="header" initialTheme="dark" scrolledTheme="light" compactThreshold={32} />
 
   <PageHeader

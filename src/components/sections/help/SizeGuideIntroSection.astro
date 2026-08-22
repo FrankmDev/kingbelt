@@ -1,5 +1,5 @@
 ---
-import HomeSectionHead from '../home/HomeSectionHead.astro';
+import SectionHeader from '@components/ui/SectionHeader.astro';
 import MediaFrame from '../../ui/MediaFrame.astro';
 
 interface ImageData {
@@ -28,7 +28,7 @@ const titleId = 'size-guide-intro-title';
 
 <section class="size-guide-intro" aria-labelledby={titleId}>
   <div class="size-guide-intro__inner kb-shell-wide">
-    <HomeSectionHead
+    <SectionHeader
       index={section.index}
       eyebrow={section.eyebrow}
       meta={section.meta}
@@ -37,17 +37,17 @@ const titleId = 'size-guide-intro-title';
       class="size-guide-intro__header"
     >
       <Fragment slot="title">{section.title}</Fragment>
-    </HomeSectionHead>
+    </SectionHeader>
 
     <MediaFrame
       src={section.image.src}
       alt={section.image.alt}
-      ratio="21/9"
+      ratio="3/2"
       label={section.image.label}
       caption={section.image.caption}
       captionNumber={section.index}
-      width={1440}
-      height={617}
+      width={1500}
+      height={1000}
       loading="lazy"
       class="size-guide-intro__media"
     />
@@ -61,8 +61,12 @@ const titleId = 'size-guide-intro-title';
     border-top: 1px solid var(--kb-stroke-hairline);
   }
 
-  .size-guide-intro__header:global(.section-header-home) {
+  .size-guide-intro__header:global(.section-header) {
     width: 100%;
     margin-bottom: var(--kb-space-gap);
+  }
+
+  .size-guide-intro__media:global(.media-frame) {
+    width: 100%;
   }
 </style>

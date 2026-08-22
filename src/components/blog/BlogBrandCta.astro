@@ -1,45 +1,41 @@
 ---
-import CTABox from '../ui/CTABox.astro';
+import EditorialCtaSection from '../sections/EditorialCtaSection.astro';
+
+interface SectionContent {
+  index?: string;
+  eyebrow: string;
+  title: string;
+  body: string;
+  label: string;
+  href: string;
+}
 
 interface Props {
   image: string;
   imagePosition?: string;
+  section: SectionContent;
   article?: boolean;
 }
 
-const { image, imagePosition, article = false } = Astro.props;
+const { image, imagePosition, section, article = false } = Astro.props;
 ---
 
-<section
-  class:list={[
-    'blog-brand-cta section-spacing-tight section-spacing-close',
-    article && 'blog-brand-cta--article',
-  ]}
-  aria-label="Conocer KingBelt"
->
-  <div class="cta-section-inner kb-shell-wide">
-    <CTABox
-      eyebrow="Detrás de la revista"
-      title="De la lectura a <em>la marca</em>."
-      description="El criterio editorial nace de una forma de mirar el producto: proporción, función, material y uso real."
-      buttonLabel="Conocer KingBelt"
-      buttonHref="/sobre"
-      buttonVariant="secondary"
-      backgroundImage={image}
-      backgroundAlt=""
-      backgroundWidth={1168}
-      backgroundHeight={784}
-      backgroundPosition={imagePosition}
-      titleTag="h2"
-    />
-  </div>
-</section>
+<EditorialCtaSection
+  index={section.index}
+  titleId={article ? 'blog-article-brand-cta' : 'blog-brand-cta-title'}
+  class:list={[article && 'blog-brand-cta--article', 'section-spacing-tight']}
+  cta={{
+    eyebrow: section.eyebrow,
+    title: section.title,
+    description: section.body,
+    buttonLabel: section.label,
+    buttonHref: section.href,
+    image,
+    imagePosition,
+  }}
+/>
 
 <style>
-  .blog-brand-cta {
-    background: var(--color-king-bg);
-  }
-
   .blog-brand-cta--article {
     padding-top: clamp(1.75rem, 3vw, 2.5rem);
   }

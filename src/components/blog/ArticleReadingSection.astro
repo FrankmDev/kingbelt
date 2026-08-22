@@ -4,11 +4,18 @@ import ArticleBody from './ArticleBody.astro';
 import ArticleIndex from './ArticleIndex.astro';
 import type { BlogPost } from '@content/blog';
 
-interface Props {
-  post: BlogPost;
+interface SectionContent {
+  index?: string;
+  eyebrow?: string;
+  title: string;
 }
 
-const { post } = Astro.props;
+interface Props {
+  post: BlogPost;
+  section: SectionContent;
+}
+
+const { post, section } = Astro.props;
 const idPrefix = `article-${post.slug}`;
 const titleId = `${idPrefix}-title`;
 ---
@@ -18,44 +25,22 @@ const titleId = `${idPrefix}-title`;
   aria-labelledby={titleId}
   data-article-main={idPrefix}
 >
-  <div class="kb-shell-wide section-stack-lg">
+  <div class="kb-shell-wide article-main__inner">
     <SectionHeader
-      eyebrow="Desarrollo"
+      index={section.index}
+      eyebrow={section.eyebrow}
       meta={`${post.dateLabel} · ${post.readingTime}`}
-      titleId={titleId}
-      align="left"
-      class="article-main-header"
+      body={post.introduction}
+      class="article-main__header"
     >
       <Fragment slot="title">
-        El artículo <em>desarrollado</em>.
+        <span id={titleId} set:html={section.title} />
       </Fragment>
-      <p slot="body">{post.introduction}</p>
     </SectionHeader>
 
-    <div class="article-reading-stage">
-      <div class="article-reading-stage__texture" aria-hidden="true"></div>
-
-      <span
-        class="article-reading-stage__corner kb-corner-bracket kb-corner-bracket-tl"
-        aria-hidden="true"
-      ></span>
-      <span
-        class="article-reading-stage__corner kb-corner-bracket kb-corner-bracket-tr"
-        aria-hidden="true"
-      ></span>
-      <span
-        class="article-reading-stage__corner kb-corner-bracket kb-corner-bracket-bl"
-        aria-hidden="true"
-      ></span>
-      <span
-        class="article-reading-stage__corner kb-corner-bracket kb-corner-bracket-br"
-        aria-hidden="true"
-      ></span>
-
-      <div class="article-spread">
-        <ArticleBody sections={post.sections} />
-        <ArticleIndex sections={post.sections} idPrefix={idPrefix} />
-      </div>
+    <div class="article-spread">
+      <ArticleBody sections={post.sections} />
+      <ArticleIndex sections={post.sections} idPrefix={idPrefix} />
     </div>
   </div>
 </section>
@@ -66,101 +51,31 @@ const titleId = `${idPrefix}-title`;
   }
 
   .article-main--chapter-start {
-    padding-top: clamp(2rem, 3.5vw, 3rem);
+    padding-top: clamp(2.5rem, 4.5vw, 3.75rem);
     padding-bottom: clamp(1.75rem, 3vw, 2.5rem);
   }
 
-  .article-main-header:global(.section-header) {
-    --sh-max-copy: 50ch;
-    --sh-max-title: 18ch;
+  .article-main__inner {
+    display: flex;
+    flex-direction: column;
+    gap: var(--kb-space-gap);
   }
 
-  .article-main-header :global(.sh-title em) {
+  .article-main__header:global(.section-header) {
+    margin-bottom: 0;
+  }
+
+  .article-main__header :global(.sh-title em) {
     color: var(--color-king-accent);
     font-style: italic;
     font-weight: inherit;
   }
 
-  .article-reading-stage {
-    position: relative;
-    width: min(100%, calc(100% - clamp(2rem, 6vw, 5.5rem)));
-    margin-inline: auto;
-    padding: clamp(1.35rem, 2.8vw, 2rem);
-    border: 1px solid var(--kb-stroke-dark);
-    border-radius: var(--kb-card-radius);
-    background: var(--kb-surface-light-strong);
-    box-shadow: var(--kb-shadow-sm);
-    overflow: hidden;
-  }
-
-  .article-reading-stage::before {
-    content: '';
-    position: absolute;
-    inset: 0 0 auto 0;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.72) 48%, transparent);
-    pointer-events: none;
-    z-index: 1;
-  }
-
-  .article-reading-stage::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    box-shadow: var(--kb-shadow-inset-soft);
-    pointer-events: none;
-  }
-
-  .article-reading-stage__texture {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    opacity: 0.32;
-    background-image:
-      linear-gradient(90deg, rgba(138, 90, 43, 0.04) 0, rgba(138, 90, 43, 0.04) 1px, transparent 1px),
-      linear-gradient(rgba(26, 26, 26, 0.016) 1px, transparent 1px);
-    background-size: 8rem 100%, 100% 4rem;
-    mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.5), transparent 88%);
-  }
-
-  .article-reading-stage__corner {
-    z-index: 2;
-  }
-
-  .article-reading-stage__corner.kb-corner-bracket-tl {
-    top: 0.9rem;
-    left: 0.9rem;
-  }
-
-  .article-reading-stage__corner.kb-corner-bracket-tr {
-    top: 0.9rem;
-    right: 0.9rem;
-  }
-
-  .article-reading-stage__corner.kb-corner-bracket-bl {
-    bottom: 0.9rem;
-    left: 0.9rem;
-  }
-
-  .article-reading-stage__corner.kb-corner-bracket-br {
-    right: 0.9rem;
-    bottom: 0.9rem;
-  }
-
   .article-spread {
-    position: relative;
-    z-index: 1;
     display: grid;
     grid-template-columns: minmax(0, 1fr);
     gap: var(--kb-space-gap-lg);
     align-items: start;
-  }
-
-  @media (min-width: 48rem) {
-    .article-reading-stage {
-      width: min(100%, calc(100% - clamp(3rem, 8vw, 7rem)));
-    }
   }
 
   @media (min-width: 64rem) {

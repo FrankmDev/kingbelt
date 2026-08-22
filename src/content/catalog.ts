@@ -6,8 +6,8 @@ export const catalogPage = {
   scope:
     'Toda la colección, agrupada por categoría. Los filtros recortan las referencias sin salir de esta página.',
   seo: {
-    title: 'Colección — KingBelt',
+    title: 'Cinturones de cuero — Colección KingBelt',
     description:
-      'Explora la colección completa de cinturones KingBelt por categoría. Filtra por acabado, color, precio y disponibilidad.',
+      'Explora cinturones de cuero KingBelt por categoría. Filtra por acabado, color, precio y disponibilidad.',
   },
 } as const;

@@ -1,5 +1,5 @@
 ---
-import HomeSectionHead from '../home/HomeSectionHead.astro';
+import SectionHeader from '@components/ui/SectionHeader.astro';
 import SizeGuideSteps from '../../help/SizeGuideSteps.astro';
 
 interface Method {
@@ -27,7 +27,7 @@ const titleId = 'size-guide-methods-title';
 
 <section class="size-guide-methods" aria-labelledby={titleId}>
   <div class="size-guide-methods__inner kb-shell-wide">
-    <HomeSectionHead
+    <SectionHeader
       index={section.index}
       eyebrow={section.eyebrow}
       meta={section.meta}
@@ -36,7 +36,7 @@ const titleId = 'size-guide-methods-title';
       class="size-guide-methods__header"
     >
       <Fragment slot="title">{section.title}</Fragment>
-    </HomeSectionHead>
+    </SectionHeader>
 
     <SizeGuideSteps methods={methods} />
   </div>
@@ -49,7 +49,7 @@ const titleId = 'size-guide-methods-title';
     border-top: 1px solid var(--kb-stroke-hairline);
   }
 
-  .size-guide-methods__header:global(.section-header-home) {
+  .size-guide-methods__header:global(.section-header) {
     width: 100%;
     margin-bottom: var(--kb-space-gap);
   }

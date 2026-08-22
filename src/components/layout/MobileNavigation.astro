@@ -1,6 +1,7 @@
 ---
 import Button from '../ui/Button.astro';
 import Icon from '../ui/Icon.astro';
+import OptimizedImage from '../ui/OptimizedImage.astro';
 import { headerAccountCta, socialLinks, type NavItem } from '@config/navigation';
 
 interface Props {
@@ -59,13 +60,13 @@ const utilities: readonly NavItem[] = [
     </ul>
 
     <a href="/productos" class="mobile-nav__media" data-mobile-nav-link>
-      <img
-        src="/images/brand/cinturones-en-taller.jpg"
+      <OptimizedImage
+        src="/images/imagen-cinturon-kingbelt-18.avif"
         alt=""
-        width="960"
-        height="540"
+        preset="card"
+        width={960}
+        height={540}
         loading="lazy"
-        decoding="async"
         class="mobile-nav__media-img"
       />
       <span class="mobile-nav__media-veil" aria-hidden="true"></span>
@@ -186,7 +187,7 @@ const utilities: readonly NavItem[] = [
     inset: 0;
     pointer-events: none;
     background:
-      radial-gradient(ellipse at 50% 0%, rgba(138, 106, 61, 0.16), transparent 46%),
+      radial-gradient(ellipse at 50% 0%, rgba(255, 250, 241, 0.08), transparent 46%),
       linear-gradient(180deg, rgba(13, 12, 11, 0.2) 0%, transparent 28%);
   }
 
@@ -259,11 +260,11 @@ const utilities: readonly NavItem[] = [
 
   .mobile-nav__link:hover,
   .mobile-nav__link:focus-visible {
-    color: var(--color-king-accent-light);
+    color: var(--color-king-on-dark-soft);
   }
 
   .mobile-nav__link:focus-visible {
-    outline: 2px solid var(--color-king-accent-light);
+    outline: 2px solid var(--color-king-on-dark-soft);
     outline-offset: 4px;
   }
 
@@ -298,7 +299,7 @@ const utilities: readonly NavItem[] = [
 
   .mobile-nav__link:hover .mobile-nav__arrow,
   .mobile-nav__link:focus-visible .mobile-nav__arrow {
-    color: var(--color-king-accent-light);
+    color: var(--color-king-on-dark-soft);
     transform: translate(2px, -2px);
   }
 
@@ -312,10 +313,17 @@ const utilities: readonly NavItem[] = [
     color: inherit;
   }
 
+  .mobile-nav__media :global(picture),
   .mobile-nav__media-img {
+    position: absolute;
+    inset: 0;
     width: 100%;
     height: 100%;
+    max-width: none;
     object-fit: cover;
+  }
+
+  .mobile-nav__media-img {
     object-position: center 42%;
     filter: saturate(0.78) contrast(1.05);
   }
@@ -342,7 +350,7 @@ const utilities: readonly NavItem[] = [
   }
 
   .mobile-nav__media-kicker {
-    color: var(--color-king-accent-light);
+    color: var(--color-king-on-dark-soft);
     letter-spacing: 0.2em;
   }
 
@@ -368,7 +376,7 @@ const utilities: readonly NavItem[] = [
   }
 
   .mobile-nav__media:focus-visible {
-    outline: 2px solid var(--color-king-accent-light);
+    outline: 2px solid var(--color-king-on-dark-soft);
     outline-offset: 3px;
   }
 
@@ -389,7 +397,7 @@ const utilities: readonly NavItem[] = [
 
   .mobile-nav__util:hover,
   .mobile-nav__util:focus-visible {
-    color: var(--color-king-accent-light);
+    color: var(--color-king-on-dark-soft);
   }
 
   .mobile-nav__dock {
@@ -410,7 +418,7 @@ const utilities: readonly NavItem[] = [
   }
 
   .mobile-nav__util:focus-visible {
-    outline: 2px solid var(--color-king-accent-light);
+    outline: 2px solid var(--color-king-on-dark-soft);
     outline-offset: 3px;
   }
 

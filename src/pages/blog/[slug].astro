@@ -6,9 +6,15 @@ import BlogBrandCta from '../../components/blog/BlogBrandCta.astro';
 import Footer from '../../components/layout/Footer.astro';
 import Header from '../../components/layout/Header.astro';
 import PageHeader from '../../components/ui/PageHeader.astro';
-import { blogPage, blogPosts, type BlogPost } from '@content/blog';
-import { site } from '@config/site';
+import { blogPage, blogPosts, getBlogPostPath, type BlogPost } from '@content/blog';
+import { siteUrl } from '@config/site';
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import { createPageSeo, toSeoImage } from '@shared/seo/page-head';
+import {
+  createBreadcrumbListSchema,
+  createWebPageSchema,
+  SITE_ORGANIZATION_ID,
+} from '@shared/seo/structured-data';
 
 export const prerender = true;
 
@@ -23,8 +29,14 @@ interface Props {
 }
 
 const { post } = Astro.props;
-const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href;
-const origin = Astro.site ?? Astro.url.origin;
+const { sections: blogSections } = blogPage;
+const seo = createPageSeo({
+  title: `${post.title} — Revista KingBelt`,
+  description: post.excerpt,
+  pathname: getBlogPostPath(post),
+  ogType: 'article',
+  image: toSeoImage(post.image, post.imageAlt),
+});
 const sameCategory = blogPosts.filter(
   (candidate) => candidate.slug !== post.slug && candidate.category === post.category
 );
@@ -33,35 +45,36 @@ const otherPosts = blogPosts.filter(
 );
 const relatedPosts = [...sameCategory, ...otherPosts].slice(0, 3);
 const articleSchema = {
-  '@context': 'https://schema.org',
-  '@type': 'BlogPosting',
+  ...createWebPageSchema({
+    type: 'BlogPosting',
+    name: post.title,
+    description: post.excerpt,
+    url: seo.canonicalUrl,
+    datePublished: post.date,
+    dateModified: post.date,
+  }),
   headline: post.title,
-  description: post.excerpt,
-  image: new URL(post.image, origin).href,
-  datePublished: post.date,
-  dateModified: post.date,
-  mainEntityOfPage: canonicalURL,
+  image: new URL(post.image, siteUrl).href,
+  mainEntityOfPage: seo.canonicalUrl,
   articleSection: post.category,
-  publisher: {
-    '@type': 'Organization',
-    name: site.name,
-    url: origin,
-  },
+  author: { '@id': SITE_ORGANIZATION_ID },
 };
+const breadcrumbSchema = createBreadcrumbListSchema([
+  { name: 'Revista', path: '/blog' },
+  { name: post.title, path: getBlogPostPath(post) },
+]);
 ---
 
 <BaseLayout
-  title={`${post.title} — Revista KingBelt`}
-  description={post.excerpt}
-  image={post.image}
-  canonicalURL={canonicalURL}
-  schema={articleSchema}
-  ogType="article"
+  seo={seo}
+  schema={[articleSchema, breadcrumbSchema]}
+  publishedAt={post.date}
+  updatedAt={post.date}
 >
   <Header slot="header" initialTheme="dark" scrolledTheme="light" compactThreshold={32} />
 
   <PageHeader
-    variant="blog"
+    titleId="article-hero-title"
     eyebrow="Revista KingBelt"
     description={post.excerpt}
     image={post.image}
@@ -72,20 +85,26 @@ const articleSchema = {
       category: post.category,
       date: post.dateLabel,
       readTime: post.readingTime,
-      image: post.image,
-      imageAlt: post.imageAlt,
-      imagePosition: post.imagePosition,
     }}
     breadcrumbs={[{ label: 'Revista', href: '/blog' }, { label: post.category }]}
   >
     <Fragment slot="title">{post.title}</Fragment>
   </PageHeader>
 
-  <ArticleReadingSection post={post} />
+  <div class="blog-article-page">
+    <ArticleReadingSection post={post} section={blogSections.reading} />
 
-  {relatedPosts.length > 0 && <ArticleRelatedSection posts={relatedPosts} />}
+    {relatedPosts.length > 0 && (
+      <ArticleRelatedSection posts={relatedPosts} section={blogSections.related} />
+    )}
 
-  <BlogBrandCta image={post.image} imagePosition={post.imagePosition} article />
+    <BlogBrandCta
+      image={post.image}
+      imagePosition={post.imagePosition}
+      section={blogSections.brandCta}
+      article
+    />
+  </div>
 
   <Footer slot="footer" connected />
 </BaseLayout>

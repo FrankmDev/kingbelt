@@ -1,6 +1,5 @@
 ---
-import CTABox from '../ui/CTABox.astro';
-import SectionHeaderHome from './home/SectionHeaderHome.astro';
+import EditorialCtaBanner from '../ui/EditorialCtaBanner.astro';
 
 interface CtaData {
   eyebrow: string;
@@ -10,6 +9,8 @@ interface CtaData {
   buttonHref: string;
   image: string;
   imagePosition?: string;
+  secondaryLabel?: string;
+  secondaryHref?: string;
 }
 
 interface Props {
@@ -17,57 +18,60 @@ interface Props {
   index?: string;
   meta?: string;
   titleId?: string;
+  id?: string;
   class?: string;
+  spacing?: 'default' | 'close';
 }
 
 const {
   cta,
-  index = '04',
-  meta = 'Contacto',
+  index,
+  meta,
   titleId = 'editorial-cta-title',
+  id,
   class: className = '',
+  spacing = 'default',
 } = Astro.props;
+
+const secondary =
+  cta.secondaryLabel && cta.secondaryHref
+    ? { label: cta.secondaryLabel, href: cta.secondaryHref }
+    : undefined;
 ---
 
-<section class:list={['editorial-cta', className]} aria-labelledby={titleId}>
+<section
+  id={id}
+  class:list={[
+    'editorial-cta section-spacing',
+    spacing === 'close' && 'section-spacing-close',
+    className,
+  ]}
+  aria-labelledby={titleId}
+>
   <div class="editorial-cta__inner kb-shell-wide">
-    <CTABox
+    <EditorialCtaBanner
+      index={index}
       eyebrow={cta.eyebrow}
+      meta={meta}
       title={cta.title}
       description={cta.description}
-      buttonLabel={cta.buttonLabel}
-      buttonHref={cta.buttonHref}
-      buttonVariant="secondary"
+      titleId={titleId}
+      primary={{ label: cta.buttonLabel, href: cta.buttonHref }}
+      secondary={secondary}
       backgroundImage={cta.image}
       backgroundAlt=""
       backgroundPosition={cta.imagePosition ?? 'center 40%'}
-      titleTag="h2"
-      class="editorial-cta__box"
-    >
-      <SectionHeaderHome
-        slot="header"
-        index={index}
-        eyebrow={cta.eyebrow}
-        meta={meta}
-        titleId={titleId}
-        body={cta.description}
-        tone="dark"
-        density="compact"
-      >
-        <Fragment slot="title">{cta.title}</Fragment>
-      </SectionHeaderHome>
-    </CTABox>
+    />
   </div>
 </section>
 
 <style>
   .editorial-cta {
-    padding-block: var(--kb-space-section);
     background: var(--color-king-bg);
     border-top: 1px solid var(--kb-stroke-hairline);
   }
 
-  .editorial-cta__box:global(.cta-box) {
-    min-height: clamp(16rem, 32vw, 22rem);
+  .editorial-cta__inner {
+    min-width: 0;
   }
 </style>

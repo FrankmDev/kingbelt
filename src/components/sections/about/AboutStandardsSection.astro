@@ -1,5 +1,5 @@
 ---
-import SectionHeaderHome from '../home/SectionHeaderHome.astro';
+import SectionHeader from '@components/ui/SectionHeader.astro';
 import type { AboutPrinciple } from '@content/about';
 
 interface StandardsData {
@@ -23,7 +23,7 @@ const { data, class: className = '' } = Astro.props;
   aria-labelledby="about-standards-title"
 >
   <div class="kb-shell-wide about-standards__shell">
-    <SectionHeaderHome
+    <SectionHeader
       index="02"
       eyebrow={data.eyebrow}
       meta={data.badge}
@@ -34,7 +34,7 @@ const { data, class: className = '' } = Astro.props;
       <Fragment slot="title">
         <span id="about-standards-title" set:html={data.title} />
       </Fragment>
-    </SectionHeaderHome>
+    </SectionHeader>
 
     <ol class="about-standards__grid" aria-label="Filtros de producto">
       {data.principles.map((principle) => (
@@ -57,7 +57,7 @@ const { data, class: className = '' } = Astro.props;
 </section>
 
 <style>
-  .about-standards__header:global(.section-header-home) {
+  .about-standards__header:global(.section-header) {
     margin-bottom: var(--kb-space-gap);
   }
 
@@ -90,13 +90,13 @@ const { data, class: className = '' } = Astro.props;
 
   .about-standard__num {
     margin: 0;
-    color: var(--color-king-accent-light);
+    color: var(--color-king-on-dark-muted);
     opacity: 0.55;
   }
 
   .about-standard__label {
     margin: 0;
-    color: var(--color-king-accent-light);
+    color: var(--color-king-on-dark-muted);
   }
 
   .about-standard__copy {
@@ -133,7 +133,7 @@ const { data, class: className = '' } = Astro.props;
     margin: 0;
     padding-top: var(--kb-space-4);
     border-top: 1px solid rgba(255, 255, 255, 0.1);
-    color: var(--color-king-accent-light);
+    color: var(--color-king-on-dark-subtle);
     letter-spacing: 0.12em;
     text-transform: uppercase;
   }

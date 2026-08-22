@@ -1,56 +1,53 @@
 ---
+export const prerender = true;
+
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Header from '../components/layout/Header.astro';
 import Footer from '../components/layout/Footer.astro';
 import PageHeader from '../components/ui/PageHeader.astro';
-
 import BlogBrandCta from '../components/blog/BlogBrandCta.astro';
 import BlogTopicNavigation from '../components/blog/BlogTopicNavigation.astro';
 import EditorialSelectionSection from '../components/blog/EditorialSelectionSection.astro';
-import FeaturedArticleSection from '../components/blog/FeaturedArticleSection.astro';
-import LatestPostsSection from '../components/blog/LatestPostsSection.astro';
-
+import BlogFeedSection from '../components/sections/blog/BlogFeedSection.astro';
 import { blogCategories, blogPage, blogPosts, getBlogPostPath } from '@content/blog';
-import { site } from '@config/site';
+import { createPageSeo, toSeoImage } from '@shared/seo/page-head';
+import { createWebPageSchema } from '@shared/seo/structured-data';
 
-const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href;
-const origin = Astro.site ?? Astro.url.origin;
-const featured = blogPosts.find((post) => post.status === 'featured') ?? blogPosts[0];
-const latestPosts = blogPosts.slice(1);
-const selection = [blogPosts[7], blogPosts[6], blogPosts[4]].filter(Boolean);
-const blogSchema = {
-  '@context': 'https://schema.org',
-  '@type': 'Blog',
-  name: blogPage.meta.title,
+const seo = createPageSeo({
+  title: blogPage.meta.title,
   description: blogPage.meta.description,
-  url: canonicalURL,
-  publisher: {
-    '@type': 'Organization',
-    name: site.name,
-    url: origin,
-  },
+  pathname: '/blog',
+  image: toSeoImage(blogPage.hero.image, blogPage.hero.imageAlt),
+});
+const featured = blogPosts.find((post) => post.status === 'featured') ?? blogPosts[0];
+const journalPosts = [
+  featured,
+  ...blogPosts.filter((post) => post.slug !== featured.slug),
+];
+const selection = [blogPosts[7], blogPosts[6], blogPosts[4]].filter(Boolean);
+const { sections: blogSections } = blogPage;
+const blogSchema = {
+  ...createWebPageSchema({
+    type: 'Blog',
+    name: blogPage.meta.title,
+    description: blogPage.meta.description,
+    url: seo.canonicalUrl,
+  }),
   blogPost: blogPosts.map((post) => ({
     '@type': 'BlogPosting',
     headline: post.title,
     description: post.excerpt,
     datePublished: post.date,
-    url: new URL(getBlogPostPath(post), origin).href,
-    image: new URL(post.image, origin).href,
+    url: new URL(getBlogPostPath(post), seo.canonicalUrl).href,
+    image: new URL(post.image, seo.canonicalUrl).href,
   })),
 };
 ---
 
-<BaseLayout
-  title={blogPage.meta.title}
-  description={blogPage.meta.description}
-  image={blogPage.hero.image}
-  canonicalURL={canonicalURL}
-  schema={blogSchema}
->
+<BaseLayout seo={seo} schema={blogSchema}>
   <Header slot="header" initialTheme="dark" scrolledTheme="light" compactThreshold={32} />
 
   <PageHeader
-    class="blog-page-header"
     eyebrow={blogPage.hero.eyebrow}
     description={blogPage.hero.lede}
     image={blogPage.hero.image}
@@ -64,22 +61,25 @@ const blogSchema = {
     </Fragment>
   </PageHeader>
 
-  <BlogTopicNavigation categories={blogCategories} />
-  <FeaturedArticleSection post={featured} />
-  <LatestPostsSection posts={latestPosts} />
-  <EditorialSelectionSection posts={selection} />
-  <BlogBrandCta image={featured.image} imagePosition={featured.imagePosition} />
+  <div class="blog-page">
+    <BlogTopicNavigation categories={blogCategories} />
+
+    <BlogFeedSection
+      id="publicaciones"
+      posts={journalPosts}
+      section={blogSections.publications}
+      titleId="blog-publications-title"
+      afterNav
+    />
+
+    <EditorialSelectionSection posts={selection} section={blogSections.selection} />
+
+    <BlogBrandCta
+      image={featured.image}
+      imagePosition={featured.imagePosition}
+      section={blogSections.brandCta}
+    />
+  </div>
 
   <Footer slot="footer" connected />
 </BaseLayout>
-
-<style>
-  .blog-page-header {
-    min-height: min(44rem, 78vh);
-  }
-
-  .blog-page-header :global(.page-header-inner) {
-    padding-top: calc(var(--kb-header-offset) + var(--kb-space-4));
-    padding-bottom: clamp(4.5rem, 9vw, 6rem);
-  }
-</style>

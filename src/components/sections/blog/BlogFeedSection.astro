@@ -1,0 +1,94 @@
+---
+import SectionHeader from '@components/ui/SectionHeader.astro';
+import BlogJournalFeed from '../../blog/BlogJournalFeed.astro';
+import Button from '../../ui/Button.astro';
+import Icon from '../../ui/Icon.astro';
+import type { BlogPost } from '@content/blog';
+
+interface SectionContent {
+  index?: string;
+  eyebrow?: string;
+  title: string;
+  body?: string;
+  meta?: string;
+}
+
+interface Props {
+  id?: string;
+  posts: BlogPost[];
+  section: SectionContent;
+  titleId: string;
+  cta?: { label: string; href: string };
+  showHead?: boolean;
+  afterNav?: boolean;
+  class?: string;
+}
+
+const {
+  id,
+  posts,
+  section,
+  titleId,
+  cta,
+  showHead = true,
+  afterNav = false,
+  class: className,
+} = Astro.props;
+---
+
+<section
+  id={id}
+  class:list={['blog-feed section-spacing', afterNav && 'blog-feed--after-nav', className]}
+  aria-labelledby={showHead ? titleId : undefined}
+  {...(!showHead && { 'aria-label': section.eyebrow ?? 'Publicaciones de la revista' })}
+>
+  <div class="kb-shell-wide blog-feed__inner">
+    {showHead && (
+      <SectionHeader
+        index={section.index}
+        eyebrow={section.eyebrow}
+        body={section.body}
+        meta={section.meta}
+        titleId={titleId}
+      >
+        <Fragment slot="title">
+          <span set:html={section.title} />
+        </Fragment>
+
+        {cta && (
+          <Fragment slot="aside">
+            <Button href={cta.href} variant="outline" size="md">
+              {cta.label}
+              <Icon
+                name="arrow-right"
+                class="h-3.5 w-3.5 transition-transform duration-[var(--kb-dur-fast)] group-hover:translate-x-1"
+              />
+            </Button>
+          </Fragment>
+        )}
+      </SectionHeader>
+    )}
+
+    <BlogJournalFeed posts={posts} />
+  </div>
+</section>
+
+<style>
+  .blog-feed {
+    background: var(--color-king-surface);
+  }
+
+  .blog-feed--after-nav {
+    padding-top: clamp(2.5rem, 4.5vw, 3.75rem);
+  }
+
+  .blog-feed__inner {
+    display: flex;
+    flex-direction: column;
+    gap: var(--kb-space-gap);
+  }
+
+  .blog-feed__inner :global(.home-section-head) {
+    margin-bottom: 0;
+  }
+</style>

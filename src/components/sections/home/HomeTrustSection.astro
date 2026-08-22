@@ -1,7 +1,8 @@
 ---
-import SectionHeaderHome from './SectionHeaderHome.astro';
+import SectionHeader from '@components/ui/SectionHeader.astro';
 import FeatureCard from '../../ui/FeatureCard.astro';
 import Button from '../../ui/Button.astro';
+import Icon from '../../ui/Icon.astro';
 import { trustSection } from '@content/home';
 
 const cardVariants = ['default', 'default', 'default'] as const;
@@ -12,68 +13,206 @@ const cardVariants = ['default', 'default', 'default'] as const;
   class="home-trust section-spacing"
   aria-labelledby="home-trust-title"
 >
-  <div class="kb-shell-wide">
-    <SectionHeaderHome
+  <div class="kb-shell-wide home-trust__shell">
+    <SectionHeader
       index={trustSection.index}
       eyebrow={trustSection.eyebrow}
+      body={trustSection.body}
+      meta={trustSection.meta}
       titleId="home-trust-title"
       class="home-trust__header"
     >
       <Fragment slot="title">
         <span set:html={trustSection.title} />
       </Fragment>
-    </SectionHeaderHome>
+
+      <Fragment slot="aside">
+        <Button href={trustSection.cta.href} variant="outline" size="md">
+          {trustSection.cta.label}
+          <Icon
+            name="arrow-right"
+            class="h-3.5 w-3.5 transition-transform duration-[var(--kb-dur-fast)] group-hover:translate-x-1"
+          />
+        </Button>
+      </Fragment>
+    </SectionHeader>
 
     <ul class="home-trust__grid">
       {trustSection.items.map((item, index) => (
         <li class="home-trust__item">
           <FeatureCard
-            number={String(index + 1).padStart(2, '0')}
+            number={item.number}
+            eyebrow={item.meta}
             title={item.title}
             description={item.text}
+            meta={item.linkLabel}
+            href={item.href}
             variant={cardVariants[index] ?? 'default'}
+            class="home-trust__card"
           />
         </li>
       ))}
     </ul>
 
-    <div class="home-trust__action">
-      <Button href="/contacto" variant="outline" size="md">
-        Ir a contacto
-      </Button>
-    </div>
+    {trustSection.shortcuts.length > 0 && (
+      <footer class="home-trust__foot">
+        <nav class="home-trust__shortcuts" aria-label="Accesos rápidos">
+          <ul class="home-trust__shortcut-list">
+            {trustSection.shortcuts.map((shortcut) => (
+              <li>
+                <a href={shortcut.href} class="home-trust__shortcut">
+                  {shortcut.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </footer>
+    )}
   </div>
 </section>
 
 <style>
   .home-trust {
-    background: var(--color-king-surface);
+    background: var(--color-king-bg);
+  }
+
+  .home-trust__shell {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .home-trust__header:global(.section-header) {
+    margin-bottom: var(--kb-space-gap);
   }
 
   .home-trust__grid {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    gap: var(--kb-space-gap);
+    gap: var(--kb-space-4);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    min-width: 0;
+  }
+
+  .home-trust__item {
+    min-width: 0;
+    display: flex;
+  }
+
+  .home-trust__card:global(.feature-card) {
+    width: 100%;
+    min-height: 100%;
+  }
+
+  .home-trust__foot {
+    margin-top: var(--kb-space-gap);
+    padding-top: var(--kb-space-4);
+    border-top: 1px solid var(--kb-stroke-hairline);
+  }
+
+  .home-trust__shortcut-list {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--kb-space-2) var(--kb-space-4);
     margin: 0;
     padding: 0;
     list-style: none;
   }
 
-  .home-trust__item {
-    min-width: 0;
+  .home-trust__shortcut-list li {
+    display: inline-flex;
+    align-items: center;
   }
 
-  .home-trust__action {
-    display: flex;
-    justify-content: flex-start;
-    margin-top: var(--kb-space-gap);
+  .home-trust__shortcut-list li + li::before {
+    content: '·';
+    margin-right: var(--kb-space-4);
+    color: var(--color-king-muted);
+    font-size: var(--kb-text-meta);
+    line-height: 1;
+  }
+
+  .home-trust__shortcut {
+    font-size: var(--kb-text-meta);
+    font-weight: var(--kb-label-weight);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-decoration: underline;
+    text-decoration-color: color-mix(in srgb, var(--color-king-accent) 30%, transparent);
+    text-underline-offset: 0.22em;
+    color: var(--color-king-accent);
+    transition:
+      color var(--kb-dur-fast) var(--kb-ease-out),
+      text-decoration-color var(--kb-dur-fast) var(--kb-ease-out);
+  }
+
+  .home-trust__shortcut:focus-visible {
+    border-radius: var(--kb-radius-sm);
+    outline: 2px solid var(--color-king-accent);
+    outline-offset: 3px;
+  }
+
+  @media (max-width: 47.99rem) {
+    .home-trust__grid {
+      gap: 0;
+    }
+
+    .home-trust__item {
+      padding-block: var(--kb-space-6);
+      border-bottom: 1px solid var(--kb-stroke-hairline);
+    }
+
+    .home-trust__item:first-child {
+      padding-top: 0;
+    }
+
+    .home-trust__item:last-child {
+      padding-bottom: 0;
+      border-bottom: 0;
+    }
+
+    .home-trust__card:global(.feature-card) {
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .home-trust__card:global(.feature-card)::before,
+    .home-trust__card:global(.feature-card)::after {
+      display: none;
+    }
+
+    .home-trust__card:global(.feature-card):hover {
+      transform: none;
+      border-color: transparent;
+      box-shadow: none;
+    }
   }
 
   @media (min-width: 48rem) {
     .home-trust__grid {
       grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: var(--kb-space-gap);
+      gap: var(--kb-space-4);
       align-items: stretch;
+    }
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .home-trust__shortcut:hover {
+      color: var(--color-king-text);
+      text-decoration-color: var(--color-king-accent);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .home-trust__shortcut {
+      transition: none;
     }
   }
 </style>

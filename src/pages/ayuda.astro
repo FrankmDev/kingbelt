@@ -1,4 +1,6 @@
 ---
+export const prerender = true;
+
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Footer from '../components/layout/Footer.astro';
 import Header from '../components/layout/Header.astro';
@@ -8,16 +10,30 @@ import HelpHubPrimarySection from '../components/sections/help/HelpHubPrimarySec
 import HelpHubResourcesSection from '../components/sections/help/HelpHubResourcesSection.astro';
 import HelpHubGuideSection from '../components/sections/help/HelpHubGuideSection.astro';
 import { helpHub, helpMeta, helpNavItems } from '@content/help';
+import { createPageSeo, toSeoImage } from '@shared/seo/page-head';
+import { createBreadcrumbListSchema, createWebPageSchema } from '@shared/seo/structured-data';
 
 const { title, description } = helpMeta.ayuda;
-const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href;
-
+const seo = createPageSeo({
+  title,
+  description,
+  pathname: '/ayuda',
+  image: toSeoImage(helpHub.hero.image, helpHub.hero.imageAlt),
+});
 const primaryItems = helpNavItems.filter((item) => item.priority === 'primary');
 const secondaryItems = helpNavItems.filter((item) => item.priority === 'secondary');
 const { hero, primary, resources, guide, cta } = helpHub;
+const helpSchema = [
+  createWebPageSchema({
+    name: title,
+    description,
+    url: seo.canonicalUrl,
+  }),
+  createBreadcrumbListSchema([{ name: 'Ayuda', path: '/ayuda' }]),
+];
 ---
 
-<BaseLayout title={title} description={description} canonicalURL={canonicalURL}>
+<BaseLayout seo={seo} schema={helpSchema}>
   <Header slot="header" initialTheme="dark" scrolledTheme="light" compactThreshold={32} />
 
   <PageHeader

@@ -1,5 +1,5 @@
 ---
-import SectionHeaderHome from '../home/SectionHeaderHome.astro';
+import SectionHeader from '@components/ui/SectionHeader.astro';
 import EditorialBanner from '../../ui/EditorialBanner.astro';
 import type { AboutContextPoint } from '@content/about';
 
@@ -36,7 +36,7 @@ const { banner } = data;
   aria-labelledby="about-context-title"
 >
   <div class="kb-shell-wide about-context__shell">
-    <SectionHeaderHome
+    <SectionHeader
       index="04"
       eyebrow={data.eyebrow}
       meta="Vestuario / Integración"
@@ -46,7 +46,7 @@ const { banner } = data;
       <Fragment slot="title">
         <span id="about-context-title" set:html={data.title} />
       </Fragment>
-    </SectionHeaderHome>
+    </SectionHeader>
 
     <EditorialBanner
       id="about-context-banner"
@@ -82,7 +82,7 @@ const { banner } = data;
     border-top: 1px solid var(--kb-stroke-hairline);
   }
 
-  .about-context__header:global(.section-header-home) {
+  .about-context__header:global(.section-header) {
     margin-bottom: var(--kb-space-gap);
   }
 

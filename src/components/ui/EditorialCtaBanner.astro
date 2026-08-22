@@ -1,0 +1,221 @@
+---
+import CTABox from './CTABox.astro';
+
+interface Action {
+  label: string;
+  href: string;
+}
+
+interface Props {
+  index?: string;
+  eyebrow: string;
+  meta?: string;
+  title: string;
+  description?: string;
+  titleId?: string;
+  primary: Action;
+  secondary?: Action;
+  backgroundImage: string;
+  backgroundAlt?: string;
+  backgroundPosition?: string;
+  backgroundWidth?: number;
+  backgroundHeight?: number;
+  class?: string;
+}
+
+const {
+  index,
+  eyebrow,
+  meta,
+  title,
+  description,
+  primary,
+  secondary,
+  backgroundImage,
+  backgroundAlt = '',
+  backgroundPosition = 'center 60%',
+  backgroundWidth = 1600,
+  backgroundHeight = 900,
+  class: className = '',
+} = Astro.props;
+---
+
+<CTABox
+  index={index}
+  eyebrow={eyebrow}
+  meta={meta}
+  title={title}
+  description={description}
+  buttonLabel={primary.label}
+  buttonHref={primary.href}
+  buttonVariant="secondary"
+  secondaryButtonLabel={secondary?.label}
+  secondaryButtonHref={secondary?.href}
+  secondaryButtonVariant="surfaceOutline"
+  backgroundImage={backgroundImage}
+  backgroundAlt={backgroundAlt}
+  backgroundPosition={backgroundPosition}
+  backgroundWidth={backgroundWidth}
+  backgroundHeight={backgroundHeight}
+  titleTag="h2"
+  class:list={['editorial-cta-banner', className]}
+>
+  <div slot="decorations" class="editorial-cta-banner__decor">
+    <span
+      class="editorial-cta-banner__bracket kb-corner-bracket kb-corner-bracket-tl"
+      aria-hidden="true"
+    ></span>
+    <span
+      class="editorial-cta-banner__bracket kb-corner-bracket kb-corner-bracket-tr"
+      aria-hidden="true"
+    ></span>
+    <span
+      class="editorial-cta-banner__bracket kb-corner-bracket kb-corner-bracket-bl"
+      aria-hidden="true"
+    ></span>
+    <span
+      class="editorial-cta-banner__bracket kb-corner-bracket kb-corner-bracket-br"
+      aria-hidden="true"
+    ></span>
+    <span class="editorial-cta-banner__accent" aria-hidden="true"></span>
+  </div>
+</CTABox>
+
+<style>
+  .editorial-cta-banner:global(.cta-box) {
+    --ecb-inset: clamp(1.5rem, 4vw, 2.75rem);
+    --ecb-radius: var(--kb-radius-xl);
+
+    min-height: clamp(20rem, 48vw, 32rem);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--ecb-radius);
+    box-shadow: var(--kb-shadow-float-dark);
+  }
+
+  .editorial-cta-banner:global(.cta-box .cta-box__bg-image) {
+    filter: saturate(0.82) contrast(1.05) brightness(0.8);
+  }
+
+  .editorial-cta-banner:global(.cta-box .cta-box__overlay) {
+    background:
+      linear-gradient(
+        180deg,
+        rgba(11, 10, 8, 0.34) 0%,
+        rgba(11, 10, 8, 0.18) 34%,
+        rgba(11, 10, 8, 0.62) 72%,
+        rgba(11, 10, 8, 0.9) 100%
+      ),
+      linear-gradient(
+        90deg,
+        rgba(11, 10, 8, 0.58) 0%,
+        rgba(11, 10, 8, 0.14) 48%,
+        rgba(11, 10, 8, 0.42) 100%
+      );
+    mix-blend-mode: normal;
+  }
+
+  .editorial-cta-banner:global(.cta-box .cta-box__texture) {
+    opacity: 0.38;
+  }
+
+  .editorial-cta-banner:global(.cta-box .cta-box__title) {
+    max-width: 14ch;
+    font-size: clamp(1.875rem, 4.2vw, 3rem);
+    font-weight: var(--kb-w-heading-light);
+    line-height: 1.05;
+    letter-spacing: -0.025em;
+  }
+
+  .editorial-cta-banner:global(.cta-box .cta-box__desc) {
+    max-width: 44ch;
+    font-size: var(--kb-text-body-lg);
+    line-height: 1.62;
+    color: rgba(255, 250, 241, 0.78);
+  }
+
+  .editorial-cta-banner__decor {
+    position: absolute;
+    inset: 0;
+  }
+
+  .editorial-cta-banner__bracket {
+    position: absolute;
+    width: 1.35rem;
+    height: 1.35rem;
+    border-color: rgba(255, 255, 255, 0.24);
+    opacity: 0.8;
+  }
+
+  .editorial-cta-banner__bracket.kb-corner-bracket-tl {
+    top: var(--ecb-inset);
+    left: var(--ecb-inset);
+    border-top-left-radius: var(--ecb-radius);
+  }
+
+  .editorial-cta-banner__bracket.kb-corner-bracket-tr {
+    top: var(--ecb-inset);
+    right: var(--ecb-inset);
+    border-top-right-radius: var(--ecb-radius);
+  }
+
+  .editorial-cta-banner__bracket.kb-corner-bracket-bl {
+    bottom: var(--ecb-inset);
+    left: var(--ecb-inset);
+    border-bottom-left-radius: var(--ecb-radius);
+  }
+
+  .editorial-cta-banner__bracket.kb-corner-bracket-br {
+    right: var(--ecb-inset);
+    bottom: var(--ecb-inset);
+    border-bottom-right-radius: var(--ecb-radius);
+  }
+
+  .editorial-cta-banner__accent {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 2px;
+    background: linear-gradient(
+      90deg,
+      var(--color-king-on-dark-line),
+      color-mix(in srgb, var(--color-king-on-dark-line) 35%, transparent) 52%,
+      transparent
+    );
+    opacity: 0.82;
+  }
+
+  @media (max-width: 47.99rem) {
+    .editorial-cta-banner:global(.cta-box .cta-box__meta) {
+      width: 100%;
+      margin-left: 0;
+    }
+
+    .editorial-cta-banner:global(.cta-box .cta-box__title) {
+      max-width: none;
+      font-size: clamp(1.75rem, 7vw, 2.35rem);
+    }
+
+    .editorial-cta-banner:global(.cta-box .cta-box__action .kb-btn) {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .editorial-cta-banner__bracket {
+      width: 1rem;
+      height: 1rem;
+    }
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .editorial-cta-banner:global(.cta-box:hover .cta-box__bg-image) {
+      filter: saturate(0.88) contrast(1.06) brightness(0.86);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .editorial-cta-banner:global(.cta-box .cta-box__bg-image) {
+      transition: none;
+    }
+  }
+</style>

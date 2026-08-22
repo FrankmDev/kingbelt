@@ -59,7 +59,7 @@ const sizeId = (label) => `size:${label}`;
 
 const productImage = (id) => ({
   id,
-  url: '/images/brand/cinturones-en-taller.jpg',
+  url: '/images/imagen-cinturon-kingbelt-10.avif',
   altText: 'Imagen de prueba',
   width: 960,
   height: 1200,

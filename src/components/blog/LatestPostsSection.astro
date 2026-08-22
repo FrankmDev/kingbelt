@@ -23,7 +23,7 @@ const { posts, showHeader = true, embedded = false, class: className = '' } = As
   aria-labelledby={showHeader ? 'blog-latest-title' : undefined}
   {...(!showHeader && { 'aria-label': 'Más lecturas de la revista' })}
 >
-  <div class="kb-shell-wide blog-latest-inner">
+  <div class:list={['blog-latest-inner', !embedded && 'kb-shell-wide']}>
     {showHeader && (
       <SectionHeader
         eyebrow="Edición actual"
@@ -71,7 +71,7 @@ const { posts, showHeader = true, embedded = false, class: className = '' } = As
               image={post.image}
               imageAlt={post.imageAlt}
               imageWidth={640}
-              imageHeight={480}
+              imageHeight={360}
               imagePosition={post.imagePosition}
               category={post.category}
               date={post.dateLabel}
@@ -179,22 +179,112 @@ const { posts, showHeader = true, embedded = false, class: className = '' } = As
   .blog-latest--embedded .blog-latest-stage {
     width: 100%;
     margin-inline: 0;
-    padding: var(--kb-space-3);
-    border-radius: var(--kb-radius-md);
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    overflow: visible;
+  }
+
+  .blog-latest--embedded .blog-latest-stage::before,
+  .blog-latest--embedded .blog-latest-stage::after,
+  .blog-latest--embedded .blog-latest-stage__texture {
+    content: none;
+    display: none;
   }
 
   .blog-latest--embedded .blog-latest-stage__corner {
     display: none;
   }
 
+  .blog-latest--embedded .blog-latest-grid {
+    gap: clamp(1rem, 2vw, 1.35rem);
+  }
+
+  .blog-latest--embedded .blog-latest-grid :global(.kb-blog-card.kb-card-dry) {
+    border: 1px solid color-mix(in srgb, var(--color-king-text) 9%, transparent);
+    border-radius: var(--kb-radius-md);
+    background: rgba(255, 255, 255, 0.42);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.65) inset,
+      0 10px 28px rgba(17, 16, 14, 0.05);
+    transition:
+      transform var(--kb-dur-fast) var(--kb-ease-out),
+      border-color var(--kb-dur-fast) var(--kb-ease-out),
+      box-shadow var(--kb-dur-fast) var(--kb-ease-out);
+  }
+
+  .blog-latest--embedded .blog-latest-grid :global(.kb-blog-card.kb-card-dry::before) {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(
+      165deg,
+      rgba(255, 255, 255, 0.34) 0%,
+      transparent 42%
+    );
+    pointer-events: none;
+    opacity: 1;
+  }
+
+  .blog-latest--embedded .blog-latest-grid :global(.kb-blog-card.kb-card-dry::after) {
+    content: none;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .blog-latest--embedded .blog-latest-grid :global(.kb-blog-card.kb-card-dry:hover) {
+      transform: translateY(-2px);
+      border-color: color-mix(in srgb, var(--color-king-accent) 28%, transparent);
+      box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.72) inset,
+        0 14px 32px rgba(17, 16, 14, 0.08);
+    }
+  }
+
+  .blog-latest--embedded .blog-latest-grid :global(.kb-blog-card__media) {
+    aspect-ratio: 16 / 9;
+    border-radius: var(--kb-radius-md) var(--kb-radius-md) 0 0;
+  }
+
   .blog-latest--embedded .blog-latest-grid :global(.kb-blog-card__body) {
-    gap: var(--kb-space-2);
-    padding: var(--kb-space-3);
+    gap: var(--kb-space-3);
+    padding: var(--kb-space-4);
+  }
+
+  .blog-latest--embedded .blog-latest-grid :global(.kb-blog-card__title) {
+    min-height: calc(2 * 1.2em);
+    font-size: clamp(1rem, 1.6vw, 1.125rem);
+    line-height: 1.2;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+  }
+
+  .blog-latest--embedded .blog-latest-grid :global(.kb-blog-card__excerpt) {
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    font-size: 0.8125rem;
+    line-height: 1.55;
+  }
+
+  .blog-latest--embedded .blog-latest-grid :global(.kb-blog-card__category) {
+    top: var(--kb-space-3);
+    left: var(--kb-space-3);
+    padding: 0.28rem 0.5rem;
+    font-size: 0.625rem;
+    background: rgba(13, 13, 12, 0.58);
+  }
+
+  .blog-latest--embedded .blog-latest-grid :global(.kb-blog-card__cta) {
+    padding-top: var(--kb-space-1);
+    font-size: 0.6875rem;
+    color: color-mix(in srgb, var(--color-king-text) 58%, transparent);
   }
 
   @media (min-width: 40rem) {
-    .blog-latest--embedded .blog-latest-stage {
-      padding: var(--kb-space-4);
+    .blog-latest--embedded .blog-latest-grid :global(.kb-blog-card__body) {
+      padding: var(--kb-space-4) var(--kb-space-4) var(--kb-space-5);
     }
   }
 
@@ -217,23 +307,26 @@ const { posts, showHeader = true, embedded = false, class: className = '' } = As
     box-sizing: border-box;
     max-width: 100%;
     height: 100%;
+  }
+
+  /* Una sola superficie enmarcada en /blog; en home cada card conserva su propia superficie */
+  .blog-latest:not(.blog-latest--embedded) .blog-latest-grid :global(.kb-blog-card) {
     border-radius: 0;
   }
 
-  /* Una sola superficie enmarcada: las entradas no repiten kb-card-dry */
-  .blog-latest-grid :global(.kb-blog-card.kb-card-dry) {
+  .blog-latest:not(.blog-latest--embedded) .blog-latest-grid :global(.kb-blog-card.kb-card-dry) {
     border: 0;
     background: transparent;
     box-shadow: none;
   }
 
-  .blog-latest-grid :global(.kb-blog-card.kb-card-dry::before),
-  .blog-latest-grid :global(.kb-blog-card.kb-card-dry::after) {
+  .blog-latest:not(.blog-latest--embedded) .blog-latest-grid :global(.kb-blog-card.kb-card-dry::before),
+  .blog-latest:not(.blog-latest--embedded) .blog-latest-grid :global(.kb-blog-card.kb-card-dry::after) {
     content: none;
   }
 
   @media (hover: hover) and (pointer: fine) {
-    .blog-latest-grid :global(.kb-blog-card.kb-card-dry:hover) {
+    .blog-latest:not(.blog-latest--embedded) .blog-latest-grid :global(.kb-blog-card.kb-card-dry:hover) {
       transform: none;
       border-color: transparent;
       box-shadow: none;
@@ -252,7 +345,7 @@ const { posts, showHeader = true, embedded = false, class: className = '' } = As
   }
 
   .blog-latest-grid :global(.kb-blog-card__media) {
-    aspect-ratio: 4 / 3;
+    aspect-ratio: 16 / 9;
     border-radius: var(--kb-radius-sm);
   }
 

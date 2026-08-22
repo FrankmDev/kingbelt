@@ -32,9 +32,8 @@ export const aboutPage = {
     title: 'El cinturón no debería ser <em>lo último que eliges.</em>',
     lede:
       'KingBelt empieza por una pieza cotidiana para hacerla mejor: más consciente, más útil y con una identidad que no necesita levantar la voz.',
-    image:
-      'https://images.unsplash.com/photo-1624222247344-550fb60583dc?auto=format&fit=crop&w=1920&q=86',
-    imageAlt: 'Detalle de un cinturón de cuero y su hebilla metálica',
+    image: '/images/imagen-cinturon-kingbelt-11.avif',
+    imageAlt: 'Detalle de hebilla plateada y costura en contraste de un cinturón de cuero marrón KingBelt',
     imagePosition: 'center 54%',
     meta: 'Producto · Material · Uso',
   },
@@ -45,9 +44,8 @@ export const aboutPage = {
     body:
       'KingBelt nace revisando un básico que casi siempre va en segundo plano: el cinturón. La premisa es sencilla —que ajuste bien, tenga presencia y no dependa de adornos ni de una historia prestada— pero exige disciplina en cada decisión.',
     statement: 'Menos gesto. Más criterio en cada elección.',
-    image:
-      'https://images.unsplash.com/photo-1605518216938-7c31b7b14ad0?auto=format&fit=crop&w=1600&q=84',
-    imageAlt: 'Detalle de cuero, tejido vaquero y herrajes metálicos',
+    image: '/images/imagen-cinturon-kingbelt-3.avif',
+    imageAlt: 'Artesano trabajando el cuero con martillo de talabartero en el taller',
     imageLabel: 'Material / Uso diario',
     imageCaption: 'El accesorio como punto de partida.',
   },
@@ -112,9 +110,8 @@ export const aboutPage = {
         },
       ] as AboutReadingLayer[],
     },
-    image:
-      'https://images.unsplash.com/photo-1559563458-527698bf5295?auto=format&fit=crop&w=1600&q=84',
-    imageAlt: 'Manos trabajando sobre una pieza de cuero',
+    image: '/images/imagen-cinturon-kingbelt-7.avif',
+    imageAlt: 'Manos cortando cuero coñac con cuchilla y regla metálica',
     imageLabel: 'Lectura de producto',
     imageCaption: 'Proporción, herraje y cuero en una sola pieza.',
   },
@@ -129,9 +126,8 @@ export const aboutPage = {
       title: 'KingBelt',
       statement: 'Que se note por <em>cómo encaja</em>, no por cuánto reclama.',
       tags: ['Producto', 'Contexto', 'Identidad'] as const,
-      image:
-        'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=1800&q=82',
-      imageAlt: 'Detalle de cinturón de cuero integrado en un look cotidiano',
+      image: '/images/imagen-cinturon-kingbelt-14.avif',
+      imageAlt: 'Cinturones de cuero marrón y negro KingBelt enrollados sobre piedra',
       imagePosition: 'center 38%',
       imageCaption: 'Contexto / Uso real',
     },

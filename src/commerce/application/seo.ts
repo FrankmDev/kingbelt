@@ -31,6 +31,17 @@ export const getRobotsForQuery = (searchParams?: URLSearchParams): string | unde
   return page && page !== '1' ? 'noindex,follow' : undefined;
 };
 
+export interface CommerceSeoOptions {
+  searchParams?: URLSearchParams;
+  /** `false` en catálogo demo para no indexar productos ficticios. */
+  indexable?: boolean;
+}
+
+export const resolveCommerceRobots = (options?: CommerceSeoOptions): string | undefined => {
+  if (options?.indexable === false) return 'noindex,follow';
+  return getRobotsForQuery(options?.searchParams);
+};
+
 interface SiteBrand {
   name: string;
 }
@@ -66,39 +77,52 @@ const buildCollectionPageSeo = (
   siteOrigin: string | URL,
   image?: SeoImage
 ): PageSeo => ({
-  title: `${collection.title} — Colección ${brand.name}`,
+  title: `${collection.title} — Cinturones ${brand.name}`,
   description: collection.description,
   canonicalUrl: resolveCanonicalUrl(siteOrigin, collectionPath(collection.handle)),
   ogType: 'website',
   image,
 });
 
+const applyCommerceRobots = (seo: PageSeo, options?: CommerceSeoOptions): PageSeo => {
+  const robots = resolveCommerceRobots(options);
+  return robots ? { ...seo, robots } : seo;
+};
+
 export interface CommercePageHead {
   seo: PageSeo;
   schema: Record<string, unknown>;
 }
 
-/** Metadatos y JSON-LD de ficha de producto, resueltos en build time. */
+/** Metadatos y JSON-LD de ficha de producto. */
 export const resolveProductPageHead = (
   product: Product,
   brand: SiteBrand,
-  siteOrigin: string | URL
+  siteOrigin: string | URL,
+  options?: CommerceSeoOptions
 ): CommercePageHead => {
-  const seo = buildProductPageSeo(product, brand, siteOrigin, toSeoImage(getPrimaryProductImage(product)));
+  const seo = applyCommerceRobots(
+    buildProductPageSeo(product, brand, siteOrigin, toSeoImage(getPrimaryProductImage(product))),
+    options
+  );
   return {
     seo,
     schema: createProductStructuredData(product, seo.canonicalUrl, brand.name),
   };
 };
 
-/** Metadatos y JSON-LD de colección, resueltos en build time. */
+/** Metadatos y JSON-LD de colección. */
 export const resolveCollectionPageHead = (
   collectionPage: CollectionPage,
   brand: SiteBrand,
-  siteOrigin: string | URL
+  siteOrigin: string | URL,
+  options?: CommerceSeoOptions
 ): CommercePageHead => {
   const { collection, products } = collectionPage;
-  const seo = buildCollectionPageSeo(collection, brand, siteOrigin, toSeoImage(collection.image));
+  const seo = applyCommerceRobots(
+    buildCollectionPageSeo(collection, brand, siteOrigin, toSeoImage(collection.image)),
+    options
+  );
   return {
     seo,
     schema: createCollectionStructuredData(collection, products, seo.canonicalUrl, siteOrigin),
@@ -116,20 +140,24 @@ interface CatalogIndexHeadInput {
 export const resolveCatalogIndexHead = (
   input: CatalogIndexHeadInput,
   brand: SiteBrand,
-  siteOrigin: string | URL
+  siteOrigin: string | URL,
+  options?: CommerceSeoOptions
 ): CommercePageHead => {
   const featured = input.collections.find((collection) => collection.featured) ?? input.collections[0];
-  const seo: PageSeo = {
-    title: input.title,
-    description: input.description,
-    canonicalUrl: resolveCanonicalUrl(siteOrigin, CATALOG_INDEX_PATH),
-    ogType: 'website',
-    image: toSeoImage(featured?.image),
-  };
+  const seo = applyCommerceRobots(
+    {
+      title: input.title,
+      description: input.description,
+      canonicalUrl: resolveCanonicalUrl(siteOrigin, CATALOG_INDEX_PATH),
+      ogType: 'website',
+      image: toSeoImage(featured?.image),
+    },
+    options
+  );
   return {
     seo,
     schema: createCollectionStructuredData(
-      { title: `Colección ${brand.name}`, description: input.description, handle: 'productos' },
+      { title: `Cinturones ${brand.name}`, description: input.description, handle: 'productos' },
       input.products,
       seo.canonicalUrl,
       siteOrigin

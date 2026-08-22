@@ -131,7 +131,7 @@ src/
 - `src/commerce/application` define contratos neutrales; `src/commerce/catalog.ts` y `src/commerce/cart.ts` seleccionan los adaptadores activos fuera de los componentes.
 - No hay barrels `index.ts`: los imports identifican la dependencia concreta.
 - `tests/architecture.test.mjs` impide dependencias desde dominio/aplicación hacia infraestructura y desde UI hacia adaptadores o datos demo.
-- El proyecto renderiza bajo demanda con `output: 'server'` y el adapter `@astrojs/vercel`; solo los artículos del blog se prerenderizan. No usa frameworks de UI ni Advanced Routing.
+- El proyecto renderiza bajo demanda con `output: 'server'` y el adapter `@astrojs/vercel`. Las páginas editoriales se prerenderizan; catálogo, portada y carrito permanecen SSR. No usa frameworks de UI ni Advanced Routing.
 - La Dev Toolbar de Astro (astronauta) está desactivada en `astro.config.mjs`.
 - Usa Bun exclusivamente; el lockfile válido es `bun.lock`.
 

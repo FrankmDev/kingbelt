@@ -69,6 +69,7 @@ interface ContactData {
     title: string;
     description: string;
     ctaLabel: string;
+    hints: { label: string; text: string }[];
   };
 }
 
@@ -79,6 +80,7 @@ const contactChannels: ContactChannel[] = [
     description: 'Pedidos, devoluciones, incidencias y atención general.',
     href: `mailto:${contactEmail}`,
     icon: 'mail',
+    meta: 'Canal principal',
   },
   ...(contactPhone
     ? [
@@ -90,6 +92,7 @@ const contactChannels: ContactChannel[] = [
             : 'Atención telefónica.',
           href: toTelHref(contactPhone),
           icon: 'phone' as const,
+          meta: 'Atención directa',
         },
       ]
     : []),
@@ -100,8 +103,8 @@ export const contactData = {
     eyebrow: 'Contacto',
     description:
       'Producto, pedidos, colaboraciones o cualquier pregunta sobre KingBelt. Cuéntanos qué necesitas y continuamos desde ahí.',
-    image: '/images/brand/cinturones-en-taller.jpg',
-    imageAlt: 'Persona sujetando varios cinturones de cuero en un taller',
+    image: '/images/imagen-cinturon-kingbelt-21.avif',
+    imageAlt: 'Cinturones de cuero marrón y negro KingBelt sobre piedra texturizada',
     imagePosition: 'center 52%',
     meta: 'KingBelt · Contacto',
   },
@@ -153,8 +156,8 @@ export const contactData = {
   ] satisfies FAQItem[],
 
   faqSidebar: {
-    image: '/images/brand/cinturones-en-taller.jpg',
-    imageAlt: 'Detalle de un cinturón KingBelt sobre superficie de trabajo',
+    image: '/images/imagen-cinturon-kingbelt-1.avif',
+    imageAlt: 'Manos artesanas cortando cuero marrón con tijeras profesionales',
     caption: 'Cada pieza se revisa con atención antes de salir.',
     label: 'Producto',
   },
@@ -170,8 +173,8 @@ export const contactData = {
       href: '/ayuda',
     },
     image: {
-      src: '/images/brand/cinturones-en-taller.jpg',
-      alt: 'Detalle de cinturón de cuero KingBelt',
+      src: '/images/imagen-cinturon-kingbelt-8.avif',
+      alt: 'Tres cinturones de cuero marrón KingBelt con costura en contraste',
       label: 'Producto',
       caption: 'Información de compra disponible en el centro de ayuda.',
     },
@@ -208,9 +211,23 @@ export const contactData = {
 
   emailBanner: {
     eyebrow: 'Escríbenos',
-    title: 'Una conversación clara desde el primer mensaje.',
+    title: 'Una conversación clara desde el <em>primer mensaje</em>.',
     description:
-      'Explica qué pieza, pedido o propuesta tienes en mente. Cuanto más concreto sea el contexto, más fácil será orientar la respuesta sin intercambios innecesarios.',
+      'Cuanto más concreto sea el contexto, más fácil será orientar la respuesta sin intercambios innecesarios.',
     ctaLabel: 'Enviar email',
+    hints: [
+      {
+        label: 'Producto',
+        text: 'Modelo, color o talla que tienes en mente.',
+      },
+      {
+        label: 'Pedido',
+        text: 'Número de referencia si ya has comprado.',
+      },
+      {
+        label: 'Propuesta',
+        text: 'Colaboración, prensa o cualquier contexto relevante.',
+      },
+    ],
   },
 } satisfies ContactData;

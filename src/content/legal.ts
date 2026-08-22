@@ -219,7 +219,7 @@ export const legalCta = {
     'Si necesitas aclarar un apartado, escríbenos con el documento y el punto concreto.',
   buttonLabel: 'Ir a contacto',
   buttonHref: '/contacto',
-  image: '/images/blog/cinturon-marron.jpg',
+  image: '/images/imagen-cinturon-kingbelt-15.avif',
   imagePosition: 'center 40%',
 } as const;
 
@@ -228,8 +228,8 @@ export const legalPages = {
     heading: 'Aviso legal',
     titleHtml: 'Información del <em>titular</em>.',
     lede: `Identificación de ${confirmed(businessFacts.legalName) ?? 'CintuElx S.L.'}, condiciones de uso del sitio y marco de responsabilidad.`,
-    image: '/images/brand/cinturones-en-taller.jpg',
-    imageAlt: 'Persona sujetando varios cinturones de cuero en un taller',
+    image: '/images/imagen-cinturon-kingbelt-2.avif',
+    imageAlt: 'Artesano alisando cuero en el banco de trabajo del taller KingBelt',
     imagePosition: 'center 52%',
     meta: 'KingBelt · Aviso legal',
     section: {
@@ -243,8 +243,8 @@ export const legalPages = {
     heading: 'Política de privacidad',
     titleHtml: 'Cómo tratamos tus <em>datos</em>.',
     lede: 'Información sobre la recopilación, el uso y la divulgación de tu información personal.',
-    image: '/images/blog/cinturon-negro.jpg',
-    imageAlt: 'Cinturón negro de vestir sobre fondo neutro',
+    image: '/images/imagen-cinturon-kingbelt-9.avif',
+    imageAlt: 'Cinturones de cuero negro y marrón KingBelt enrollados sobre fondo neutro',
     imagePosition: 'center 55%',
     meta: 'KingBelt · Privacidad',
     section: {
@@ -258,8 +258,8 @@ export const legalPages = {
     heading: 'Política de cookies y tecnologías',
     titleHtml: 'Tecnologías que usa este <em>sitio</em>.',
     lede: 'Información sobre el almacenamiento local y recursos externos utilizados actualmente.',
-    image: '/images/blog/cinturon-marron-oscuro.jpg',
-    imageAlt: 'Detalle de cinturón de cuero marrón oscuro',
+    image: '/images/imagen-cinturon-kingbelt-5.avif',
+    imageAlt: 'Banco de talabartería con herramientas y recortes de cuero',
     imagePosition: 'center 48%',
     meta: 'KingBelt · Cookies',
     section: {
@@ -273,8 +273,8 @@ export const legalPages = {
     heading: 'Condiciones generales de compra',
     titleHtml: 'Condiciones de <em>compra</em>.',
     lede: 'Identidad del vendedor, proceso de pedido y remisión a envíos, devoluciones y garantías.',
-    image: '/images/brand/cinturones-en-taller.jpg',
-    imageAlt: 'Persona sujetando varios cinturones de cuero en un taller',
+    image: '/images/imagen-cinturon-kingbelt-8.avif',
+    imageAlt: 'Tres cinturones de cuero marrón KingBelt con costura en contraste',
     imagePosition: 'center 46%',
     meta: 'KingBelt · Condiciones',
     section: {
@@ -288,8 +288,8 @@ export const legalPages = {
     heading: 'Formulario de desistimiento',
     titleHtml: 'Desistimiento, <em>aún no operativo</em>.',
     lede: 'Vista interna de revisión. El mecanismo electrónico no está activo.',
-    image: '/images/blog/cinturon-negro.jpg',
-    imageAlt: 'Cinturón negro de vestir sobre fondo neutro',
+    image: '/images/imagen-cinturon-kingbelt-20.avif',
+    imageAlt: 'Cinturones de cuero marrón y negro KingBelt enrollados sobre fondo beige',
     imagePosition: 'center 62%',
     meta: 'KingBelt · Desistimiento',
     section: {
@@ -303,8 +303,8 @@ export const legalPages = {
     heading: 'Política de envíos',
     titleHtml: 'Preparación, transporte y <em>entrega</em>.',
     lede: 'Envíos gratuitos con transporte incluido en el precio. Plazos, seguimiento e incidencias de los pedidos KingBelt.',
-    image: '/images/brand/cinturones-en-taller.jpg',
-    imageAlt: 'Persona sujetando varios cinturones de cuero en un taller',
+    image: '/images/imagen-cinturon-kingbelt-3.avif',
+    imageAlt: 'Artesano trabajando el cuero con martillo de talabartero',
     imagePosition: 'center 48%',
     meta: 'KingBelt · Envíos',
     section: {
@@ -318,8 +318,8 @@ export const legalPages = {
     heading: 'Devoluciones y reembolsos',
     titleHtml: 'Devoluciones y <em>desistimiento</em>.',
     lede: 'Condiciones aplicables a devoluciones, desistimiento y reembolsos.',
-    image: '/images/blog/cinturon-marron.jpg',
-    imageAlt: 'Cinturón de cuero marrón sobre fondo neutro',
+    image: '/images/imagen-cinturon-kingbelt-17.avif',
+    imageAlt: 'Cinturón de cuero marrón KingBelt extendido junto a un cinturón negro enrollado',
     imagePosition: 'center 42%',
     meta: 'KingBelt · Devoluciones',
     section: {

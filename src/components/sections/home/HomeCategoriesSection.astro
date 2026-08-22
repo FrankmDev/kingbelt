@@ -1,6 +1,7 @@
 ---
-import SectionHeaderHome from './SectionHeaderHome.astro';
+import SectionHeader from '@components/ui/SectionHeader.astro';
 import Badge from '../../ui/Badge.astro';
+import OptimizedImage from '../../ui/OptimizedImage.astro';
 import { categoriesSection } from '@content/home';
 import type { Collection } from '@commerce/domain/catalog';
 
@@ -28,7 +29,7 @@ const cards = featured ? [
   aria-labelledby="home-categories-title"
 >
   <div class="kb-shell-wide">
-    <SectionHeaderHome
+    <SectionHeader
       index={categoriesSection.index}
       eyebrow={categoriesSection.eyebrow}
       body={categoriesSection.body}
@@ -39,7 +40,7 @@ const cards = featured ? [
       <Fragment slot="title">
         <span set:html={categoriesSection.title} />
       </Fragment>
-    </SectionHeaderHome>
+    </SectionHeader>
 
     <div class="home-categories__grid" style={`--secondary-count: ${Math.max(secondary.length, 1)}`}>
       {cards.map(({ category, index, featured: isFeatured }) => (
@@ -53,16 +54,18 @@ const cards = featured ? [
           aria-label={`Explorar categoría ${category.title}`}
         >
           <div class="home-categories__media-wrap">
-            {category.image && <img
-              src={category.image.url}
-              alt={category.image.altText}
-              width={category.image.width ?? (isFeatured ? 1200 : 960)}
-              height={category.image.height ?? (isFeatured ? 1600 : 720)}
-              loading="lazy"
-              decoding="async"
-              class="home-categories__media"
-              style={`object-position: ${category.image.position ?? 'center'}`}
-            />}
+            {category.image && (
+              <OptimizedImage
+                src={category.image.url}
+                alt={category.image.altText}
+                preset={isFeatured ? 'feature' : 'card'}
+                width={category.image.width ?? 1672}
+                height={category.image.height ?? 941}
+                loading="lazy"
+                class="home-categories__media"
+                style={`object-position: ${category.image.position ?? 'center'}`}
+              />
+            )}
           </div>
 
           <div
@@ -153,7 +156,7 @@ const cards = featured ? [
   }
 
   .home-categories__card {
-    --cat-accent: var(--color-king-accent-light);
+    --cat-accent: var(--color-king-on-dark-line);
 
     position: relative;
     display: block;
@@ -180,11 +183,18 @@ const cards = featured ? [
     overflow: hidden;
   }
 
+  .home-categories__media-wrap :global(picture),
   .home-categories__media {
+    position: absolute;
+    inset: 0;
     display: block;
     width: 100%;
     height: 100%;
+    max-width: none;
     object-fit: cover;
+  }
+
+  .home-categories__media {
     transform: scale(1.06);
     filter: saturate(0.86) contrast(1.06) brightness(0.9);
     transition:
@@ -317,9 +327,9 @@ const cards = featured ? [
   }
 
   .home-categories__badge:global(.kb-badge-accent) {
-    border-color: rgba(201, 168, 124, 0.42);
+    border-color: rgba(255, 250, 241, 0.28);
     background: rgba(11, 10, 8, 0.52);
-    color: var(--color-king-accent-light);
+    color: var(--color-king-on-dark-muted);
   }
 
   .home-categories__title {
@@ -398,8 +408,8 @@ const cards = featured ? [
     height: 2px;
     background: linear-gradient(
       90deg,
-      var(--color-king-accent),
-      color-mix(in srgb, var(--color-king-brass) 70%, transparent) 55%,
+      var(--color-king-on-dark-line),
+      color-mix(in srgb, var(--color-king-on-dark-line) 45%, transparent) 55%,
       transparent
     );
     transform: scaleX(0.22);
@@ -421,7 +431,7 @@ const cards = featured ? [
   }
 
   .home-categories__card:focus-visible {
-    outline: 2px solid var(--color-king-accent);
+    outline: 2px solid var(--color-king-on-dark-soft);
     outline-offset: 2px;
   }
 
@@ -536,7 +546,7 @@ const cards = featured ? [
     }
 
     .home-categories__card:hover .home-categories__folio {
-      color: rgba(201, 168, 124, 0.78);
+      color: rgba(255, 250, 241, 0.78);
       transform: translateY(-4px);
     }
 
@@ -552,7 +562,7 @@ const cards = featured ? [
     }
 
     .home-categories__card:hover .home-categories__action {
-      color: var(--color-king-accent-light);
+      color: var(--color-king-on-dark-soft);
     }
 
     .home-categories__card:hover .home-categories__action::before {
@@ -566,7 +576,7 @@ const cards = featured ? [
     .home-categories__card:hover::after {
       opacity: 1;
       box-shadow:
-        inset 0 0 0 1px rgba(166, 124, 78, 0.18),
+        inset 0 0 0 1px rgba(255, 250, 241, 0.14),
         inset 0 -24px 48px rgba(11, 10, 8, 0.22);
     }
   }

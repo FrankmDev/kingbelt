@@ -59,7 +59,7 @@ Para activarlo:
 
 1. En Vercel, crear un Deploy Hook y guardar la URL en `VERCEL_DEPLOY_HOOK_URL`.
 2. Copiar el secreto de firma de webhooks de Shopify en `SHOPIFY_WEBHOOK_SECRET`.
-3. En Shopify Admin → Settings → Notifications → Webhooks, crear eventos `products/create`, `products/update`, `products/delete`, `collections/create`, `collections/update` y `collections/delete` hacia `https://kingbelt.com/api/shopify-catalog-rebuild`.
+3. En Shopify Admin → Settings → Notifications → Webhooks, crear eventos `products/create`, `products/update`, `products/delete`, `collections/create`, `collections/update` y `collections/delete` hacia `https://kingbelt.es/api/shopify-catalog-rebuild`.
 4. Un build que falle deja publicado el despliegue anterior.
 
 ## 8. Contrato definitivo de producto

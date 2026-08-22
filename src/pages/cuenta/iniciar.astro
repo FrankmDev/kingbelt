@@ -6,19 +6,21 @@ import Header from '../../components/layout/Header.astro';
 import Breadcrumbs from '../../components/ui/Breadcrumbs.astro';
 import { getAccountAccessResponse } from '@commerce/commerce-navigation';
 import { accountAccessPage } from '@content/account';
+import { createPageSeo } from '@shared/seo/page-head';
 
 const shopifyAccountResponse = getAccountAccessResponse();
 if (shopifyAccountResponse) return shopifyAccountResponse;
 
-const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href;
+const seo = createPageSeo({
+  title: accountAccessPage.title,
+  description: accountAccessPage.description,
+  pathname: '/cuenta/iniciar',
+  robots: 'noindex,nofollow',
+});
+Astro.response.headers.set('Cache-Control', 'private, no-store, max-age=0');
 ---
 
-<BaseLayout
-  title={accountAccessPage.title}
-  description={accountAccessPage.description}
-  canonicalURL={canonicalURL}
-  robots="noindex,nofollow"
->
+<BaseLayout seo={seo}>
   <Header slot="header" initialTheme="light" scrolledTheme="light" compactThreshold={32} />
 
   <div class="account-page">

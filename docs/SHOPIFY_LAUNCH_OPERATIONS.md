@@ -19,7 +19,7 @@ No guardar en Git: capturas de Payments, IBAN, VAT ID, KYC, direcciones personal
 | Este documento | Admin: checkout → pedido | Un pedido de prueba |
 | Pedido de prueba *(después)* | Tarifa, tax, pago, pedido, email, inventario | — |
 
-`shopify:release-gate` ya engloba validate + legal:preflight + session + Shopify + cart smoke + comprobaciones HTTP. `legal:preflight` FAIL por datos pendientes es blocker: no se desactiva. Los comandos individuales siguen documentados para diagnosticar un fallo. No promociona, no hace rollback y no crea pedidos. Si los gates automáticos pasan, imprime `AUTOMATED PRE-PAYMENT GATE: PASSED` y `PAYMENT QA READINESS: BLOCKED`. No declara READY FOR PAYMENT QA: Shipping, Taxes, Payment provider, Notifications, Fulfillment y Thank You / Order Status se confirman a mano en este runbook. Astro policy content must be reconciled with Shopify Admin before Payment QA.
+`shopify:release-gate` ya engloba validate + legal:preflight + session + Shopify + cart smoke + comprobaciones HTTP. `legal:preflight` FAIL por datos pendientes es blocker: no se desactiva. Los comandos individuales siguen documentados para diagnosticar un fallo. No promociona, no hace rollback y no crea pedidos. Si los gates automáticos pasan, imprime `AUTOMATED PRE-PAYMENT GATE: PASSED` y `PAYMENT QA READINESS: BLOCKED`. No declara READY FOR PAYMENT QA: Shipping, Taxes, Payment provider, Notifications, Fulfillment y Thank You / Order Status se confirman a mano en este runbook.
 
 ## Código (ya garantizado)
 
@@ -366,18 +366,18 @@ Shopify Admin → Orders.
 
 Evidence: ___ · Date: ___ · Notes: ___
 
-## 9. Policies — BLOCKER
+## 9. Policies — VERIFIED
 
 Configurarlas en Shopify Checkout. No inyectarlas desde Astro.
 
-- [ ] Privacidad, devoluciones/reembolsos, términos, envío e información legal requeridas.
-- [ ] Coherentes con las páginas KingBelt. Dos versiones contradictorias = MANUAL BLOCKER.
+- [x] Privacidad, devoluciones/reembolsos, términos, envío e información legal requeridas.
+- [x] Coherentes con las páginas KingBelt. Dos versiones contradictorias = MANUAL BLOCKER.
 
-**MANUAL BLOCKER actual:** `shopifyPolicyReconciliation` — las políticas Astro deben alinearse a mano con Shopify Admin antes de Payment QA. `bun run legal:preflight` puede pasar el contrato versionado del repositorio; no declara coincidencia con Admin. SHOPIFY POLICY CONTENT REQUIRED MANUALLY.
+`shopifyPolicyReconciliation` está resuelta: las políticas de Astro y Shopify Admin se declararon reconciliadas el 22/08/2026. Si se modifica cualquiera de las dos versiones, esta comprobación vuelve a ser obligatoria antes de Payment QA.
 
 Web «gratis» + Checkout que cobra, o web «24/48 h» + operación que no puede, es BLOCKER.
 
-Evidence: ___ · Date: ___ · Notes: ___
+Evidence: confirmación del responsable del proyecto · Date: 22/08/2026 · Notes: políticas de Astro y Shopify reconciliadas
 
 ## 10. Thank You / Order Status — BLOCKER
 

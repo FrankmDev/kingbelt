@@ -4,16 +4,15 @@ const madeInSpain = confirmed(businessFacts.madeInSpain);
 
 export const hero = {
   brand: 'KingBelt',
-  badge: madeInSpain ? `Hecho a mano en ${madeInSpain}` : 'Hecho a mano en España',
+  badge: 'Producto Nacional',
   subtitleLines: [
     { text: 'Cinturones de cuero ', variant: 'plain' as const },
     { text: 'con criterio.', variant: 'em' as const },
   ],
   signals: [
-    { label: 'Selección curada', href: '/productos' },
     { label: FREE_SHIPPING_LABEL, href: '/envios-y-devoluciones' },
-    { label: 'Guía de tallas', href: '/guia-de-tallas' },
-    { label: 'Atención directa', href: '/contacto' },
+    { label: 'Fabricación artesanal', href: '/sobre' },
+    { label: madeInSpain ? `Hecho en ${madeInSpain}` : 'Hecho en España', href: '/sobre' },
   ] as const,
   index: '01',
   primaryCta: { label: 'Ver colección', href: '/productos' },
@@ -24,19 +23,11 @@ export const brandStatement = {
   index: '03',
   eyebrow: 'Sobre KingBelt',
   meta: 'Marca · Producto',
-  lede: 'Una marca que empieza por el producto y avanza con criterio, no con ruido de escaparate.',
   title: 'Accesorios masculinos con criterio, <em>no con etiqueta.</em>',
-  titleLines: [
-    { text: 'Accesorios masculinos con criterio,', variant: 'plain' as const },
-    { text: 'no con etiqueta.', variant: 'em' as const },
-  ],
-  quote: {
-    eyebrow: 'Criterio',
-    text: 'Cuero y herraje con criterio, no con etiqueta.',
-  },
-  paragraphs: [
-    'Piezas con carácter para el día a día: proporción contenida, materiales con presencia y un acabado que se nota al usarlas.',
-  ],
+  lede: 'Una marca que empieza por el producto y avanza con criterio, no con ruido de escaparate.',
+  body: 'Piezas con carácter para el día a día: proporción contenida, materiales con presencia y un acabado que se nota al usarlas.',
+  kicker: 'Criterio',
+  quote: 'Criterio de producto antes que discurso de escaparate.',
   signals: [
     {
       number: '01',
@@ -54,9 +45,8 @@ export const brandStatement = {
       text: 'Piezas seleccionadas con atención al material, al ajuste y al uso real.',
     },
   ] as const,
-  tags: ['Cuero', 'Proporción', 'Uso diario'] as const,
-  image: '/images/blog/cinturon-marron.jpg',
-  imageAlt: 'Detalle de cinturón de cuero marrón con hebilla metálica',
+  image: '/images/imagen-cinturon-kingbelt-6.avif',
+  imageAlt: 'Manos ensamblando un cinturón de cuero marrón KingBelt con hebilla y remaches',
   imagePosition: 'center 42%',
   imageLabel: 'Material',
   imageCaption: 'Presencia contenida, sin teatralidad.',
@@ -111,8 +101,8 @@ export const standardsSection = {
       text: 'Pensado para el uso diario: ajuste cómodo, agujeros bien rematados y curva que no se deforma a la primera.',
     },
   ],
-  image: '/images/blog/cinturon-marron-oscuro.jpg',
-  imageAlt: 'Detalle de cinturón de cuero con hebilla metálica',
+  image: '/images/imagen-cinturon-kingbelt-7.avif',
+  imageAlt: 'Corte de cuero coñac con cuchilla y regla en el taller KingBelt',
   imageLabel: 'Detalle / cierre',
   imageCaption: 'Proporción, material y cierre en una sola pieza.',
 } as const;
@@ -121,8 +111,8 @@ export const styleBanner = {
   eyebrow: 'En conjunto',
   title: 'El cinturón completa el look, no lo anuncia.',
   body: 'Proporción entre pantalón, calzado y cinturón. Presencia contenida para el armario masculino actual.',
-  image: '/images/brand/cinturones-en-taller.jpg',
-  imageAlt: 'Conjunto masculino con cinturón de cuero, pantalón y calzado',
+  image: '/images/imagen-cinturon-kingbelt-16.avif',
+  imageAlt: 'Cinturones de cuero marrón y negro KingBelt sobre piedra natural',
   imagePosition: 'center 38%',
 } as const;
 
@@ -139,18 +129,37 @@ export const trustSection = {
   index: '06',
   eyebrow: 'Antes de elegir',
   title: 'Menos dudas, <em>más claridad.</em>',
+  body: 'Todo lo que necesitas para elegir con criterio, antes de añadir al carrito.',
+  meta: 'Atención · 3 puntos',
+  cta: { label: 'Ir a contacto', href: '/contacto' },
+  shortcuts: [
+    { label: 'Guía de tallas', href: '/guia-de-tallas' },
+    { label: 'Centro de ayuda', href: '/ayuda' },
+  ],
   items: [
     {
+      number: '01',
       title: 'Ayuda para elegir',
       text: 'Consulta la guía de tallas, el centro de ayuda o escríbenos antes de decidir.',
+      meta: 'Guías',
+      href: '/guia-de-tallas',
+      linkLabel: 'Ver guía',
     },
     {
+      number: '02',
       title: 'Información de producto',
       text: 'Material, color, categoría y precio visibles en cada referencia. Sin letra pequeña inventada.',
+      meta: 'Ficha',
+      href: '/productos',
+      linkLabel: 'Ver colección',
     },
     {
+      number: '03',
       title: 'Atención directa',
       text: 'Escríbenos con tu duda concreta por email o Instagram.',
+      meta: 'Contacto',
+      href: '/contacto',
+      linkLabel: 'Contactar',
     },
   ],
 } as const;
@@ -163,7 +172,7 @@ export const closingCta = {
     'Revisa la selección o escríbenos si necesitas orientación antes de elegir.',
   primary: { label: 'Ver colección', href: '/productos' },
   secondary: { label: 'Contactar', href: '/contacto' },
-  backgroundImage: '/images/blog/cinturon-negro.jpg',
+  backgroundImage: '/images/imagen-cinturon-kingbelt-9.avif',
   backgroundAlt: '',
   backgroundPosition: 'center 60%',
 } as const;

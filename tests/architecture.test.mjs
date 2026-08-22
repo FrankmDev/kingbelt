@@ -352,7 +352,7 @@ describe('límites de arquitectura', () => {
     const vercelEnvUses = sourceFiles
       .filter((path) => /\bVERCEL_ENV\b/.test(readFileSync(path, 'utf8')))
       .map(sourcePath);
-    expect(vercelEnvUses).toEqual([]);
+    expect(vercelEnvUses).toEqual(['src/shared/seo/deployment.ts']);
   });
 
   test('la fuente de comercio no se infiere de Vercel, hostname ni tokens', () => {

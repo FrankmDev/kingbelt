@@ -77,7 +77,18 @@ export const createProductStructuredData = (
 
   const priceRange = calculatePriceRange(pricingVariants);
   const hasRange = priceRange.min.amountMinor !== priceRange.max.amountMinor;
-  const sharedOffer = { availability, url: canonical };
+  const sharedOffer = {
+    availability,
+    url: canonical,
+    itemCondition: `${SCHEMA_CONTEXT}/NewCondition`,
+    hasMerchantReturnPolicy: {
+      '@type': 'MerchantReturnPolicy',
+      applicableCountry: 'ES',
+      returnPolicyCategory: `${SCHEMA_CONTEXT}/MerchantReturnFiniteReturnWindow`,
+      merchantReturnDays: 30,
+      url: new URL('/devoluciones', canonical).href,
+    },
+  };
 
   if (hasRange) {
     data.offers = {

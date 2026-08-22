@@ -98,7 +98,7 @@ describe('hechos empresariales confirmados', () => {
     expect(site.contact.email).toBe(confirmed(businessFacts.email));
     expect(confirmed(businessFacts.address)).toContain('Avenida de Novelda, 143, bajo');
     expect(confirmed(businessFacts.address)).toContain('03206 Elche (Alicante)');
-    expect(confirmed(businessFacts.website)).toBe('https://kingbelt.com');
+    expect(confirmed(businessFacts.website)).toBe('https://kingbelt.es');
     expect(confirmed(businessFacts.registeredAddress)).toBe(confirmed(businessFacts.address));
     expect(confirmed(businessFacts.registryData)).toContain('hoja A-168894');
     expect(confirmed(businessFacts.legalBases)).toContain('Ejecución contractual');
@@ -325,13 +325,13 @@ describe('robots, sitemap y tecnologías', () => {
 });
 
 describe('legal:preflight sobre el repositorio actual', () => {
-  test('pasa con facts confirmados, documentos definitivos y claims opcionales aún pendientes', () => {
+  test('pasa con facts, documentos y políticas Shopify confirmados', () => {
     const report = runLegalPreflight();
     expect(report.ok).toBe(true);
     expect(report.pendingRequiredFacts).toEqual([]);
     expect(report.draftRequiredDocuments).toEqual([]);
     expect(report.unresolvedManualDecisions).toEqual([]);
-    expect(report.paymentQaManualDecisions).toEqual(['shopifyPolicyReconciliation']);
+    expect(report.paymentQaManualDecisions).toEqual([]);
     expect(report.incompletePrivacyFirstLayer).toBe(false);
     expect(report.optionalPendingFacts).toEqual(
       expect.arrayContaining(['madeInSpain', 'packagingIncluded', 'responseTime'])
@@ -347,7 +347,7 @@ describe('legal:preflight sobre el repositorio actual', () => {
     expect(runLegalPreflightCli(io)).toBe(0);
     const output = io.stdout.chunks.join('');
     expect(output).toContain('Legal preflight passed');
-    expect(output).toContain('shopifyPolicyReconciliation');
+    expect(output).not.toContain('shopifyPolicyReconciliation');
     expect(output).not.toContain('at ');
   });
 });

@@ -48,7 +48,7 @@ describe('registro legal', () => {
 
     expect(isSitemapExcluded('/')).toBe(false);
     expect(isSitemapExcluded('/ayuda/')).toBe(false);
-    expect(isSitemapExcluded('/guia-de-tallas')).toBe(true);
+    expect(isSitemapExcluded('/guia-de-tallas')).toBe(false);
     expect(isSitemapExcluded('/aviso-legal')).toBe(false);
     expect(isSitemapExcluded('/privacidad')).toBe(false);
     expect(isSitemapExcluded('/envios-y-devoluciones')).toBe(false);

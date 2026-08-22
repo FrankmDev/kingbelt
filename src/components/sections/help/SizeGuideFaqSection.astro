@@ -1,5 +1,5 @@
 ---
-import HomeSectionHead from '../home/HomeSectionHead.astro';
+import SectionHeader from '@components/ui/SectionHeader.astro';
 import FAQ from '@components/faq/FAQ.astro';
 import type { FAQItem } from '@content/faq';
 
@@ -28,7 +28,7 @@ const titleId = 'size-guide-faq-title';
   stickySidebar={false}
   itemVariant="editorial"
 >
-  <HomeSectionHead
+  <SectionHeader
     slot="header"
     index={section.index}
     eyebrow={section.eyebrow}
@@ -38,7 +38,7 @@ const titleId = 'size-guide-faq-title';
     class="size-guide-faq__header"
   >
     <Fragment slot="title">{section.title}</Fragment>
-  </HomeSectionHead>
+  </SectionHeader>
 </FAQ>
 
 <style>
@@ -48,7 +48,7 @@ const titleId = 'size-guide-faq-title';
     background: var(--color-king-surface);
   }
 
-  .size-guide-faq__header:global(.section-header-home) {
+  .size-guide-faq__header:global(.section-header) {
     width: 100%;
     margin-bottom: var(--kb-space-gap);
   }

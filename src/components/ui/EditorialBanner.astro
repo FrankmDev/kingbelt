@@ -1,6 +1,7 @@
 ---
 import Breadcrumbs from './Breadcrumbs.astro';
 import Eyebrow from './Eyebrow.astro';
+import OptimizedImage from './OptimizedImage.astro';
 
 interface Props {
   eyebrow: string;
@@ -40,15 +41,15 @@ const labelId = id ? `${id}-label` : undefined;
   aria-labelledby={labelId}
   {...id ? { id } : {}}
 >
-  <img
+  <OptimizedImage
     src={image}
     alt={imageAlt}
+    preset="background"
     width={imageWidth}
     height={imageHeight}
     class="kb-editorial-banner__media"
     style={`object-position: ${imagePosition}`}
     loading="lazy"
-    decoding="async"
   />
 
   <div class="kb-editorial-banner__overlay" aria-hidden="true"></div>

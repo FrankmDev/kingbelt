@@ -1,44 +1,22 @@
 ---
-import SectionHeaderHome from './SectionHeaderHome.astro';
-import CTABox from '../../ui/CTABox.astro';
+import EditorialCtaSection from '../EditorialCtaSection.astro';
 import { closingCta } from '@content/home';
 ---
 
-<section class="home-closing section-spacing section-spacing-close" aria-label="Llamada a la acción">
-  <div class="cta-section-inner kb-shell-wide">
-    <CTABox
-      eyebrow={closingCta.eyebrow}
-      title={closingCta.title}
-      description={closingCta.description}
-      buttonLabel={closingCta.primary.label}
-      buttonHref={closingCta.primary.href}
-      buttonVariant="secondary"
-      secondaryButtonLabel={closingCta.secondary.label}
-      secondaryButtonHref={closingCta.secondary.href}
-      secondaryButtonVariant="surfaceOutline"
-      backgroundImage={closingCta.backgroundImage}
-      backgroundAlt={closingCta.backgroundAlt}
-      backgroundPosition={closingCta.backgroundPosition}
-      titleTag="h2"
-    >
-      <SectionHeaderHome
-        slot="header"
-        index={closingCta.index}
-        eyebrow={closingCta.eyebrow}
-        body={closingCta.description}
-        tone="dark"
-        density="compact"
-      >
-        <Fragment slot="title">
-          <span set:html={closingCta.title} />
-        </Fragment>
-      </SectionHeaderHome>
-    </CTABox>
-  </div>
-</section>
-
-<style>
-  .home-closing :global(.section-header-home) {
-    margin-bottom: 0;
-  }
-</style>
+<EditorialCtaSection
+  id="cierre"
+  index={closingCta.index}
+  titleId="home-closing-title"
+  spacing="close"
+  cta={{
+    eyebrow: closingCta.eyebrow,
+    title: closingCta.title,
+    description: closingCta.description,
+    buttonLabel: closingCta.primary.label,
+    buttonHref: closingCta.primary.href,
+    secondaryLabel: closingCta.secondary.label,
+    secondaryHref: closingCta.secondary.href,
+    image: closingCta.backgroundImage,
+    imagePosition: closingCta.backgroundPosition,
+  }}
+/>

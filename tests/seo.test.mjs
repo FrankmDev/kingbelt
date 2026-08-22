@@ -4,6 +4,7 @@ import {
   getRobotsForQuery,
   resolveCatalogIndexHead,
   resolveCollectionPageHead,
+  resolveCommerceRobots,
   resolveProductPageHead,
 } from '../src/commerce/application/seo.ts';
 import { CATALOG_INDEX_PATH, productPath, resolveCanonicalUrl } from '../src/commerce/application/paths.ts';
@@ -17,7 +18,16 @@ import {
   resolveProductRedirectTarget,
 } from '../src/commerce/application/product-redirects.ts';
 import { isSafeInternalPath } from '../src/commerce/domain/url-policy.ts';
-import { isSitemapExcluded } from '../src/config/sitemap.ts';
+import { toCanonicalUrl } from '../src/shared/url.ts';
+import { createPageSeo } from '../src/shared/seo/page-head.ts';
+import { isSearchIndexableDeployment, resolveIndexRobots } from '../src/shared/seo/deployment.ts';
+import {
+  createOrganizationSchema,
+  createFaqPageSchema,
+  SITE_ORGANIZATION_ID,
+} from '../src/shared/seo/structured-data.ts';
+import { GET as robotsGET } from '../src/pages/robots.txt.ts';
+import { isSitemapExcluded, getSsrSitemapUrls, buildCommerceSitemapUrls } from '../src/config/sitemap.ts';
 import { getLegalSitemapExcludedPaths } from '../src/content/legal.ts';
 
 const site = { name: 'KingBelt' };
@@ -67,7 +77,7 @@ const makeProduct = (overrides = {}) => ({
   images: [
     {
       id: 'image:primary',
-      url: '/images/brand/cinturones-en-taller.jpg',
+      url: '/images/imagen-cinturon-kingbelt-10.avif',
       altText: 'Cinturón de prueba',
       width: 960,
       height: 1200,
@@ -83,7 +93,7 @@ describe('SEO canónico y robots', () => {
   test('mantiene URLs estables por handle sin parámetros de consulta', () => {
     expect(productPath('cinturon-bandera')).toBe('/productos/cinturon-bandera');
     expect(resolveCanonicalUrl(siteUrl, '/productos/cinturon-bandera')).toBe(
-      'https://kingbelt.com/productos/cinturon-bandera'
+      'https://kingbelt.es/productos/cinturon-bandera'
     );
   });
 
@@ -95,6 +105,22 @@ describe('SEO canónico y robots', () => {
     expect(getRobotsForQuery(new URLSearchParams('page=2'))).toBe('noindex,follow');
     expect(getRobotsForQuery(new URLSearchParams('page=1'))).toBeUndefined();
     expect(getRobotsForQuery()).toBeUndefined();
+    expect(resolveCommerceRobots({ indexable: false })).toBe('noindex,follow');
+    expect(resolveCommerceRobots({
+      indexable: true,
+      searchParams: new URLSearchParams('color=negro'),
+    })).toBe('noindex,follow');
+    expect(resolveCommerceRobots({ indexable: true })).toBeUndefined();
+  });
+
+  test('el canonical público ignora barras finales y el host de la petición', () => {
+    expect(toCanonicalUrl(siteUrl, '/blog/')).toBe('https://kingbelt.es/blog');
+    expect(toCanonicalUrl(siteUrl, '/')).toBe('https://kingbelt.es/');
+    expect(createPageSeo({
+      title: 'Contacto — KingBelt',
+      description: 'Contacto.',
+      pathname: '/contacto/',
+    }).canonicalUrl).toBe('https://kingbelt.es/contacto');
   });
 });
 
@@ -109,7 +135,7 @@ describe('cabecera de páginas de comercio', () => {
     const { seo, schema } = resolveProductPageHead(product, site, siteUrl);
     expect(seo.title).toBe('Título SEO — KingBelt');
     expect(seo.description).toBe('Descripción SEO específica.');
-    expect(seo.canonicalUrl).toBe('https://kingbelt.com/productos/cinturon-test');
+    expect(seo.canonicalUrl).toBe('https://kingbelt.es/productos/cinturon-test');
     expect(seo.ogType).toBe('product');
     expect(schema['@type']).toBe('Product');
     expect(schema.url).toBe(seo.canonicalUrl);
@@ -130,14 +156,14 @@ describe('cabecera de páginas de comercio', () => {
       site,
       siteUrl
     );
-    expect(seo.canonicalUrl).toBe('https://kingbelt.com/categorias/piel-lisa');
+    expect(seo.canonicalUrl).toBe('https://kingbelt.es/categorias/piel-lisa');
     expect(seo.ogType).toBe('website');
   });
 
   test('resuelve SEO del índice de catálogo en /productos', () => {
     const { seo, schema } = resolveCatalogIndexHead(
       {
-        title: 'Colección — KingBelt',
+        title: 'Cinturones de cuero — Colección KingBelt',
         description: 'Colección completa.',
         products: [],
         collections: [{
@@ -152,7 +178,7 @@ describe('cabecera de páginas de comercio', () => {
       siteUrl
     );
     expect(CATALOG_INDEX_PATH).toBe('/productos');
-    expect(seo.canonicalUrl).toBe('https://kingbelt.com/productos');
+    expect(seo.canonicalUrl).toBe('https://kingbelt.es/productos');
     expect(seo.ogType).toBe('website');
     expect(schema['@type']).toBe('CollectionPage');
   });
@@ -160,7 +186,7 @@ describe('cabecera de páginas de comercio', () => {
 
 describe('datos estructurados de producto', () => {
   test('representa rangos de precio con AggregateOffer y sin ofertas por variante', () => {
-    const schema = createProductStructuredData(makeProduct(), 'https://kingbelt.com/productos/cinturon-test', 'KingBelt');
+    const schema = createProductStructuredData(makeProduct(), 'https://kingbelt.es/productos/cinturon-test', 'KingBelt');
     expect(schema.mpn).toBe('KB-TEST');
     expect(schema.sku).toBeUndefined();
     expect(schema.offers).toMatchObject({
@@ -170,6 +196,12 @@ describe('datos estructurados de producto', () => {
       priceCurrency: 'EUR',
       offerCount: 2,
       availability: 'https://schema.org/InStock',
+      itemCondition: 'https://schema.org/NewCondition',
+      hasMerchantReturnPolicy: {
+        '@type': 'MerchantReturnPolicy',
+        merchantReturnDays: 30,
+        applicableCountry: 'ES',
+      },
     });
     expect(schema.image[0]).toMatchObject({
       '@type': 'ImageObject',
@@ -181,7 +213,7 @@ describe('datos estructurados de producto', () => {
   test('usa Offer única con sku real solo en productos de una variante activa', () => {
     const schema = createProductStructuredData(
       makeProduct({ variants: [makeVariant({ id: 'variant:solo', sku: 'SKU-SOLO', price: 8_900 })] }),
-      'https://kingbelt.com/productos/cinturon-test',
+      'https://kingbelt.es/productos/cinturon-test',
       'KingBelt'
     );
     expect(schema.offers).toMatchObject({
@@ -200,7 +232,7 @@ describe('datos estructurados de producto', () => {
           price: 8_900,
         })],
       }),
-      'https://kingbelt.com/productos/cinturon-test',
+      'https://kingbelt.es/productos/cinturon-test',
       'KingBelt'
     );
     expect(schema.offers).toMatchObject({ '@type': 'Offer', price: '89.00' });
@@ -216,6 +248,8 @@ describe('datos estructurados de producto', () => {
     const { seo } = resolveProductPageHead(product, site, siteUrl);
     const schema = createProductStructuredData(product, seo.canonicalUrl, 'KingBelt');
     expect(seo.robots).toBeUndefined();
+    expect(resolveProductPageHead(product, site, siteUrl, { indexable: false }).seo.robots)
+      .toBe('noindex,follow');
     expect(schema.offers.availability).toBe('https://schema.org/OutOfStock');
     expect(schema.offers.price).toBe('89.00');
   });
@@ -226,7 +260,7 @@ describe('datos estructurados de producto', () => {
         makeVariant({ id: 'variant:off', sku: 'SKU-OFF', price: 8_900, salesStatus: 'unavailable' }),
       ],
     });
-    const schema = createProductStructuredData(product, 'https://kingbelt.com/productos/cinturon-test', 'KingBelt');
+    const schema = createProductStructuredData(product, 'https://kingbelt.es/productos/cinturon-test', 'KingBelt');
     expect(schema.offers).toBeUndefined();
     expect(schema.name).toBe('Cinturón Test');
   });
@@ -253,10 +287,10 @@ describe('datos estructurados de colección', () => {
           colors: [],
         },
       ],
-      'https://kingbelt.com/categorias/piel-lisa',
+      'https://kingbelt.es/categorias/piel-lisa',
       siteUrl
     );
-    expect(schema.mainEntity.itemListElement[0].url).toBe('https://kingbelt.com/productos/cinturon-a');
+    expect(schema.mainEntity.itemListElement[0].url).toBe('https://kingbelt.es/productos/cinturon-a');
   });
 });
 
@@ -265,7 +299,8 @@ describe('sitemap y redirecciones', () => {
     expect(isSitemapExcluded('/carrito')).toBe(true);
     expect(isSitemapExcluded('/cart-catalog.json')).toBe(true);
     expect(isSitemapExcluded('/cuenta/iniciar')).toBe(true);
-    expect(isSitemapExcluded('/guia-de-tallas')).toBe(true);
+    expect(isSitemapExcluded('/rss.xml')).toBe(true);
+    expect(isSitemapExcluded('/guia-de-tallas')).toBe(false);
     expect(isSitemapExcluded('/aviso-legal')).toBe(false);
     expect(isSitemapExcluded('/')).toBe(false);
     expect(isSitemapExcluded('/productos')).toBe(false);
@@ -309,5 +344,71 @@ describe('sitemap y redirecciones', () => {
     );
     expect(schema.mainEntity.numberOfItems).toBe(products.length);
     expect(schema.mainEntity.itemListElement).toHaveLength(COLLECTION_SCHEMA_MAX_ITEMS);
+  });
+
+  test('el sitemap editorial SSR incluye la portada y el de comercio omite el catálogo demo', () => {
+    expect(getSsrSitemapUrls(siteUrl)).toEqual(['https://kingbelt.es/']);
+    expect(buildCommerceSitemapUrls(siteUrl, ['cinturon-test'], ['vestir'], false)).toEqual([]);
+    expect(buildCommerceSitemapUrls(siteUrl, ['cinturon-test'], ['vestir'], true)).toEqual([
+      'https://kingbelt.es/productos',
+      'https://kingbelt.es/categorias/vestir',
+      'https://kingbelt.es/productos/cinturon-test',
+    ]);
+  });
+});
+
+describe('señales de entidad y robots de deployment', () => {
+  test('Organization usa identidad legal confirmada', () => {
+    const organization = createOrganizationSchema();
+    expect(organization['@id']).toBe(SITE_ORGANIZATION_ID);
+    expect(organization.legalName).toBe('CintuElx S.L.');
+    expect(organization.address).toMatchObject({
+      '@type': 'PostalAddress',
+      postalCode: '03206',
+      addressLocality: 'Elche',
+      addressCountry: 'ES',
+    });
+  });
+
+  test('FAQPage serializa preguntas y respuestas', () => {
+    const schema = createFaqPageSchema(
+      [{ question: '¿Cuánto cuesta el envío?', answer: 'Envíos gratuitos.' }],
+      'https://kingbelt.es/contacto'
+    );
+    expect(schema['@type']).toBe('FAQPage');
+    expect(schema.mainEntity[0]).toMatchObject({
+      '@type': 'Question',
+      name: '¿Cuánto cuesta el envío?',
+    });
+  });
+
+  test('preview de Vercel no se indexa y producción conserva index,follow', () => {
+    const previous = process.env.VERCEL_ENV;
+    delete process.env.VERCEL_ENV;
+    expect(isSearchIndexableDeployment()).toBe(true);
+    expect(resolveIndexRobots()).toBe('index,follow');
+    process.env.VERCEL_ENV = 'preview';
+    expect(isSearchIndexableDeployment()).toBe(false);
+    expect(resolveIndexRobots('index,follow')).toBe('noindex,nofollow');
+    if (previous === undefined) delete process.env.VERCEL_ENV;
+    else process.env.VERCEL_ENV = previous;
+  });
+
+  test('robots.txt bloquea superficies privadas y declara ambos sitemaps', async () => {
+    const previous = process.env.VERCEL_ENV;
+    delete process.env.VERCEL_ENV;
+    const response = await robotsGET({ site: new URL('https://kingbelt.es/') });
+    const body = await response.text();
+    expect(body).toContain('Disallow: /api/');
+    expect(body).toContain('Disallow: /carrito');
+    expect(body).toContain('Disallow: /cuenta/');
+    expect(body).toContain('Disallow: /desistimiento');
+    expect(body).toContain('Sitemap: https://kingbelt.es/sitemap-index.xml');
+    expect(body).toContain('Sitemap: https://kingbelt.es/sitemap-commerce.xml');
+    process.env.VERCEL_ENV = 'preview';
+    const preview = await robotsGET({ site: new URL('https://kingbelt.es/') });
+    expect(await preview.text()).toContain('Disallow: /');
+    if (previous === undefined) delete process.env.VERCEL_ENV;
+    else process.env.VERCEL_ENV = previous;
   });
 });

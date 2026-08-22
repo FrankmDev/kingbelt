@@ -1,5 +1,5 @@
 ---
-import SectionHeaderHome from '../home/SectionHeaderHome.astro';
+import SectionHeader from '@components/ui/SectionHeader.astro';
 import MediaFrame from '../../ui/MediaFrame.astro';
 
 interface OriginData {
@@ -27,7 +27,7 @@ const { data, class: className = '' } = Astro.props;
   aria-labelledby="about-origin-title"
 >
   <div class="kb-shell-wide about-origin__shell">
-    <SectionHeaderHome
+    <SectionHeader
       index="01"
       eyebrow={data.eyebrow}
       meta="KingBelt / Marca"
@@ -36,7 +36,7 @@ const { data, class: className = '' } = Astro.props;
       <Fragment slot="title">
         <span id="about-origin-title" set:html={data.title} />
       </Fragment>
-    </SectionHeaderHome>
+    </SectionHeader>
 
     <div class="about-origin__layout">
       <div class="about-origin__panel kb-origin-panel">
@@ -53,12 +53,12 @@ const { data, class: className = '' } = Astro.props;
       <MediaFrame
         src={data.image}
         alt={data.imageAlt}
-        ratio="4/3"
+        ratio="3/2"
         label={data.imageLabel}
         caption={data.imageCaption}
         captionNumber="01"
-        width={1200}
-        height={900}
+        width={1500}
+        height={1000}
         loading="lazy"
         class="about-origin__media"
       />
@@ -72,7 +72,7 @@ const { data, class: className = '' } = Astro.props;
     background: var(--color-king-bg);
   }
 
-  .about-origin__header:global(.section-header-home) {
+  .about-origin__header:global(.section-header) {
     margin-bottom: var(--kb-space-gap);
   }
 
@@ -112,18 +112,11 @@ const { data, class: className = '' } = Astro.props;
   @media (min-width: 64rem) {
     .about-origin__layout {
       grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
-      align-items: stretch;
+      align-items: start;
     }
 
-    .about-origin__panel {
-      height: 100%;
-      min-height: 0;
-    }
-
-    .about-origin__media:global(.media-frame.media-frame--ratio-4-3) {
-      height: 100%;
-      min-height: 0;
-      aspect-ratio: auto;
+    .about-origin__media:global(.media-frame) {
+      width: 100%;
     }
   }
 </style>

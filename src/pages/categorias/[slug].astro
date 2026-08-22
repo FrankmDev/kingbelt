@@ -8,7 +8,9 @@ import { site, siteUrl } from '@config/site';
 import { getCatalogProvider } from '@commerce/catalog';
 import { CATALOG_INDEX_PATH } from '@commerce/application/paths';
 import { resolveCollectionPageHead, type CommercePageHead } from '@commerce/application/seo';
+import { isShopifyCommerce } from '@commerce/commerce-source';
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import { createBreadcrumbListSchema } from '@shared/seo/structured-data';
 
 const handle = Astro.params.slug;
 if (!handle) {
@@ -23,12 +25,24 @@ if (!collectionPage) {
 }
 // HTML anónimo y derivado del catálogo: caché CDN breve con revalidación.
 Astro.response.headers.set('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=600');
-const pageHead: CommercePageHead = resolveCollectionPageHead(collectionPage, site, siteUrl);
+const pageHead: CommercePageHead = resolveCollectionPageHead(collectionPage, site, siteUrl, {
+  searchParams: Astro.url.searchParams,
+  indexable: isShopifyCommerce(),
+});
 const { collection: category, products, facets } = collectionPage;
 const categories = await catalogProvider.getCollections();
 ---
 
-<BaseLayout seo={pageHead.seo} schema={pageHead.schema}>
+<BaseLayout
+  seo={pageHead.seo}
+  schema={[
+    pageHead.schema,
+    createBreadcrumbListSchema([
+      { name: 'Productos', path: CATALOG_INDEX_PATH },
+      { name: category.title, path: `/categorias/${category.handle}` },
+    ]),
+  ]}
+>
   <Header slot="header" initialTheme="light" scrolledTheme="light" compactThreshold={32} />
 
   <CollectionPageHead

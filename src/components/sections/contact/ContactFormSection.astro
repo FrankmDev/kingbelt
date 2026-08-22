@@ -1,5 +1,5 @@
 ---
-import SectionHeaderHome from '../home/SectionHeaderHome.astro';
+import SectionHeader from '@components/ui/SectionHeader.astro';
 import Button from '../../ui/Button.astro';
 import ContactMethod from '../../ui/ContactMethod.astro';
 import FormField from '../../ui/FormField.astro';
@@ -16,7 +16,7 @@ const { channels, inquiryTypes } = Astro.props;
 
 <section class="contact-form-section" aria-labelledby="contact-form-title">
   <div class="contact-form-section__inner kb-shell-wide">
-    <SectionHeaderHome
+    <SectionHeader
       index="01"
       eyebrow="Escríbenos"
       meta="Formulario"
@@ -28,16 +28,16 @@ const { channels, inquiryTypes } = Astro.props;
       <Fragment slot="body">
         El formulario es la vía más completa. También puedes escribir por email o teléfono.
       </Fragment>
-    </SectionHeaderHome>
+    </SectionHeader>
 
     <div class="contact-form-section__layout">
       <aside class="contact-form-section__channels" aria-labelledby="contact-channels-title">
         <header class="contact-form-section__channels-head">
-          <h2 id="contact-channels-title" class="contact-form-section__channels-title kb-meta-label text-king-muted">
+          <p id="contact-channels-title" class="contact-form-section__channels-kicker kb-eyebrow kb-eyebrow-lined">
             Canales directos
-          </h2>
+          </p>
           <p class="contact-form-section__channels-note">
-            Email y teléfono disponibles.
+            Email y teléfono para consultas que no requieren formulario.
           </p>
         </header>
 
@@ -195,7 +195,7 @@ const { channels, inquiryTypes } = Astro.props;
     background: var(--color-king-bg);
   }
 
-  .contact-form-section__header:global(.section-header-home) {
+  .contact-form-section__header:global(.section-header) {
     width: 100%;
     margin-bottom: var(--kb-space-gap);
   }
@@ -223,17 +223,17 @@ const { channels, inquiryTypes } = Astro.props;
     gap: var(--kb-space-2);
   }
 
-  .contact-form-section__channels-title {
+  .contact-form-section__channels-kicker {
     margin: 0;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
+    color: var(--color-king-accent);
   }
 
   .contact-form-section__channels-note {
     margin: 0;
     font-size: var(--kb-text-sm);
-    line-height: 1.5;
-    color: color-mix(in srgb, var(--color-king-text) 68%, var(--color-king-muted));
+    line-height: 1.55;
+    color: var(--color-king-muted);
+    text-wrap: pretty;
   }
 
   .contact-form-section__channels-list {
@@ -241,8 +241,7 @@ const { channels, inquiryTypes } = Astro.props;
     gap: var(--kb-space-4);
   }
 
-  .contact-form-section__channels-list :global(.kb-card),
-  .contact-form-section__channels-list :global(.kb-card-steel) {
+  .contact-form-section__channels-list :global(.contact-method) {
     box-sizing: border-box;
     max-width: 100%;
   }

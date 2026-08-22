@@ -2,7 +2,14 @@
 import Button from '../../ui/Button.astro';
 import Badge from '../../ui/Badge.astro';
 import Icon from '../../ui/Icon.astro';
+import { getImage } from 'astro:assets';
+import { getEditorialAsset } from '@shared/editorial-images';
 import { hero } from '@content/home';
+
+const posterAsset = getEditorialAsset('/images/imagen-cinturon-kingbelt-9.avif');
+const poster = posterAsset
+  ? await getImage({ src: posterAsset, width: 1600, quality: 70 })
+  : undefined;
 ---
 
 <section
@@ -15,7 +22,7 @@ import { hero } from '@content/home';
     <video
       class="hero-home__video"
       src="/videos/home-hero.mp4"
-      poster="/images/brand/cinturones-en-taller.jpg"
+      poster={poster?.src}
       autoplay
       muted
       loop
@@ -96,7 +103,7 @@ import { hero } from '@content/home';
   .hero-home {
     --hh-ink: var(--color-king-bone);
     --hh-ink-soft: color-mix(in srgb, var(--color-king-bone), transparent 10%);
-    --hh-accent: var(--color-king-accent-light);
+    --hh-accent: var(--color-king-on-dark-line);
 
     position: relative;
     isolation: isolate;
@@ -199,7 +206,7 @@ import { hero } from '@content/home';
     pointer-events: none;
     background: radial-gradient(
       ellipse 68% 58% at 42% 88%,
-      color-mix(in srgb, var(--hh-accent), transparent 78%) 0%,
+      color-mix(in srgb, var(--color-king-bone), transparent 82%) 0%,
       color-mix(in srgb, var(--color-king-steel), transparent 92%) 38%,
       transparent 72%
     );
@@ -433,7 +440,7 @@ import { hero } from '@content/home';
   }
 
   .hero-home__eyebrow {
-    color: var(--hh-accent);
+    color: var(--hh-ink);
     letter-spacing: 0.16em;
   }
 
@@ -443,14 +450,14 @@ import { hero } from '@content/home';
     background: linear-gradient(
       90deg,
       transparent,
-      color-mix(in srgb, var(--hh-accent), transparent 24%)
+      color-mix(in srgb, var(--hh-ink), transparent 24%)
     );
   }
 
   .hero-home__eyebrow.kb-eyebrow-lined::after {
     background: linear-gradient(
       90deg,
-      color-mix(in srgb, var(--hh-accent), transparent 24%),
+      color-mix(in srgb, var(--hh-ink), transparent 24%),
       transparent
     );
   }

@@ -115,7 +115,7 @@ const isEditorial = variant === 'editorial';
   }
 
   .kb-card-steel.faq-card::before {
-    background: var(--color-king-accent-light);
+    background: var(--color-king-on-dark-line);
   }
 
   .faq-card[open]::before {
@@ -174,7 +174,7 @@ const isEditorial = variant === 'editorial';
   }
 
   .faq-card--dark .faq-summary:focus-visible {
-    outline-color: var(--color-king-accent-light);
+    outline-color: var(--color-king-on-dark-soft);
   }
 
   .faq-card[open]:not(.faq-card--editorial) {
@@ -182,7 +182,7 @@ const isEditorial = variant === 'editorial';
   }
 
   .kb-card-steel.faq-card[open] {
-    background-color: color-mix(in srgb, var(--kb-surface-steel) 92%, var(--color-king-accent-light) 8%);
+    background-color: color-mix(in srgb, var(--kb-surface-steel) 94%, var(--color-king-bone) 6%);
   }
 
   .faq-card[open] .faq-summary {
@@ -238,7 +238,7 @@ const isEditorial = variant === 'editorial';
   }
 
   .kb-card-steel .faq-summary-num {
-    color: var(--color-king-accent-light);
+    color: var(--color-king-on-dark-muted);
     opacity: 0.45;
   }
 
@@ -271,9 +271,9 @@ const isEditorial = variant === 'editorial';
   }
 
   .kb-card-steel .faq-summary-icon {
-    background: rgba(183, 138, 79, 0.1);
-    color: var(--color-king-accent-light);
-    border-color: rgba(183, 138, 79, 0.2);
+    background: var(--color-king-on-dark-fill);
+    color: var(--color-king-on-dark-muted);
+    border-color: var(--color-king-on-dark-line-faint);
   }
 
   @media (hover: hover) and (pointer: fine) {
@@ -284,8 +284,8 @@ const isEditorial = variant === 'editorial';
     }
 
     .kb-card-steel.faq-card:hover .faq-summary-icon {
-      background: rgba(183, 138, 79, 0.14);
-      border-color: rgba(183, 138, 79, 0.35);
+      background: var(--color-king-on-dark-fill-strong);
+      border-color: var(--color-king-on-dark-line);
     }
 
     .faq-card--editorial:hover {
@@ -434,7 +434,7 @@ const isEditorial = variant === 'editorial';
   }
 
   .kb-card-steel .faq-answer-rule {
-    background: linear-gradient(90deg, var(--color-king-accent-light), transparent);
+    background: linear-gradient(90deg, var(--color-king-on-dark-line), transparent);
   }
 
   .faq-answer-text {

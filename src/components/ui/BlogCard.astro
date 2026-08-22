@@ -1,6 +1,7 @@
 ---
 import ArticleMeta from './ArticleMeta.astro';
 import Icon from './Icon.astro';
+import OptimizedImage from './OptimizedImage.astro';
 
 interface Props {
   title: string;
@@ -67,14 +68,14 @@ const isSurfaceCard = variant === 'default' || variant === 'bento';
 
     {hasImage && variant !== 'index' && (
       <div class="kb-blog-card__media">
-        <img
-          src={image}
+        <OptimizedImage
+          src={image ?? ''}
           alt={imageAlt}
+          preset="card"
           width={imageWidth}
           height={imageHeight}
           loading={imageLoading}
           fetchpriority={imageFetchPriority}
-          decoding="async"
           class="kb-blog-card__image"
           style={`object-position: ${imagePosition}`}
         />
@@ -87,13 +88,13 @@ const isSurfaceCard = variant === 'default' || variant === 'bento';
 
     {hasImage && variant === 'index' && (
       <div class="kb-blog-card__thumb" aria-hidden="true">
-        <img
-          src={image}
+        <OptimizedImage
+          src={image ?? ''}
           alt=""
+          preset="thumb"
           width={imageWidth}
           height={imageHeight}
           loading="lazy"
-          decoding="async"
           class="kb-blog-card__thumb-image"
           style={`object-position: ${imagePosition}`}
         />

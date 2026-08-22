@@ -1,8 +1,11 @@
 ---
 import '../styles/global.css';
-import { site } from '@config/site';
+import { site, siteUrl } from '@config/site';
 import { serializeJsonForHtml } from '@shared/security/serialize-json-for-html';
+import { resolveIndexRobots } from '@shared/seo/deployment';
 import type { PageSeo } from '@shared/seo/page-seo';
+import { buildSchemaGraph } from '@shared/seo/structured-data';
+import { toCanonicalUrl } from '@shared/url';
 
 interface Props {
   seo?: PageSeo;
@@ -13,7 +16,7 @@ interface Props {
   imageWidth?: number;
   imageHeight?: number;
   canonicalURL?: string;
-  schema?: object;
+  schema?: Record<string, unknown> | readonly Record<string, unknown>[] | object;
   ogType?: 'website' | 'article' | 'product';
   robots?: string;
   publishedAt?: string;
@@ -39,16 +42,21 @@ const {
 const title = seo?.title ?? titleProp ?? `${site.name} — ${site.tagline}`;
 const description = seo?.description ?? descriptionProp ?? site.description;
 const canonicalURL = seo?.canonicalUrl ?? canonicalURLProp ??
-  new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href;
-const robots = seo?.robots ?? robotsProp;
+  toCanonicalUrl(siteUrl, Astro.url.pathname);
+const robots = resolveIndexRobots(seo?.robots ?? robotsProp);
 const ogType = seo?.ogType ?? ogTypeProp ?? 'website';
-const image = seo?.image?.url ?? imageProp ?? '/favicon.svg';
-const imageAlt = seo?.image?.altText ?? imageAltProp ?? site.name;
+const image = seo?.image?.url ?? imageProp ?? site.defaultOgImage.url;
+const imageAlt = seo?.image?.altText ?? imageAltProp ?? site.defaultOgImage.altText;
 const imageWidth = seo?.image?.width ?? imageWidthProp;
 const imageHeight = seo?.image?.height ?? imageHeightProp;
 
-const schemaScript = schema ? serializeJsonForHtml(schema) : null;
-const ogImageUrl = new URL(image, Astro.site || Astro.url).href;
+const schemaScript = serializeJsonForHtml(buildSchemaGraph(schema));
+const ogImageUrl = new URL(image, siteUrl).href;
+const rssUrl = new URL('/rss.xml', siteUrl).href;
+
+if (robots) {
+  Astro.response.headers.set('X-Robots-Tag', robots);
+}
 ---
 
 <!doctype html>
@@ -62,7 +70,7 @@ const ogImageUrl = new URL(image, Astro.site || Astro.url).href;
     <meta name="theme-color" content="#0a0908" media="(prefers-color-scheme: dark)" />
     <meta name="color-scheme" content="light" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta name="format-detection" content="telephone=no" />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
 
@@ -82,8 +90,11 @@ const ogImageUrl = new URL(image, Astro.site || Astro.url).href;
     {/* SEO */}
     <title>{title}</title>
     <meta name="description" content={description} />
-    {robots && <meta name="robots" content={robots} />}
+    <meta name="robots" content={robots} />
     <link rel="canonical" href={canonicalURL} />
+    <link rel="alternate" hreflang="es" href={canonicalURL} />
+    <link rel="alternate" hreflang="x-default" href={canonicalURL} />
+    <link rel="alternate" type="application/rss+xml" title="Revista KingBelt" href={rssUrl} />
     <link rel="sitemap" href="/sitemap-index.xml" />
     <link rel="sitemap" href="/sitemap-commerce.xml" />
     {publishedAt && <meta property="article:published_time" content={publishedAt} />}
@@ -110,9 +121,7 @@ const ogImageUrl = new URL(image, Astro.site || Astro.url).href;
     <meta name="twitter:image:alt" content={imageAlt} />
 
     {/* Schema.org */}
-    {schemaScript && (
-      <script is:inline type="application/ld+json" set:html={schemaScript} />
-    )}
+    <script is:inline type="application/ld+json" set:html={schemaScript} />
   </head>
   <body class="min-h-screen flex flex-col bg-king-bg">
     <a

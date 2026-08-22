@@ -13,7 +13,7 @@ Los valores pendientes:
 
 La frontera de lanzamiento está en `src/config/legal-readiness.ts` y `bun run legal:preflight`. `bun run validate` comprueba el código del gate, no que los datos comerciales ya estén completos.
 
-Astro policy content must be reconciled with Shopify Admin before Payment QA. SHOPIFY POLICY CONTENT REQUIRED MANUALLY. No se declara coincidencia automática con políticas de Admin.
+Las políticas publicadas en Astro se declararon reconciliadas con Shopify Admin el 22/08/2026. El registro no sustituye una nueva comprobación manual si cualquiera de las dos versiones cambia.
 
 ## Checklist para la empresa
 
@@ -25,7 +25,7 @@ Astro policy content must be reconciled with Shopify Admin before Payment QA. SH
 - [x] Domicilio social — Avenida de Novelda, 143, bajo, 03206 Elche (Alicante), España (`confirmed`)
 - [x] Email legal y de atención — contabilidad@cintuelx.com (`confirmed`)
 - [x] Teléfono de atención — 965 43 01 51 (`confirmed`)
-- [x] Web — https://kingbelt.com (`confirmed`)
+- [x] Web — https://kingbelt.es (`confirmed`)
 - [x] Datos registrales — Registro Mercantil de Alicante, sección 8, hoja A-168894, inscripción 3 (`confirmed`; BORME 02/01/2026)
 - [x] Actividad — fabricación y comercio de calzado, marroquinería y complementos de vestir (`confirmed`; BORME 21/02/2020)
 
@@ -105,7 +105,7 @@ Los borradores no aparecen en navegación pública. El footer y el sitemap solo 
 
 - Sitemap: `@astrojs/sitemap` → `/sitemap-index.xml`
 - Robots: `src/pages/robots.txt.ts`
-- Exclusiones: `/404`, `/carrito`, `/cart-catalog.json`, `/desistimiento`, documentos draft
+- Exclusiones: `/404`, `/carrito`, `/cart-catalog.json`, `/cuenta/iniciar`, `/rss.xml`, `/desistimiento`, documentos draft. El sitemap de comercio solo lista catálogo con `COMMERCE_SOURCE=shopify`.
 
 ## Cómo confirmar un dato
 

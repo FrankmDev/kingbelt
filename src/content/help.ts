@@ -203,8 +203,8 @@ export const helpHub = {
     title: 'Todo para comprar con <em>claridad</em>.',
     description:
       'Información útil antes y después de comprar: tallaje, cuidados, envíos y atención cuando la necesites.',
-    image: '/images/blog/cinturon-marron-oscuro.jpg',
-    imageAlt: 'Detalle de cinturón de cuero marrón oscuro',
+    image: '/images/imagen-cinturon-kingbelt-17.avif',
+    imageAlt: 'Cinturón de cuero marrón KingBelt extendido junto a un cinturón negro enrollado',
     imagePosition: 'center 48%',
     meta: 'KingBelt · Ayuda',
   },
@@ -230,8 +230,8 @@ export const helpHub = {
     body:
       'Esta sección reúne lo que necesitas para elegir bien, conservar las piezas y resolver dudas habituales.',
     image: {
-      src: '/images/blog/cinturon-negro.jpg',
-      alt: 'Cinturón negro de vestir sobre fondo neutro',
+      src: '/images/imagen-cinturon-kingbelt-18.avif',
+      alt: 'Pareja de cinturones de cuero marrón y negro KingBelt con hebilla plateada',
       label: 'Producto',
       caption: 'Material, ajuste y atención en un solo lugar.',
     },
@@ -257,7 +257,7 @@ export const helpHub = {
       'Cuanto más concreto sea el contexto — modelo, medida o duda — más fácil será orientar la respuesta.',
     buttonLabel: 'Ir a contacto',
     buttonHref: '/contacto',
-    image: '/images/blog/cinturon-marron.jpg',
+    image: '/images/imagen-cinturon-kingbelt-20.avif',
     imagePosition: 'center 40%',
   },
 } as const;
@@ -268,8 +268,8 @@ export const sizeGuidePage = {
     title: 'Mide antes de <em>elegir</em>.',
     description:
       'Un cinturón debe ajustarse con comodidad en el agujero central. La equivalencia final depende del modelo.',
-    image: '/images/blog/cinturon-negro.jpg',
-    imageAlt: 'Cinturón negro de vestir sobre fondo neutro',
+    image: '/images/imagen-cinturon-kingbelt-10.avif',
+    imageAlt: 'Cinturones de cuero marrón y negro KingBelt con costura blanca y hebilla plateada',
     imagePosition: 'center 58%',
     meta: 'KingBelt · Guía de tallas',
   },
@@ -281,8 +281,8 @@ export const sizeGuidePage = {
     body:
       'La talla correcta depende del modelo, del ancho y del punto de referencia de cada referencia. Toma la medida y contrástala con la ficha del producto.',
     image: {
-      src: '/images/brand/cinturones-en-taller.jpg',
-      alt: 'Persona sujetando varios cinturones de cuero en un taller',
+      src: '/images/imagen-cinturon-kingbelt-6.avif',
+      alt: 'Manos ensamblando un cinturón de cuero marrón con hebilla y remaches',
       label: 'Ajuste',
       caption: 'El agujero central debe quedar cómodo, con margen a ambos extremos.',
     },
@@ -331,8 +331,8 @@ export const carePage = {
     title: 'Conservar el cuero, <em>sin recetas genéricas</em>.',
     description:
       'Recomendaciones generales para cinturones y herrajes. Las instrucciones específicas se publicarán por producto.',
-    image: '/images/blog/cinturon-marron.jpg',
-    imageAlt: 'Cinturón de cuero marrón sobre fondo neutro',
+    image: '/images/imagen-cinturon-kingbelt-4.avif',
+    imageAlt: 'Manos trabajando el canto de un cinturón de cuero en el taller',
     imagePosition: 'center 42%',
     meta: 'KingBelt · Cuidados',
   },
@@ -344,8 +344,8 @@ export const carePage = {
     body:
       'La composición, el curtido, los tratamientos y la durabilidad concreta de cada pieza se indicarán en su ficha cuando estén confirmados.',
     image: {
-      src: '/images/blog/cinturon-marron-oscuro.jpg',
-      alt: 'Detalle de cinturón de cuero marrón oscuro',
+      src: '/images/imagen-cinturon-kingbelt-5.avif',
+      alt: 'Banco de talabartería con herramientas y recortes de cuero',
       label: 'Material',
       caption: 'Aplica solo lo confirmado para el modelo que tienes.',
     },
@@ -385,8 +385,8 @@ export const shippingPage = {
     title: 'Preparación, transporte y <em>entrega</em>.',
     description:
       'Envíos gratuitos: el transporte va incluido en el precio. Plazos, seguimiento e incidencias de los pedidos KingBelt.',
-    image: '/images/brand/cinturones-en-taller.jpg',
-    imageAlt: 'Persona sujetando varios cinturones de cuero en un taller',
+    image: '/images/imagen-cinturon-kingbelt-2.avif',
+    imageAlt: 'Artesano alisando cuero en el banco de trabajo del taller KingBelt',
     imagePosition: 'center 48%',
     meta: 'KingBelt · Envíos',
   },
@@ -411,7 +411,7 @@ export const helpMeta = {
     title: 'Guía de tallas — KingBelt',
     description:
       'Cómo medir antes de elegir cinturón: métodos, equivalencias por modelo y preguntas frecuentes sobre tallaje.',
-    indexable: false,
+    indexable: true,
   },
   care: {
     title: 'Cuidados del cuero — KingBelt',

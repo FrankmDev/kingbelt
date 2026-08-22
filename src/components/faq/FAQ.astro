@@ -240,8 +240,16 @@ const counts = items.reduce<Record<string, number>>((accumulator, item) => {
     margin-bottom: var(--kb-space-2);
   }
 
-  .faq-sidebar-header .faq-header-eyebrow {
-    margin-bottom: var(--kb-space-5);
+  .faq-section--dark .faq-header-eyebrow {
+    color: var(--color-king-on-dark-muted);
+  }
+
+  .faq-section--dark .faq-header-eyebrow.kb-eyebrow-lined::before {
+    background: linear-gradient(
+      90deg,
+      var(--color-king-on-dark-line),
+      var(--color-king-on-dark-line-faint)
+    );
   }
 
   .faq-sidebar-header .faq-title {
@@ -308,7 +316,13 @@ const counts = items.reduce<Record<string, number>>((accumulator, item) => {
   }
 
   .faq-section--dark .faq-sidebar-rule {
-    background: linear-gradient(180deg, transparent, var(--color-king-accent-light) 15%, var(--color-king-accent-light) 85%, transparent);
+    background: linear-gradient(
+      180deg,
+      transparent,
+      var(--color-king-on-dark-line) 15%,
+      var(--color-king-on-dark-line) 85%,
+      transparent
+    );
     opacity: 0.6;
   }
 
@@ -373,9 +387,9 @@ const counts = items.reduce<Record<string, number>>((accumulator, item) => {
   }
 
   .faq-section--dark .faq-support-icon {
-    background: rgba(183, 138, 79, 0.1);
-    color: var(--color-king-accent-light);
-    border-color: rgba(183, 138, 79, 0.2);
+    background: var(--color-king-on-dark-fill);
+    color: var(--color-king-on-dark-muted);
+    border-color: var(--color-king-on-dark-line-faint);
   }
 
   .faq-support-text {
@@ -441,8 +455,8 @@ const counts = items.reduce<Record<string, number>>((accumulator, item) => {
 
   .faq-section--dark .faq-filter-btn:hover,
   .faq-section--dark .faq-filter-btn:focus-visible {
-    border-color: rgba(183, 138, 79, 0.35);
-    color: var(--color-king-accent-light);
+    border-color: var(--color-king-on-dark-line-faint);
+    color: var(--color-king-on-dark-soft);
   }
 
   .faq-filter-btn[data-active='true'] {
@@ -452,9 +466,9 @@ const counts = items.reduce<Record<string, number>>((accumulator, item) => {
   }
 
   .faq-section--dark .faq-filter-btn[data-active='true'] {
-    border-color: rgba(183, 138, 79, 0.35);
-    background: rgba(183, 138, 79, 0.1);
-    color: var(--color-king-accent-light);
+    border-color: var(--color-king-on-dark-line-faint);
+    background: var(--color-king-on-dark-fill);
+    color: var(--color-king-on-dark-muted);
   }
 
   .faq-filter-count {
@@ -507,8 +521,8 @@ const counts = items.reduce<Record<string, number>>((accumulator, item) => {
 
   .faq-section--dark .faq-control-btn:hover,
   .faq-section--dark .faq-control-btn:focus-visible {
-    color: var(--color-king-accent-light);
-    background: rgba(183, 138, 79, 0.08);
+    color: var(--color-king-on-dark-soft);
+    background: var(--color-king-on-dark-fill);
   }
 
   .faq-control-btn :global(svg) {
@@ -540,7 +554,7 @@ const counts = items.reduce<Record<string, number>>((accumulator, item) => {
   }
 
   .faq-section--dark .faq-counter-value {
-    color: var(--color-king-accent-light);
+    color: var(--color-king-on-dark-muted);
   }
 
   .faq-counter-label {

@@ -1,150 +1,123 @@
 ---
-import SectionHeaderHome from './SectionHeaderHome.astro';
+import SectionHeader from '@components/ui/SectionHeader.astro';
 import Button from '../../ui/Button.astro';
 import Icon from '../../ui/Icon.astro';
 import MediaFrame from '../../ui/MediaFrame.astro';
-import TagList from '../../ui/TagList.astro';
 import { brandStatement } from '@content/home';
+
+const signalCount = brandStatement.signals.length;
 ---
 
 <section
   id="marca"
   class="home-brand section-spacing"
-  data-home-brand
   aria-labelledby="home-brand-title"
 >
-  <div class="kb-shell-wide home-brand__shell">
-    <SectionHeaderHome
+  <div class="kb-shell-wide">
+    <SectionHeader
       index={brandStatement.index}
       eyebrow={brandStatement.eyebrow}
-      meta={brandStatement.meta}
       body={brandStatement.lede}
-      trackCell
+      meta={brandStatement.meta}
+      titleId="home-brand-title"
       class="home-brand__header"
-    />
+    >
+      <Fragment slot="title">
+        <span set:html={brandStatement.title} />
+      </Fragment>
 
-    <div class="home-brand__folio-panel">
-      <div class="home-brand__grid">
-        <div class="home-brand__split">
-          <div class="home-brand__editorial" data-brand-editorial>
-            <div class="home-brand__cell home-brand__cell--title" data-brand-cell>
-              <h2 id="home-brand-title" class="home-brand__title font-display font-display-strong">
-                {brandStatement.titleLines.map((line) => (
-                  <span class="home-brand__title-line">
-                    <span class="home-brand__title-inner">
-                      {line.variant === 'em' ? <em>{line.text}</em> : line.text}
-                    </span>
-                  </span>
-                ))}
-              </h2>
-            </div>
-
-            <div class="home-brand__cell home-brand__cell--quote" data-brand-cell>
-              <aside
-                class="home-brand__manifest kb-texture-metal"
-                aria-label="Criterio KingBelt"
-              >
-                <p class="kb-eyebrow kb-eyebrow-lined home-brand__manifest-eyebrow">
-                  {brandStatement.quote.eyebrow}
-                </p>
-                <blockquote class="home-brand__manifest-quote">
-                  <p>{brandStatement.quote.text}</p>
-                </blockquote>
-              </aside>
-            </div>
-
-            <div class="home-brand__cell home-brand__cell--copy" data-brand-cell>
-              <div class="home-brand__copy-grid">
-                {brandStatement.paragraphs.map((paragraph) => (
-                  <p class="home-brand__paragraph body-copy text-king-muted">{paragraph}</p>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div class="home-brand__cell home-brand__cell--visual" data-brand-cell>
-            <MediaFrame
-              src={brandStatement.image}
-              alt={brandStatement.imageAlt}
-              ratio="3/4"
-              label={brandStatement.imageLabel}
-              caption={brandStatement.imageCaption}
-              captionNumber={brandStatement.index}
-              imagePosition={brandStatement.imagePosition}
-              width={900}
-              height={1200}
-              loading="lazy"
-              class="home-brand__media"
-            />
-          </div>
-        </div>
-
-        <div class="home-brand__cell home-brand__cell--signals" data-brand-cell>
-          <ul class="home-brand__signals" aria-label="Tres señales de la marca">
-            {brandStatement.signals.map((signal, index) => (
-              <li class="home-brand__signal kb-card-dry" data-brand-signal={index}>
-                <header class="home-brand__signal-head">
-                  <span class="home-brand__signal-num" aria-hidden="true">{signal.number}</span>
-                  <p class="home-brand__signal-label">{signal.label}</p>
-                </header>
-                <p class="home-brand__signal-text">{signal.text}</p>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <footer class="home-brand__cell home-brand__cell--foot" data-brand-cell>
-          <TagList
-            items={[...brandStatement.tags]}
-            variant="accent"
-            size="sm"
-            dot
-            class="home-brand__tags"
+      <Fragment slot="aside">
+        <Button href={brandStatement.cta.href} variant="outline" size="md">
+          {brandStatement.cta.label}
+          <Icon
+            name="arrow-right"
+            class="h-3.5 w-3.5 transition-transform duration-[var(--kb-dur-fast)] group-hover:translate-x-1"
           />
+        </Button>
+      </Fragment>
+    </SectionHeader>
 
-          <Button href={brandStatement.cta.href} variant="outline" size="md" class="home-brand__cta">
-            {brandStatement.cta.label}
-            <Icon
-              name="arrow-right"
-              class="h-3.5 w-3.5 transition-transform duration-[var(--kb-dur-fast)] group-hover:translate-x-1"
-            />
-          </Button>
-        </footer>
+    <div class="home-brand__layout">
+      <div class="home-brand__panel kb-origin-panel">
+        <div class="home-brand__intro">
+          <p class="kb-meta-label text-king-muted kb-origin-panel__kicker">
+            {brandStatement.kicker}
+          </p>
+          <p class="body-copy-lg kb-origin-panel__body">{brandStatement.body}</p>
+        </div>
+
+        <ol class="home-brand__signals" aria-label="Señales de la marca">
+          {brandStatement.signals.map((signal, index) => (
+            <li class="home-brand__signal">
+              <div class="home-brand__signal-rail" aria-hidden="true">
+                <span class="home-brand__signal-num">{signal.number}</span>
+                {index < signalCount - 1 && <span class="home-brand__signal-line"></span>}
+              </div>
+
+              <div class="home-brand__signal-body">
+                <h3 class="home-brand__signal-label">{signal.label}</h3>
+                <p class="home-brand__signal-text">{signal.text}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+
+        <blockquote class="kb-origin-panel__quote home-brand__quote">
+          <p>{brandStatement.quote}</p>
+        </blockquote>
       </div>
+
+      <MediaFrame
+        src={brandStatement.image}
+        alt={brandStatement.imageAlt}
+        ratio="3/2"
+        label={brandStatement.imageLabel}
+        caption={brandStatement.imageCaption}
+        captionNumber={brandStatement.index}
+        imagePosition={brandStatement.imagePosition}
+        width={1500}
+        height={1000}
+        loading="lazy"
+        class="home-brand__media"
+      />
     </div>
   </div>
 </section>
 
 <style>
   .home-brand {
+    border-top: 1px solid var(--kb-stroke-hairline);
     background: var(--color-king-bg);
   }
 
-  .home-brand__shell {
-    display: flex;
-    flex-direction: column;
+  .home-brand__layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--kb-space-gap-lg);
+    align-items: start;
+    min-width: 0;
   }
 
-  .home-brand__header:global(.section-header-home) {
-    margin-bottom: var(--kb-space-gap);
-  }
-
-  .home-brand__folio-panel {
+  .home-brand__panel {
     position: relative;
-    padding: clamp(var(--kb-space-5), 2.5vw, var(--kb-space-6));
-    border: 1px solid var(--kb-stroke-dark);
-    border-radius: var(--kb-radius-xl);
-    background: var(--color-king-surface);
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 0;
+    padding: clamp(var(--kb-space-5), 2.8vw, var(--kb-space-6));
+    border: 1px solid var(--kb-stroke-hairline);
+    border-radius: var(--kb-card-radius);
+    background: color-mix(in srgb, var(--color-king-bone) 18%, var(--color-king-bg));
     box-shadow: var(--kb-shadow-sm);
     overflow: hidden;
   }
 
-  .home-brand__folio-panel::before {
+  .home-brand__panel::before {
     content: '';
     position: absolute;
     top: 0;
-    left: clamp(var(--kb-space-5), 2.5vw, var(--kb-space-6));
-    right: clamp(var(--kb-space-5), 2.5vw, var(--kb-space-6));
+    left: clamp(var(--kb-space-5), 2.8vw, var(--kb-space-6));
+    right: clamp(var(--kb-space-5), 2.8vw, var(--kb-space-6));
     height: 2px;
     background: linear-gradient(
       90deg,
@@ -156,371 +129,214 @@ import { brandStatement } from '@content/home';
     pointer-events: none;
   }
 
-  .home-brand__grid {
+  .home-brand__intro {
     display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--kb-space-gap);
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: var(--kb-space-4);
+    align-items: start;
     min-width: 0;
   }
 
-  .home-brand__editorial {
-    display: flex;
-    flex-direction: column;
-    gap: var(--kb-space-gap);
-    min-width: 0;
-  }
-
-  .home-brand__split {
-    display: flex;
-    flex-direction: column;
-    gap: var(--kb-space-gap);
-    min-width: 0;
-  }
-
-  .home-brand__cell {
-    min-width: 0;
-  }
-
-  .home-brand__title {
-    margin: 0;
-    font-size: clamp(1.625rem, 2.4vw, 2.125rem);
-    line-height: 1.1;
-    letter-spacing: -0.02em;
-    color: var(--color-king-text);
-    text-wrap: balance;
-    max-width: none;
-  }
-
-  .home-brand__title-line {
-    display: block;
-    overflow: hidden;
-  }
-
-  .home-brand__title-inner {
-    display: block;
-  }
-
-  .home-brand__title :global(em) {
-    display: inline;
-    color: var(--color-king-accent);
-    font-style: italic;
-    font-weight: var(--kb-w-heading);
-  }
-
-  .home-brand__cell--quote {
-    width: 100%;
-  }
-
-  .home-brand__manifest {
-    --manifest-ink: rgba(255, 255, 255, 0.94);
-    --manifest-pad: clamp(1rem, 2vw, 1.25rem);
-
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    gap: var(--kb-space-3);
-    min-width: 0;
-    padding: var(--manifest-pad);
-    border: 1px solid rgba(255, 255, 255, 0.09);
-    border-radius: var(--kb-panel-radius);
-    background: var(--kb-surface-steel);
-    color: var(--manifest-ink);
-    box-shadow: var(--kb-shadow-steel-soft);
-    overflow: hidden;
-  }
-
-  .home-brand__manifest::after {
+  .home-brand__intro::before {
     content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    box-shadow: var(--kb-shadow-inset-steel);
-    pointer-events: none;
-  }
-
-  .home-brand__manifest-eyebrow {
-    position: relative;
-    z-index: 1;
-    margin: 0;
-    color: var(--color-king-brass);
-  }
-
-  .home-brand__manifest-eyebrow.kb-eyebrow-lined::before {
+    display: block;
+    width: 1px;
+    min-height: 100%;
+    align-self: stretch;
     background: linear-gradient(
-      90deg,
-      var(--color-king-brass),
-      color-mix(in srgb, var(--color-king-brass) 18%, transparent)
+      180deg,
+      var(--color-king-accent),
+      color-mix(in srgb, var(--color-king-accent) 18%, transparent) 78%,
+      transparent
     );
+    opacity: 0.85;
   }
 
-  .home-brand__manifest-quote {
-    position: relative;
-    z-index: 1;
+  .home-brand__panel :global(.kb-origin-panel__kicker) {
     margin: 0;
-    padding: 0;
-    border: 0;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
   }
 
-  .home-brand__manifest-quote p {
+  .home-brand__panel :global(.kb-origin-panel__body) {
     margin: 0;
-    font-family: var(--font-display);
-    font-size: clamp(1.05rem, 1.5vw, 1.2rem);
-    font-weight: var(--kb-w-heading);
-    line-height: 1.35;
-    letter-spacing: -0.01em;
-    text-wrap: pretty;
-    color: var(--color-king-bone);
-  }
-
-  .home-brand__copy-grid {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--kb-space-4);
-  }
-
-  .home-brand__paragraph {
-    margin: 0;
-    line-height: 1.7;
-    text-wrap: pretty;
-    max-width: 58ch;
+    color: color-mix(in srgb, var(--color-king-text) 68%, var(--color-king-muted));
   }
 
   .home-brand__signals {
     display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--kb-space-3);
-    margin: 0;
-    padding: 0;
+    gap: 0;
+    margin: var(--kb-space-5) 0 0;
+    padding: var(--kb-space-5) 0 0;
     list-style: none;
+    border-top: 1px solid var(--kb-stroke-hairline);
   }
 
   .home-brand__signal {
-    display: flex;
-    flex-direction: column;
-    gap: var(--kb-space-3);
-    min-height: 100%;
-    padding: clamp(1rem, 2vw, 1.25rem) var(--kb-space-5);
-    overflow: hidden;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: var(--kb-space-4);
+    row-gap: var(--kb-space-1);
+    padding-block: var(--kb-space-4);
+    border-bottom: 1px solid var(--kb-stroke-hairline);
   }
 
-  .home-brand__signal-head {
+  .home-brand__signal:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  .home-brand__signal-rail {
     display: flex;
-    align-items: baseline;
-    gap: var(--kb-space-3);
-    padding-bottom: var(--kb-space-3);
-    border-bottom: 1px solid var(--kb-stroke-dark);
+    flex-direction: column;
+    align-items: center;
+    gap: var(--kb-space-2);
+    padding-top: 0.125rem;
   }
 
   .home-brand__signal-num {
-    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2rem;
+    height: 2rem;
+    border: 1px solid color-mix(in srgb, var(--kb-stroke-hairline) 90%, transparent);
+    border-radius: var(--kb-radius-xs);
     font-family: var(--font-display);
-    font-size: var(--kb-text-meta);
+    font-size: var(--kb-text-sm);
     font-weight: var(--kb-w-heading-light);
-    line-height: 1;
-    letter-spacing: 0.06em;
     font-variant-numeric: tabular-nums;
+    line-height: 1;
+    letter-spacing: 0.02em;
     color: var(--color-king-accent);
-    opacity: 0.55;
+    background: color-mix(in srgb, var(--color-king-bone) 24%, var(--color-king-bg));
+  }
+
+  .home-brand__signal-line {
+    display: block;
+    width: 1px;
+    flex: 1 1 auto;
+    min-height: 1.25rem;
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-king-accent) 28%, var(--kb-stroke-hairline)),
+      transparent
+    );
+  }
+
+  .home-brand__signal-body {
+    display: grid;
+    gap: var(--kb-space-1);
+    min-width: 0;
+    padding-bottom: var(--kb-space-1);
   }
 
   .home-brand__signal-label {
     margin: 0;
-    font-family: var(--font-display);
-    font-size: var(--kb-text-h5);
-    font-weight: var(--kb-w-medium);
-    line-height: 1.2;
-    letter-spacing: 0;
-    text-wrap: balance;
+    font-family: var(--font-sans);
+    font-size: var(--kb-text-sm);
+    font-weight: var(--kb-w-semibold);
+    line-height: 1.3;
+    letter-spacing: 0.01em;
     color: var(--color-king-text);
   }
 
   .home-brand__signal-text {
     margin: 0;
-    font-size: var(--kb-text-body);
-    font-weight: var(--kb-w-body);
+    font-size: var(--kb-text-sm);
     line-height: 1.6;
-    text-wrap: pretty;
     color: var(--color-king-muted);
+    text-wrap: pretty;
   }
 
-  .home-brand__cell--foot {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--kb-space-4);
-    padding-top: var(--kb-space-4);
-    border-top: 1px solid var(--kb-stroke-dark);
+  .home-brand__quote:global(.kb-origin-panel__quote) {
+    margin-top: auto;
+    padding-top: clamp(1.15rem, 2.4vw, 1.5rem);
+    border-top-color: var(--kb-stroke-hairline);
   }
 
-  .home-brand__tags {
-    flex: 1 1 auto;
-    min-width: 0;
-  }
+  @media (max-width: 47.99rem) {
+    .home-brand__intro {
+      grid-template-columns: minmax(0, 1fr);
+    }
 
-  .home-brand__cta:global(.kb-btn) {
-    flex-shrink: 0;
-  }
-
-  .home-brand__media:global(.media-frame) {
-    width: 100%;
+    .home-brand__intro::before {
+      display: none;
+    }
   }
 
   @media (min-width: 48rem) {
     .home-brand__signals {
       grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: var(--kb-space-4);
+      gap: 0;
     }
 
-    .home-brand__title {
-      font-size: clamp(1.75rem, 2.2vw, 2.25rem);
+    .home-brand__signal {
+      grid-template-columns: minmax(0, 1fr);
+      padding: 0 var(--kb-space-5) 0 0;
+      border-bottom: 0;
+      border-right: 1px solid var(--kb-stroke-hairline);
+    }
+
+    .home-brand__signal:last-child {
+      padding-right: 0;
+      border-right: 0;
+    }
+
+    .home-brand__signal-rail {
+      flex-direction: row;
+      align-items: center;
+      gap: 0;
+      padding-top: 0;
+    }
+
+    .home-brand__signal-line {
+      display: none;
+    }
+
+    .home-brand__signal-body {
+      padding-bottom: 0;
     }
   }
 
   @media (min-width: 64rem) {
-    .home-brand__split {
-      display: grid;
-      grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
-      gap: var(--kb-space-gap);
-      align-items: start;
-    }
-
-    .home-brand__editorial {
-      gap: var(--kb-space-gap);
-    }
-
-    .home-brand__cell--visual {
-      display: flex;
-      flex-direction: column;
-      align-self: start;
-      overflow: hidden;
-    }
-
-    .home-brand__media:global(.media-frame) {
-      position: relative;
-      flex: 1 1 auto;
-      width: 100%;
-      min-height: 0;
-      aspect-ratio: unset !important;
-    }
-
-    .home-brand__media:global(.media-frame.media-frame--hero),
-    .home-brand__media:global(.media-frame.media-frame--ratio-3-4) {
-      aspect-ratio: unset !important;
-    }
-
-    .home-brand__media :global(.media-frame__stage) {
-      position: absolute;
-      inset: 0;
-      height: auto;
-    }
-
-    .home-brand__media :global(.media-frame__image) {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .home-brand__manifest {
-      width: 100%;
-    }
-
-    .home-brand__title {
-      font-size: clamp(1.875rem, 2.3vw, 2.35rem);
-      line-height: 1.08;
-    }
-
-    .home-brand__paragraph {
-      max-width: none;
-    }
-  }
-
-  @media (max-width: 47.99rem) {
-    .home-brand__title {
-      max-width: none;
-    }
-
-    .home-brand__cell--foot {
-      flex-direction: column;
+    .home-brand__layout {
+      grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
       align-items: stretch;
     }
 
-    .home-brand__cta:global(.kb-btn) {
+    .home-brand__panel {
+      min-height: 100%;
+    }
+
+    .home-brand__media:global(.media-frame) {
       width: 100%;
-      justify-content: center;
-    }
-  }
-
-  @media (prefers-reduced-motion: no-preference) {
-    @supports (animation-timeline: view()) {
-      [data-home-brand] [data-brand-cell],
-      [data-home-brand] [data-brand-signal] {
-        animation: kb-scroll-reveal linear both;
-        animation-timeline: view();
-        animation-range: entry 0% cover 35%;
-      }
-
-      [data-home-brand] .home-brand__title-line {
-        overflow: hidden;
-      }
-
-      [data-home-brand] .home-brand__title-inner {
-        animation: kb-scroll-reveal linear both;
-        animation-timeline: view();
-        animation-range: entry 0% cover 35%;
-      }
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    [data-home-brand] [data-brand-cell],
-    [data-home-brand] [data-brand-signal] {
-      opacity: 1 !important;
-      transform: none !important;
+      height: 100%;
+      min-height: 100%;
+      aspect-ratio: auto;
     }
 
-    [data-home-brand] .home-brand__title-inner {
-      transform: none !important;
+    .home-brand__media:global(.media-frame .media-frame__stage) {
+      min-height: 100%;
+      height: 100%;
+    }
+
+    .home-brand__media:global(.media-frame .media-frame__image) {
+      object-fit: cover;
+      transform: scale(1.06);
+      transform-origin: center 42%;
+    }
+
+    @media (hover: hover) and (pointer: fine) {
+      .home-brand__media:global(.media-frame:hover .media-frame__image) {
+        transform: scale(1.12);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .home-brand__media:global(.media-frame .media-frame__image) {
+        transform: scale(1.06);
+      }
     }
   }
 </style>
-
-<script>
-  const scope = document.querySelector<HTMLElement>('[data-home-brand]');
-
-  if (scope) {
-    const editorial = scope.querySelector<HTMLElement>('[data-brand-editorial]');
-    const visual = scope.querySelector<HTMLElement>('.home-brand__cell--visual');
-    const media = scope.querySelector<HTMLElement>('.home-brand__media');
-    const splitQuery = window.matchMedia('(min-width: 64rem)');
-
-    const syncMediaHeight = () => {
-      if (!editorial || !visual || !media) return;
-
-      if (splitQuery.matches) {
-        const targetHeight = editorial.getBoundingClientRect().height;
-        visual.style.height = `${targetHeight}px`;
-        visual.style.maxHeight = `${targetHeight}px`;
-        media.style.height = `${targetHeight}px`;
-        media.style.maxHeight = `${targetHeight}px`;
-      } else {
-        visual.style.height = '';
-        visual.style.maxHeight = '';
-        media.style.height = '';
-        media.style.maxHeight = '';
-      }
-    };
-
-    syncMediaHeight();
-    window.addEventListener('resize', syncMediaHeight, { passive: true });
-    splitQuery.addEventListener('change', syncMediaHeight);
-
-    if (editorial && 'ResizeObserver' in window) {
-      const observer = new ResizeObserver(syncMediaHeight);
-      observer.observe(editorial);
-    }
-
-    const mediaImage = media?.querySelector<HTMLImageElement>('.media-frame__image');
-    mediaImage?.addEventListener('load', syncMediaHeight, { passive: true });
-  }
-</script>

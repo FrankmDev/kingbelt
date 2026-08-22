@@ -1,5 +1,5 @@
 ---
-import HomeSectionHead from '../home/HomeSectionHead.astro';
+import SectionHeader from '@components/ui/SectionHeader.astro';
 import FAQ from '@components/faq/FAQ.astro';
 import Icon from '../../ui/Icon.astro';
 import MediaFrame from '../../ui/MediaFrame.astro';
@@ -22,7 +22,7 @@ const { items, sidebar } = Astro.props;
   stickySidebar={true}
   itemVariant="editorial"
 >
-  <HomeSectionHead
+  <SectionHeader
     slot="header"
     index="03"
     eyebrow="Preguntas frecuentes"
@@ -34,7 +34,7 @@ const { items, sidebar } = Astro.props;
     <Fragment slot="title">
       Resolvemos las dudas <em>antes de que surjan</em>.
     </Fragment>
-  </HomeSectionHead>
+  </SectionHeader>
 
   <aside slot="sidebar" class="contact-faq__sidebar" aria-label="Soporte">
     <MediaFrame
@@ -73,12 +73,12 @@ const { items, sidebar } = Astro.props;
     opacity: 0.12;
   }
 
-  .contact-faq__header:global(.section-header-home) {
+  .contact-faq__header:global(.section-header) {
     width: 100%;
     margin-bottom: var(--kb-space-gap);
   }
 
-  .contact-faq__header :global(.shh-title em) {
+  .contact-faq__header :global(.sh-title em) {
     color: var(--color-king-accent);
     font-style: italic;
     font-weight: var(--kb-w-heading-strong);
@@ -94,7 +94,9 @@ const { items, sidebar } = Astro.props;
 
   .contact-faq :global(.contact-faq__media.media-frame.media-frame--ratio-3-4) {
     flex: 1 1 auto;
+    width: 100%;
     min-height: 0;
+    overflow: hidden;
     border-radius: var(--kb-panel-radius);
   }
 
@@ -102,8 +104,10 @@ const { items, sidebar } = Astro.props;
     min-height: 100%;
   }
 
-  .contact-faq :global(.contact-faq__media .media-frame__image) {
-    object-position: center 35%;
+  .contact-faq :global(.contact-faq__media.media-frame.media-frame--ratio-3-4 .media-frame__image) {
+    object-position: center 42%;
+    transform: scale(1.42);
+    transform-origin: center 42%;
   }
 
   .contact-faq__support {
@@ -187,13 +191,25 @@ const { items, sidebar } = Astro.props;
     }
   }
 
+  @media (hover: hover) and (pointer: fine) {
+    .contact-faq :global(.contact-faq__media.media-frame.media-frame--ratio-3-4:hover .media-frame__image) {
+      transform: scale(1.5);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .contact-faq :global(.contact-faq__media.media-frame.media-frame--ratio-3-4 .media-frame__image) {
+      transform: scale(1.42);
+    }
+  }
+
   @media (max-width: 63.99rem) {
     .contact-faq__sidebar {
       min-height: auto;
     }
 
     .contact-faq :global(.contact-faq__media) {
-      aspect-ratio: 16 / 10;
+      aspect-ratio: 3 / 4;
     }
   }
 </style>

@@ -1,75 +1,621 @@
 ---
 interface Props {
+  index?: string;
   eyebrow?: string;
   title?: string;
   titleId?: string;
+  titleTag?: 'h1' | 'h2';
   body?: string;
   meta?: string;
   align?: 'left' | 'center';
   tone?: 'light' | 'dark';
   density?: 'default' | 'compact';
+  trackCell?: boolean;
+  asideLayout?: 'action' | 'panel';
   class?: string;
 }
 
 const {
+  index,
   eyebrow,
   title,
   titleId,
+  titleTag = 'h2',
   body,
   meta,
-  align = 'center',
+  align = 'left',
   tone = 'light',
   density = 'default',
+  trackCell = false,
+  asideLayout = 'action',
   class: className = '',
 } = Astro.props;
 
-const hasTitle = Boolean(title || Astro.slots.has('title'));
-const hasCopy = Boolean(body || Astro.slots.has('body'));
+const layout = index ? 'chapter' : 'kicker';
+const hasChapter = Boolean(index || eyebrow || meta);
 const hasKicker = Boolean(eyebrow || meta);
+const hasTitle = Boolean(title || Astro.slots.has('title'));
+const hasBody = Boolean(body || Astro.slots.has('body'));
+const hasCopy = hasBody;
+const hasEditorial = hasTitle || hasBody;
+const hasAside = Astro.slots.has('aside');
 const isCentered = align === 'center';
+const TitleTag = titleTag;
 ---
 
-<header
-  class:list={['section-header', className]}
-  data-align={align}
-  data-tone={tone}
-  data-density={density}
->
-  <div class="sh-head">
-    {hasKicker && (
-      <div class="sh-kicker">
-        {isCentered && <span class="sh-kicker-wing" aria-hidden="true"></span>}
+{layout === 'chapter' ? (
+  <header
+    class:list={[
+      'section-header',
+      'section-header--chapter',
+      hasAside && 'section-header--with-aside',
+      hasAside && asideLayout === 'panel' && 'section-header--with-panel',
+      className,
+    ]}
+    data-tone={tone}
+    data-density={density}
+    data-align={align}
+    {...trackCell ? { 'data-brand-cell': true } : {}}
+  >
+    {hasChapter && (
+      <div class="shh-chapter">
+        {index && <span class="shh-folio kb-folio">{index}</span>}
+        {eyebrow && <span class="kb-eyebrow shh-eyebrow">{eyebrow}</span>}
+        <span class="shh-rule" aria-hidden="true"></span>
+        {meta && <span class="kb-meta-label shh-meta">{meta}</span>}
+      </div>
+    )}
 
-        <div class="sh-kicker-inner">
-          {eyebrow && (
-            <p class="sh-eyebrow kb-eyebrow">
-              <span class="sh-eyebrow-mark" aria-hidden="true"></span>
-              <span class="sh-eyebrow-text">{eyebrow}</span>
-            </p>
-          )}
+    {(hasEditorial || hasAside) && (
+      <div class="shh-row">
+        {hasEditorial && (
+          <div class="shh-editorial">
+            {hasTitle && (
+              <TitleTag id={titleId} class="shh-title font-display">
+                {Astro.slots.has('title') ? (
+                  <slot name="title" />
+                ) : (
+                  <span set:html={title} />
+                )}
+              </TitleTag>
+            )}
 
-          {eyebrow && meta && <span class="sh-kicker-sep" aria-hidden="true"></span>}
+            {hasBody && (
+              <div class="shh-body">
+                {body ? <p>{body}</p> : <slot name="body" />}
+              </div>
+            )}
+          </div>
+        )}
 
-          {meta && <p class="sh-meta kb-meta-label">{meta}</p>}
+        {hasAside && (
+          <div class="shh-aside">
+            <slot name="aside" />
+          </div>
+        )}
+      </div>
+    )}
+  </header>
+) : (
+  <header
+    class:list={['section-header', 'section-header--kicker', className]}
+    data-align={align}
+    data-tone={tone}
+    data-density={density}
+  >
+    <div class="sh-head">
+      {hasKicker && (
+        <div class="sh-kicker">
+          {isCentered && <span class="sh-kicker-wing" aria-hidden="true"></span>}
+
+          <div class="sh-kicker-inner">
+            {eyebrow && (
+              <p class="sh-eyebrow kb-eyebrow">
+                <span class="sh-eyebrow-mark" aria-hidden="true"></span>
+                <span class="sh-eyebrow-text">{eyebrow}</span>
+              </p>
+            )}
+
+            {eyebrow && meta && <span class="sh-kicker-sep" aria-hidden="true"></span>}
+
+            {meta && <p class="sh-meta kb-meta-label">{meta}</p>}
+          </div>
+
+          {isCentered && <span class="sh-kicker-wing" aria-hidden="true"></span>}
         </div>
+      )}
 
-        {isCentered && <span class="sh-kicker-wing" aria-hidden="true"></span>}
-      </div>
-    )}
-
-    {hasTitle && (
-      <h2 id={titleId} class="sh-title">
-        {Astro.slots.has('title') ? <slot name="title" /> : title}
-      </h2>
-    )}
-  </div>
-
-  {hasCopy && (
-    <div class="sh-lede">
-      <div class="sh-lede-rule" aria-hidden="true"></div>
-      <div class="sh-copy">
-        {Astro.slots.has('body') ? <slot name="body" /> : <p>{body}</p>}
-      </div>
+      {hasTitle && (
+        <TitleTag id={titleId} class="sh-title font-display">
+          {Astro.slots.has('title') ? <slot name="title" /> : title}
+        </TitleTag>
+      )}
     </div>
-  )}
-</header>
+
+    {hasCopy && (
+      <div class="sh-lede">
+        <div class="sh-lede-rule" aria-hidden="true"></div>
+        <div class="sh-copy">
+          {Astro.slots.has('body') ? <slot name="body" /> : <p>{body}</p>}
+        </div>
+      </div>
+    )}
+  </header>
+)}
+
+<style>
+  /* ── Chapter layout (SectionHeaderHome original) ── */
+
+  .section-header--chapter {
+    --shh-ink: var(--color-king-text);
+    --shh-muted: var(--color-king-muted);
+    --shh-line: var(--kb-stroke-dark);
+    --shh-accent: var(--color-king-accent);
+
+    display: flex;
+    flex-direction: column;
+    gap: var(--kb-space-5);
+    width: 100%;
+    min-width: 0;
+    margin-bottom: var(--kb-space-gap);
+    color: var(--shh-ink);
+  }
+
+  .section-header--chapter[data-tone='dark'] {
+    --shh-ink: rgba(255, 250, 241, 0.96);
+    --shh-muted: rgba(255, 250, 241, 0.64);
+    --shh-line: rgba(255, 255, 255, 0.12);
+    --shh-accent: var(--color-king-accent-light);
+  }
+
+  .shh-chapter {
+    display: grid;
+    grid-template-columns: auto auto 1fr auto;
+    align-items: center;
+    gap: var(--kb-space-4);
+    width: 100%;
+    padding-block: var(--kb-space-3);
+    border-block: 1px solid var(--shh-line);
+  }
+
+  .shh-folio {
+    margin: 0;
+    color: var(--shh-accent);
+  }
+
+  .shh-eyebrow {
+    margin: 0;
+    white-space: nowrap;
+    color: var(--shh-accent);
+  }
+
+  .shh-rule {
+    display: block;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      var(--kb-stroke-accent),
+      color-mix(in srgb, var(--color-king-accent) 12%, transparent) 72%,
+      transparent
+    );
+  }
+
+  .section-header--chapter[data-tone='dark'] .shh-rule {
+    background: linear-gradient(
+      90deg,
+      rgba(166, 124, 78, 0.55),
+      rgba(166, 124, 78, 0.12) 72%,
+      transparent
+    );
+  }
+
+  .shh-meta {
+    margin: 0;
+    justify-self: end;
+    color: var(--shh-muted);
+    white-space: nowrap;
+  }
+
+  .shh-row {
+    display: grid;
+    gap: var(--kb-space-5);
+    align-items: end;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .section-header--with-aside .shh-row {
+    align-items: stretch;
+  }
+
+  .shh-editorial {
+    display: grid;
+    gap: var(--kb-space-4);
+    min-width: 0;
+  }
+
+  .shh-aside {
+    display: flex;
+    justify-content: flex-end;
+    align-items: flex-end;
+    min-width: 0;
+    padding-bottom: 0.2rem;
+  }
+
+  .shh-title {
+    margin: 0;
+    max-width: 24ch;
+    font-size: var(--kb-text-h2);
+    font-weight: var(--kb-w-heading-light);
+    line-height: 1.06;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+    color: var(--shh-ink);
+  }
+
+  .shh-title :global(em) {
+    color: var(--shh-accent);
+    font-style: italic;
+    font-weight: var(--kb-w-heading-strong);
+  }
+
+  .shh-body {
+    max-width: 42ch;
+  }
+
+  .shh-body :global(p) {
+    margin: 0;
+    font-size: var(--kb-text-body-lg);
+    line-height: 1.55;
+    color: var(--shh-muted);
+  }
+
+  .section-header--chapter[data-density='compact'] {
+    gap: var(--kb-space-4);
+  }
+
+  .section-header--chapter[data-density='compact'] .shh-chapter {
+    padding-block: var(--kb-space-2);
+  }
+
+  .section-header--chapter[data-density='compact'] .shh-title {
+    font-size: clamp(1.5rem, 2.6vw, 1.875rem);
+    max-width: 22ch;
+  }
+
+  .section-header--chapter[data-density='compact'] .shh-body {
+    max-width: 46ch;
+  }
+
+  .section-header--chapter[data-density='compact'] .shh-body :global(p) {
+    font-size: var(--kb-text-body-lg);
+    line-height: 1.65;
+  }
+
+  @media (max-width: 47.99rem) {
+    .shh-chapter {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--kb-space-2) var(--kb-space-3);
+    }
+
+    .shh-rule {
+      display: none;
+    }
+
+    .shh-eyebrow,
+    .shh-meta {
+      white-space: normal;
+    }
+
+    .shh-meta {
+      width: 100%;
+      justify-self: auto;
+    }
+
+    .shh-title {
+      max-width: none;
+      font-size: clamp(1.625rem, 7vw, 2.25rem);
+    }
+
+    .shh-body {
+      max-width: none;
+    }
+
+    .section-header--with-aside .shh-row {
+      gap: var(--kb-space-4);
+    }
+
+    .shh-aside {
+      justify-content: flex-start;
+      align-items: flex-start;
+      padding-bottom: 0;
+    }
+
+    .shh-aside :global(.kb-btn) {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+
+  @media (min-width: 48rem) {
+    .section-header--with-aside .shh-row {
+      grid-template-columns: minmax(0, 1fr) auto;
+      column-gap: var(--kb-space-6);
+      align-items: end;
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .section-header--with-panel .shh-row {
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+      column-gap: var(--kb-space-10);
+      align-items: center;
+    }
+  }
+
+  /* ── Kicker layout (SectionHeader original) ── */
+
+  .section-header--kicker {
+    --sh-ink: var(--color-king-text);
+    --sh-muted: var(--color-king-muted);
+    --sh-line: var(--kb-stroke-dark);
+    --sh-accent: var(--color-king-accent);
+
+    --sh-gap-kicker-title: clamp(0.85rem, 1.8vw, 1.25rem);
+    --sh-gap-head-copy: clamp(1.4rem, 2.8vw, 2.1rem);
+
+    --sh-max-title: 22ch;
+    --sh-max-copy: 36rem;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    width: min(100%, var(--kb-shell-copy));
+    margin-inline: auto;
+    color: var(--sh-ink);
+    text-align: center;
+  }
+
+  .section-header--kicker[data-align='left'] {
+    align-items: flex-start;
+    width: 100%;
+    margin-inline: 0;
+    text-align: left;
+  }
+
+  .section-header--kicker[data-tone='dark'] {
+    --sh-ink: rgba(255, 250, 241, 0.96);
+    --sh-muted: rgba(255, 250, 241, 0.64);
+    --sh-line: rgba(255, 255, 255, 0.12);
+    --sh-accent: var(--color-king-accent-light);
+  }
+
+  .section-header--kicker[data-density='compact'] {
+    --sh-gap-kicker-title: 0.6rem;
+    --sh-gap-head-copy: 0.9rem;
+  }
+
+  .section-header--kicker .sh-head {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--sh-gap-kicker-title);
+    width: 100%;
+  }
+
+  .section-header--kicker[data-align='left'] .sh-head {
+    align-items: flex-start;
+  }
+
+  .section-header--kicker .sh-kicker {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(0.7rem, 1.8vw, 1.15rem);
+    width: min(100%, 34rem);
+    max-width: 100%;
+  }
+
+  .section-header--kicker[data-align='left'] .sh-kicker {
+    justify-content: flex-start;
+    width: 100%;
+  }
+
+  .section-header--kicker .sh-kicker-wing {
+    display: block;
+    flex: 1 1 0;
+    height: 1px;
+    max-width: clamp(2.5rem, 9vw, 5.5rem);
+    background: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in srgb, var(--sh-accent) 42%, var(--sh-line))
+    );
+  }
+
+  .section-header--kicker .sh-kicker-wing:last-of-type {
+    background: linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--sh-accent) 42%, var(--sh-line)),
+      transparent
+    );
+  }
+
+  .section-header--kicker[data-align='left'] .sh-kicker-wing {
+    display: none;
+  }
+
+  .section-header--kicker .sh-kicker-inner {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem 0.75rem;
+    max-width: 100%;
+    padding: 0.42rem 0.9rem;
+    border: 1px solid color-mix(in srgb, var(--sh-accent) 16%, var(--sh-line));
+    border-radius: var(--kb-radius-pill);
+    background: color-mix(in srgb, var(--sh-ink) 2%, var(--color-king-surface));
+    box-shadow: var(--kb-shadow-xs);
+  }
+
+  .section-header--kicker[data-align='left'] .sh-kicker-inner {
+    justify-content: flex-start;
+  }
+
+  .section-header--kicker[data-tone='dark'] .sh-kicker-inner {
+    border-color: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .section-header--kicker .sh-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    margin: 0;
+    color: var(--sh-accent);
+  }
+
+  .section-header--kicker .sh-eyebrow-mark {
+    display: block;
+    width: 1rem;
+    height: 1px;
+    background: var(--sh-accent);
+    opacity: 0.85;
+    flex-shrink: 0;
+  }
+
+  .section-header--kicker .sh-eyebrow-text {
+    letter-spacing: var(--kb-label-tracking);
+  }
+
+  .section-header--kicker .sh-kicker-sep {
+    width: 1px;
+    height: 0.7rem;
+    background: var(--sh-line);
+    flex-shrink: 0;
+  }
+
+  .section-header--kicker .sh-meta {
+    margin: 0;
+    color: var(--sh-muted);
+    letter-spacing: 0.14em;
+  }
+
+  .section-header--kicker .sh-title {
+    margin: 0;
+    max-width: var(--sh-max-title);
+    color: var(--sh-ink);
+    font-size: clamp(2.75rem, 5.5vw, 4rem);
+    font-weight: var(--kb-w-heading-light);
+    letter-spacing: -0.02em;
+    line-height: 1;
+    text-wrap: balance;
+    text-rendering: optimizeLegibility;
+  }
+
+  .section-header--kicker[data-align='center'] .sh-title {
+    margin-inline: auto;
+    max-width: 20ch;
+  }
+
+  .section-header--kicker[data-density='compact'] .sh-title {
+    font-size: clamp(1.5rem, 2.8vw, 2rem);
+    font-weight: var(--kb-w-heading-light);
+  }
+
+  .section-header--kicker .sh-title :global(em) {
+    color: var(--sh-accent);
+    font-style: italic;
+    font-weight: var(--kb-w-heading-strong);
+    letter-spacing: -0.008em;
+  }
+
+  .section-header--kicker[data-tone='dark'] .sh-title :global(em) {
+    color: var(--color-king-accent-light);
+  }
+
+  .section-header--kicker .sh-lede {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: min(100%, var(--sh-max-copy));
+  }
+
+  .section-header--kicker[data-align='left'] .sh-lede {
+    align-items: flex-start;
+    width: 100%;
+  }
+
+  .section-header--kicker .sh-lede-rule {
+    width: clamp(2.75rem, 8vw, 4.25rem);
+    height: 1px;
+    margin-top: var(--sh-gap-head-copy);
+    background: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in srgb, var(--sh-accent) 75%, transparent),
+      transparent
+    );
+  }
+
+  .section-header--kicker[data-align='left'] .sh-lede-rule {
+    background: linear-gradient(
+      90deg,
+      var(--sh-accent),
+      color-mix(in srgb, var(--sh-accent) 24%, transparent)
+    );
+  }
+
+  .section-header--kicker .sh-copy {
+    width: 100%;
+    margin-top: clamp(0.85rem, 1.6vw, 1.15rem);
+    color: var(--sh-muted);
+    font-size: clamp(0.9375rem, 0.9rem + 0.14vw, 1.0625rem);
+    font-weight: var(--kb-w-body);
+    letter-spacing: 0.006em;
+    line-height: 1.68;
+  }
+
+  .section-header--kicker[data-align='center'] .sh-copy {
+    margin-inline: auto;
+  }
+
+  .section-header--kicker .sh-copy :global(p) {
+    margin: 0;
+  }
+
+  .section-header--kicker .sh-copy :global(p + p) {
+    margin-top: 0.8rem;
+  }
+
+  @media (max-width: 47.99rem) {
+    .section-header--kicker {
+      --sh-max-title: 16ch;
+    }
+
+    .section-header--kicker[data-align='center'] .sh-title {
+      max-width: 18ch;
+    }
+
+    .section-header--kicker .sh-kicker-wing {
+      max-width: 1.75rem;
+    }
+
+    .section-header--kicker .sh-kicker-inner {
+      padding: 0.38rem 0.75rem;
+    }
+
+    .section-header--kicker .sh-title {
+      font-size: clamp(1.75rem, 7.5vw, 2.375rem);
+    }
+
+    .section-header--kicker .sh-copy {
+      font-size: 0.9375rem;
+      line-height: 1.64;
+    }
+  }
+</style>

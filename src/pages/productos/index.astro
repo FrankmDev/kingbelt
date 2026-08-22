@@ -8,7 +8,9 @@ import { site, siteUrl } from '@config/site';
 import { getCatalogProvider } from '@commerce/catalog';
 import { getCollectionFacets } from '@commerce/domain/catalog-filters';
 import { resolveCatalogIndexHead, type CommercePageHead } from '@commerce/application/seo';
+import { isShopifyCommerce } from '@commerce/commerce-source';
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import { createBreadcrumbListSchema } from '@shared/seo/structured-data';
 
 const catalogProvider = await getCatalogProvider(Astro.clientAddress);
 const [products, collections] = await Promise.all([
@@ -33,11 +35,21 @@ const pageHead: CommercePageHead = resolveCatalogIndexHead(
     collections,
   },
   site,
-  siteUrl
+  siteUrl,
+  {
+    searchParams: Astro.url.searchParams,
+    indexable: isShopifyCommerce(),
+  }
 );
 ---
 
-<BaseLayout seo={pageHead.seo} schema={pageHead.schema}>
+<BaseLayout
+  seo={pageHead.seo}
+  schema={[
+    pageHead.schema,
+    createBreadcrumbListSchema([{ name: 'Productos', path: '/productos' }]),
+  ]}
+>
   <Header slot="header" initialTheme="light" scrolledTheme="light" compactThreshold={32} />
 
   <CollectionPageHead

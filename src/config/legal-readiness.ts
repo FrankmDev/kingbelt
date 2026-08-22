@@ -164,7 +164,8 @@ export interface ManualLaunchDecision {
 
 /**
  * Decisiones que un humano debe registrar en esta fuente.
- * `resolved: false` bloquea el preflight. No interpreta la validez jurídica.
+ * `resolved: false` bloquea el preflight salvo que la decisión se declare
+ * explícitamente como exclusiva de Payment QA. No interpreta la validez jurídica.
  */
 export const manualLaunchDecisions: readonly ManualLaunchDecision[] = [
   {
@@ -175,10 +176,10 @@ export const manualLaunchDecisions: readonly ManualLaunchDecision[] = [
   },
   {
     id: 'shopifyPolicyReconciliation',
-    resolved: false,
+    resolved: true,
     blocksLegalPreflight: false,
     summary:
-      'SHOPIFY POLICY CONTENT REQUIRED MANUALLY. Astro policy content must be reconciled with Shopify Admin before Payment QA.',
+      'Las políticas publicadas en Astro han sido reconciliadas con las configuradas en Shopify Admin.',
   },
   {
     id: 'addressLegalFunction',

@@ -4,7 +4,8 @@ import tailwindcss from '@tailwindcss/vite';
 import sitemap from '@astrojs/sitemap';
 import vercel from '@astrojs/vercel';
 import { siteUrl } from './src/config/site.ts';
-import { isSitemapExcluded } from './src/config/sitemap.ts';
+import { getSsrSitemapUrls, isSitemapExcluded } from './src/config/sitemap.ts';
+import { blogPosts, getBlogPostPath } from './src/content/blog.ts';
 import { buildProductRedirectMap } from './src/commerce/application/product-redirects.ts';
 import { MAX_HOSTED_URL_LENGTH } from './src/commerce/application/hosted-url.ts';
 import {
@@ -28,6 +29,7 @@ export default defineConfig({
   compressHTML: true,
   fetchFile: null,
   site: siteUrl,
+  trailingSlash: 'never',
   env: {
     schema: {
       COMMERCE_SOURCE: envField.enum({
@@ -96,6 +98,16 @@ export default defineConfig({
   integrations: [
     sitemap({
       filter: (page) => !isSitemapExcluded(new URL(page).pathname),
+      customPages: getSsrSitemapUrls(siteUrl),
+      serialize(item) {
+        const post = blogPosts.find(
+          (entry) => item.url === new URL(getBlogPostPath(entry), siteUrl).href
+        );
+        if (post) {
+          item.lastmod = post.date;
+        }
+        return item;
+      },
     }),
   ],
   vite: {

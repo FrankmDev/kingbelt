@@ -1,5 +1,5 @@
 ---
-import HomeSectionHead from '../home/HomeSectionHead.astro';
+import SectionHeader from '@components/ui/SectionHeader.astro';
 import FeatureCard from '../../ui/FeatureCard.astro';
 
 interface Mistake {
@@ -26,7 +26,7 @@ const titleId = 'size-guide-mistakes-title';
 
 <section class="size-guide-mistakes" aria-labelledby={titleId}>
   <div class="size-guide-mistakes__inner kb-shell-wide">
-    <HomeSectionHead
+    <SectionHeader
       index={section.index}
       eyebrow={section.eyebrow}
       meta={section.meta}
@@ -35,7 +35,7 @@ const titleId = 'size-guide-mistakes-title';
       class="size-guide-mistakes__header"
     >
       <Fragment slot="title">{section.title}</Fragment>
-    </HomeSectionHead>
+    </SectionHeader>
 
     <div class="size-guide-mistakes__grid">
       {items.map((item, index) => (
@@ -57,7 +57,7 @@ const titleId = 'size-guide-mistakes-title';
     border-top: 1px solid var(--kb-stroke-hairline);
   }
 
-  .size-guide-mistakes__header:global(.section-header-home) {
+  .size-guide-mistakes__header:global(.section-header) {
     width: 100%;
     margin-bottom: var(--kb-space-gap);
   }

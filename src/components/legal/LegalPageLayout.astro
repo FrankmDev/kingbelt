@@ -1,5 +1,5 @@
 ---
-import SectionHeaderHome from '../sections/home/SectionHeaderHome.astro';
+import SectionHeader from '@components/ui/SectionHeader.astro';
 import EditorialCtaSection from '../sections/EditorialCtaSection.astro';
 import LegalNavigation from './LegalNavigation.astro';
 import LegalStatusNotice from './LegalStatusNotice.astro';
@@ -47,7 +47,7 @@ const hasIntro = status === 'published' && Astro.slots.has('intro');
 
   <section class="legal-page__document" aria-labelledby={titleId}>
     <div class="legal-page__inner kb-shell-wide">
-      <SectionHeaderHome
+      <SectionHeader
         index={section.index}
         eyebrow={section.eyebrow}
         meta={statusMeta}
@@ -56,7 +56,7 @@ const hasIntro = status === 'published' && Astro.slots.has('intro');
         class="legal-page__header"
       >
         <Fragment slot="title">{section.title}</Fragment>
-      </SectionHeaderHome>
+      </SectionHeader>
 
       {(version || updatedAt) && (
         <p class="legal-page__version kb-meta-label">
@@ -175,7 +175,7 @@ const hasIntro = status === 'published' && Astro.slots.has('intro');
     }
   }
 
-  .legal-page__header:global(.section-header-home) {
+  .legal-page__header:global(.section-header) {
     width: 100%;
     margin-bottom: var(--kb-space-4);
   }

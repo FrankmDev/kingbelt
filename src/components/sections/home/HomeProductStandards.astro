@@ -1,5 +1,5 @@
 ---
-import SectionHeaderHome from './SectionHeaderHome.astro';
+import SectionHeader from '@components/ui/SectionHeader.astro';
 import MediaFrame from '../../ui/MediaFrame.astro';
 import { standardsSection } from '@content/home';
 
@@ -13,7 +13,7 @@ const layerCount = principles.length;
   aria-labelledby="home-standards-title"
 >
   <div class="kb-shell-wide">
-    <SectionHeaderHome
+    <SectionHeader
       index={standardsSection.index}
       eyebrow={standardsSection.eyebrow}
       body={standardsSection.lede}
@@ -23,19 +23,19 @@ const layerCount = principles.length;
       <Fragment slot="title">
         <span id="home-standards-title" set:html={standardsSection.title} />
       </Fragment>
-    </SectionHeaderHome>
+    </SectionHeader>
 
     <div class="home-standards__layout">
       <MediaFrame
         src={standardsSection.image}
         alt={standardsSection.imageAlt}
-        ratio="4/3"
+        ratio="3/2"
         label={standardsSection.imageLabel}
         caption={standardsSection.imageCaption}
         captionNumber="01"
         imagePosition="center 58%"
-        width={1600}
-        height={1200}
+        width={1500}
+        height={1000}
         loading="lazy"
         class="home-standards__media"
       />
@@ -104,14 +104,34 @@ const layerCount = principles.length;
       align-items: stretch;
     }
 
-    .home-standards__layout .kb-reading-panel {
+    .home-standards__media:global(.media-frame) {
+      width: 100%;
+      height: 100%;
+      min-height: 100%;
+      aspect-ratio: auto;
+    }
+
+    .home-standards__media:global(.media-frame .media-frame__stage) {
+      min-height: 100%;
       height: 100%;
     }
 
-    .home-standards__media:global(.media-frame.media-frame--ratio-4-3) {
-      height: 100%;
-      min-height: 0;
-      aspect-ratio: auto;
+    .home-standards__media:global(.media-frame .media-frame__image) {
+      object-fit: cover;
+      transform: scale(1.28);
+      transform-origin: center;
+    }
+
+    @media (hover: hover) and (pointer: fine) {
+      .home-standards__media:global(.media-frame:hover .media-frame__image) {
+        transform: scale(1.36);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .home-standards__media:global(.media-frame .media-frame__image) {
+        transform: scale(1.28);
+      }
     }
   }
 </style>

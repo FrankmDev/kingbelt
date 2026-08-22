@@ -8,26 +8,25 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import { formatMoney, zeroMoney } from '../commerce/domain/money';
 import { CART_UNRECOVERABLE_MESSAGE } from '../commerce/application/cart-provider';
 import { CART_CHECKOUT_NOTE } from '@config/business';
+import { createPageSeo } from '@shared/seo/page-head';
+import { createWebPageSchema } from '@shared/seo/structured-data';
 
-const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href;
+const seo = createPageSeo({
+  title: 'Carrito — KingBelt',
+  description: 'Consulta los productos de tu carrito, modifica cantidades y continúa hacia la compra.',
+  pathname: '/carrito',
+  robots: 'noindex,follow',
+});
 const emptySubtotal = formatMoney(zeroMoney());
-
-const cartSchema = {
-  '@context': 'https://schema.org',
-  '@type': 'WebPage',
+const cartSchema = createWebPageSchema({
   name: 'Carrito — KingBelt',
   description: 'Consulta y modifica los productos de tu carrito antes de finalizar la compra.',
-  url: canonicalURL,
-};
+  url: seo.canonicalUrl,
+});
+Astro.response.headers.set('Cache-Control', 'private, no-store, max-age=0');
 ---
 
-<BaseLayout
-  title="Carrito — KingBelt"
-  description="Consulta los productos de tu carrito, modifica cantidades y continúa hacia la compra."
-  canonicalURL={canonicalURL}
-  schema={cartSchema}
-  robots="noindex,follow"
->
+<BaseLayout seo={seo} schema={cartSchema}>
   <Header slot="header" cartEager initialTheme="light" scrolledTheme="light" compactThreshold={32} />
 
   <div class="cart-page" data-cart-page>

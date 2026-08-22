@@ -15,8 +15,26 @@ import { blogPosts } from '@content/blog';
 import { categoriesSection } from '@content/home';
 import { site } from '@config/site';
 import { getCatalogProvider } from '@commerce/catalog';
+import { createPageSeo, toSeoImage } from '@shared/seo/page-head';
+import { createWebPageSchema } from '@shared/seo/structured-data';
 
-const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href;
+const homeTitle = `${site.name} — Cinturones de cuero con criterio`;
+const homeDescription =
+  'KingBelt selecciona cinturones masculinos con criterio: cuero, herrajes y proporción pensados para el día a día. Explora categorías, selección y revista.';
+const seo = createPageSeo({
+  title: homeTitle,
+  description: homeDescription,
+  pathname: '/',
+  image: toSeoImage(
+    '/images/imagen-cinturon-kingbelt-9.avif',
+    'Cinturones de cuero negro y marrón KingBelt con costura en contraste'
+  ),
+});
+const homeSchema = createWebPageSchema({
+  name: homeTitle,
+  description: homeDescription,
+  url: seo.canonicalUrl,
+});
 const featuredPost = blogPosts.find((post) => post.status === 'featured') ?? blogPosts[0];
 const secondaryPosts = blogPosts
   .filter((post) => post.slug !== featuredPost.slug)
@@ -29,29 +47,9 @@ const productCategories = categoriesSection.enabled
   : [];
 // HTML anónimo derivado del catálogo: caché CDN breve; un redeploy purga.
 Astro.response.headers.set('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=600');
-
-const homeSchema = {
-  '@context': 'https://schema.org',
-  '@type': 'WebSite',
-  name: site.name,
-  description: site.description,
-  url: canonicalURL,
-  publisher: {
-    '@type': 'Organization',
-    name: site.name,
-    url: Astro.site ?? Astro.url.origin,
-  },
-};
 ---
 
-<BaseLayout
-  title={`${site.name} — Cinturones de cuero con criterio`}
-  description="KingBelt selecciona cinturones masculinos con criterio: cuero, herrajes y proporción pensados para el día a día. Explora categorías, selección y revista."
-  image="/images/brand/cinturones-en-taller.jpg"
-  imageAlt="Cinturón de cuero KingBelt"
-  canonicalURL={canonicalURL}
-  schema={homeSchema}
->
+<BaseLayout seo={seo} schema={homeSchema}>
   <Header slot="header" initialTheme="dark" scrolledTheme="light" compactThreshold={48} />
 
   <HeroHome />

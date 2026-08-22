@@ -15,7 +15,7 @@ const sizes: ProductOptionValue[] = Array.from({ length: 20 }, (_, index) => ({
 const images: ProductImage[] = colors.flatMap((color, colorIndex) =>
   Array.from({ length: 3 }, (_, imageIndex) => ({
     id: `scale:image:${colorIndex}:${imageIndex}`,
-    url: '/images/brand/cinturones-en-taller.jpg',
+    url: '/images/imagen-cinturon-kingbelt-10.avif',
     altText: `Ficha de escala en ${color.label.toLocaleLowerCase('es')}, vista ${imageIndex + 1}`,
     width: 960,
     height: 1200,

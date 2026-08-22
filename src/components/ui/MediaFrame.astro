@@ -1,4 +1,6 @@
 ---
+import OptimizedImage from './OptimizedImage.astro';
+
 interface Props {
   src?: string;
   alt?: string;
@@ -68,13 +70,13 @@ const aspectClass = {
     <div class="media-frame__grid">
       {galleryImages.map((img) => (
         <div class="media-frame__cell">
-          <img
+          <OptimizedImage
             src={img.src}
             alt={img.alt}
+            preset="feature"
             width={width}
             height={height}
             loading="lazy"
-            decoding="async"
             class="media-frame__image"
             style={`object-position: ${imagePosition}`}
           />
@@ -85,14 +87,14 @@ const aspectClass = {
     </div>
   ) : (
     <div class="media-frame__stage">
-      <img
+      <OptimizedImage
         src={src || ''}
         alt={alt || ''}
+        preset="feature"
         width={width}
         height={height}
         loading={loading}
         fetchpriority={fetchpriority}
-        decoding="async"
         class="media-frame__image"
         style={`object-position: ${imagePosition}`}
       />
@@ -123,6 +125,8 @@ const aspectClass = {
 <style>
   .media-frame {
     position: relative;
+    width: 100%;
+    min-width: 0;
     margin: 0;
     border-radius: var(--kb-radius-xl);
     overflow: hidden;
@@ -276,8 +280,8 @@ const aspectClass = {
     width: 0.3125rem;
     height: 0.3125rem;
     border-radius: var(--kb-radius-pill);
-    background: var(--color-king-accent);
-    box-shadow: 0 0 0 2px rgba(138, 90, 43, 0.22);
+    background: var(--color-king-on-dark-line);
+    box-shadow: 0 0 0 2px rgba(255, 250, 241, 0.18);
     flex: 0 0 auto;
   }
 
@@ -308,7 +312,7 @@ const aspectClass = {
     font-size: var(--kb-text-meta);
     font-weight: 500;
     letter-spacing: 0.12em;
-    color: var(--color-king-accent);
+    color: var(--color-king-on-dark-muted);
     flex: 0 0 auto;
     line-height: 1;
   }
@@ -322,7 +326,7 @@ const aspectClass = {
     width: 0.5rem;
     height: 0.5rem;
     border-radius: var(--kb-radius-pill);
-    background: var(--color-king-brass);
+    background: var(--color-king-on-dark-line);
     border: 2px solid var(--color-king-surface);
     box-shadow:
       0 0 0 1px rgba(11, 10, 8, 0.12),

@@ -24,7 +24,7 @@ export const demoCollections: Collection[] = [
     id: 'local:collection:vestir',
     handle: 'vestir',
     title: 'Vestir',
-    image: image('collection:vestir:cover', '/images/blog/cinturon-negro.jpg', 'Cinturón negro de vestir sobre fondo neutro', 'center 62%'),
+    image: image('collection:vestir:cover', '/images/imagen-cinturon-kingbelt-10.avif', 'Cinturones de cuero marrón y negro KingBelt con costura en contraste', 'center 62%', 1672, 941),
     description: 'Cinturones de silueta limpia para conjuntos formales: piel lisa, hebillas discretas y proporción contenida.',
     featured: true,
     badge: 'Principal',
@@ -34,7 +34,7 @@ export const demoCollections: Collection[] = [
     id: 'local:collection:casual',
     handle: 'casual',
     title: 'Casual',
-    image: image('collection:casual:cover', '/images/blog/cinturon-marron.jpg', 'Cinturón marrón para uso diario', 'center 55%'),
+    image: image('collection:casual:cover', '/images/imagen-cinturon-kingbelt-8.avif', 'Tres cinturones de cuero marrón KingBelt sobre fondo neutro', 'center 55%', 1672, 941),
     description: 'Cinturones de uso diario con proporción contenida: cueros con carácter, trenzados y detalles discretos.',
     tagline: 'Proporción para el día a día',
   },
@@ -42,7 +42,7 @@ export const demoCollections: Collection[] = [
     id: 'local:collection:sport',
     handle: 'sport',
     title: 'Sport',
-    image: image('collection:sport:cover', '/images/brand/cinturones-en-taller.jpg', 'Selección de cinturones con acabado resistente', 'center 42%'),
+    image: image('collection:sport:cover', '/images/imagen-cinturon-kingbelt-12.avif', 'Colección de cinturones de cuero marrón y negro KingBelt', 'center 42%', 1672, 941),
     description: 'Cinturones de acabado resistente con herrajes de carácter industrial, pensados para aguantar el ritmo.',
     tagline: 'Acabado resistente con carácter',
   },
@@ -55,10 +55,10 @@ interface ImagePoolEntry {
 }
 
 const imagePool: ImagePoolEntry[] = [
-  { url: '/images/blog/cinturon-negro.jpg', altBase: 'sobre fondo neutro', position: 'center 65%' },
-  { url: '/images/blog/cinturon-marron.jpg', altBase: 'con textura de cuero', position: 'center 50%' },
-  { url: '/images/blog/cinturon-marron-oscuro.jpg', altBase: 'en cuero marrón oscuro', position: 'center 58%' },
-  { url: '/images/brand/cinturones-en-taller.jpg', altBase: 'con herraje metálico', position: 'center 40%' },
+  { url: '/images/imagen-cinturon-kingbelt-10.avif', altBase: 'con costura en contraste sobre fondo neutro', position: 'center 65%' },
+  { url: '/images/imagen-cinturon-kingbelt-8.avif', altBase: 'en cuero marrón con hebilla plateada', position: 'center 50%' },
+  { url: '/images/imagen-cinturon-kingbelt-11.avif', altBase: 'con detalle de hebilla y costura', position: 'center 58%' },
+  { url: '/images/imagen-cinturon-kingbelt-13.avif', altBase: 'sobre piedra natural', position: 'center 40%' },
 ];
 
 const swatches: Record<string, string> = {

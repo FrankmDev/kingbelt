@@ -1,6 +1,7 @@
 ---
 import Button from './Button.astro';
 import Eyebrow from './Eyebrow.astro';
+import OptimizedImage from './OptimizedImage.astro';
 
 interface Props {
   title: string;
@@ -12,6 +13,8 @@ interface Props {
   secondaryButtonHref?: string;
   secondaryButtonVariant?: 'primary' | 'secondary' | 'outline' | 'surfaceOutline';
   eyebrow?: string;
+  index?: string;
+  meta?: string;
   backgroundImage: string;
   backgroundAlt?: string;
   backgroundWidth?: number;
@@ -31,6 +34,8 @@ const {
   secondaryButtonHref,
   secondaryButtonVariant = 'surfaceOutline',
   eyebrow,
+  index,
+  meta,
   backgroundImage,
   backgroundAlt = '',
   backgroundWidth = 1600,
@@ -41,24 +46,31 @@ const {
 } = Astro.props;
 
 const hasHeader = Astro.slots.has('header');
+const hasLedger = Boolean(index || eyebrow || meta);
 const hasSecondaryAction = Boolean(secondaryButtonLabel && secondaryButtonHref);
 ---
 
 <div class:list={['cta-box kb-cta-dark', hasSecondaryAction && 'cta-box--dual', className]}>
-  <img
+  <OptimizedImage
     src={backgroundImage}
     alt={backgroundAlt}
+    preset="background"
     width={backgroundWidth}
     height={backgroundHeight}
     class="cta-box__bg-image"
     style={`object-position: ${backgroundPosition}`}
     loading="lazy"
-    decoding="async"
-    aria-hidden="true"
+    aria-hidden={backgroundAlt ? undefined : true}
   />
 
   <div class="cta-box__overlay" aria-hidden="true"></div>
   <div class="cta-box__texture kb-texture-asphalt" aria-hidden="true"></div>
+
+  {Astro.slots.has('decorations') && (
+    <div class="cta-box__decorations" aria-hidden="true">
+      <slot name="decorations" />
+    </div>
+  )}
 
   <div class="cta-box__inner">
     <div class="cta-box__copy">
@@ -66,7 +78,22 @@ const hasSecondaryAction = Boolean(secondaryButtonLabel && secondaryButtonHref);
         <slot name="header" />
       ) : (
         <>
-          {eyebrow && (
+          {hasLedger && (
+            <div class="cta-box__ledger">
+              {index && <span class="cta-box__index kb-folio">{index}</span>}
+              {eyebrow && (
+                <Eyebrow class="cta-box__eyebrow">
+                  {eyebrow}
+                </Eyebrow>
+              )}
+              {(eyebrow || index) && meta && (
+                <span class="cta-box__ledger-sep" aria-hidden="true"></span>
+              )}
+              {meta && <span class="cta-box__meta kb-meta-label">{meta}</span>}
+            </div>
+          )}
+
+          {!hasLedger && eyebrow && (
             <Eyebrow class="cta-box__eyebrow">
               {eyebrow}
             </Eyebrow>
@@ -121,6 +148,10 @@ const hasSecondaryAction = Boolean(secondaryButtonLabel && secondaryButtonHref);
     transition: transform var(--kb-dur-slow) var(--kb-ease-out);
   }
 
+  .cta-box :global(picture.kb-optimized-image) {
+    z-index: 0;
+  }
+
   .cta-box__overlay {
     position: absolute;
     inset: 0;
@@ -148,6 +179,13 @@ const hasSecondaryAction = Boolean(secondaryButtonLabel && secondaryButtonHref);
     opacity: 0.06;
   }
 
+  .cta-box__decorations {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+  }
+
   .cta-box__inner {
     position: relative;
     z-index: 3;
@@ -161,15 +199,43 @@ const hasSecondaryAction = Boolean(secondaryButtonLabel && secondaryButtonHref);
     flex: 1;
   }
 
-  .cta-box__copy :global(.section-header),
-  .cta-box__copy :global(.section-header-home) {
-    --sh-max-title: 20ch;
-    --sh-max-copy: 46ch;
+  .cta-box__ledger {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--kb-space-2) var(--kb-space-4);
+    margin-bottom: var(--kb-space-4);
+  }
+
+  .cta-box__index {
+    color: rgba(255, 250, 241, 0.9);
+    font-size: clamp(1.5rem, 3vw, 2.25rem);
+    font-weight: var(--kb-w-heading-light);
+    letter-spacing: -0.02em;
+  }
+
+  .cta-box__ledger-sep {
+    width: 1px;
+    height: 0.75rem;
+    background: rgba(255, 255, 255, 0.18);
+    flex-shrink: 0;
+  }
+
+  .cta-box__meta {
+    margin-left: auto;
+    color: rgba(255, 250, 241, 0.62);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
   }
 
   .cta-box__eyebrow {
     margin-bottom: var(--kb-space-5);
     color: var(--color-king-bone);
+  }
+
+  .cta-box__ledger .cta-box__eyebrow {
+    margin-bottom: 0;
+    color: rgba(255, 250, 241, 0.78);
   }
 
   .cta-box__title {
@@ -214,6 +280,13 @@ const hasSecondaryAction = Boolean(secondaryButtonLabel && secondaryButtonHref);
 
     .cta-box__action {
       justify-content: flex-end;
+    }
+  }
+
+  @media (max-width: 47.99rem) {
+    .cta-box__meta {
+      width: 100%;
+      margin-left: 0;
     }
   }
 

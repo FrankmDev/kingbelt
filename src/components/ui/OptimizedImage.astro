@@ -1,0 +1,103 @@
+---
+import { Picture } from 'astro:assets';
+import { getEditorialAsset } from '@shared/editorial-images';
+
+type ImagePreset = 'hero' | 'feature' | 'card' | 'thumb' | 'background';
+
+interface Props {
+  src: string;
+  alt: string;
+  preset?: ImagePreset;
+  widths?: number[];
+  sizes?: string;
+  loading?: 'lazy' | 'eager';
+  fetchpriority?: 'high' | 'low' | 'auto';
+  quality?: number;
+  width?: number;
+  height?: number;
+  class?: string;
+  style?: string;
+  'aria-hidden'?: boolean | 'true' | 'false';
+}
+
+const PRESETS: Record<ImagePreset, { widths: number[]; sizes: string }> = {
+  hero: { widths: [640, 960, 1280, 1600, 1920], sizes: '100vw' },
+  feature: { widths: [480, 768, 1100, 1440], sizes: '(min-width: 64rem) 55vw, 100vw' },
+  card: { widths: [320, 480, 640, 800], sizes: '(min-width: 64rem) 25vw, (min-width: 40rem) 50vw, 100vw' },
+  thumb: { widths: [160, 240, 360], sizes: '160px' },
+  background: { widths: [720, 1080, 1440, 1920], sizes: '100vw' },
+};
+
+const {
+  src,
+  alt,
+  preset = 'feature',
+  widths,
+  sizes,
+  loading = 'lazy',
+  fetchpriority,
+  quality = 80,
+  width,
+  height,
+  class: className,
+  style,
+  'aria-hidden': ariaHidden,
+} = Astro.props;
+
+const asset = getEditorialAsset(src);
+const presetConfig = PRESETS[preset];
+const resolvedWidths = widths ?? presetConfig.widths;
+const resolvedSizes = sizes ?? presetConfig.sizes;
+---
+
+{asset ? (
+  <Picture
+    src={asset}
+    alt={alt}
+    formats={['avif']}
+    fallbackFormat="webp"
+    widths={resolvedWidths}
+    sizes={resolvedSizes}
+    loading={loading}
+    fetchpriority={fetchpriority}
+    decoding="async"
+    quality={quality}
+    class:list={['kb-optimized-image__img', className]}
+    style={style}
+    aria-hidden={ariaHidden}
+    pictureAttributes={{ class: 'kb-optimized-image' }}
+  />
+) : (
+  <img
+    src={src}
+    alt={alt}
+    width={width}
+    height={height}
+    loading={loading}
+    fetchpriority={fetchpriority}
+    decoding="async"
+    class:list={['kb-optimized-image__img', className]}
+    style={style}
+    aria-hidden={ariaHidden}
+  />
+)}
+
+<style is:global>
+  picture.kb-optimized-image {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    overflow: hidden;
+  }
+
+  .kb-optimized-image__img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    object-fit: cover;
+  }
+</style>

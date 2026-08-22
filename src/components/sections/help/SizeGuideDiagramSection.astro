@@ -1,5 +1,5 @@
 ---
-import SectionHeaderHome from '../home/SectionHeaderHome.astro';
+import SectionHeader from '@components/ui/SectionHeader.astro';
 import BeltMeasurementDiagram from '../../help/BeltMeasurementDiagram.astro';
 
 interface SectionCopy {
@@ -20,7 +20,7 @@ const titleId = 'size-guide-diagram-title';
 
 <section class="size-guide-diagram section-asphalt" aria-labelledby={titleId}>
   <div class="size-guide-diagram__inner kb-shell-wide">
-    <SectionHeaderHome
+    <SectionHeader
       index={section.index}
       eyebrow={section.eyebrow}
       meta={section.meta}
@@ -30,7 +30,7 @@ const titleId = 'size-guide-diagram-title';
       class="size-guide-diagram__header"
     >
       <Fragment slot="title">{section.title}</Fragment>
-    </SectionHeaderHome>
+    </SectionHeader>
 
     <BeltMeasurementDiagram />
   </div>
@@ -42,7 +42,7 @@ const titleId = 'size-guide-diagram-title';
     border-top: 1px solid rgba(255, 255, 255, 0.08);
   }
 
-  .size-guide-diagram__header:global(.section-header-home) {
+  .size-guide-diagram__header:global(.section-header) {
     width: 100%;
     margin-bottom: var(--kb-space-gap);
   }

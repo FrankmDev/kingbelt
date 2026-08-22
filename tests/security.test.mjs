@@ -69,11 +69,14 @@ describe('serialización y contenido externo', () => {
     expect(isAllowedImageUrl('//images.unsplash.com/photo.jpg', allowed)).toBe(false);
   });
 
-  test('las imágenes editoriales remotas actuales pertenecen a la allowlist', () => {
-    const remoteUrls = collectStrings(aboutPage).filter((value) => /^https?:\/\//.test(value));
-    expect(remoteUrls.length).toBeGreaterThan(0);
-    expect(remoteUrls.every((url) => isAllowedImageUrl(url, publicSecurityConfig.remoteImageHosts)))
+  test('las imágenes editoriales actuales son rutas locales permitidas', () => {
+    const imageUrls = collectStrings(aboutPage).filter((value) =>
+      value.startsWith('/images/') || /^https?:\/\//.test(value)
+    );
+    expect(imageUrls.length).toBeGreaterThan(0);
+    expect(imageUrls.every((url) => isAllowedImageUrl(url, publicSecurityConfig.remoteImageHosts)))
       .toBe(true);
+    expect(imageUrls.every((url) => url.startsWith('/images/'))).toBe(true);
   });
 
   test('el catálogo rechaza HTML, hosts de imagen no aprobados y textos excesivos', () => {

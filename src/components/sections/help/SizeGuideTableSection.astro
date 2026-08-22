@@ -1,5 +1,5 @@
 ---
-import HomeSectionHead from '../home/HomeSectionHead.astro';
+import SectionHeader from '@components/ui/SectionHeader.astro';
 import SizeGuideTable from '../../help/SizeGuideTable.astro';
 
 interface SectionCopy {
@@ -20,7 +20,7 @@ const titleId = 'size-guide-table-title';
 
 <section class="size-guide-table" aria-labelledby={titleId}>
   <div class="size-guide-table__inner kb-shell-wide">
-    <HomeSectionHead
+    <SectionHeader
       index={section.index}
       eyebrow={section.eyebrow}
       meta={section.meta}
@@ -29,7 +29,7 @@ const titleId = 'size-guide-table-title';
       class="size-guide-table__header"
     >
       <Fragment slot="title">{section.title}</Fragment>
-    </HomeSectionHead>
+    </SectionHeader>
 
     <SizeGuideTable />
   </div>
@@ -42,7 +42,7 @@ const titleId = 'size-guide-table-title';
     border-top: 1px solid var(--kb-stroke-hairline);
   }
 
-  .size-guide-table__header:global(.section-header-home) {
+  .size-guide-table__header:global(.section-header) {
     width: 100%;
     margin-bottom: var(--kb-space-gap);
   }

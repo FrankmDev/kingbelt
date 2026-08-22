@@ -1,5 +1,5 @@
 ---
-import HomeSectionHead from './HomeSectionHead.astro';
+import SectionHeader from '@components/ui/SectionHeader.astro';
 import Button from '../../ui/Button.astro';
 import Icon from '../../ui/Icon.astro';
 import ProductCard from '../../collection/ProductCard.astro';
@@ -19,7 +19,7 @@ const { products } = Astro.props;
   aria-labelledby="home-featured-title"
 >
   <div class="kb-shell-wide">
-    <HomeSectionHead
+    <SectionHeader
       index={featuredSection.index}
       eyebrow={featuredSection.eyebrow}
       body={featuredSection.body}
@@ -30,7 +30,7 @@ const { products } = Astro.props;
         <span set:html={featuredSection.title} />
       </Fragment>
 
-      <Fragment slot="action">
+      <Fragment slot="aside">
         <Button href={featuredSection.cta.href} variant="outline" size="md">
           {featuredSection.cta.label}
           <Icon
@@ -39,7 +39,7 @@ const { products } = Astro.props;
           />
         </Button>
       </Fragment>
-    </HomeSectionHead>
+    </SectionHeader>
 
     <ul class="home-featured__grid">
       {products.map((product, index) => (

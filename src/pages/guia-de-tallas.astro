@@ -1,4 +1,6 @@
 ---
+export const prerender = true;
+
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Header from '../components/layout/Header.astro';
 import Footer from '../components/layout/Footer.astro';
@@ -19,18 +21,37 @@ import {
   sizeGuideFaqs,
   getHelpRobots,
 } from '@content/help';
+import { createPageSeo, toSeoImage } from '@shared/seo/page-head';
+import {
+  createBreadcrumbListSchema,
+  createFaqPageSchema,
+  createWebPageSchema,
+} from '@shared/seo/structured-data';
 
 const { title, description } = helpMeta.sizeGuide;
-const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href;
 const { hero, intro, methods, diagram, table, mistakes, faq } = sizeGuidePage;
+const seo = createPageSeo({
+  title,
+  description,
+  pathname: helpMeta.sizeGuide.path,
+  robots: getHelpRobots(helpMeta.sizeGuide),
+  image: toSeoImage(hero.image, hero.imageAlt),
+});
+const sizeGuideSchema = [
+  createWebPageSchema({
+    name: title,
+    description,
+    url: seo.canonicalUrl,
+  }),
+  createFaqPageSchema(sizeGuideFaqs, seo.canonicalUrl),
+  createBreadcrumbListSchema([
+    { name: 'Ayuda', path: '/ayuda' },
+    { name: 'Guía de tallas', path: helpMeta.sizeGuide.path },
+  ]),
+];
 ---
 
-<BaseLayout
-  title={title}
-  description={description}
-  canonicalURL={canonicalURL}
-  robots={getHelpRobots(helpMeta.sizeGuide)}
->
+<BaseLayout seo={seo} schema={sizeGuideSchema}>
   <Header slot="header" initialTheme="dark" scrolledTheme="light" compactThreshold={32} />
 
   <PageHeader

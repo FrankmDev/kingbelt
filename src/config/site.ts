@@ -6,8 +6,12 @@ export const site = {
   logos: {
     ink: '/images/brand/logo.avif',
     white: '/images/brand/logo-white.avif',
-    width: 3969,
-    height: 2102,
+    width: 512,
+    height: 271,
+  },
+  defaultOgImage: {
+    url: '/images/imagen-cinturon-kingbelt-9.avif',
+    altText: 'Cinturones de cuero negro y marrón KingBelt con costura en contraste',
   },
   contact: {
     email: 'contabilidad@cintuelx.com',
@@ -21,4 +25,4 @@ export const site = {
 } as const;
 
 /** Debe coincidir con `site` en `astro.config.mjs`. */
-export const siteUrl = 'https://kingbelt.com' as const;
+export const siteUrl = 'https://kingbelt.es' as const;

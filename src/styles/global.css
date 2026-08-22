@@ -1229,11 +1229,13 @@ a.kb-badge:focus-visible {
   z-index: 1;
 }
 
+/* El anillo de foco debe ganar a las variantes y a los estilos scoped que
+   declaran su propia box-shadow más abajo en la cascada. */
 .kb-btn:focus-visible {
   outline: none;
   box-shadow:
     0 0 0 2px var(--color-king-bg),
-    0 0 0 4px rgba(138, 90, 43, 0.45);
+    0 0 0 4px rgba(138, 90, 43, 0.45) !important;
 }
 
 .kb-btn:active {

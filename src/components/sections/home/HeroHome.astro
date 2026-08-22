@@ -916,6 +916,23 @@ import { hero } from '@content/home';
     motionCleanup = undefined;
   };
 
+  // El vídeo de fondo es movimiento continuo: con reduced motion se congela en el póster.
+  const syncVideoPlayback = () => {
+    const video = scope?.querySelector<HTMLVideoElement>('.hero-home__video');
+    if (!video) return;
+
+    if (reducedMotion.matches) {
+      video.autoplay = false;
+      video.loop = false;
+      video.pause();
+      return;
+    }
+
+    video.autoplay = true;
+    video.loop = true;
+    void video.play().catch(() => undefined);
+  };
+
   const startMotion = () => {
     if (!scope || reducedMotion.matches || motionCleanup || motionPromise || disposed) return;
 
@@ -930,6 +947,7 @@ import { hero } from '@content/home';
   };
 
   const syncMotionPreference = () => {
+    syncVideoPlayback();
     if (reducedMotion.matches) stopMotion();
     else startMotion();
   };

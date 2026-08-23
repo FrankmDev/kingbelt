@@ -302,7 +302,7 @@ export const legalPages = {
   envios: {
     heading: 'Política de envíos',
     titleHtml: 'Preparación, transporte y <em>entrega</em>.',
-    lede: 'Envíos gratuitos con transporte incluido en el precio. Plazos, seguimiento e incidencias de los pedidos KingBelt.',
+    lede: 'Envíos gratuitos con entrega en 24-48 horas. Seguimiento e incidencias de los pedidos KingBelt.',
     image: '/images/imagen-cinturon-kingbelt-3.avif',
     imageAlt: 'Artesano trabajando el cuero con martillo de talabartero',
     imagePosition: 'center 48%',
@@ -311,7 +311,7 @@ export const legalPages = {
       index: '01',
       eyebrow: 'Documento',
       title: 'Cómo llega el pedido.',
-      body: 'Envíos gratuitos, plazos, seguimiento y qué ocurre si hay una incidencia en el transporte.',
+      body: 'Envíos gratuitos, entrega en 24-48 horas, seguimiento y qué ocurre si hay una incidencia en el transporte.',
     },
   },
   devoluciones: {

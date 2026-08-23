@@ -1,6 +1,7 @@
 import { legalDocuments, type DocumentStatus } from './legal';
 import type { FAQItem } from './faq';
 import type { IconName } from '../components/ui/icon-paths';
+import { DELIVERY_PROMISE, FREE_SHIPPING_LABEL } from '@config/business';
 
 interface HelpNavItem {
   label: string;
@@ -28,7 +29,7 @@ const allHelpNavItems: HelpNavItem[] = [
   {
     label: 'Envíos',
     href: '/envios-y-devoluciones',
-    description: 'Envíos gratuitos, plazos, seguimiento e incidencias de los pedidos.',
+    description: 'Envíos gratuitos, entrega en 24-48 horas, seguimiento e incidencias de los pedidos.',
     priority: 'primary',
     icon: 'truck',
   },
@@ -213,7 +214,7 @@ export const helpHub = {
     eyebrow: 'Accesos principales',
     meta: 'Empieza aquí',
     title: 'Lo esencial antes y después de comprar.',
-    body: 'Guía de tallas y envíos gratuitos: los dos puntos que más consultan antes de decidir.',
+    body: 'Guía de tallas y envíos gratuitos con entrega en 24-48 horas: los dos puntos que más consultan antes de decidir.',
   },
   resources: {
     index: '02',
@@ -246,7 +247,7 @@ export const helpHub = {
         label: 'Después de comprar',
         title: 'Envíos, cambios y atención',
         text:
-          'Envíos gratuitos con el transporte incluido en el precio. Consulta plazos, seguimiento e incidencias en la política de envíos. Las devoluciones y el desistimiento están en su propia página.',
+          `${FREE_SHIPPING_LABEL}. ${DELIVERY_PROMISE}. Consulta seguimiento e incidencias en la política de envíos. Las devoluciones y el desistimiento están en su propia página.`,
       },
     ],
   },
@@ -384,7 +385,7 @@ export const shippingPage = {
     eyebrow: 'Ayuda',
     title: 'Preparación, transporte y <em>entrega</em>.',
     description:
-      'Envíos gratuitos: el transporte va incluido en el precio. Plazos, seguimiento e incidencias de los pedidos KingBelt.',
+      `${FREE_SHIPPING_LABEL}. ${DELIVERY_PROMISE}. Seguimiento e incidencias de los pedidos KingBelt.`,
     image: '/images/imagen-cinturon-kingbelt-2.avif',
     imageAlt: 'Artesano alisando cuero en el banco de trabajo del taller KingBelt',
     imagePosition: 'center 48%',
@@ -395,7 +396,7 @@ export const shippingPage = {
     eyebrow: 'Documento',
     meta: 'Vigente',
     title: 'Cómo llega el pedido.',
-    body: 'Envíos gratuitos, plazos, seguimiento y qué ocurre si hay una incidencia en el transporte.',
+    body: `${FREE_SHIPPING_LABEL}. ${DELIVERY_PROMISE}. Seguimiento y qué ocurre si hay una incidencia en el transporte.`,
   },
 } as const;
 
@@ -422,7 +423,7 @@ export const helpMeta = {
   shipping: {
     title: 'Política de envíos — KingBelt',
     description:
-      'Envíos gratuitos con transporte incluido en el precio. Preparación, plazos, seguimiento e incidencias de los pedidos realizados en KingBelt.',
+      `${FREE_SHIPPING_LABEL}. ${DELIVERY_PROMISE}. Preparación, seguimiento e incidencias de los pedidos realizados en KingBelt.`,
     indexable: true,
   },
 } as const;

@@ -1,4 +1,4 @@
-import { confirmed, businessFacts, FREE_SHIPPING_LABEL } from '@config/business';
+import { confirmed, businessFacts, DELIVERY_PROMISE, FREE_SHIPPING_LABEL } from '@config/business';
 
 const madeInSpain = confirmed(businessFacts.madeInSpain);
 
@@ -11,6 +11,7 @@ export const hero = {
   ],
   signals: [
     { label: FREE_SHIPPING_LABEL, href: '/envios-y-devoluciones' },
+    { label: DELIVERY_PROMISE, href: '/envios-y-devoluciones' },
     { label: 'Fabricación artesanal', href: '/sobre' },
     { label: madeInSpain ? `Hecho en ${madeInSpain}` : 'Hecho en España', href: '/sobre' },
   ] as const,

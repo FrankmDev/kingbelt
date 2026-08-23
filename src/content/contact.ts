@@ -1,5 +1,5 @@
 import { site } from '@config/site';
-import { businessFacts, confirmed, toTelHref, toWhatsAppHref, FREE_SHIPPING_DETAIL, FREE_SHIPPING_LABEL } from '@config/business';
+import { businessFacts, confirmed, toTelHref, toWhatsAppHref, DELIVERY_PROMISE, FREE_SHIPPING_DETAIL, FREE_SHIPPING_LABEL } from '@config/business';
 import { LEGAL_CONTACT_EMAIL } from './legal-bodies';
 import type { IconName } from '../components/ui/icon-paths';
 import type { FAQItem } from './faq';
@@ -137,7 +137,7 @@ export const contactData = {
     },
     {
       question: '¿Cuánto cuesta el envío?',
-      answer: `${FREE_SHIPPING_LABEL}. ${FREE_SHIPPING_DETAIL} Consulta plazos, destinos e incidencias en la política de envíos.`,
+      answer: `${FREE_SHIPPING_LABEL}. ${FREE_SHIPPING_DETAIL} ${DELIVERY_PROMISE}. Consulta destinos e incidencias en la política de envíos.`,
       category: 'Envío',
       icon: 'truck',
     },
@@ -174,7 +174,7 @@ export const contactData = {
     eyebrow: 'Tu compra',
     title: 'Información clara, desde el pedido.',
     description:
-      `${FREE_SHIPPING_LABEL}: el transporte va incluido en el precio del producto. Consulta plazos, devoluciones y atención en el centro de ayuda.`,
+      `${FREE_SHIPPING_LABEL}. ${DELIVERY_PROMISE}. Consulta devoluciones y atención en el centro de ayuda.`,
     badge: { label: FREE_SHIPPING_LABEL },
     cta: {
       label: 'Centro de ayuda',
@@ -196,7 +196,7 @@ export const contactData = {
       {
         title: FREE_SHIPPING_LABEL,
         description:
-          'El transporte va incluido en el precio. Consulta plazos, destinos e incidencias en la política de envíos.',
+          `${FREE_SHIPPING_DETAIL} ${DELIVERY_PROMISE}. Consulta destinos e incidencias en la política de envíos.`,
         label: 'Envío',
         icon: 'truck',
       },

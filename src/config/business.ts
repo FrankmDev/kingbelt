@@ -83,11 +83,12 @@ const BORME_REGISTERED_ADDRESS_SOURCE =
 const BORME_ACTIVITY_SOURCE =
   'BORME-A-2020-36-03, constitución de CintuElx S.L., publicado el 21/02/2020.';
 
-/** Copy pública: el transporte va incluido en el precio del producto. */
+/** Copy pública: envío gratuito sin coste adicional. */
 export const FREE_SHIPPING_LABEL = 'Envíos gratuitos';
 export const FREE_SHIPPING_DETAIL =
-  'El coste del envío está incluido en el precio del producto; no añadimos gastos de transporte aparte.';
-export const CART_CHECKOUT_NOTE = `${FREE_SHIPPING_LABEL}. Los impuestos se calculan en el checkout.`;
+  'Envío gratuito sin coste adicional en la compra ordinaria.';
+export const DELIVERY_PROMISE = 'Entrega en 24-48 horas';
+export const CART_CHECKOUT_NOTE = `${FREE_SHIPPING_LABEL}. ${DELIVERY_PROMISE}. Los impuestos se calculan en el checkout.`;
 
 export const businessFacts: BusinessFacts = {
   legalName: {
@@ -171,9 +172,9 @@ export const businessFacts: BusinessFacts = {
   },
   shippingCosts: {
     status: 'confirmed',
-    value: 'Incluidos en el precio del producto',
+    value: 'Envíos gratuitos',
     source: LEGAL_TEXT_VALIDATION_SOURCE,
-    notes: 'No se añaden gastos de transporte aparte en la compra ordinaria.',
+    notes: 'Sin coste de envío en la compra ordinaria.',
   },
   preparationTime: {
     status: 'confirmed',
@@ -267,5 +268,6 @@ export const publicHighlights = (): string[] => {
   if (packaging) highlights.push(packaging);
   const freeShipping = confirmed(businessFacts.freeShipping);
   if (freeShipping) highlights.push(freeShipping);
+  highlights.push(DELIVERY_PROMISE);
   return highlights;
 };

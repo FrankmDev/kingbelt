@@ -11,7 +11,7 @@ import {
 import type { Product } from '@commerce/domain/catalog';
 import { resolveColorSwatch } from '@commerce/domain/color-swatch';
 import { serializeJsonForHtml } from '@shared/security/serialize-json-for-html';
-import { confirmed, businessFacts, FREE_SHIPPING_DETAIL, FREE_SHIPPING_LABEL } from '@config/business';
+import { confirmed, businessFacts, DELIVERY_PROMISE, FREE_SHIPPING_DETAIL, FREE_SHIPPING_LABEL } from '@config/business';
 
 interface Props {
   product: Product;
@@ -70,7 +70,7 @@ const freeShippingLabel = confirmed(businessFacts.freeShipping);
     {freeShippingLabel && (
       <p class="product-buy__shipping kb-meta-label text-king-muted">
         <Icon name="truck" class="product-buy__shipping-icon h-3.5 w-3.5" aria-hidden="true" />
-        <span><strong class="text-king-text">{FREE_SHIPPING_LABEL}</strong> · {FREE_SHIPPING_DETAIL}</span>
+        <span><strong class="text-king-text">{FREE_SHIPPING_LABEL}</strong> · {FREE_SHIPPING_DETAIL} · {DELIVERY_PROMISE}</span>
       </p>
     )}
   </div>

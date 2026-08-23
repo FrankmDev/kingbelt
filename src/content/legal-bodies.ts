@@ -653,7 +653,7 @@ export const enviosBody: LegalDocumentBody = {
         'Kingbelt ofrece envíos gratuitos a los destinos habilitados durante el proceso de compra.'
       ),
       p(
-        'El coste del transporte está incluido en el precio de los productos mostrado en la tienda. No se añaden gastos de envío aparte en la modalidad ordinaria de compra.'
+        'No se añaden gastos de envío aparte en la modalidad ordinaria de compra. El envío se ofrece sin coste adicional para el cliente.'
       ),
       p(
         'Durante el proceso de compra, y antes de confirmar el pedido con obligación de pago, el cliente podrá comprobar que el envío ordinario es gratuito en las zonas cubiertas por esta política.'
@@ -1069,7 +1069,7 @@ export const devolucionesBody: LegalDocumentBody = {
         'El reembolso se realizará utilizando el mismo medio de pago utilizado para la compra, salvo que el cliente acuerde expresamente otro medio y siempre que ello no le genere gastos adicionales.'
       ),
       p(
-        'Como el envío ordinario está incluido en el precio del producto y no se cobra aparte, el reembolso del desistimiento comprende el precio pagado por los productos. No existe un cargo de envío separado que reembolsar.'
+        'Como el envío ordinario es gratuito y no se cobra aparte, el reembolso del desistimiento comprende el precio pagado por los productos. No existe un cargo de envío separado que reembolsar.'
       ),
       p(
         'Una vez emitido el reembolso por Kingbelt, el tiempo necesario para que el importe aparezca en la cuenta del cliente dependerá de la entidad bancaria o del proveedor del método de pago utilizado.'
@@ -1386,7 +1386,7 @@ export const condicionesBody: LegalDocumentBody = {
     ],
     envio: [
       p(
-        'Los envíos son gratuitos: el coste del transporte está incluido en el precio del producto. Antes de confirmar el pedido, el cliente podrá comprobar que el envío ordinario se muestra como gratuito.'
+        'Los envíos son gratuitos. Antes de confirmar el pedido, el cliente podrá comprobar que el envío ordinario se muestra como gratuito.'
       ),
       p(
         'El transporte lo realiza una empresa de transporte propuesta, seleccionada o contratada por Kingbelt. La modalidad concreta se comunica durante el proceso de compra. El detalle operativo está en la ',

@@ -26,6 +26,8 @@ export const LEGAL_NAME = 'CintuElx S.L.';
 export const LEGAL_TRADE_NAME = 'Kingbelt';
 export const LEGAL_TAX_ID = 'B42696716';
 export const LEGAL_PHONE_DISPLAY = '965 43 01 51';
+/** Teléfono público de atención (no usar en textos legales). */
+export const CONTACT_PHONE_DISPLAY = '689 99 19 53';
 export const LEGAL_EMAIL = 'contabilidad@cintuelx.com';
 export const LEGAL_REGISTERED_ADDRESS = `Avenida de Novelda, 143, bajo,
 03206 Elche (Alicante),
@@ -42,6 +44,7 @@ export interface BusinessFacts {
   registeredAddress: BusinessFact;
   email: BusinessFact;
   phone: BusinessFact;
+  contactPhone: BusinessFact;
   website: BusinessFact;
   registryData: BusinessFact;
   activity: BusinessFact;
@@ -123,6 +126,13 @@ export const businessFacts: BusinessFacts = {
     status: 'confirmed',
     value: LEGAL_PHONE_DISPLAY,
     source: COMPANY_CONFIRMATION_SOURCE,
+    notes: 'Teléfono legal y de identidad empresarial; no sustituye el teléfono de atención pública.',
+  },
+  contactPhone: {
+    status: 'confirmed',
+    value: CONTACT_PHONE_DISPLAY,
+    source: COMPANY_CONFIRMATION_SOURCE,
+    notes: 'Teléfono de atención al cliente y WhatsApp; no publicar en textos legales.',
   },
   website: {
     status: 'confirmed',
@@ -244,13 +254,15 @@ export const businessFacts: BusinessFacts = {
 /** Normaliza el teléfono nacional publicado a un href `tel:`. */
 export const toTelHref = (display: string): string => `tel:+34${display.replace(/\D/g, '')}`;
 
+/** Enlace `wa.me` para el teléfono nacional publicado. */
+export const toWhatsAppHref = (display: string): string =>
+  `https://wa.me/34${display.replace(/\D/g, '')}`;
+
 /** Claims públicos derivados de hechos confirmados. Vacío si no hay datos. */
 export const publicHighlights = (): string[] => {
   const highlights: string[] = [];
   const madeIn = confirmed(businessFacts.madeInSpain);
   if (madeIn) highlights.push(`Hecho en ${madeIn}`);
-  const delivery = confirmed(businessFacts.deliveryTime);
-  if (delivery) highlights.push(delivery);
   const packaging = confirmed(businessFacts.packagingIncluded);
   if (packaging) highlights.push(packaging);
   const freeShipping = confirmed(businessFacts.freeShipping);

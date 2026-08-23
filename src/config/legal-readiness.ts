@@ -127,6 +127,7 @@ export const BUSINESS_FACT_CLASSIFICATION: Record<BusinessFactKey, BusinessFactC
   registeredAddress: 'required',
   email: 'required',
   phone: 'required',
+  contactPhone: 'optional',
   website: 'required',
   registryData: 'required',
   activity: 'required',

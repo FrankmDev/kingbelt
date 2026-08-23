@@ -34,7 +34,7 @@ const parseRegisteredAddress = (value: string): Record<string, unknown> | undefi
 
 export const createOrganizationSchema = (): Record<string, unknown> => {
   const email = confirmed(businessFacts.email) ?? site.contact.email;
-  const phone = confirmed(businessFacts.phone);
+  const phone = confirmed(businessFacts.contactPhone);
   const legalName = confirmed(businessFacts.legalName);
   const addressValue = confirmed(businessFacts.registeredAddress);
   const logoUrl = toCanonicalUrl(siteUrl, site.logos.ink);

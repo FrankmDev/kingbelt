@@ -1,7 +1,7 @@
 import type { IconName } from '../components/ui/icon-paths';
 import { legalFooterNav } from '@content/legal';
 import { helpFooterNav } from '@content/help';
-import { publicHighlights, businessFacts, confirmed, toTelHref } from './business';
+import { publicHighlights, businessFacts, confirmed, toTelHref, toWhatsAppHref } from './business';
 import { site } from './site';
 
 export interface NavItem {
@@ -43,7 +43,7 @@ export const footerLegalNav: NavItem[] = [...legalFooterNav];
 export const footerHighlights = publicHighlights();
 
 const footerEmail = confirmed(businessFacts.email) ?? site.contact.email;
-const footerPhone = confirmed(businessFacts.phone);
+const footerPhone = confirmed(businessFacts.contactPhone);
 
 export const footerContact: readonly {
   label: string;
@@ -68,15 +68,15 @@ export const footerContact: readonly {
           external: false,
           icon: 'phone' as IconName,
         },
+        {
+          label: 'WhatsApp',
+          value: footerPhone,
+          href: toWhatsAppHref(footerPhone),
+          external: true,
+          icon: 'whatsapp' as IconName,
+        },
       ]
     : []),
-  {
-    label: 'Instagram',
-    value: site.social.instagram.handle,
-    href: site.social.instagram.href,
-    external: true,
-    icon: 'instagram',
-  },
 ];
 
 export const socialLinks = [

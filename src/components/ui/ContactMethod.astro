@@ -12,6 +12,7 @@ interface Props extends Omit<HTMLAttributes<'a'>, 'href'> {
   index?: number | string;
   meta?: string;
   variant?: 'default' | 'steel';
+  density?: 'default' | 'compact';
 }
 
 const {
@@ -23,6 +24,7 @@ const {
   index,
   meta,
   variant = 'default',
+  density = 'default',
   class: className,
   ...rest
 } = Astro.props;
@@ -41,7 +43,14 @@ const formattedIndex =
     : undefined;
 
 const cardClass = variant === 'steel' ? 'kb-card-steel' : 'kb-card-dry';
-const ctaLabel = icon === 'phone' ? 'Llamar' : icon === 'mail' ? 'Enviar email' : 'Contactar';
+const ctaLabel =
+  icon === 'phone'
+    ? 'Llamar'
+    : icon === 'mail'
+      ? 'Enviar email'
+      : icon === 'whatsapp'
+        ? 'Abrir WhatsApp'
+        : 'Contactar';
 const footMeta = meta ?? (variant === 'steel' ? 'Canal principal' : 'Canal directo');
 ---
 
@@ -49,6 +58,7 @@ const footMeta = meta ?? (variant === 'steel' ? 'Canal principal' : 'Canal direc
   class:list={[
     'contact-method',
     `contact-method--${variant}`,
+    density === 'compact' && 'contact-method--compact',
     cardClass,
     href && 'contact-method--linked',
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-king-accent/45 focus-visible:ring-offset-2 focus-visible:ring-offset-king-bg',
@@ -72,7 +82,7 @@ const footMeta = meta ?? (variant === 'steel' ? 'Canal principal' : 'Canal direc
             <Icon name={icon} class="h-full w-full" strokeWidth={1.65} />
           </span>
         )}
-        {label}
+        <span class="contact-method__label">{label}</span>
       </p>
     </header>
 
@@ -132,6 +142,54 @@ const footMeta = meta ?? (variant === 'steel' ? 'Canal principal' : 'Canal direc
     --cm-cta: var(--color-king-accent-light);
   }
 
+  .contact-method--compact {
+    padding: var(--kb-space-3) var(--kb-space-4);
+  }
+
+  .contact-method--compact .contact-method__inner {
+    gap: var(--kb-space-2);
+  }
+
+  .contact-method--compact .contact-method__head {
+    gap: var(--kb-space-2);
+  }
+
+  .contact-method--compact .contact-method__index {
+    font-size: 0.625rem;
+  }
+
+  .contact-method--compact .contact-method__mark {
+    width: 0.8125rem;
+    height: 0.8125rem;
+  }
+
+  .contact-method--compact .contact-method__main {
+    gap: 0.25rem;
+  }
+
+  .contact-method--compact .contact-method__value {
+    font-size: clamp(1rem, 1.6vw, 1.125rem);
+    line-height: 1.25;
+  }
+
+  .contact-method--compact .contact-method__description {
+    font-size: var(--kb-text-xs);
+    line-height: 1.5;
+  }
+
+  .contact-method--compact .contact-method__foot {
+    padding-top: var(--kb-space-2);
+  }
+
+  .contact-method--compact .contact-method__meta {
+    padding: 0.2rem 0.5rem;
+    font-size: 0.625rem;
+  }
+
+  .contact-method--compact .contact-method__cta {
+    font-size: 0.6875rem;
+  }
+
   .contact-method__accent {
     position: absolute;
     top: 0;
@@ -159,21 +217,23 @@ const footMeta = meta ?? (variant === 'steel' ? 'Canal principal' : 'Canal direc
 
   .contact-method__head {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    align-items: center;
     gap: var(--kb-space-3);
     min-width: 0;
   }
 
   .contact-method__index {
+    flex-shrink: 0;
     margin: 0;
-    font-family: var(--font-display);
-    font-size: clamp(1.5rem, 2.4vw, 2rem);
-    font-weight: var(--kb-w-heading-light);
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-size: 0.6875rem;
+    font-weight: var(--kb-w-medium);
     line-height: 1;
-    letter-spacing: -0.01em;
+    letter-spacing: 0.08em;
     font-variant-numeric: tabular-nums;
     color: var(--cm-index);
-    opacity: 0.38;
+    opacity: 0.45;
   }
 
   .contact-method__eyebrow {
@@ -181,7 +241,12 @@ const footMeta = meta ?? (variant === 'steel' ? 'Canal principal' : 'Canal direc
     align-items: center;
     gap: var(--kb-space-2);
     margin: 0;
+    min-width: 0;
     color: var(--cm-eyebrow);
+  }
+
+  .contact-method__label {
+    min-width: 0;
   }
 
   .contact-method__mark {
@@ -189,10 +254,10 @@ const footMeta = meta ?? (variant === 'steel' ? 'Canal principal' : 'Canal direc
     flex-shrink: 0;
     align-items: center;
     justify-content: center;
-    width: 0.875rem;
-    height: 0.875rem;
+    width: 0.9375rem;
+    height: 0.9375rem;
     color: var(--cm-mark);
-    opacity: 0.82;
+    opacity: 0.88;
   }
 
   .contact-method__mark :global(svg) {

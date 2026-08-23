@@ -94,6 +94,7 @@ describe('hechos empresariales confirmados', () => {
     expect(confirmed(businessFacts.tradeName)).toBe('Kingbelt');
     expect(confirmed(businessFacts.taxId)).toBe('B42696716');
     expect(confirmed(businessFacts.phone)).toBe('965 43 01 51');
+    expect(confirmed(businessFacts.contactPhone)).toBe('689 99 19 53');
     expect(confirmed(businessFacts.email)).toBe('contabilidad@cintuelx.com');
     expect(site.contact.email).toBe(confirmed(businessFacts.email));
     expect(confirmed(businessFacts.address)).toContain('Avenida de Novelda, 143, bajo');
@@ -104,6 +105,7 @@ describe('hechos empresariales confirmados', () => {
     expect(confirmed(businessFacts.legalBases)).toContain('Ejecución contractual');
     expect(confirmed(businessFacts.returnAddress)).toBeUndefined();
     expect(toTelHref(businessFacts.phone.value)).toBe('tel:+34965430151');
+    expect(toTelHref(businessFacts.contactPhone.value)).toBe('tel:+34689991953');
   });
 
   test('un hecho pending no se publica', () => {

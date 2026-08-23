@@ -10,7 +10,7 @@ import ContactFaqSection from '../components/sections/contact/ContactFaqSection.
 import ContactFormSection from '../components/sections/contact/ContactFormSection.astro';
 import PurchaseInfo from '../components/sections/contact/PurchaseInfo.astro';
 import { contactData } from '@content/contact';
-import { confirmed, businessFacts } from '@config/business';
+import { confirmed, businessFacts, toTelHref } from '@config/business';
 import { site } from '@config/site';
 import { createPageSeo, toSeoImage } from '@shared/seo/page-head';
 import {
@@ -47,8 +47,8 @@ const contactSchema = [
         '@type': 'ContactPoint',
         contactType: 'customer support',
         email: emailChannel.value,
-        ...(confirmed(businessFacts.phone)
-          ? { telephone: confirmed(businessFacts.phone) }
+        ...(confirmed(businessFacts.contactPhone)
+          ? { telephone: toTelHref(confirmed(businessFacts.contactPhone)!).replace(/^tel:/, '') }
           : {}),
         url: seo.canonicalUrl,
         availableLanguage: 'Spanish',

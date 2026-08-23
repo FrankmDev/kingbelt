@@ -1,11 +1,11 @@
 import { site } from '@config/site';
-import { businessFacts, confirmed, toTelHref, FREE_SHIPPING_DETAIL, FREE_SHIPPING_LABEL } from '@config/business';
+import { businessFacts, confirmed, toTelHref, toWhatsAppHref, FREE_SHIPPING_DETAIL, FREE_SHIPPING_LABEL } from '@config/business';
 import { LEGAL_CONTACT_EMAIL } from './legal-bodies';
 import type { IconName } from '../components/ui/icon-paths';
 import type { FAQItem } from './faq';
 
 const contactEmail = confirmed(businessFacts.email) ?? site.contact.email;
-const contactPhone = confirmed(businessFacts.phone);
+const contactPhone = confirmed(businessFacts.contactPhone);
 const contactLegalName = confirmed(businessFacts.legalName);
 
 export interface ContactChannel {
@@ -94,6 +94,14 @@ const contactChannels: ContactChannel[] = [
           icon: 'phone' as const,
           meta: 'Atención directa',
         },
+        {
+          label: 'WhatsApp',
+          value: contactPhone,
+          description: 'Mensajes para consultas rápidas sobre producto y pedidos.',
+          href: toWhatsAppHref(contactPhone),
+          icon: 'whatsapp' as const,
+          meta: 'Respuesta ágil',
+        },
       ]
     : []),
 ];
@@ -149,7 +157,7 @@ export const contactData = {
     },
     {
       question: '¿Cómo puedo contactar con KingBelt?',
-      answer: `Por email en ${contactEmail} o por teléfono. Indica el número de pedido, el modelo o el contexto de tu consulta para que podamos orientarte con más precisión.`,
+      answer: `Por email en ${contactEmail}, por teléfono o WhatsApp en ${contactPhone ?? 'nuestros canales de contacto'}. Indica el número de pedido, el modelo o el contexto de tu consulta para que podamos orientarte con más precisión.`,
       category: 'Atención',
       icon: 'mail',
     },
@@ -201,7 +209,7 @@ export const contactData = {
       {
         title: 'Atención directa',
         description: contactPhone
-          ? `Escríbenos a ${LEGAL_CONTACT_EMAIL} o llama al ${contactPhone}.`
+          ? `Escríbenos a ${LEGAL_CONTACT_EMAIL}, llama al ${contactPhone} o envíanos un WhatsApp.`
           : `Escríbenos a ${LEGAL_CONTACT_EMAIL}.`,
         label: 'Contacto',
         icon: 'mail',

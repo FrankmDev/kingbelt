@@ -11,16 +11,17 @@ interface Props {
 const { name, class: className = 'w-5 h-5', title, strokeWidth = 1.8 } = Astro.props;
 
 const hasTitle = Boolean(title);
+const isFilled = name === 'whatsapp' || name === 'instagram';
 ---
 
 <svg
   class={className}
   viewBox="0 0 24 24"
-  fill="none"
-  stroke="currentColor"
-  stroke-width={strokeWidth}
-  stroke-linecap="round"
-  stroke-linejoin="round"
+  fill={isFilled ? 'currentColor' : 'none'}
+  stroke={isFilled ? 'none' : 'currentColor'}
+  stroke-width={isFilled ? undefined : strokeWidth}
+  stroke-linecap={isFilled ? undefined : 'round'}
+  stroke-linejoin={isFilled ? undefined : 'round'}
   aria-hidden={hasTitle ? undefined : 'true'}
   role={hasTitle ? 'img' : undefined}
   set:html={iconPaths[name]}

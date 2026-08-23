@@ -18,8 +18,8 @@ export const site = {
   },
   social: {
     instagram: {
-      handle: '@kingbelt',
-      href: 'https://instagram.com/kingbelt',
+      handle: '@kingbelt_',
+      href: 'https://www.instagram.com/kingbelt_/?hl=es',
     },
   },
 } as const;

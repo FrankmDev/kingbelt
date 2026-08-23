@@ -1,5 +1,11 @@
 ---
-import { iconPaths, type IconName } from './icon-paths';
+import type { AstroComponentFactory } from 'astro/runtime/server/index.js';
+import Instagram from '../icons/Instagram.astro';
+import Mail from '../icons/Mail.astro';
+import Phone from '../icons/Phone.astro';
+import ShoppingBag from '../icons/ShoppingBag.astro';
+import Whatsapp from '../icons/Whatsapp.astro';
+import { iconPaths, type ComponentIconName, type IconName, type PathIconName } from './icon-paths';
 
 interface Props {
   name: IconName;
@@ -10,21 +16,37 @@ interface Props {
 
 const { name, class: className = 'w-5 h-5', title, strokeWidth = 1.8 } = Astro.props;
 
+const iconComponents = {
+  instagram: Instagram,
+  mail: Mail,
+  phone: Phone,
+  'shopping-bag': ShoppingBag,
+  whatsapp: Whatsapp,
+} as const satisfies Record<ComponentIconName, AstroComponentFactory>;
+
+const isComponentIcon = (iconName: IconName): iconName is ComponentIconName =>
+  iconName in iconComponents;
+
+const IconComponent = isComponentIcon(name) ? iconComponents[name] : undefined;
+const pathName = isComponentIcon(name) ? undefined : (name as PathIconName);
 const hasTitle = Boolean(title);
-const isFilled = name === 'whatsapp' || name === 'instagram';
 ---
 
-<svg
-  class={className}
-  viewBox="0 0 24 24"
-  fill={isFilled ? 'currentColor' : 'none'}
-  stroke={isFilled ? 'none' : 'currentColor'}
-  stroke-width={isFilled ? undefined : strokeWidth}
-  stroke-linecap={isFilled ? undefined : 'round'}
-  stroke-linejoin={isFilled ? undefined : 'round'}
-  aria-hidden={hasTitle ? undefined : 'true'}
-  role={hasTitle ? 'img' : undefined}
-  set:html={iconPaths[name]}
->
-  {hasTitle && <title>{title}</title>}
-</svg>
+{IconComponent ? (
+  <IconComponent class={className} title={title} strokeWidth={strokeWidth} />
+) : (
+  <svg
+    class={className}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width={strokeWidth}
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    aria-hidden={hasTitle ? undefined : 'true'}
+    role={hasTitle ? 'img' : undefined}
+    set:html={pathName ? iconPaths[pathName] : ''}
+  >
+    {hasTitle && <title>{title}</title>}
+  </svg>
+)}

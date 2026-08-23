@@ -30,12 +30,11 @@ const titleId = 'size-guide-mistakes-title';
       index={section.index}
       eyebrow={section.eyebrow}
       meta={section.meta}
+      title={section.title}
       titleId={titleId}
       body={section.body}
       class="size-guide-mistakes__header"
-    >
-      <Fragment slot="title">{section.title}</Fragment>
-    </SectionHeader>
+    />
 
     <div class="size-guide-mistakes__grid">
       {items.map((item, index) => (

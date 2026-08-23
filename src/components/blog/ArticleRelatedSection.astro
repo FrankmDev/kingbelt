@@ -33,14 +33,11 @@ const meta = section.meta?.includes('Artículos')
     <SectionHeader
       index={section.index}
       eyebrow={section.eyebrow}
+      title={section.title}
       body={section.body}
       meta={meta}
       titleId="article-related-title"
     >
-      <Fragment slot="title">
-        <span set:html={section.title} />
-      </Fragment>
-
       {section.cta && (
         <Fragment slot="aside">
           <Button href={section.cta.href} variant="outline" size="md">

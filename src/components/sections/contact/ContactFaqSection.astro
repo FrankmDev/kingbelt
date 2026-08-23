@@ -27,14 +27,11 @@ const { items, sidebar } = Astro.props;
     index="03"
     eyebrow="Preguntas frecuentes"
     meta="Ayuda"
+    title="Resolvemos las dudas <em>antes de que surjan</em>."
     titleId="contact-faq-title"
     body="Respuestas a dudas habituales. Si no encuentras lo que buscas, escríbenos desde el formulario."
     class="contact-faq__header"
-  >
-    <Fragment slot="title">
-      Resolvemos las dudas <em>antes de que surjan</em>.
-    </Fragment>
-  </SectionHeader>
+  />
 
   <aside slot="sidebar" class="contact-faq__sidebar" aria-label="Soporte">
     <MediaFrame
@@ -76,12 +73,6 @@ const { items, sidebar } = Astro.props;
   .contact-faq__header:global(.section-header) {
     width: 100%;
     margin-bottom: var(--kb-space-gap);
-  }
-
-  .contact-faq__header :global(.sh-title em) {
-    color: var(--color-king-accent);
-    font-style: italic;
-    font-weight: var(--kb-w-heading-strong);
   }
 
   .contact-faq__sidebar {

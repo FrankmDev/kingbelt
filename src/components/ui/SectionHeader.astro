@@ -127,7 +127,11 @@ const TitleTag = titleTag;
 
       {hasTitle && (
         <TitleTag id={titleId} class="sh-title font-display">
-          {Astro.slots.has('title') ? <slot name="title" /> : title}
+          {Astro.slots.has('title') ? (
+            <slot name="title" />
+          ) : (
+            <span set:html={title} />
+          )}
         </TitleTag>
       )}
     </div>
@@ -254,9 +258,11 @@ const TitleTag = titleTag;
   }
 
   .shh-title :global(em) {
+    display: inline;
     color: var(--shh-accent);
     font-style: italic;
     font-weight: var(--kb-w-heading-strong);
+    white-space: nowrap;
   }
 
   .shh-body {
@@ -528,10 +534,12 @@ const TitleTag = titleTag;
   }
 
   .section-header--kicker .sh-title :global(em) {
+    display: inline;
     color: var(--sh-accent);
     font-style: italic;
     font-weight: var(--kb-w-heading-strong);
     letter-spacing: -0.008em;
+    white-space: nowrap;
   }
 
   .section-header--kicker[data-tone='dark'] .sh-title :global(em) {

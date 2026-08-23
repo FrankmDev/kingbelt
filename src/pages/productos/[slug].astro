@@ -196,8 +196,17 @@ const breadcrumbs = [
   }
 
   .pdp__gallery {
+    display: flex;
+    flex-direction: column;
     width: 100%;
     max-width: 100%;
+    min-height: 0;
+  }
+
+  .pdp__gallery :global(.product-gallery) {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
   }
 
   .pdp__buy {
@@ -371,17 +380,16 @@ const breadcrumbs = [
     }
 
     .pdp__gallery {
-      display: flex;
-      align-items: start;
+      align-self: stretch;
+      height: 0;
+      min-height: 100%;
       margin-inline: 0;
-      position: sticky;
-      top: var(--kb-sticky-below-header);
     }
 
     .pdp__main {
       grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
       gap: clamp(2rem, 3.25vw, 2.75rem);
-      align-items: start;
+      align-items: stretch;
     }
 
     .pdp__related-grid {

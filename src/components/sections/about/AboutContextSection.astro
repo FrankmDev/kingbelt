@@ -39,14 +39,12 @@ const { banner } = data;
     <SectionHeader
       index="04"
       eyebrow={data.eyebrow}
+      title={data.title}
       meta="Vestuario / Integración"
       body={data.lede}
+      titleId="about-context-title"
       class="about-context__header"
-    >
-      <Fragment slot="title">
-        <span id="about-context-title" set:html={data.title} />
-      </Fragment>
-    </SectionHeader>
+    />
 
     <EditorialBanner
       id="about-context-banner"

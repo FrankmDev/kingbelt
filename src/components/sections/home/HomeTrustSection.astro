@@ -3,9 +3,15 @@ import SectionHeader from '@components/ui/SectionHeader.astro';
 import FeatureCard from '../../ui/FeatureCard.astro';
 import Button from '../../ui/Button.astro';
 import Icon from '../../ui/Icon.astro';
-import { trustSection } from '@content/home';
+import { trustSection, trustContactChannels } from '@content/home';
 
 const cardVariants = ['default', 'default', 'default'] as const;
+
+const hasChannels = (
+  item: (typeof trustSection.items)[number],
+): item is (typeof trustSection.items)[number] & {
+  channels: typeof trustContactChannels;
+} => 'channels' in item && Boolean(item.channels);
 ---
 
 <section
@@ -17,15 +23,12 @@ const cardVariants = ['default', 'default', 'default'] as const;
     <SectionHeader
       index={trustSection.index}
       eyebrow={trustSection.eyebrow}
+      title={trustSection.title}
       body={trustSection.body}
       meta={trustSection.meta}
       titleId="home-trust-title"
       class="home-trust__header"
     >
-      <Fragment slot="title">
-        <span set:html={trustSection.title} />
-      </Fragment>
-
       <Fragment slot="aside">
         <Button href={trustSection.cta.href} variant="outline" size="md">
           {trustSection.cta.label}
@@ -46,10 +49,33 @@ const cardVariants = ['default', 'default', 'default'] as const;
             title={item.title}
             description={item.text}
             meta={item.linkLabel}
-            href={item.href}
+            href={'href' in item ? item.href : undefined}
             variant={cardVariants[index] ?? 'default'}
             class="home-trust__card"
-          />
+          >
+            {hasChannels(item) && (
+              <ul class="home-trust__channels" aria-label="Canales de contacto">
+                {item.channels.map((channel) => (
+                  <li class="home-trust__channel-item">
+                    <a
+                      href={channel.href}
+                      class="home-trust__channel"
+                      target={channel.external ? '_blank' : undefined}
+                      rel={channel.external ? 'noopener noreferrer' : undefined}
+                    >
+                      <span class="home-trust__channel-icon" aria-hidden="true">
+                        <Icon name={channel.icon} class="h-3.5 w-3.5" strokeWidth={1.65} />
+                      </span>
+                      <span class="home-trust__channel-copy">
+                        <span class="home-trust__channel-label">{channel.label}</span>
+                        <span class="home-trust__channel-value">{channel.value}</span>
+                      </span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </FeatureCard>
         </li>
       ))}
     </ul>
@@ -105,6 +131,77 @@ const cardVariants = ['default', 'default', 'default'] as const;
   .home-trust__card:global(.feature-card) {
     width: 100%;
     min-height: 100%;
+  }
+
+  .home-trust__channels {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--kb-space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    min-width: 0;
+  }
+
+  .home-trust__channel-item {
+    min-width: 0;
+  }
+
+  .home-trust__channel {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--kb-space-2);
+    min-width: 0;
+    min-height: 100%;
+    padding: var(--kb-space-2) var(--kb-space-3);
+    border: 1px solid var(--kb-stroke-hairline);
+    border-radius: var(--kb-radius-xs);
+    background: color-mix(in srgb, var(--color-king-accent) 3%, transparent);
+    text-decoration: none;
+    transition:
+      border-color var(--kb-dur-fast) var(--kb-ease-out),
+      background-color var(--kb-dur-fast) var(--kb-ease-out),
+      transform var(--kb-dur-fast) var(--kb-ease-out);
+  }
+
+  .home-trust__channel-icon {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: var(--kb-radius-xs);
+    border: 1px solid color-mix(in srgb, var(--color-king-accent) 18%, transparent);
+    background: var(--color-king-bg);
+    color: var(--color-king-accent);
+  }
+
+  .home-trust__channel-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+    min-width: 0;
+    padding-top: 0.125rem;
+  }
+
+  .home-trust__channel-label {
+    font-size: var(--kb-text-2xs);
+    font-weight: var(--kb-w-medium);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-king-muted);
+    line-height: 1.2;
+  }
+
+  .home-trust__channel-value {
+    font-size: var(--kb-text-xs);
+    font-weight: var(--kb-w-medium);
+    line-height: 1.35;
+    color: var(--color-king-text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .home-trust__foot {
@@ -193,6 +290,10 @@ const cardVariants = ['default', 'default', 'default'] as const;
       border-color: transparent;
       box-shadow: none;
     }
+
+    .home-trust__channels {
+      grid-template-columns: minmax(0, 1fr);
+    }
   }
 
   @media (min-width: 48rem) {
@@ -207,6 +308,16 @@ const cardVariants = ['default', 'default', 'default'] as const;
     .home-trust__shortcut:hover {
       color: var(--color-king-text);
       text-decoration-color: var(--color-king-accent);
+    }
+
+    .home-trust__channel:hover {
+      border-color: color-mix(in srgb, var(--color-king-accent) 35%, transparent);
+      background: color-mix(in srgb, var(--color-king-accent) 6%, transparent);
+      transform: translateY(-1px);
+    }
+
+    .home-trust__channel:hover .home-trust__channel-value {
+      color: var(--color-king-accent);
     }
   }
 

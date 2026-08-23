@@ -38,12 +38,11 @@ const titleId = 'help-hub-resources-title';
       index={section.index}
       eyebrow={section.eyebrow}
       meta={section.meta}
+      title={section.title}
       titleId={titleId}
       body={section.body}
       class="help-hub-resources__header"
-    >
-      <Fragment slot="title">{section.title}</Fragment>
-    </SectionHeader>
+    />
 
     <div class="help-hub-resources__grid">
       {items.map((item, index) => (

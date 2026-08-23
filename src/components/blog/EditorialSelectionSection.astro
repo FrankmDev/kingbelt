@@ -34,14 +34,11 @@ const [lead, ...secondary] = posts;
       <SectionHeader
         index={section.index}
         eyebrow={section.eyebrow}
+        title={section.title}
         body={section.body}
         meta={section.meta}
         titleId="blog-selection-title"
-      >
-        <Fragment slot="title">
-          <span set:html={section.title} />
-        </Fragment>
-      </SectionHeader>
+      />
     )}
 
     {lead && (

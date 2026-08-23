@@ -32,15 +32,12 @@ const cards = featured ? [
     <SectionHeader
       index={categoriesSection.index}
       eyebrow={categoriesSection.eyebrow}
+      title={categoriesSection.title}
       body={categoriesSection.body}
       meta={categoriesSection.meta}
       titleId="home-categories-title"
       class="home-categories__header"
-    >
-      <Fragment slot="title">
-        <span set:html={categoriesSection.title} />
-      </Fragment>
-    </SectionHeader>
+    />
 
     <div class="home-categories__grid" style={`--secondary-count: ${Math.max(secondary.length, 1)}`}>
       {cards.map(({ category, index, featured: isFeatured }) => (

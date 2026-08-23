@@ -16,14 +16,12 @@ const layerCount = principles.length;
     <SectionHeader
       index={standardsSection.index}
       eyebrow={standardsSection.eyebrow}
+      title={standardsSection.title}
       body={standardsSection.lede}
       meta={standardsSection.meta}
+      titleId="home-standards-title"
       class="home-standards__header"
-    >
-      <Fragment slot="title">
-        <span id="home-standards-title" set:html={standardsSection.title} />
-      </Fragment>
-    </SectionHeader>
+    />
 
     <div class="home-standards__layout">
       <MediaFrame

@@ -88,7 +88,7 @@ export const FREE_SHIPPING_LABEL = 'Envíos gratuitos';
 export const FREE_SHIPPING_DETAIL =
   'Envío gratuito sin coste adicional en la compra ordinaria.';
 export const DELIVERY_PROMISE = 'Entrega en 24-48 horas';
-export const CART_CHECKOUT_NOTE = `${FREE_SHIPPING_LABEL}. ${DELIVERY_PROMISE}. Los impuestos se calculan en el checkout.`;
+export const CART_CHECKOUT_NOTE = `${FREE_SHIPPING_LABEL}. ${DELIVERY_PROMISE}.`;
 
 export const businessFacts: BusinessFacts = {
   legalName: {

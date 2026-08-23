@@ -32,12 +32,11 @@ const titleId = 'size-guide-intro-title';
       index={section.index}
       eyebrow={section.eyebrow}
       meta={section.meta}
+      title={section.title}
       titleId={titleId}
       body={section.body}
       class="size-guide-intro__header"
-    >
-      <Fragment slot="title">{section.title}</Fragment>
-    </SectionHeader>
+    />
 
     <MediaFrame
       src={section.image.src}

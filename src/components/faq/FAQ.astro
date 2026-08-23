@@ -567,6 +567,26 @@ const counts = items.reduce<Record<string, number>>((accumulator, item) => {
     color: rgba(255, 255, 255, 0.45);
   }
 
+  .faq-shell :global(.section-header--chapter .shh-title) {
+    max-width: none;
+    text-wrap: pretty;
+  }
+
+  .faq-shell :global(.section-header--chapter .shh-title em) {
+    display: inline;
+    white-space: nowrap;
+  }
+
+  .faq-shell :global(.section-header--chapter .shh-body) {
+    max-width: min(56ch, 100%);
+  }
+
+  @media (min-width: 64rem) {
+    .faq-shell :global(.section-header--chapter .shh-title) {
+      white-space: nowrap;
+    }
+  }
+
   .faq-list {
     display: flex;
     flex-direction: column;

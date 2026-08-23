@@ -61,12 +61,11 @@ const layerCount = items.length;
       index={index}
       eyebrow={eyebrow}
       meta={badge ? badge.label : 'Tu compra'}
+      title={title}
       titleId={titleId}
       body={description}
       class="purchase-info__header"
     >
-      <Fragment slot="title">{title}</Fragment>
-
       {cta && (
         <Fragment slot="aside">
           <Button href={cta.href} variant="outline" size="md">

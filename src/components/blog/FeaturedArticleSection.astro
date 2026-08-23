@@ -23,6 +23,8 @@ const {
   class: className = '',
 } = Astro.props;
 const href = `/blog/${post.slug}`;
+const topics = post.sections.slice(0, 3).map((section) => section.title);
+const sectionCount = post.sections.length;
 ---
 
 <section
@@ -42,16 +44,13 @@ const href = `/blog/${post.slug}`;
     {showHeader && (
       <SectionHeader
         eyebrow="El cuaderno KingBelt"
+        title="Una lectura para empezar <em>por lo esencial</em>."
         body="Guías sobre proporción, materiales, cuidado y estilo masculino. Información directa para entender cada pieza antes y después de usarla."
         meta="Cuaderno 01 / Verano 2026"
         titleId="blog-featured-title"
         align="center"
         class="blog-featured-header"
-      >
-        <Fragment slot="title">
-          Una lectura para empezar <em>por lo esencial</em>.
-        </Fragment>
-      </SectionHeader>
+      />
     )}
 
     <Panel variant="steel" padding="none" class="blog-featured-cover">
@@ -76,14 +75,17 @@ const href = `/blog/${post.slug}`;
             Artículo destacado
           </span>
           <span class="blog-featured-cover__image-caption kb-meta-label">
-            Objeto / proporción / uso
+            {post.category} · {post.readingTime}
           </span>
           <span class="blog-featured-cover__image-folio" aria-hidden="true">01</span>
         </a>
 
         <div class="blog-featured-cover__content">
           <header class="blog-featured-cover__head">
-            <p class="kb-eyebrow kb-eyebrow-lined blog-featured-cover__eyebrow">En portada</p>
+            <div class="blog-featured-cover__head-bar">
+              <p class="kb-eyebrow kb-eyebrow-lined blog-featured-cover__eyebrow">En portada</p>
+              <span class="blog-featured-cover__folio kb-meta-label" aria-hidden="true">01</span>
+            </div>
             <ArticleMeta
               category={post.category}
               date={post.dateLabel}
@@ -98,20 +100,31 @@ const href = `/blog/${post.slug}`;
             <span></span>
           </div>
 
-          <h3 id="blog-featured-article-title" class="blog-featured-cover__title">
-            <a href={href}>{post.title}</a>
-          </h3>
+          <div class="blog-featured-cover__body">
+            <h3 id="blog-featured-article-title" class="blog-featured-cover__title">
+              <a href={href}>{post.title}</a>
+            </h3>
 
-          <p class="blog-featured-cover__excerpt">{post.excerpt}</p>
+            <p class="blog-featured-cover__dek">{post.introduction}</p>
 
-          <ul class="blog-featured-cover__topics" aria-label="Temas del artículo">
-            <li>Ancho</li>
-            <li>Trabillas</li>
-            <li>Hebilla</li>
-          </ul>
+            <p class="blog-featured-cover__excerpt">{post.excerpt}</p>
+
+            {topics.length > 0 && (
+              <ul class="blog-featured-cover__topics" aria-label="Apartados del artículo">
+                {topics.map((topic) => (
+                  <li>{topic}</li>
+                ))}
+              </ul>
+            )}
+          </div>
 
           <footer class="blog-featured-cover__foot">
-            <span class="blog-featured-cover__edition kb-meta-label">Revista / 01</span>
+            <div class="blog-featured-cover__foot-meta">
+              <span class="blog-featured-cover__edition kb-meta-label">Revista / 01</span>
+              <span class="blog-featured-cover__scope kb-meta-label">
+                {sectionCount} apartados
+              </span>
+            </div>
             <Button href={href} variant="surface" size="md" class="blog-featured-cover__button">
               Leer artículo
               <Icon name="arrow-right" />
@@ -252,25 +265,29 @@ const href = `/blog/${post.slug}`;
     position: relative;
     display: flex;
     flex-direction: column;
-    padding: var(--kb-space-7);
+    gap: var(--kb-space-5);
+    padding: var(--kb-space-6);
     border-top: 1px solid var(--kb-stroke-soft);
   }
 
   .blog-featured--embedded .blog-featured-cover__content {
     padding: var(--kb-space-5);
-  }
-
-  .blog-featured--embedded .blog-featured-cover__reading-track,
-  .blog-featured--embedded .blog-featured-cover__topics {
-    display: none;
+    gap: var(--kb-space-4);
   }
 
   .blog-featured--embedded .blog-featured-cover__title {
     max-width: none;
-    margin-top: var(--kb-space-4);
     font-size: clamp(1.375rem, 3.2vw, 1.875rem);
     line-height: 1.12;
     letter-spacing: -0.018em;
+  }
+
+  .blog-featured--embedded .blog-featured-cover__dek {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
   }
 
   .blog-featured--embedded .blog-featured-cover__excerpt {
@@ -279,18 +296,13 @@ const href = `/blog/${post.slug}`;
     line-height: 1.62;
     display: -webkit-box;
     -webkit-box-orient: vertical;
-    -webkit-line-clamp: 3;
-    line-clamp: 3;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
     overflow: hidden;
   }
 
   .blog-featured--embedded .blog-featured-cover__foot {
-    margin-top: var(--kb-space-5);
     padding-top: var(--kb-space-4);
-  }
-
-  .blog-featured--embedded .blog-featured-cover__head {
-    gap: var(--kb-space-3);
   }
 
   .blog-featured--embedded .blog-featured-cover__image-folio,
@@ -323,7 +335,21 @@ const href = `/blog/${post.slug}`;
     display: flex;
     align-items: flex-start;
     flex-direction: column;
+    gap: var(--kb-space-3);
+  }
+
+  .blog-featured-cover__head-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     gap: var(--kb-space-4);
+    width: 100%;
+  }
+
+  .blog-featured-cover__folio {
+    flex-shrink: 0;
+    color: rgba(255, 255, 255, 0.38);
+    letter-spacing: 0.16em;
   }
 
   .blog-featured-cover__eyebrow {
@@ -343,7 +369,6 @@ const href = `/blog/${post.slug}`;
     display: grid;
     grid-template-columns: 1fr 0.62fr 0.28fr;
     gap: var(--kb-space-2);
-    margin-top: var(--kb-space-5);
   }
 
   .blog-featured-cover__reading-track span {
@@ -355,13 +380,20 @@ const href = `/blog/${post.slug}`;
     background: var(--color-king-on-dark-line);
   }
 
+  .blog-featured-cover__body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--kb-space-4);
+    min-width: 0;
+  }
+
   .blog-featured-cover__title {
-    max-width: 15ch;
-    margin: var(--kb-space-8) 0 var(--kb-space-5);
-    font-size: clamp(2rem, 6vw, 3.75rem);
+    max-width: 22ch;
+    margin: 0;
+    font-size: clamp(1.75rem, 5vw, 3rem);
     font-weight: var(--kb-w-heading-light);
-    line-height: 1.04;
-    letter-spacing: -0.025em;
+    line-height: 1.06;
+    letter-spacing: -0.022em;
     text-wrap: balance;
   }
 
@@ -377,11 +409,23 @@ const href = `/blog/${post.slug}`;
     outline-offset: 0.2em;
   }
 
-  .blog-featured-cover__excerpt {
-    max-width: 40ch;
+  .blog-featured-cover__dek {
+    max-width: 48ch;
     margin: 0;
-    font-size: var(--kb-text-body-lg);
-    line-height: 1.7;
+    font-family: var(--font-display);
+    font-size: clamp(1.05rem, 2vw, 1.2rem);
+    font-style: italic;
+    font-weight: 400;
+    line-height: 1.42;
+    color: rgba(255, 255, 255, 0.82);
+    text-wrap: pretty;
+  }
+
+  .blog-featured-cover__excerpt {
+    max-width: 46ch;
+    margin: 0;
+    font-size: var(--kb-text-sm);
+    line-height: 1.65;
     color: var(--color-king-secondary);
   }
 
@@ -389,20 +433,19 @@ const href = `/blog/${post.slug}`;
     display: flex;
     flex-wrap: wrap;
     gap: var(--kb-space-2);
-    margin: var(--kb-space-6) 0 0;
+    margin: 0;
     padding: 0;
     list-style: none;
   }
 
   .blog-featured-cover__topics li {
-    padding: 0.4rem 0.65rem;
+    padding: 0.35rem 0.6rem;
     border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: var(--kb-radius-xs);
-    font-size: var(--kb-micro-size);
-    font-weight: var(--kb-label-weight);
-    line-height: 1;
-    letter-spacing: var(--kb-micro-tracking);
-    text-transform: uppercase;
+    font-size: var(--kb-text-2xs);
+    font-weight: var(--kb-w-medium);
+    line-height: 1.25;
+    letter-spacing: 0.01em;
     color: var(--color-king-secondary);
   }
 
@@ -410,13 +453,21 @@ const href = `/blog/${post.slug}`;
     display: flex;
     align-items: flex-start;
     flex-direction: column;
-    gap: var(--kb-space-5);
-    margin-top: var(--kb-space-8);
-    padding-top: var(--kb-space-6);
+    gap: var(--kb-space-4);
+    margin-top: var(--kb-space-2);
+    padding-top: var(--kb-space-5);
     border-top: 1px solid var(--kb-stroke-soft);
   }
 
-  .blog-featured-cover__edition {
+  .blog-featured-cover__foot-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--kb-space-2) var(--kb-space-4);
+  }
+
+  .blog-featured-cover__edition,
+  .blog-featured-cover__scope {
     color: var(--color-king-secondary);
   }
 
@@ -451,7 +502,7 @@ const href = `/blog/${post.slug}`;
   }
 
   @media (min-width: 48rem) {
-    .blog-featured-cover__head,
+    .blog-featured-cover__head-bar,
     .blog-featured-cover__foot {
       align-items: center;
       flex-direction: row;
@@ -470,22 +521,26 @@ const href = `/blog/${post.slug}`;
     }
 
     .blog-featured-cover__media {
-      align-self: start;
+      align-self: stretch;
       width: 100%;
+      min-height: 100%;
+      aspect-ratio: auto;
     }
 
     .blog-featured-cover__content {
-      padding: clamp(2.25rem, 4vw, 4.5rem);
+      justify-content: flex-start;
+      gap: var(--kb-space-5);
+      padding: clamp(1.75rem, 3vw, 2.75rem);
       border-top: 0;
       border-inline-start: 1px solid var(--kb-stroke-soft);
     }
 
     .blog-featured--embedded .blog-featured-cover__content {
-      padding: var(--kb-space-6);
+      padding: var(--kb-space-5);
     }
 
     .blog-featured-cover__content::before {
-      top: var(--kb-space-9);
+      top: var(--kb-space-7);
       left: -3px;
       width: 5px;
       height: 5px;
@@ -495,18 +550,20 @@ const href = `/blog/${post.slug}`;
     }
 
     .blog-featured-cover__title {
-      margin-top: auto;
-      padding-top: var(--kb-space-8);
+      max-width: 20ch;
+      font-size: clamp(1.875rem, 2.8vw, 2.75rem);
     }
 
     .blog-featured--embedded .blog-featured-cover__title {
-      margin-top: var(--kb-space-5);
-      padding-top: 0;
       font-size: clamp(1.5rem, 2.4vw, 2rem);
     }
 
-    .blog-featured-cover__foot {
-      margin-top: auto;
+    .blog-featured-cover__dek {
+      max-width: 42ch;
+    }
+
+    .blog-featured-cover__excerpt {
+      max-width: 44ch;
     }
   }
 

@@ -47,14 +47,11 @@ const {
       <SectionHeader
         index={section.index}
         eyebrow={section.eyebrow}
+        title={section.title}
         body={section.body}
         meta={section.meta}
         titleId={titleId}
       >
-        <Fragment slot="title">
-          <span set:html={section.title} />
-        </Fragment>
-
         {cta && (
           <Fragment slot="aside">
             <Button href={cta.href} variant="outline" size="md">

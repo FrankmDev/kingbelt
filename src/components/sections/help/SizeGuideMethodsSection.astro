@@ -31,12 +31,11 @@ const titleId = 'size-guide-methods-title';
       index={section.index}
       eyebrow={section.eyebrow}
       meta={section.meta}
+      title={section.title}
       titleId={titleId}
       body={section.body}
       class="size-guide-methods__header"
-    >
-      <Fragment slot="title">{section.title}</Fragment>
-    </SectionHeader>
+    />
 
     <SizeGuideSteps methods={methods} />
   </div>

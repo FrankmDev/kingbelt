@@ -120,14 +120,24 @@ const slideSizes = '(min-width: 90rem) 32rem, (min-width: 64rem) 28vw, (min-widt
   .product-gallery {
     --gallery-thumb-width: 4.5rem;
     --gallery-gutter: var(--kb-space-3);
+    --gallery-stage-ratio: 4 / 5;
+    --gallery-radius: var(--kb-card-radius);
+    display: flex;
+    flex-direction: column;
     width: 100%;
     max-width: 100%;
     min-width: 0;
+    min-height: 0;
+    height: 100%;
   }
 
   .product-gallery__set {
-    display: grid;
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
     min-width: 0;
+    min-height: 0;
+    height: 100%;
   }
 
   .product-gallery__set[hidden] {
@@ -136,18 +146,34 @@ const slideSizes = '(min-width: 90rem) 32rem, (min-width: 64rem) 28vw, (min-widt
 
   .product-gallery__layout {
     display: grid;
-    grid-template-columns: var(--gallery-thumb-width) auto;
-    grid-template-rows: repeat(var(--gallery-thumb-count, 3), auto);
+    grid-template-columns: var(--gallery-thumb-width) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
     column-gap: var(--gallery-gutter);
-    row-gap: var(--gallery-gutter);
     align-items: stretch;
-    width: fit-content;
+    flex: 1 1 auto;
+    width: 100%;
     max-width: 100%;
     min-width: 0;
+    min-height: 0;
+    height: 100%;
   }
 
   .product-gallery__thumbs {
-    display: contents;
+    display: flex;
+    flex-direction: column;
+    gap: var(--gallery-gutter);
+    grid-column: 1;
+    grid-row: 1;
+    min-height: 0;
+    height: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: none;
+  }
+
+  .product-gallery__thumbs::-webkit-scrollbar {
+    display: none;
   }
 
   .product-gallery__thumbs[hidden] {
@@ -156,31 +182,27 @@ const slideSizes = '(min-width: 90rem) 32rem, (min-width: 64rem) 28vw, (min-widt
 
   .product-gallery__layout:has(.product-gallery__thumbs[hidden]) {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: auto;
-    width: 100%;
   }
 
   .product-gallery__stage {
     grid-column: 2;
-    grid-row: 1 / -1;
+    grid-row: 1;
     position: relative;
     overflow: hidden;
     box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    min-height: 0;
     height: 100%;
-    width: auto;
-    max-width: 100%;
-    aspect-ratio: 4 / 5;
+    aspect-ratio: var(--gallery-stage-ratio);
     border: 1px solid var(--kb-stroke-hairline);
-    border-radius: var(--kb-card-radius);
+    border-radius: var(--gallery-radius);
     background: var(--color-king-bone);
     box-shadow: var(--kb-shadow-xs);
   }
 
   .product-gallery__layout:has(.product-gallery__thumbs[hidden]) .product-gallery__stage {
     grid-column: 1;
-    grid-row: auto;
-    width: min(100%, 26rem);
-    height: auto;
   }
 
   .product-gallery__stage::after {
@@ -204,13 +226,13 @@ const slideSizes = '(min-width: 90rem) 32rem, (min-width: 64rem) 28vw, (min-widt
 
   .product-gallery__thumb {
     position: relative;
-    grid-column: 1;
+    flex: 0 0 auto;
     display: block;
     width: 100%;
-    aspect-ratio: 4 / 5;
+    aspect-ratio: var(--gallery-stage-ratio);
     overflow: hidden;
     border: 1px solid var(--kb-stroke-hairline);
-    border-radius: var(--kb-radius-xs);
+    border-radius: var(--gallery-radius);
     background: var(--color-king-bone);
     cursor: pointer;
     transition:
@@ -234,11 +256,18 @@ const slideSizes = '(min-width: 90rem) 32rem, (min-width: 64rem) 28vw, (min-widt
       --gallery-thumb-width: 3.25rem;
     }
 
+    .product-gallery,
+    .product-gallery__set {
+      height: auto;
+    }
+
     .product-gallery__layout {
       display: flex;
       flex-direction: column;
+      flex: none;
       width: 100%;
       max-width: 100%;
+      height: auto;
       align-items: stretch;
     }
 
@@ -249,6 +278,7 @@ const slideSizes = '(min-width: 90rem) 32rem, (min-width: 64rem) 28vw, (min-widt
       width: 100%;
       max-width: 100%;
       height: auto;
+      aspect-ratio: var(--gallery-stage-ratio);
     }
 
     .product-gallery__thumbs {
@@ -256,7 +286,10 @@ const slideSizes = '(min-width: 90rem) 32rem, (min-width: 64rem) 28vw, (min-widt
       flex-direction: row;
       order: 2;
       gap: var(--kb-space-2);
+      height: auto;
+      min-height: 0;
       overflow-x: auto;
+      overflow-y: hidden;
       overscroll-behavior-x: contain;
       scroll-snap-type: x proximity;
       padding-block: 2px;
@@ -280,14 +313,29 @@ const slideSizes = '(min-width: 90rem) 32rem, (min-width: 64rem) 28vw, (min-widt
     .product-gallery {
       --gallery-thumb-width: 7.5rem;
       --gallery-gutter: var(--kb-space-4);
-      width: fit-content;
+      width: 100%;
+      height: 100%;
     }
 
     .product-gallery__layout {
-      display: grid;
-      grid-template-columns: var(--gallery-thumb-width) auto;
-      grid-template-rows: repeat(var(--gallery-thumb-count, 3), auto);
-      width: fit-content;
+      width: 100%;
+      height: 100%;
+      grid-template-columns: var(--gallery-thumb-width) minmax(0, 1fr);
+    }
+
+    .product-gallery__thumbs {
+      overflow: hidden;
+    }
+
+    .product-gallery__thumb {
+      flex: 1 1 0;
+      min-height: 0;
+      aspect-ratio: auto;
+    }
+
+    .product-gallery__stage {
+      height: 100%;
+      aspect-ratio: auto;
     }
   }
 

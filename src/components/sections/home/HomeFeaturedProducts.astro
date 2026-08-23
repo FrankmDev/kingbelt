@@ -22,14 +22,11 @@ const { products } = Astro.props;
     <SectionHeader
       index={featuredSection.index}
       eyebrow={featuredSection.eyebrow}
+      title={featuredSection.title}
       body={featuredSection.body}
       meta={featuredSection.meta}
       titleId="home-featured-title"
     >
-      <Fragment slot="title">
-        <span set:html={featuredSection.title} />
-      </Fragment>
-
       <Fragment slot="aside">
         <Button href={featuredSection.cta.href} variant="outline" size="md">
           {featuredSection.cta.label}

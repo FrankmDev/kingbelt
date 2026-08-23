@@ -1,19 +1,70 @@
-import { confirmed, businessFacts, DELIVERY_PROMISE, FREE_SHIPPING_LABEL } from '@config/business';
+import {
+  confirmed,
+  businessFacts,
+  DELIVERY_PROMISE,
+  FREE_SHIPPING_LABEL,
+  toTelHref,
+  toWhatsAppHref,
+} from '@config/business';
+import { site } from '@config/site';
+import type { IconName } from '../components/ui/icon-paths';
 
 const madeInSpain = confirmed(businessFacts.madeInSpain);
+const contactEmail = confirmed(businessFacts.email) ?? site.contact.email;
+const contactPhone = confirmed(businessFacts.contactPhone);
+
+export const trustContactChannels: readonly {
+  label: string;
+  value: string;
+  href: string;
+  external: boolean;
+  icon: IconName;
+}[] = [
+  {
+    label: 'Email',
+    value: contactEmail,
+    href: `mailto:${contactEmail}`,
+    external: false,
+    icon: 'mail',
+  },
+  ...(contactPhone
+    ? [
+        {
+          label: 'Teléfono',
+          value: contactPhone,
+          href: toTelHref(contactPhone),
+          external: false,
+          icon: 'phone' as IconName,
+        },
+        {
+          label: 'WhatsApp',
+          value: contactPhone,
+          href: toWhatsAppHref(contactPhone),
+          external: true,
+          icon: 'whatsapp' as IconName,
+        },
+      ]
+    : []),
+  {
+    label: 'Instagram',
+    value: site.social.instagram.handle,
+    href: site.social.instagram.href,
+    external: true,
+    icon: 'instagram',
+  },
+];
 
 export const hero = {
   brand: 'KingBelt',
-  badge: 'Producto Nacional',
+  badge: madeInSpain ? `Hecho a mano en ${madeInSpain}` : 'Hecho a mano en España',
   subtitleLines: [
-    { text: 'Cinturones de cuero ', variant: 'plain' as const },
-    { text: 'con criterio.', variant: 'em' as const },
+    { text: 'Cuero con cuerpo, ', variant: 'plain' as const },
+    { text: 'uso diario.', variant: 'em' as const },
   ],
   signals: [
     { label: FREE_SHIPPING_LABEL, href: '/envios-y-devoluciones' },
     { label: DELIVERY_PROMISE, href: '/envios-y-devoluciones' },
     { label: 'Fabricación artesanal', href: '/sobre' },
-    { label: madeInSpain ? `Hecho en ${madeInSpain}` : 'Hecho en España', href: '/sobre' },
   ] as const,
   index: '01',
   primaryCta: { label: 'Ver colección', href: '/productos' },
@@ -31,40 +82,21 @@ export const brandStatement = {
     statement: 'Lo que debe notarse en la pieza, no solo en el escaparate.',
   },
   body: 'Piezas con carácter para el día a día: proporción contenida, materiales con presencia y un acabado que se nota al usarlas.',
-  kicker: 'Criterio',
-  quote: 'Criterio de producto antes que discurso de escaparate.',
   highlights: [
     {
-      label: 'Catálogo',
-      text: 'Selección reducida: cada referencia tiene que merecer su sitio.',
-    },
-    {
-      label: 'Taller',
-      text: 'Fabricación artesanal con control de proporción, cierre y acabado.',
-    },
-    {
-      label: 'Origen',
-      text: madeInSpain ? `Hecho en ${madeInSpain}.` : 'Hecho en España.',
-    },
-  ] as const,
-  signals: [
-    {
       number: '01',
-      label: 'Curaduría',
-      meta: 'Selección',
-      text: 'Catálogo reducido: cada referencia tiene que merecer su sitio.',
+      label: 'Catálogo',
+      text: 'Selección reducida con criterio.',
     },
     {
       number: '02',
-      label: 'Proporción',
-      meta: 'Integración',
-      text: 'Presencia contenida que completa el conjunto sin dominarlo.',
+      label: 'Taller',
+      text: 'Acabado artesanal a mano.',
     },
     {
       number: '03',
-      label: 'Criterio',
-      meta: 'Material / Uso',
-      text: 'Piezas seleccionadas con atención al material, al ajuste y al uso real.',
+      label: 'Origen',
+      text: madeInSpain ? `Hecho a mano en ${madeInSpain}.` : 'Hecho a mano en España.',
     },
   ] as const,
   shortcuts: [
@@ -183,10 +215,10 @@ export const trustSection = {
     {
       number: '03',
       title: 'Atención directa',
-      text: 'Escríbenos con tu duda concreta por email o Instagram.',
+      text: 'Escríbenos con tu duda por email, teléfono, WhatsApp o Instagram.',
       meta: 'Contacto',
-      href: '/contacto',
       linkLabel: 'Contactar',
+      channels: trustContactChannels,
     },
   ],
 } as const;

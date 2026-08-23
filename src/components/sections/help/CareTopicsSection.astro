@@ -37,13 +37,12 @@ const isDark = chapter.tone === 'dark';
       index={chapter.index}
       eyebrow={chapter.eyebrow}
       meta={chapter.meta}
+      title={chapter.title}
       titleId={titleId}
       body={chapter.body}
       tone={isDark ? 'dark' : 'light'}
       class="care-topics__header"
-    >
-      <Fragment slot="title">{chapter.title}</Fragment>
-    </SectionHeader>
+    />
 
     <ol class="care-topics__list">
       {items.map((item, index) => (

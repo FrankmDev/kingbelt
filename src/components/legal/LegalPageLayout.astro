@@ -50,13 +50,12 @@ const hasIntro = status === 'published' && Astro.slots.has('intro');
       <SectionHeader
         index={section.index}
         eyebrow={section.eyebrow}
+        title={section.title}
         meta={statusMeta}
         titleId={titleId}
         body={section.body}
         class="legal-page__header"
-      >
-        <Fragment slot="title">{section.title}</Fragment>
-      </SectionHeader>
+      />
 
       {(version || updatedAt) && (
         <p class="legal-page__version kb-meta-label">

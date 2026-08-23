@@ -1,13 +1,13 @@
 ---
 import SectionHeader from '@components/ui/SectionHeader.astro';
 import Button from '../../ui/Button.astro';
-import FeatureCard from '../../ui/FeatureCard.astro';
 import Icon from '../../ui/Icon.astro';
 import MediaFrame from '../../ui/MediaFrame.astro';
 import Panel from '../../ui/Panel.astro';
 import { brandStatement } from '@content/home';
 
 const { panel, highlights, shortcuts } = brandStatement;
+const layerCount = highlights.length;
 ---
 
 <section
@@ -19,15 +19,12 @@ const { panel, highlights, shortcuts } = brandStatement;
     <SectionHeader
       index={brandStatement.index}
       eyebrow={brandStatement.eyebrow}
+      title={brandStatement.title}
       body={brandStatement.lede}
       meta={brandStatement.meta}
       titleId="home-brand-title"
       class="home-brand__header"
     >
-      <Fragment slot="title">
-        <span set:html={brandStatement.title} />
-      </Fragment>
-
       <Fragment slot="aside">
         <Button href={brandStatement.cta.href} variant="outline" size="md">
           {brandStatement.cta.label}
@@ -41,46 +38,52 @@ const { panel, highlights, shortcuts } = brandStatement;
 
     <div class="home-brand__layout">
       <Panel padding="lg" class="home-brand__panel">
-        <div class="kb-origin-panel">
-          <header class="home-brand__panel-head">
-            <p class="kb-eyebrow kb-eyebrow-lined text-king-accent">{panel.eyebrow}</p>
-            <p class="home-brand__statement font-display">{panel.statement}</p>
-          </header>
-
-          <div class="kb-origin-panel__main home-brand__panel-main">
-            <p class="kb-meta-label text-king-muted kb-origin-panel__kicker">{brandStatement.kicker}</p>
-            <p class="body-copy-lg kb-origin-panel__body">{brandStatement.body}</p>
+        <header class="home-brand__panel-head">
+          <div class="home-brand__panel-bar">
+            <p class="kb-eyebrow kb-eyebrow-lined home-brand__eyebrow">{panel.eyebrow}</p>
+            <span class="kb-meta-label home-brand__folio" aria-hidden="true">
+              {String(layerCount).padStart(2, '0')}
+            </span>
           </div>
 
-          <ul class="home-brand__highlights" aria-label="Datos de la marca">
-            {highlights.map((item) => (
-              <li class="home-brand__highlight">
-                <span class="home-brand__highlight-label kb-meta-label">{item.label}</span>
-                <p class="home-brand__highlight-text body-copy text-king-muted">{item.text}</p>
-              </li>
-            ))}
-          </ul>
+          <p id="home-brand-panel-title" class="home-brand__statement">
+            {panel.statement}
+          </p>
 
-          <blockquote class="kb-origin-panel__quote home-brand__quote">
-            <p>{brandStatement.quote}</p>
-          </blockquote>
+          <p class="home-brand__panel-lede">{brandStatement.body}</p>
+        </header>
 
-          {shortcuts.length > 0 && (
-            <footer class="home-brand__foot">
-              <nav aria-label="Accesos de la marca">
-                <ul class="home-brand__shortcut-list">
-                  {shortcuts.map((shortcut) => (
-                    <li>
-                      <a href={shortcut.href} class="home-brand__shortcut">
-                        {shortcut.label}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </nav>
-            </footer>
-          )}
-        </div>
+        <ol class="home-brand__facts">
+          {highlights.map((item, index) => (
+            <li class="home-brand__fact">
+              <div class="home-brand__fact-rail" aria-hidden="true">
+                <span class="home-brand__fact-num">{item.number}</span>
+                {index < layerCount - 1 && <span class="home-brand__fact-line"></span>}
+              </div>
+
+              <div class="home-brand__fact-copy">
+                <h3 class="home-brand__fact-label">{item.label}</h3>
+                <p class="home-brand__fact-text">{item.text}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+
+        {shortcuts.length > 0 && (
+          <footer class="home-brand__foot">
+            <nav aria-label="Accesos de la marca">
+              <ul class="home-brand__shortcut-list">
+                {shortcuts.map((shortcut) => (
+                  <li>
+                    <a href={shortcut.href} class="home-brand__shortcut kb-action-label">
+                      {shortcut.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          </footer>
+        )}
       </Panel>
 
       <MediaFrame
@@ -97,20 +100,6 @@ const { panel, highlights, shortcuts } = brandStatement;
         class="home-brand__media"
       />
     </div>
-
-    <ul class="home-brand__signals">
-      {brandStatement.signals.map((signal) => (
-        <li class="home-brand__signal-item">
-          <FeatureCard
-            number={signal.number}
-            eyebrow={signal.meta}
-            title={signal.label}
-            description={signal.text}
-            class="home-brand__signal-card"
-          />
-        </li>
-      ))}
-    </ul>
   </div>
 </section>
 
@@ -139,89 +128,147 @@ const { panel, highlights, shortcuts } = brandStatement;
   }
 
   .home-brand__panel {
+    display: flex;
     min-width: 0;
+    flex-direction: column;
   }
 
   .home-brand__panel-head {
     display: flex;
     flex-direction: column;
     gap: var(--kb-space-3);
-    margin-bottom: var(--kb-space-5);
-    min-width: 0;
-  }
-
-  .home-brand__panel-head .kb-eyebrow {
-    margin: 0;
-  }
-
-  .home-brand__statement {
-    margin: 0;
-    max-width: 28ch;
-    font-size: var(--kb-text-h4);
-    font-weight: var(--kb-w-medium);
-    line-height: 1.2;
-    letter-spacing: -0.01em;
-    text-wrap: balance;
-    color: var(--color-king-text);
-  }
-
-  .home-brand__panel-main {
-    margin-bottom: var(--kb-space-4);
-  }
-
-  .home-brand__panel :global(.kb-origin-panel__kicker) {
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-  }
-
-  .home-brand__panel :global(.kb-origin-panel__body) {
-    color: color-mix(in srgb, var(--color-king-text) 72%, var(--color-king-muted));
-  }
-
-  .home-brand__highlights {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: 0;
-    margin: 0;
-    padding: var(--kb-space-4) 0;
-    list-style: none;
-    border-top: 1px solid var(--kb-stroke-hairline);
+    padding-bottom: var(--kb-space-5);
     border-bottom: 1px solid var(--kb-stroke-hairline);
   }
 
-  .home-brand__highlight {
-    display: grid;
-    grid-template-columns: minmax(5.5rem, 6.5rem) minmax(0, 1fr);
-    gap: var(--kb-space-3) var(--kb-space-4);
-    align-items: baseline;
-    min-width: 0;
-    padding-block: var(--kb-space-3);
+  .home-brand__panel-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--kb-space-4);
   }
 
-  .home-brand__highlight + .home-brand__highlight {
-    border-top: 1px solid var(--kb-stroke-hairline);
-  }
-
-  .home-brand__highlight-label {
+  .home-brand__eyebrow {
     margin: 0;
     color: var(--color-king-accent);
   }
 
-  .home-brand__highlight-text {
+  .home-brand__folio {
     margin: 0;
-    font-size: var(--kb-text-sm);
-    line-height: 1.65;
-    text-wrap: pretty;
+    flex-shrink: 0;
+    color: var(--color-king-muted);
+    letter-spacing: 0.16em;
   }
 
-  .home-brand__quote:global(.kb-origin-panel__quote) {
-    margin-top: var(--kb-space-5);
-    border-top-color: var(--kb-stroke-hairline);
+  .home-brand__statement {
+    margin: 0;
+    max-width: 26ch;
+    font-family: var(--font-display);
+    font-size: clamp(1.25rem, 2.2vw, 1.5rem);
+    font-style: italic;
+    font-weight: var(--kb-w-heading);
+    line-height: 1.32;
+    letter-spacing: -0.012em;
+    color: var(--color-king-text);
+    text-wrap: balance;
+  }
+
+  .home-brand__panel-lede {
+    margin: 0;
+    max-width: 40ch;
+    font-size: var(--kb-text-body);
+    line-height: 1.55;
+    color: var(--color-king-muted);
+  }
+
+  .home-brand__facts {
+    display: flex;
+    flex-direction: column;
+    gap: var(--kb-space-4);
+    margin: 0;
+    padding: var(--kb-space-5) 0 0;
+    list-style: none;
+  }
+
+  .home-brand__fact {
+    display: grid;
+    grid-template-columns: 2.35rem minmax(0, 1fr);
+    column-gap: clamp(0.85rem, 1.8vw, 1.15rem);
+    align-items: stretch;
+  }
+
+  .home-brand__fact-rail {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100%;
+  }
+
+  .home-brand__fact-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 2.35rem;
+    height: 2.35rem;
+    border: 1px solid color-mix(in srgb, var(--color-king-accent) 28%, var(--kb-stroke-hairline));
+    border-radius: var(--kb-radius-xs);
+    background: color-mix(in srgb, var(--color-king-accent) 6%, var(--color-king-surface));
+    font-family: var(--font-display);
+    font-size: var(--kb-text-body);
+    font-variant-numeric: tabular-nums;
+    font-weight: var(--kb-w-heading-light);
+    line-height: 1;
+    color: var(--color-king-accent);
+  }
+
+  .home-brand__fact-line {
+    flex: 1;
+    width: 1px;
+    min-height: 0.65rem;
+    margin-block: 0.35rem;
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-king-accent) 32%, transparent) 0%,
+      var(--kb-stroke-hairline) 100%
+    );
+  }
+
+  .home-brand__fact-copy {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 0.35rem;
+    padding-bottom: var(--kb-space-4);
+    border-bottom: 1px solid var(--kb-stroke-hairline);
+  }
+
+  .home-brand__fact:last-child .home-brand__fact-copy {
+    padding-bottom: 0;
+    border-bottom: 0;
+  }
+
+  .home-brand__fact-label {
+    margin: 0;
+    font-family: var(--font-sans);
+    font-size: var(--kb-text-body-lg);
+    font-weight: var(--kb-w-semibold);
+    line-height: 1.2;
+    letter-spacing: 0.01em;
+    color: var(--color-king-text);
+  }
+
+  .home-brand__fact-text {
+    margin: 0;
+    max-width: 36ch;
+    font-size: var(--kb-text-body);
+    line-height: 1.55;
+    color: var(--color-king-muted);
   }
 
   .home-brand__foot {
-    margin-top: var(--kb-space-5);
-    padding-top: var(--kb-space-4);
+    margin-top: auto;
+    padding-top: var(--kb-space-5);
     border-top: 1px solid var(--kb-stroke-hairline);
   }
 
@@ -245,18 +292,17 @@ const { panel, highlights, shortcuts } = brandStatement;
     margin-right: var(--kb-space-4);
     color: var(--color-king-muted);
     font-size: var(--kb-text-meta);
+    font-weight: var(--kb-w-body);
+    letter-spacing: 0;
     line-height: 1;
+    text-transform: none;
   }
 
   .home-brand__shortcut {
-    font-size: var(--kb-text-meta);
-    font-weight: var(--kb-label-weight);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+    color: var(--color-king-accent);
     text-decoration: underline;
     text-decoration-color: color-mix(in srgb, var(--color-king-accent) 30%, transparent);
     text-underline-offset: 0.22em;
-    color: var(--color-king-accent);
     transition:
       color var(--kb-dur-fast) var(--kb-ease-out),
       text-decoration-color var(--kb-dur-fast) var(--kb-ease-out);
@@ -268,96 +314,6 @@ const { panel, highlights, shortcuts } = brandStatement;
     outline-offset: 3px;
   }
 
-  .home-brand__signals {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--kb-space-4);
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    min-width: 0;
-  }
-
-  .home-brand__signal-item {
-    min-width: 0;
-    display: flex;
-  }
-
-  .home-brand__signal-card:global(.feature-card) {
-    width: 100%;
-    min-height: 100%;
-  }
-
-  @media (max-width: 47.99rem) {
-    .home-brand__signals {
-      gap: 0;
-    }
-
-    .home-brand__signal-item {
-      padding-block: var(--kb-space-6);
-      border-bottom: 1px solid var(--kb-stroke-hairline);
-    }
-
-    .home-brand__signal-item:first-child {
-      padding-top: 0;
-    }
-
-    .home-brand__signal-item:last-child {
-      padding-bottom: 0;
-      border-bottom: 0;
-    }
-
-    .home-brand__signal-card:global(.feature-card) {
-      padding: 0;
-      border: 0;
-      border-radius: 0;
-      background: transparent;
-      box-shadow: none;
-    }
-
-    .home-brand__signal-card:global(.feature-card)::before,
-    .home-brand__signal-card:global(.feature-card)::after {
-      display: none;
-    }
-
-    .home-brand__signal-card:global(.feature-card):hover {
-      transform: none;
-      border-color: transparent;
-      box-shadow: none;
-    }
-  }
-
-  @media (min-width: 48rem) {
-    .home-brand__highlights {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 0 var(--kb-space-4);
-      padding-block: var(--kb-space-5);
-    }
-
-    .home-brand__highlight {
-      grid-template-columns: minmax(0, 1fr);
-      gap: var(--kb-space-2);
-      padding: 0 var(--kb-space-4) 0 0;
-      border-top: 0;
-      border-right: 1px solid var(--kb-stroke-hairline);
-    }
-
-    .home-brand__highlight + .home-brand__highlight {
-      border-top: 0;
-    }
-
-    .home-brand__highlight:last-child {
-      padding-right: 0;
-      border-right: 0;
-    }
-
-    .home-brand__signals {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: var(--kb-space-4);
-      align-items: stretch;
-    }
-  }
-
   @media (min-width: 64rem) {
     .home-brand__layout {
       grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
@@ -367,6 +323,16 @@ const { panel, highlights, shortcuts } = brandStatement;
 
     .home-brand__panel {
       min-height: 100%;
+    }
+
+    .home-brand__fact {
+      grid-template-columns: 2.5rem minmax(0, 1fr);
+      column-gap: 1.25rem;
+    }
+
+    .home-brand__fact-num {
+      width: 2.5rem;
+      height: 2.5rem;
     }
 
     .home-brand__media:global(.media-frame) {

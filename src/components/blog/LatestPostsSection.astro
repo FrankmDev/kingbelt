@@ -27,16 +27,13 @@ const { posts, showHeader = true, embedded = false, class: className = '' } = As
     {showHeader && (
       <SectionHeader
         eyebrow="Edición actual"
+        title="Últimas <em>publicaciones</em>."
         body="Guías concretas y piezas de lectura sobre estilo, materiales, uso y cultura de carretera."
         meta={`${posts.length} nuevas lecturas`}
         titleId="blog-latest-title"
         align="left"
         class="blog-latest-header"
-      >
-        <Fragment slot="title">
-          Últimas <em>publicaciones</em>.
-        </Fragment>
-      </SectionHeader>
+      />
     )}
 
     <div class="blog-latest-stage">

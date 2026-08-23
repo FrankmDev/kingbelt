@@ -26,6 +26,133 @@ import { styleBanner } from '@content/home';
   }
 
   .home-style__banner:global(.kb-editorial-banner) {
+    --kb-banner-corner-inset: 1.125rem;
+
     min-height: clamp(20rem, 48vw, 32rem);
+    box-shadow: var(--kb-shadow-float);
+  }
+
+  /* Lighten atmosphere so photography and text breathe */
+  .home-style__banner :global(.kb-editorial-banner__media) {
+    filter: saturate(0.84) contrast(1.03) brightness(0.9);
+  }
+
+  .home-style__banner :global(.kb-editorial-banner__overlay) {
+    background:
+      linear-gradient(
+        180deg,
+        rgba(13, 13, 12, 0.2) 0%,
+        rgba(13, 13, 12, 0.1) 36%,
+        rgba(13, 13, 12, 0.46) 74%,
+        rgba(13, 13, 12, 0.68) 100%
+      ),
+      linear-gradient(
+        90deg,
+        rgba(13, 13, 12, 0.34) 0%,
+        rgba(13, 13, 12, 0.06) 48%,
+        rgba(13, 13, 12, 0.22) 100%
+      );
+  }
+
+  .home-style__banner :global(.kb-editorial-banner__vignette) {
+    background: radial-gradient(
+      ellipse 82% 72% at 62% 40%,
+      transparent 44%,
+      rgba(13, 13, 12, 0.32) 100%
+    );
+  }
+
+  .home-style__banner :global(.kb-editorial-banner__texture::before) {
+    opacity: 0.04;
+  }
+
+  .home-style__banner :global(.kb-editorial-banner__tracks) {
+    opacity: 0.22;
+  }
+
+  .home-style__banner :global(.kb-editorial-banner__card) {
+    background: rgba(13, 13, 12, 0.3);
+    backdrop-filter: blur(10px);
+  }
+
+  /* Title leads; body supports — existing scale tokens */
+  .home-style__banner :global(.kb-editorial-banner__title) {
+    font-size: var(--kb-text-h2);
+    font-weight: var(--kb-w-heading-strong);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+  }
+
+  .home-style__banner :global(.kb-editorial-banner__quote) {
+    max-width: 34ch;
+    font-family: var(--font-sans);
+    font-size: var(--kb-text-body-lg);
+    font-style: normal;
+    font-weight: var(--kb-w-body);
+    line-height: 1.72;
+    color: var(--color-king-on-dark-soft);
+  }
+
+  .home-style__banner :global(.kb-editorial-banner__quote::before) {
+    width: clamp(2rem, 4.5vw, 2.75rem);
+  }
+
+  /* Corners on container edge — inset matches radius, clear of content padding */
+  .home-style__banner :global(.kb-editorial-banner__corner) {
+    width: 1.25rem;
+    height: 1.25rem;
+    border-color: rgba(255, 250, 241, 0.28);
+    opacity: 0.7;
+  }
+
+  .home-style__banner :global(.kb-editorial-banner__corner.kb-corner-bracket-tl) {
+    top: var(--kb-banner-corner-inset);
+    left: var(--kb-banner-corner-inset);
+    border-top-left-radius: var(--kb-radius-md);
+  }
+
+  .home-style__banner :global(.kb-editorial-banner__corner.kb-corner-bracket-tr) {
+    top: var(--kb-banner-corner-inset);
+    right: var(--kb-banner-corner-inset);
+    border-top-right-radius: var(--kb-radius-md);
+  }
+
+  .home-style__banner :global(.kb-editorial-banner__corner.kb-corner-bracket-bl) {
+    bottom: var(--kb-banner-corner-inset);
+    left: var(--kb-banner-corner-inset);
+    border-bottom-left-radius: var(--kb-radius-md);
+  }
+
+  .home-style__banner :global(.kb-editorial-banner__corner.kb-corner-bracket-br) {
+    right: var(--kb-banner-corner-inset);
+    bottom: var(--kb-banner-corner-inset);
+    border-bottom-right-radius: var(--kb-radius-md);
+  }
+
+  @media (min-width: 48rem) {
+    .home-style__banner:global(.kb-editorial-banner) {
+      --kb-banner-corner-inset: 1.25rem;
+    }
+
+    .home-style__banner :global(.kb-editorial-banner__title) {
+      max-width: 22ch;
+    }
+  }
+
+  @media (max-width: 47.99rem) {
+    .home-style__banner :global(.kb-editorial-banner__quote) {
+      max-width: none;
+      text-align: left;
+    }
+
+    .home-style__banner :global(.kb-editorial-banner__quote::before) {
+      left: 0;
+      right: auto;
+      background: linear-gradient(
+        90deg,
+        var(--color-king-on-dark-line),
+        transparent
+      );
+    }
   }
 </style>

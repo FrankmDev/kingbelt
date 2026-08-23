@@ -29,14 +29,12 @@ const titleId = `${idPrefix}-title`;
     <SectionHeader
       index={section.index}
       eyebrow={section.eyebrow}
+      title={section.title}
       meta={`${post.dateLabel} · ${post.readingTime}`}
       body={post.introduction}
+      titleId={titleId}
       class="article-main__header"
-    >
-      <Fragment slot="title">
-        <span id={titleId} set:html={section.title} />
-      </Fragment>
-    </SectionHeader>
+    />
 
     <div class="article-spread">
       <ArticleBody sections={post.sections} />
@@ -63,12 +61,6 @@ const titleId = `${idPrefix}-title`;
 
   .article-main__header:global(.section-header) {
     margin-bottom: 0;
-  }
-
-  .article-main__header :global(.sh-title em) {
-    color: var(--color-king-accent);
-    font-style: italic;
-    font-weight: inherit;
   }
 
   .article-spread {

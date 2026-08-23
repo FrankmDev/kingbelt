@@ -26,15 +26,13 @@ const { data, class: className = '' } = Astro.props;
     <SectionHeader
       index="02"
       eyebrow={data.eyebrow}
+      title={data.title}
       meta={data.badge}
       body={data.lede}
+      titleId="about-standards-title"
       tone="dark"
       class="about-standards__header"
-    >
-      <Fragment slot="title">
-        <span id="about-standards-title" set:html={data.title} />
-      </Fragment>
-    </SectionHeader>
+    />
 
     <ol class="about-standards__grid" aria-label="Filtros de producto">
       {data.principles.map((principle) => (

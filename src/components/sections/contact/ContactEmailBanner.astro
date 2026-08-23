@@ -46,19 +46,15 @@ const hintCount = hints.length;
           index="05"
           eyebrow={eyebrow}
           meta="Canal directo"
+          title={title}
+          body={description}
           titleId={titleId}
           density="compact"
           class="contact-email-banner__header"
-        >
-          <Fragment slot="title">
-            <span set:html={title} />
-          </Fragment>
-        </SectionHeader>
+        />
 
-        <div class="contact-email-banner__brief">
-          <p class="contact-email-banner__lede">{description}</p>
-
-          {hintCount > 0 && (
+        {hintCount > 0 && (
+          <div class="contact-email-banner__brief">
             <ol class="contact-email-banner__hints" aria-label="Qué incluir en tu mensaje">
               {hints.map((hint, index) => (
                 <li class="contact-email-banner__hint">
@@ -80,8 +76,8 @@ const hintCount = hints.length;
                 </li>
               ))}
             </ol>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       <aside class="contact-email-banner__panel kb-reading-panel" aria-label="Email de contacto">
@@ -152,15 +148,6 @@ const hintCount = hints.length;
     display: grid;
     gap: var(--kb-space-5);
     min-width: 0;
-  }
-
-  .contact-email-banner__lede {
-    margin: 0;
-    max-width: 42ch;
-    font-size: var(--kb-text-body-lg);
-    line-height: 1.62;
-    color: var(--color-king-muted);
-    text-wrap: pretty;
   }
 
   .contact-email-banner__hints {

@@ -24,13 +24,12 @@ const titleId = 'size-guide-diagram-title';
       index={section.index}
       eyebrow={section.eyebrow}
       meta={section.meta}
+      title={section.title}
       titleId={titleId}
       body={section.body}
       tone="dark"
       class="size-guide-diagram__header"
-    >
-      <Fragment slot="title">{section.title}</Fragment>
-    </SectionHeader>
+    />
 
     <BeltMeasurementDiagram />
   </div>

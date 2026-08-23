@@ -354,15 +354,17 @@ describe('navegación de tarjetas de producto', () => {
     expect(pdp).not.toMatch(/\.pdp__related\s*\{[^}]*z-index:\s*[1-9]/);
   });
 
-  test('la galería de escritorio es miniatura a la izquierda y foto principal al lado', () => {
+  test('la galería de escritorio iguala la columna de compra y pone la miniatura a la izquierda', () => {
     const gallery = read('src/components/product/ProductGallery.astro');
-    const desktop = gallery.split('@media (min-width: 48rem)')[1] ?? '';
-    expect(gallery).toContain('grid-template-columns: var(--gallery-thumb-width) auto');
-    expect(gallery).toContain('grid-row: 1 / -1');
-    expect(gallery).toContain('height: 100%');
-    expect(desktop).toContain('width: fit-content');
-    expect(desktop).toContain('grid-template-columns: var(--gallery-thumb-width) auto');
-    expect(desktop).not.toContain('minmax(0, 1fr)');
+    const desktopGallery = gallery.split('@media (min-width: 48rem)')[1] ?? '';
+    const desktopPdp = pdp.split('@media (min-width: 48rem)')[1] ?? '';
+    expect(gallery).toContain('grid-template-columns: var(--gallery-thumb-width) minmax(0, 1fr)');
+    expect(gallery).toContain('grid-row: 1');
+    expect(desktopPdp).toContain('align-items: stretch');
+    expect(desktopPdp).toMatch(/\.pdp__gallery\s*\{[^}]*height:\s*0/);
+    expect(desktopGallery).toContain('height: 100%');
+    expect(desktopGallery).toContain('aspect-ratio: auto');
+    expect(desktopGallery).not.toContain('width: fit-content');
     expect(gallery).not.toContain('padding-bottom: 125%');
   });
 });

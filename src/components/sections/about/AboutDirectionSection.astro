@@ -38,14 +38,12 @@ const layerCount = panel.layers.length;
     <SectionHeader
       index="03"
       eyebrow={data.eyebrow}
+      title={data.title}
       meta="Material / Proporción / Cierre"
       body={data.lede}
+      titleId="about-direction-title"
       class="about-direction__header"
-    >
-      <Fragment slot="title">
-        <span id="about-direction-title" set:html={data.title} />
-      </Fragment>
-    </SectionHeader>
+    />
 
     <div class="about-direction__layout">
       <MediaFrame

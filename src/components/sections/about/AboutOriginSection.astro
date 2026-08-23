@@ -30,13 +30,11 @@ const { data, class: className = '' } = Astro.props;
     <SectionHeader
       index="01"
       eyebrow={data.eyebrow}
+      title={data.title}
       meta="KingBelt / Marca"
+      titleId="about-origin-title"
       class="about-origin__header"
-    >
-      <Fragment slot="title">
-        <span id="about-origin-title" set:html={data.title} />
-      </Fragment>
-    </SectionHeader>
+    />
 
     <div class="about-origin__layout">
       <div class="about-origin__panel kb-origin-panel">

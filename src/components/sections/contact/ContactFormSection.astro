@@ -20,27 +20,15 @@ const { channels, inquiryTypes } = Astro.props;
       index="01"
       eyebrow="Escríbenos"
       meta="Formulario"
+      title="Cuéntanos el contexto."
+      body="El formulario es la vía más completa. También puedes escribir por email, teléfono o WhatsApp."
       titleId="contact-form-title"
       density="compact"
       class="contact-form-section__header"
-    >
-      <Fragment slot="title">Cuéntanos el contexto.</Fragment>
-      <Fragment slot="body">
-        El formulario es la vía más completa. También puedes escribir por email, teléfono o WhatsApp.
-      </Fragment>
-    </SectionHeader>
+    />
 
     <div class="contact-form-section__layout">
       <aside class="contact-form-section__channels" aria-labelledby="contact-channels-title">
-        <header class="contact-form-section__channels-head">
-          <p id="contact-channels-title" class="contact-form-section__channels-kicker kb-eyebrow kb-eyebrow-lined">
-            Canales directos
-          </p>
-          <p class="contact-form-section__channels-note">
-            Email, teléfono y WhatsApp para consultas que no requieren formulario.
-          </p>
-        </header>
-
         <div class="contact-form-section__channels-list">
           {channels.map((channel, index) => (
             <ContactMethod
@@ -52,7 +40,6 @@ const { channels, inquiryTypes } = Astro.props;
               index={index + 1}
               meta={channel.meta}
               variant={index === 0 ? 'steel' : 'default'}
-              density="compact"
             />
           ))}
         </div>
@@ -205,7 +192,7 @@ const { channels, inquiryTypes } = Astro.props;
     display: grid;
     grid-template-columns: 1fr;
     gap: var(--kb-space-gap-lg);
-    align-items: start;
+    align-items: stretch;
   }
 
   .contact-form-section__channels,
@@ -215,36 +202,26 @@ const { channels, inquiryTypes } = Astro.props;
   }
 
   .contact-form-section__channels {
-    display: grid;
+    display: flex;
+    flex-direction: column;
     gap: var(--kb-space-5);
-  }
-
-  .contact-form-section__channels-head {
-    display: grid;
-    gap: var(--kb-space-2);
-  }
-
-  .contact-form-section__channels-kicker {
-    margin: 0;
-    color: var(--color-king-accent);
-  }
-
-  .contact-form-section__channels-note {
-    margin: 0;
-    font-size: var(--kb-text-sm);
-    line-height: 1.55;
-    color: var(--color-king-muted);
-    text-wrap: pretty;
   }
 
   .contact-form-section__channels-list {
     display: grid;
-    gap: var(--kb-space-4);
+    gap: var(--kb-space-5);
   }
 
   .contact-form-section__channels-list :global(.contact-method) {
     box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
     max-width: 100%;
+    padding: var(--kb-space-5);
+  }
+
+  .contact-form-section__channels-list :global(.contact-method__foot) {
+    padding-top: var(--kb-space-2);
   }
 
   .contact-form-section__panel {
@@ -375,6 +352,25 @@ const { channels, inquiryTypes } = Astro.props;
     .contact-form-section__layout {
       grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
       gap: var(--kb-space-10);
+    }
+
+    .contact-form-section__channels,
+    .contact-form-section__panel {
+      align-self: stretch;
+      height: 100%;
+    }
+
+  .contact-form-section__channels-list {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .contact-form-section__channels-list :global(.contact-method) {
+      flex: 1 1 0;
+    }
+
+    .contact-form-section__channels-list :global(.contact-method__inner) {
+      flex: 1 1 auto;
     }
   }
 

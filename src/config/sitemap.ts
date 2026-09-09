@@ -7,6 +7,7 @@ const STATIC_SITEMAP_EXCLUDED = new Set([
   '/carrito',
   '/cart-catalog.json',
   '/cuenta/iniciar',
+  '/llms.txt',
   '/rss.xml',
 ]);
 
@@ -28,16 +29,88 @@ export const getSsrSitemapUrls = (origin: string | URL): string[] =>
     .filter((pathname) => !isSitemapExcluded(pathname))
     .map((pathname) => toCanonicalUrl(origin, pathname));
 
-export const buildCommerceSitemapUrls = (
+/** Google recomienda no pasar de ~1000 imágenes por archivo de sitemap. */
+export const MAX_COMMERCE_SITEMAP_IMAGES = 1000;
+
+export interface CommerceSitemapImageEntry {
+  url: string;
+  title: string;
+  caption?: string;
+}
+
+export interface CommerceSitemapEntry {
+  url: string;
+  image?: CommerceSitemapImageEntry;
+}
+
+interface SitemapImageSource {
+  url: string;
+  altText: string;
+}
+
+interface SitemapProductEntryInput {
+  handle: string;
+  title: string;
+  primaryImage?: SitemapImageSource;
+}
+
+interface SitemapCollectionEntryInput {
+  handle: string;
+  title: string;
+  image?: SitemapImageSource;
+}
+
+const toSitemapImage = (
   origin: string | URL,
-  productHandles: readonly string[],
-  collectionHandles: readonly string[],
+  source: SitemapImageSource,
+  title: string
+): CommerceSitemapImageEntry | undefined => {
+  try {
+    return {
+      url: new URL(source.url, origin).href,
+      title,
+      ...(source.altText.trim() ? { caption: source.altText.trim() } : {}),
+    };
+  } catch {
+    return undefined;
+  }
+};
+
+/**
+ * Entradas del sitemap de comercio con su imagen principal, para que Google
+ * Images indexe productos y categorías directamente desde el feed.
+ */
+export const buildCommerceSitemapEntries = (
+  origin: string | URL,
+  products: readonly SitemapProductEntryInput[],
+  collections: readonly SitemapCollectionEntryInput[],
   indexable: boolean
-): string[] => {
+): CommerceSitemapEntry[] => {
   if (!indexable) return [];
+  let imageBudget = MAX_COMMERCE_SITEMAP_IMAGES;
+  const takeImage = (
+    source: SitemapImageSource | undefined,
+    title: string
+  ): CommerceSitemapImageEntry | undefined => {
+    if (!source || imageBudget <= 0) return undefined;
+    const image = toSitemapImage(origin, source, title);
+    if (!image) return undefined;
+    imageBudget -= 1;
+    return image;
+  };
   return [
-    toCanonicalUrl(origin, '/productos'),
-    ...collectionHandles.map((handle) => toCanonicalUrl(origin, `/categorias/${handle}`)),
-    ...productHandles.map((handle) => toCanonicalUrl(origin, `/productos/${handle}`)),
+    { url: toCanonicalUrl(origin, '/productos') },
+    ...collections.map((collection) => ({
+      url: toCanonicalUrl(origin, `/categorias/${collection.handle}`),
+      ...(collection.image
+        ? { image: takeImage(collection.image, `Cinturones ${collection.title} KingBelt`) }
+        : {}),
+    })),
+    ...products.map((product) => ({
+      url: toCanonicalUrl(origin, `/productos/${product.handle}`),
+      ...(product.primaryImage
+        ? { image: takeImage(product.primaryImage, product.title) }
+        : {}),
+    })),
   ];
 };

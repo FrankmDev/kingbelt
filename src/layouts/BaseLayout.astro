@@ -2,6 +2,7 @@
 import '../styles/global.css';
 import { site, siteUrl } from '@config/site';
 import { serializeJsonForHtml } from '@shared/security/serialize-json-for-html';
+import { OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH, toOgImageUrl } from '@shared/seo/og-image';
 import { resolveIndexRobots } from '@shared/seo/deployment';
 import type { PageSeo } from '@shared/seo/page-seo';
 import { buildSchemaGraph } from '@shared/seo/structured-data';
@@ -51,7 +52,11 @@ const imageWidth = seo?.image?.width ?? imageWidthProp;
 const imageHeight = seo?.image?.height ?? imageHeightProp;
 
 const schemaScript = serializeJsonForHtml(buildSchemaGraph(schema));
-const ogImageUrl = new URL(image, siteUrl).href;
+// Gemelo JPG para previsualizaciones sociales: Meta/X no soportan AVIF.
+const ogImageUrl = new URL(toOgImageUrl(image), siteUrl).href;
+const ogImageIsTwin = ogImageUrl !== new URL(image, siteUrl).href;
+const ogImageWidth = ogImageIsTwin ? OG_IMAGE_WIDTH : imageWidth;
+const ogImageHeight = ogImageIsTwin ? OG_IMAGE_HEIGHT : imageHeight;
 const rssUrl = new URL('/rss.xml', siteUrl).href;
 
 if (robots) {
@@ -107,8 +112,8 @@ if (robots) {
     <meta property="og:description" content={description} />
     <meta property="og:image" content={ogImageUrl} />
     <meta property="og:image:alt" content={imageAlt} />
-    {imageWidth && <meta property="og:image:width" content={String(imageWidth)} />}
-    {imageHeight && <meta property="og:image:height" content={String(imageHeight)} />}
+    {ogImageWidth && <meta property="og:image:width" content={String(ogImageWidth)} />}
+    {ogImageHeight && <meta property="og:image:height" content={String(ogImageHeight)} />}
     <meta property="og:locale" content="es_ES" />
     <meta property="og:site_name" content="KingBelt" />
 

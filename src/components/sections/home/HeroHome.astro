@@ -5,6 +5,7 @@ import Icon from '../../ui/Icon.astro';
 import { getImage } from 'astro:assets';
 import { getEditorialAsset } from '@shared/editorial-images';
 import { hero } from '@content/home';
+import { site } from '@config/site';
 
 const posterAsset = getEditorialAsset('/images/imagen-cinturon-kingbelt-9.avif');
 const poster = posterAsset
@@ -62,6 +63,8 @@ const poster = posterAsset
 
         <h1 id="hero-home-title" class="hero-home__wordmark font-display font-display-light">
           <span class="hero-home__wordmark-inner" data-hero-wordmark>{hero.brand}</span>
+          {/* Texto accesible para buscadores/lectores: el H1 no debe ser solo la marca. */}
+          <span class="sr-only">— {site.tagline}</span>
           <span class="hero-home__wordmark-bar" aria-hidden="true"></span>
         </h1>
 

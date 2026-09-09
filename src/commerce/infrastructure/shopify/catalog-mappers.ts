@@ -607,11 +607,16 @@ export const mapShopifyCollection = (
   index = 0
 ): Collection => {
   const title = requiredText(collection.title, `collections[${index}].title`);
+  const seoTitle = optionalText(collection.seo?.title);
+  const seoDescription = optionalText(collection.seo?.description);
   return {
     id: requiredShopifyGid(collection.id, 'Collection', `collections[${index}].id`),
     handle: requiredHandle(collection.handle, `collections[${index}].handle`),
     title,
     description: optionalText(collection.description) ?? title,
+    ...(seoTitle || seoDescription
+      ? { seo: { ...(seoTitle ? { title: seoTitle } : {}), ...(seoDescription ? { description: seoDescription } : {}) } }
+      : {}),
     ...(collection.image
       ? { image: mapImage(collection.image, `collections[${index}].image`, title) }
       : {}),

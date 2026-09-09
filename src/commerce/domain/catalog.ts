@@ -81,6 +81,12 @@ export interface ProductSeo {
   description?: string;
 }
 
+/** Campos SEO editables en Shopify Admin (`Collection.seo`). */
+export interface CollectionSeo {
+  title?: string;
+  description?: string;
+}
+
 export interface OfficialProductCategory {
   id: string;
   name: string;
@@ -102,6 +108,7 @@ export interface Collection {
   featured?: boolean;
   badge?: string;
   tagline?: string;
+  seo?: CollectionSeo;
 }
 
 export interface CollectionReference {

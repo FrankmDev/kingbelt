@@ -43,6 +43,8 @@ export interface ShopifyCollectionNode {
   handle: string;
   title: string;
   description: string;
+  /** Presente cuando la consulta pide `seo { title description }`. */
+  seo?: { title: string | null; description: string | null };
   image: ShopifyImageNode | null;
 }
 
@@ -226,6 +228,7 @@ export const PRODUCT_SUMMARY_FIELDS = `
 
 export const COLLECTION_FIELDS = `
   id handle title description
+  seo { title description }
   image { ${IMAGE_FIELDS} }
 `;
 

@@ -2,7 +2,7 @@ import type { Collection, CollectionPage, Product, ProductImage, ProductSummary 
 import { getPrimaryProductImage } from '../domain/product-media';
 import type { PageSeo, SeoImage } from '@shared/seo/page-seo';
 import { CATALOG_INDEX_PATH, collectionPath, productPath, resolveCanonicalUrl } from './paths';
-import { createCollectionStructuredData, createProductStructuredData } from './structured-data';
+import { createCollectionStructuredData, createProductStructuredData, type ProductSchemaCategory } from './structured-data';
 
 export type { OgType, PageSeo, SeoImage } from '@shared/seo/page-seo';
 
@@ -35,6 +35,8 @@ export interface CommerceSeoOptions {
   searchParams?: URLSearchParams;
   /** `false` en catálogo demo para no indexar productos ficticios. */
   indexable?: boolean;
+  /** Colección principal declarada en el schema Product. */
+  category?: ProductSchemaCategory;
 }
 
 export const resolveCommerceRobots = (options?: CommerceSeoOptions): string | undefined => {
@@ -65,20 +67,49 @@ const buildProductPageSeo = (
   image?: SeoImage
 ): PageSeo => ({
   title: product.seo?.title ?? `${product.title} — ${brand.name}`,
-  description: product.seo?.description ?? product.summary,
+  description: product.seo?.description ?? truncateForMetaDescription(product.summary),
   canonicalUrl: resolveCanonicalUrl(siteOrigin, productPath(product.handle)),
   ogType: 'product',
   image,
 });
 
+/** Longitud objetivo de meta description: Google trunca hacia los ~155-160 caracteres. */
+const META_DESCRIPTION_MAX = 155;
+
+const truncateForMetaDescription = (value: string): string => {
+  const normalized = value.trim();
+  if (normalized.length <= META_DESCRIPTION_MAX) return normalized;
+  const cut = normalized.lastIndexOf(' ', META_DESCRIPTION_MAX);
+  return `${(cut > META_DESCRIPTION_MAX * 0.6 ? normalized.slice(0, cut) : normalized.slice(0, META_DESCRIPTION_MAX)).trimEnd()}…`;
+};
+
+/**
+ * Descripción de colección para la head cuando Shopify no aporta contenido
+ * (collection.description o collection.seo vacíos). Plantilla neutra, sin
+ * datos comerciales: el texto editado en Shopify siempre tiene prioridad.
+ */
+export const buildCollectionMetaDescription = (
+  collection: Pick<Collection, 'title' | 'description' | 'seo'>,
+  brandName: string
+): string => {
+  const fromSeo = collection.seo?.description?.trim();
+  if (fromSeo) return fromSeo;
+  const fromDescription = collection.description?.trim();
+  if (fromDescription && fromDescription !== collection.title.trim()) {
+    return fromDescription;
+  }
+  const theme = collection.title.trim().toLowerCase();
+  return `Descubre los cinturones de cuero ${theme} de ${brandName}: cuero, herrajes y ajuste pensados para el uso diario. Explora la colección.`;
+};
+
 const buildCollectionPageSeo = (
-  collection: Pick<Collection, 'title' | 'description' | 'handle'>,
+  collection: Pick<Collection, 'title' | 'description' | 'handle' | 'seo'>,
   brand: SiteBrand,
   siteOrigin: string | URL,
   image?: SeoImage
 ): PageSeo => ({
-  title: `${collection.title} — Cinturones ${brand.name}`,
-  description: collection.description,
+  title: collection.seo?.title ?? `${collection.title} — Cinturones de cuero ${brand.name}`,
+  description: buildCollectionMetaDescription(collection, brand.name),
   canonicalUrl: resolveCanonicalUrl(siteOrigin, collectionPath(collection.handle)),
   ogType: 'website',
   image,
@@ -107,7 +138,7 @@ export const resolveProductPageHead = (
   );
   return {
     seo,
-    schema: createProductStructuredData(product, seo.canonicalUrl, brand.name),
+    schema: createProductStructuredData(product, seo.canonicalUrl, brand.name, options?.category),
   };
 };
 
@@ -125,7 +156,12 @@ export const resolveCollectionPageHead = (
   );
   return {
     seo,
-    schema: createCollectionStructuredData(collection, products, seo.canonicalUrl, siteOrigin),
+    schema: createCollectionStructuredData(
+      { title: collection.title, description: seo.description, handle: collection.handle },
+      products,
+      seo.canonicalUrl,
+      siteOrigin
+    ),
   };
 };
 

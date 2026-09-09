@@ -1,6 +1,6 @@
 ---
-export const prerender = true;
-
+// Debe ser on-demand: Astro prohíbe reescrituras de rutas SSR hacia rutas
+// prerenderizadas (ForbiddenRewrite) y /productos/* y /categorias/* reescriben aquí.
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Header from '../components/layout/Header.astro';
 import Footer from '../components/layout/Footer.astro';

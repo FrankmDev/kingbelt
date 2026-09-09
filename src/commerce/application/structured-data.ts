@@ -54,10 +54,19 @@ const toSchemaImages = (
 const getPricingVariants = (product: Product): ProductVariant[] =>
   product.variants.filter((variant) => variant.salesStatus === 'active');
 
+export interface ProductSchemaCategory {
+  /** Título de la colección principal, p. ej. «Sport». */
+  name: string;
+}
+
+/** Etiquetas de especificación que ya viajan en otras propiedades del schema. */
+const REDUNDANT_SPEC_LABELS = new Set(['Referencia']);
+
 export const createProductStructuredData = (
   product: Product,
   canonical: string,
-  brandName: string
+  brandName: string,
+  category?: ProductSchemaCategory
 ): Record<string, unknown> => {
   const pricingVariants = getPricingVariants(product);
   const availability = toAvailability(product.variants);
@@ -68,10 +77,19 @@ export const createProductStructuredData = (
     name: product.title,
     description: product.description,
     image: toSchemaImages(product.images, canonical),
-    mpn: product.reference,
     brand: { '@type': 'Brand', name: brandName },
     url: canonical,
+    ...(category?.name ? { category: category.name } : {}),
   };
+  const additionalProperty = product.specifications
+    .filter((spec) => !REDUNDANT_SPEC_LABELS.has(spec.label))
+    .map((spec) => ({ '@type': 'PropertyValue', name: spec.label, value: spec.value }));
+  if (additionalProperty.length) data.additionalProperty = additionalProperty;
+  // El mapeador usa el handle como referencia cuando falta el metafield
+  // `model_reference`; un handle no es un MPN real, así que se omite.
+  if (product.reference && product.reference !== product.handle) {
+    data.mpn = product.reference;
+  }
 
   if (!pricingVariants.length) return data;
 

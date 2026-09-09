@@ -21,13 +21,14 @@ import { isSafeInternalPath } from '../src/commerce/domain/url-policy.ts';
 import { toCanonicalUrl } from '../src/shared/url.ts';
 import { createPageSeo } from '../src/shared/seo/page-head.ts';
 import { isSearchIndexableDeployment, resolveIndexRobots } from '../src/shared/seo/deployment.ts';
+import { toOgImageUrl } from '../src/shared/seo/og-image.ts';
 import {
   createOrganizationSchema,
   createFaqPageSchema,
   SITE_ORGANIZATION_ID,
 } from '../src/shared/seo/structured-data.ts';
 import { GET as robotsGET } from '../src/pages/robots.txt.ts';
-import { isSitemapExcluded, getSsrSitemapUrls, buildCommerceSitemapUrls } from '../src/config/sitemap.ts';
+import { isSitemapExcluded, getSsrSitemapUrls, buildCommerceSitemapEntries } from '../src/config/sitemap.ts';
 import { getLegalSitemapExcludedPaths } from '../src/content/legal.ts';
 
 const site = { name: 'KingBelt' };
@@ -158,6 +159,67 @@ describe('cabecera de páginas de comercio', () => {
     );
     expect(seo.canonicalUrl).toBe('https://kingbelt.es/categorias/piel-lisa');
     expect(seo.ogType).toBe('website');
+  });
+
+  test('colección sin descripción de Shopify recibe meta description con keyword', () => {
+    const { seo, schema } = resolveCollectionPageHead(
+      {
+        collection: {
+          id: 'collection:sport',
+          handle: 'sport',
+          title: 'Sport',
+          description: 'Sport',
+        },
+        products: [],
+        facets: { productTypes: [], colors: [], priceRanges: [] },
+      },
+      site,
+      siteUrl
+    );
+    expect(seo.title).toBe('Sport — Cinturones de cuero KingBelt');
+    expect(seo.description.length).toBeGreaterThan(80);
+    expect(seo.description.length).toBeLessThanOrEqual(160);
+    expect(seo.description).toContain('cinturones de cuero sport');
+    expect(schema.description).toBe(seo.description);
+  });
+
+  test('la colección usa los campos seo editados en Shopify cuando existen', () => {
+    const { seo } = resolveCollectionPageHead(
+      {
+        collection: {
+          id: 'collection:sport',
+          handle: 'sport',
+          title: 'Sport',
+          description: 'Sport',
+          seo: { title: 'Cinturones sport de cuero', description: 'Descripción editada en Shopify.' },
+        },
+        products: [],
+        facets: { productTypes: [], colors: [], priceRanges: [] },
+      },
+      site,
+      siteUrl
+    );
+    expect(seo.title).toBe('Cinturones sport de cuero');
+    expect(seo.description).toBe('Descripción editada en Shopify.');
+  });
+
+  test('trunca la meta description de producto por límite de palabra', () => {
+    const longSummary =
+      'Cinturón de caballero al corte con acabado texturizado y cantos tintados. '
+      + 'Diseño versátil y sobrio que combina con cualquier estilo, desde lo más casual hasta lo más formal, '
+      + 'con herrajes resistentes y una construcción pensada para el uso diario.';
+    const { seo } = resolveProductPageHead(makeProduct({ summary: longSummary }), site, siteUrl);
+    expect(seo.description.length).toBeLessThanOrEqual(160);
+    expect(seo.description.endsWith('…')).toBe(true);
+  });
+
+  test('respeta la meta description de producto corta sin truncar', () => {
+    const { seo } = resolveProductPageHead(
+      makeProduct({ summary: 'Resumen corto.', seo: {} }),
+      site,
+      siteUrl
+    );
+    expect(seo.description).toBe('Resumen corto.');
   });
 
   test('resuelve SEO del índice de catálogo en /productos', () => {
@@ -348,12 +410,58 @@ describe('sitemap y redirecciones', () => {
 
   test('el sitemap editorial SSR incluye la portada y el de comercio omite el catálogo demo', () => {
     expect(getSsrSitemapUrls(siteUrl)).toEqual(['https://kingbelt.es/']);
-    expect(buildCommerceSitemapUrls(siteUrl, ['cinturon-test'], ['vestir'], false)).toEqual([]);
-    expect(buildCommerceSitemapUrls(siteUrl, ['cinturon-test'], ['vestir'], true)).toEqual([
+    expect(
+      buildCommerceSitemapEntries(
+        siteUrl,
+        [{ handle: 'cinturon-test', title: 'Cinturón Test' }],
+        [{ handle: 'vestir', title: 'Vestir' }],
+        false
+      )
+    ).toEqual([]);
+    expect(
+      buildCommerceSitemapEntries(
+        siteUrl,
+        [{ handle: 'cinturon-test', title: 'Cinturón Test' }],
+        [{ handle: 'vestir', title: 'Vestir' }],
+        true
+      ).map((entry) => entry.url)
+    ).toEqual([
       'https://kingbelt.es/productos',
       'https://kingbelt.es/categorias/vestir',
       'https://kingbelt.es/productos/cinturon-test',
     ]);
+  });
+
+  test('el sitemap de comercio adjunta la imagen principal con título y caption', () => {
+    const entries = buildCommerceSitemapEntries(
+      siteUrl,
+      [{
+        handle: 'cinturon-test',
+        title: 'Cinturón Test',
+        primaryImage: { url: 'https://cdn.shopify.com/img/a.jpg', altText: 'Cinturón de prueba' },
+      }],
+      [{ handle: 'vestir', title: 'Vestir' }],
+      true
+    );
+    expect(entries[0].image).toBeUndefined();
+    expect(entries[2].image).toEqual({
+      url: 'https://cdn.shopify.com/img/a.jpg',
+      title: 'Cinturón Test',
+      caption: 'Cinturón de prueba',
+    });
+  });
+
+  test('resuelve URLs de imagen relativas sobre el origen del sitio', () => {
+    const entries = buildCommerceSitemapEntries(
+      siteUrl,
+      [{ handle: 'x', title: 'X', primaryImage: { url: '/img/x.jpg', altText: '' } }],
+      [],
+      true
+    );
+    expect(entries[1].image).toEqual({
+      url: 'https://kingbelt.es/img/x.jpg',
+      title: 'X',
+    });
   });
 });
 
@@ -410,5 +518,70 @@ describe('señales de entidad y robots de deployment', () => {
     expect(await preview.text()).toContain('Disallow: /');
     if (previous === undefined) delete process.env.VERCEL_ENV;
     else process.env.VERCEL_ENV = previous;
+  });
+});
+
+describe('datos estructurados: referencias de producto', () => {
+  test('declara el MPN real cuando existe', () => {
+    const schema = createProductStructuredData(
+      makeProduct(),
+      'https://kingbelt.es/productos/cinturon-test',
+      'KingBelt'
+    );
+    expect(schema.mpn).toBe('KB-TEST');
+  });
+
+  test('omite el MPN cuando la referencia es el handle de fallback', () => {
+    const schema = createProductStructuredData(
+      makeProduct({ reference: 'cinturon-test' }),
+      'https://kingbelt.es/productos/cinturon-test',
+      'KingBelt'
+    );
+    expect(schema.mpn).toBeUndefined();
+  });
+
+  test('declara categoría y propiedades adicionales desde especificaciones', () => {
+    const schema = createProductStructuredData(
+      makeProduct({
+        specifications: [
+          { label: 'Referencia', value: 'KB-TEST' },
+          { label: 'Ancho', value: '35 mm' },
+          { label: 'Material', value: 'Piel vacuno flor corregida' },
+        ],
+      }),
+      'https://kingbelt.es/productos/cinturon-test',
+      'KingBelt',
+      { name: 'Sport' }
+    );
+    expect(schema.category).toBe('Sport');
+    expect(schema.additionalProperty).toEqual([
+      { '@type': 'PropertyValue', name: 'Ancho', value: '35 mm' },
+      { '@type': 'PropertyValue', name: 'Material', value: 'Piel vacuno flor corregida' },
+    ]);
+  });
+
+  test('omite categoría y additionalProperty cuando no hay datos', () => {
+    const schema = createProductStructuredData(
+      makeProduct(),
+      'https://kingbelt.es/productos/cinturon-test',
+      'KingBelt'
+    );
+    expect(schema.category).toBeUndefined();
+    expect(schema.additionalProperty).toBeUndefined();
+  });
+});
+
+describe('imágenes para compartir social', () => {
+  test('las imágenes AVIF editoriales usan su gemelo JPG en OG', () => {
+    expect(toOgImageUrl('/images/imagen-cinturon-kingbelt-9.avif'))
+      .toBe('/images/og/imagen-cinturon-kingbelt-9.jpg');
+    expect(toOgImageUrl('/images/imagen-cinturon-kingbelt-21.avif'))
+      .toBe('/images/og/imagen-cinturon-kingbelt-21.jpg');
+  });
+
+  test('las URLs sin gemelo (p. ej. JPG de Shopify CDN) no cambian', () => {
+    const shopify = 'https://cdn.shopify.com/s/files/1/1064/2581/1284/files/5568-35_CUERO_01.jpg';
+    expect(toOgImageUrl(shopify)).toBe(shopify);
+    expect(toOgImageUrl('/images/brand/logo.avif')).toBe('/images/brand/logo.avif');
   });
 });

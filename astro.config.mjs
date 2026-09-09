@@ -94,7 +94,12 @@ export default defineConfig({
   build: {
     inlineStylesheets: 'never',
   },
-  ...(Object.keys(productRedirects).length ? { redirects: productRedirects } : {}),
+  // Convención: muchos rastreadores piden /sitemap.xml por defecto. El índice real
+  // se sirve en /sitemap-index.xml, así que se redirige la ruta canónica.
+  redirects: {
+    '/sitemap.xml': '/sitemap-index.xml',
+    ...productRedirects,
+  },
   integrations: [
     sitemap({
       filter: (page) => !isSitemapExcluded(new URL(page).pathname),

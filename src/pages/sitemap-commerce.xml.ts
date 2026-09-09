@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro';
 import { getCatalogProvider } from '@commerce/catalog';
 import { isShopifyCommerce } from '@commerce/commerce-source';
-import { buildCommerceSitemapUrls } from '@config/sitemap';
+import { buildCommerceSitemapEntries, type CommerceSitemapEntry } from '@config/sitemap';
 import { siteUrl } from '@config/site';
 
 const escapeXml = (value: string): string => value.replace(/[<>&'"]/g, (character) => ({
@@ -12,10 +12,22 @@ const escapeXml = (value: string): string => value.replace(/[<>&'"]/g, (characte
   '"': '&quot;',
 }[character] ?? character));
 
-const renderUrlset = (urls: readonly string[]): string =>
-  `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls
-    .map((url) => `<url><loc>${escapeXml(url)}</loc></url>`)
-    .join('')}</urlset>`;
+const renderEntry = (entry: CommerceSitemapEntry): string => {
+  const image = entry.image
+    ? '<image:image>'
+      + `<image:loc>${escapeXml(entry.image.url)}</image:loc>`
+      + `<image:title>${escapeXml(entry.image.title)}</image:title>`
+      + (entry.image.caption ? `<image:caption>${escapeXml(entry.image.caption)}</image:caption>` : '')
+      + '</image:image>'
+    : '';
+  return `<url><loc>${escapeXml(entry.url)}</loc>${image}</url>`;
+};
+
+const renderUrlset = (entries: readonly CommerceSitemapEntry[]): string =>
+  `<?xml version="1.0" encoding="UTF-8"?>\n`
+  + `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">`
+  + entries.map(renderEntry).join('')
+  + `</urlset>`;
 
 const xmlHeaders = {
   'Content-Type': 'application/xml; charset=utf-8',
@@ -31,10 +43,10 @@ export const GET: APIRoute = async ({ clientAddress }) => {
   }
 
   const catalogProvider = await getCatalogProvider(clientAddress);
-  const [productHandles, collectionHandles] = await Promise.all([
-    catalogProvider.getProductHandles(),
-    catalogProvider.getCollectionHandles(),
+  const [products, collections] = await Promise.all([
+    catalogProvider.getProductSummaries(),
+    catalogProvider.getCollections(),
   ]);
-  const urls = buildCommerceSitemapUrls(siteUrl, productHandles, collectionHandles, true);
-  return new Response(renderUrlset(urls), { headers: xmlHeaders });
+  const entries = buildCommerceSitemapEntries(siteUrl, products, collections, true);
+  return new Response(renderUrlset(entries), { headers: xmlHeaders });
 };
